@@ -149,6 +149,26 @@ export async function actOnAttention(
   }
 }
 
+// ---- manual job kick (Today § RUN HER DAY) ----
+// The brain owns the cadence (04 §1) — this only fires one of her real jobs
+// NOW, on demand. force bypasses the once-a-day guard so a manual tap always
+// does something visible. No scripted pings: whatever comes back is the truth.
+export async function runJob(
+  job: "morning_brief" | "closeout" | "pulse_sweep" | "floor_check" | "week_preview",
+  force = true,
+): Promise<{ ok: boolean; reason?: string; error?: string }> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/job`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      body: JSON.stringify({ job, force }),
+    });
+    return (await res.json()) as { ok: boolean; reason?: string; error?: string };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network error" };
+  }
+}
+
 // ---- voice loop (05 §3): mic blob → transcript; text → spoken audio ----
 
 export async function transcribeAudio(

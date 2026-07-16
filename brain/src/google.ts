@@ -125,13 +125,32 @@ export async function listEvents(days: number): Promise<string> {
   });
   const items = r.data.items ?? [];
   if (items.length === 0) return `Calendar is clear for the next ${days === 1 ? "day" : days + " days"}.`;
-  return items
+
+  // Collapse exact duplicates (same title, same start). Real calendars
+  // accumulate them from bad syncs — King's had the same 3:30 meeting eight
+  // times over. Distinct event ids, so Google won't dedupe for us. Nobody
+  // needs to read a meeting eight times, and it poisons her context window.
+  const seen = new Map<string, number>();
+  const unique: typeof items = [];
+  for (const e of items) {
+    const key = `${e.summary ?? ""}|${e.start?.dateTime || e.start?.date || ""}`;
+    const n = (seen.get(key) ?? 0) + 1;
+    seen.set(key, n);
+    if (n === 1) unique.push(e);
+  }
+
+  return unique
     .map((e) => {
       const start = e.start?.dateTime || e.start?.date || "?";
       const when = e.start?.dateTime
         ? new Date(start).toLocaleString("en-US", { timeZone: TZ, weekday: "short", hour: "numeric", minute: "2-digit" })
         : `${start} (all day)`;
-      return `- ${when} · ${e.summary ?? "(untitled)"}${e.location ? " @ " + e.location : ""}`;
+      const key = `${e.summary ?? ""}|${start}`;
+      const dupes = seen.get(key) ?? 1;
+      // Surface the duplication rather than hiding it — it's a real problem
+      // with his calendar data, and silently swallowing it would be dishonest.
+      const dupNote = dupes > 1 ? ` [⚠ ${dupes} duplicate copies of this event exist on the calendar]` : "";
+      return `- ${when} · ${e.summary ?? "(untitled)"}${e.location ? " @ " + e.location : ""}${dupNote}`;
     })
     .join("\n");
 }
