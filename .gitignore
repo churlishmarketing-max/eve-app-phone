@@ -1,0 +1,41 @@
+# Secrets — never committed (00_START_HERE rule 5)
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+google-services.json
+serviceAccountKey.json
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+npm-debug.log*
+
+# Build artifacts
+apk/*.apk
+app/dist/
+app/android/
+
+# Runtime data (device push tokens — mildly sensitive; deliverables regenerate
+# and now also live in the DB). Her wardrobe IS re-included: those renders must
+# ship to the host or she has no closet. Negation needs the /* form — you
+# cannot re-include a file whose parent DIRECTORY is excluded.
+brain/data/*
+!brain/data/wardrobe/
+brain/data/wardrobe-state.json
+
+# Firebase / signing (never commit)
+*service-account*.json
+keystore.properties
+*.jks
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Her closet lives in Supabase Storage (scripts/sync-wardrobe.mjs), not git:
+# keeps the repo small, deploys fast, and adding a look needs no redeploy.
+brain/data/
+brain/*.log

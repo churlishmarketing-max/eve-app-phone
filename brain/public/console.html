@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EVE — dev console</title>
+<style>
+  :root { --bg:#0a0d0e; --panel:#101517; --teal:#007A87; --hi:#1CB9C8; --cream:#F0EDE8; --red:#C41E3A; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--cream); font:15px/1.5 Barlow, system-ui, sans-serif; display:flex; flex-direction:column; height:100vh; }
+  header { padding:10px 16px; border-bottom:1px solid #1e2a2d; display:flex; gap:12px; align-items:center; }
+  header h1 { font:600 14px "Barlow Condensed", sans-serif; letter-spacing:.2em; color:var(--hi); margin:0; }
+  header .badge { font:11px "IBM Plex Mono", monospace; color:#7a8a8d; border:1px solid #1e2a2d; padding:2px 8px; border-radius:3px; }
+  #state { margin-left:auto; font:11px "IBM Plex Mono", monospace; color:#7a8a8d; }
+  #state.speaking { color:var(--hi); }
+  #token { background:var(--panel); border:1px solid #1e2a2d; color:var(--cream); padding:4px 8px; font:12px "IBM Plex Mono", monospace; width:220px; border-radius:3px; }
+  #log { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .msg { max-width:72ch; padding:10px 14px; border-radius:8px; white-space:pre-wrap; }
+  .you { align-self:flex-end; background:#12282b; border:1px solid var(--teal); }
+  .eve { align-self:flex-start; background:var(--panel); border:1px solid #1e2a2d; }
+  .err { align-self:center; color:var(--red); font:12px "IBM Plex Mono", monospace; }
+  form { display:flex; gap:8px; padding:12px 16px; border-top:1px solid #1e2a2d; }
+  #input { flex:1; background:var(--panel); border:1px solid #1e2a2d; color:var(--cream); padding:10px 12px; border-radius:6px; font:inherit; }
+  #input:focus { outline:1px solid var(--hi); }
+  button { background:var(--teal); color:var(--cream); border:0; padding:0 18px; border-radius:6px; font:600 14px Barlow, sans-serif; cursor:pointer; }
+  button:disabled { opacity:.4; }
+</style>
+</head>
+<body>
+<header>
+  <h1>EVE</h1><span class="badge">DEV CONSOLE — not the app</span>
+  <input id="token" type="password" placeholder="EVE_BRAIN_TOKEN">
+  <span id="state">idle</span>
+</header>
+<div id="log"></div>
+<form id="form">
+  <input id="input" autocomplete="off" placeholder="Talk to her…">
+  <button id="send">Send</button>
+</form>
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const send = document.getElementById("send");
+const stateEl = document.getElementById("state");
+const tokenEl = document.getElementById("token");
+const devToken = "__DEV_TOKEN__";
+tokenEl.value = (devToken.startsWith("__") ? "" : devToken) || localStorage.getItem("eveToken") || "";
+tokenEl.addEventListener("change", () => localStorage.setItem("eveToken", tokenEl.value));
+let conversationId = null;
+
+function bubble(cls, text) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.textContent = text;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+  return d;
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = "";
+  send.disabled = true;
+  bubble("you", message);
+  const eveBubble = bubble("eve", "");
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + tokenEl.value.trim(),
+      },
+      body: JSON.stringify({ message, conversationId, surface: "app" }),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status + " — check the token field (top right)");
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const frames = buf.split("\n\n");
+      buf = frames.pop();
+      for (const frame of frames) {
+        let ev = "", data = "";
+        for (const line of frame.split("\n")) {
+          if (line.startsWith("event: ")) ev = line.slice(7);
+          else if (line.startsWith("data: ")) data = line.slice(6);
+        }
+        if (!ev) continue;
+        const d = data ? JSON.parse(data) : {};
+        if (ev === "token") { eveBubble.textContent += d.text; log.scrollTop = log.scrollHeight; }
+        else if (ev === "state") { stateEl.textContent = d.state; stateEl.className = d.state; }
+        else if (ev === "done") { conversationId = d.conversationId; }
+        else if (ev === "error") { bubble("err", d.message); }
+      }
+    }
+  } catch (err) {
+    bubble("err", String(err.message || err));
+  } finally {
+    send.disabled = false;
+    stateEl.textContent = "idle";
+    stateEl.className = "";
+    input.focus();
+  }
+});
+input.focus();
+</script>
+</body>
+</html>
