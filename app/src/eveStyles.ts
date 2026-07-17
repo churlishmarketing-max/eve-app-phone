@@ -73,8 +73,10 @@ export const CSS = `
 .talk .plate{ flex:0 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
 .talk .plate .staterow{ flex-shrink:0; }
 /* basis 0, not auto: the transcript takes LEFTOVER space and scrolls its
-   content — a long conversation must never out-negotiate her plate. */
-.tscroll{ flex:1 1 0; min-height:96px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+   content — a long conversation must never out-negotiate her plate. The
+   min-height is a real floor, not a token one: at 96px he got a one-line
+   sliver on a 2800px phone. */
+.tscroll{ flex:1 1 0; min-height:150px; overflow-y:auto; -webkit-overflow-scrolling:touch;
   margin:14px 0 2px;
   /* fade the conversation out under the plate instead of hard-cutting it */
   -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 16px);
@@ -161,16 +163,19 @@ export const CSS = `
 .br.tr{ top:-1px; right:-1px; border-top:1px solid #1CB9C8; border-right:1px solid #1CB9C8; }
 .br.bl{ bottom:-1px; left:-1px; border-bottom:1px solid #1CB9C8; border-left:1px solid #1CB9C8; }
 .br.brr{ bottom:-1px; right:-1px; border-bottom:1px solid #1CB9C8; border-right:1px solid #1CB9C8; }
-/* hero portrait: fixed height (clamp, no aspect-ratio — Android WebView law),
-   full-bleed cover anchored to her face */
+/* Hero portrait: fixed height (clamp, no aspect-ratio — Android WebView law),
+   full-bleed cover anchored to her face. Her renders are 768x1376 (ratio 1.79),
+   so a wide-short box crops to head-and-shoulders — which is the point. Sized
+   to ~a quarter of the screen: big enough to read her face, small enough that
+   the conversation gets real room (his call, 2026-07-17). */
 .portrait.hero{ position:relative; width:100%; flex:1 1 auto;
-  height:clamp(300px, 44vh, 470px); min-height:210px; }
+  height:clamp(200px, 26vh, 300px); min-height:170px; }
 .portrait.hero img{ position:absolute; inset:0; width:100%; height:100%;
   object-fit:cover; object-position:50% 16%;
   border-radius:3px; border:1px solid rgba(28,185,200,.18); display:block;
   box-shadow:inset 0 0 40px rgba(0,122,135,.14); }
 .portrait.alert img{ opacity:.55; }
-.corefall{ height:clamp(300px, 44vh, 470px); display:flex; align-items:center; justify-content:center; }
+.corefall{ height:clamp(200px, 26vh, 300px); display:flex; align-items:center; justify-content:center; }
 /* Keyboard open (adjustResize shrinks the viewport): she compresses to a
    strip instead of bleeding over the transcript; chips step aside so the
    conversation and the input rail always survive. Placed AFTER the base
