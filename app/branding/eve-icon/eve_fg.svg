@@ -1,0 +1,41 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="core" cx="50%" cy="44%" r="60%">
+      <stop offset="0%" stop-color="#EAFDFF" stop-opacity="1"/>
+      <stop offset="20%" stop-color="#7FE9F2" stop-opacity="1"/>
+      <stop offset="48%" stop-color="#1CB9C8" stop-opacity="0.98"/>
+      <stop offset="78%" stop-color="#007A87" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#007A87" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hot" cx="50%" cy="42%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#CFF8FB" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#CFF8FB" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1CB9C8" stop-opacity="0.15"/>
+      <stop offset="42%" stop-color="#3FD3E0" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#1CB9C8" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#007A87" stop-opacity="0.1"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+  <!-- everything scaled ~0.72 into the adaptive safe zone (center 66%) -->
+  <g transform="translate(512 512) scale(0.7) translate(-512 -512)">
+    <g transform="rotate(-24 512 512)">
+      <ellipse cx="512" cy="512" rx="360" ry="360" fill="none"
+               stroke="url(#ring)" stroke-width="9" stroke-linecap="round"
+               stroke-dasharray="1400 300" opacity="0.95"/>
+      <circle cx="512" cy="152" r="10" fill="#CFF8FB"/>
+      <circle cx="820" cy="600" r="7" fill="#3FD3E0" opacity="0.8"/>
+    </g>
+    <circle cx="512" cy="512" r="250" fill="none" stroke="#1CB9C8"
+            stroke-width="3" stroke-dasharray="3 22" opacity="0.4"/>
+    <circle cx="512" cy="500" r="196" fill="url(#core)" filter="url(#soft)"/>
+    <circle cx="512" cy="500" r="150" fill="url(#hot)"/>
+    <circle cx="512" cy="500" r="200" fill="none" stroke="#CFF8FB"
+            stroke-width="2.5" opacity="0.55"/>
+  </g>
+</svg>
