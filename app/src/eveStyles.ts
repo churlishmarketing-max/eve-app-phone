@@ -66,9 +66,16 @@ export const CSS = `
    her at all times (his call, 2026-07-16). The plate and the input rail hold
    still; only the transcript between them moves. */
 .eve-screen.talk{ overflow:hidden; display:flex; flex-direction:column; padding-bottom:10px; }
-.talk .eyebrow, .talk .plate, .talk .chips, .talk .inrow, .talk .vrow{ flex-shrink:0; }
-.tscroll{ flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
-  margin:18px 0 2px;
+.talk .eyebrow, .talk .chips, .talk .inrow, .talk .footrow{ flex-shrink:0; }
+/* The plate is the one flexible block: as tall as the clamp allows, but it
+   YIELDS to the transcript's guaranteed minimum on short screens — her image
+   never squeezes the conversation to zero. */
+.talk .plate{ flex:0 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+.talk .plate .staterow{ flex-shrink:0; }
+/* basis 0, not auto: the transcript takes LEFTOVER space and scrolls its
+   content — a long conversation must never out-negotiate her plate. */
+.tscroll{ flex:1 1 0; min-height:96px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  margin:14px 0 2px;
   /* fade the conversation out under the plate instead of hard-cutting it */
   -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 16px);
   mask-image:linear-gradient(180deg,transparent 0,#000 16px); }
@@ -140,24 +147,59 @@ export const CSS = `
   color:var(--faint); margin-bottom:8px; }
 .twoup .v{ font-size:14px; line-height:1.45; color:var(--dim); }
 
-/* ---------- the plate (EVE / talk) ---------- */
+/* ---------- the plate (EVE / talk) — her portrait IS the plate ---------- */
 .plate{ position:relative; border:1px solid rgba(28,185,200,.16); border-radius:4px;
-  background:linear-gradient(180deg,rgba(12,20,23,.5),rgba(7,11,12,.2)); padding:8px; }
-.br{ position:absolute; width:14px; height:14px; pointer-events:none; }
+  background:linear-gradient(180deg,rgba(12,20,23,.5),rgba(7,11,12,.2)); padding:6px;
+  cursor:pointer; transition:border-color .4s ease, box-shadow .4s ease; }
+/* the frame carries her state now that the core is gone */
+.plate.m-listening{ border-color:rgba(28,185,200,.5); box-shadow:0 0 26px rgba(28,185,200,.2); }
+.plate.m-thinking{ border-color:rgba(28,185,200,.38); box-shadow:0 0 20px rgba(28,185,200,.12); }
+.plate.m-speaking{ border-color:rgba(28,185,200,.6); box-shadow:0 0 30px rgba(28,185,200,.24); }
+.plate.m-alert{ border-color:rgba(196,30,58,.55); box-shadow:0 0 26px rgba(196,30,58,.18); }
+.br{ position:absolute; width:14px; height:14px; pointer-events:none; z-index:2; }
 .br.tl{ top:-1px; left:-1px; border-top:1px solid #1CB9C8; border-left:1px solid #1CB9C8; }
 .br.tr{ top:-1px; right:-1px; border-top:1px solid #1CB9C8; border-right:1px solid #1CB9C8; }
 .br.bl{ bottom:-1px; left:-1px; border-bottom:1px solid #1CB9C8; border-left:1px solid #1CB9C8; }
 .br.brr{ bottom:-1px; right:-1px; border-bottom:1px solid #1CB9C8; border-right:1px solid #1CB9C8; }
-.portrait{ display:flex; justify-content:center; padding-top:8px; }
-.portrait img{ width:190px; height:132px; max-width:100%; object-fit:cover; object-position:50% 26%;
-  border-radius:8px; border:1px solid rgba(28,185,200,.2); display:block;
-  box-shadow:inset 0 0 34px rgba(0,122,135,.16); }
+/* hero portrait: fixed height (clamp, no aspect-ratio — Android WebView law),
+   full-bleed cover anchored to her face */
+.portrait.hero{ position:relative; width:100%; flex:1 1 auto;
+  height:clamp(300px, 44vh, 470px); min-height:210px; }
+.portrait.hero img{ position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:50% 16%;
+  border-radius:3px; border:1px solid rgba(28,185,200,.18); display:block;
+  box-shadow:inset 0 0 40px rgba(0,122,135,.14); }
 .portrait.alert img{ opacity:.55; }
+.corefall{ height:clamp(300px, 44vh, 470px); display:flex; align-items:center; justify-content:center; }
+/* Keyboard open (adjustResize shrinks the viewport): she compresses to a
+   strip instead of bleeding over the transcript; chips step aside so the
+   conversation and the input rail always survive. Placed AFTER the base
+   .portrait.hero rules — same specificity, so source order decides. */
+@media (max-height:640px){
+  .talk .eyebrow{ display:none; }
+  .talk .chips{ display:none; }
+  .portrait.hero, .corefall{ min-height:0; height:clamp(0px, 24vh, 220px); }
+  .tscroll{ min-height:72px; margin:10px 0 2px; }
+}
 .staterow{ display:flex; justify-content:space-between; align-items:center;
-  border-top:1px solid rgba(28,185,200,.14); margin:6px 6px 2px; padding:9px 2px 4px; }
-.statelab{ font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.22em; color:#1CB9C8; }
+  border-top:1px solid rgba(28,185,200,.14); margin:6px 4px 0; padding:9px 2px 4px; }
+.statelab{ font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.22em; color:#1CB9C8;
+  display:inline-flex; align-items:center; }
 .statelab.alert{ color:var(--red); }
 .statetag{ font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.16em; color:rgba(240,237,232,.35); }
+/* state ticks in the strip — the orb's job, miniaturized */
+.thinkdots{ display:inline-flex; gap:3px; margin-right:9px; }
+.thinkdots i{ width:4px; height:4px; border-radius:50%; background:#1CB9C8;
+  animation:evebreathe 1s ease-in-out infinite; }
+.thinkdots i:nth-child(2){ animation-delay:.18s; }
+.thinkdots i:nth-child(3){ animation-delay:.36s; }
+.minivox{ display:inline-flex; gap:2.5px; margin-right:9px; align-items:center; }
+.minivox i{ width:3px; height:11px; border-radius:1.5px; background:#1CB9C8;
+  animation:evewave .9s ease-in-out infinite; }
+.minivox i:nth-child(2){ animation-delay:.14s; }
+.minivox i:nth-child(3){ animation-delay:.28s; }
+.minivox i:nth-child(4){ animation-delay:.42s; }
+.minivox i:nth-child(5){ animation-delay:.56s; }
 
 /* ---------- the entity ---------- */
 .corezone{ position:relative; display:flex; align-items:center; justify-content:center; }

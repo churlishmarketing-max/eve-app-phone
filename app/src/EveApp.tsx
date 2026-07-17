@@ -83,9 +83,6 @@ const ALERT_SHADOW = "0 0 46px rgba(196,30,58,.55), 0 0 110px rgba(196,30,58,.28
 const CONV_KEY = "eve.conversationId";
 const WEAR_KEY = "eve.wearing";
 
-/* ---- the entity: rings, core, ripples, thinking arc, speaking bars ----
-   Sizes follow the design: compact when her portrait carries the plate,
-   full-size when the core IS the portrait. */
 // She writes markdown emphasis by instinct; raw asterisks on screen read as a
 // glitch. Render the inline set (bold/italic/code, header lines as bold) and
 // nothing heavier — escape first so nothing she says can inject markup.
@@ -98,12 +95,15 @@ function mdLite(s: string): string {
   return h;
 }
 
-function EveEntity({ mode, compact }: { mode: EveMode; compact: boolean }) {
+/* ---- the entity: rings, core, ripples, thinking arc, speaking bars ----
+   Lives on the boot screen and as the Talk plate's empty-closet fallback;
+   her portrait carries the plate everywhere else. */
+function EveEntity({ mode }: { mode: EveMode }) {
   const alert = mode === "alert";
-  const zone = compact ? 86 : 200;
-  const core = compact ? 48 : 116;
-  const rOut = compact ? 74 : 176;
-  const rIn = compact ? 60 : 144;
+  const zone = 200;
+  const core = 116;
+  const rOut = 176;
+  const rIn = 144;
   return (
     <div
       className={`corezone${alert ? " alert" : ""}`}
@@ -375,6 +375,9 @@ export default function EveApp() {
     const t = draft.trim();
     if (!t) return;
     setDraft("");
+    // setDraft doesn't fire onChange, so the grown height would stick after
+    // a multi-line send — collapse it by hand.
+    if (inputRef.current) inputRef.current.style.height = "auto";
     runMessage(t);
   };
 
@@ -754,26 +757,45 @@ export default function EveApp() {
         {/* ---------- EVE / TALK ---------- */}
         {tab === "eve" && (
           <div className="eve-screen talk">
-            <div className="eyebrow mono">§ FIG.01 — EVE CORE · LIVE PLATE</div>
+            <div className="eyebrow mono">§ FIG.01 — EVE · LIVE PLATE</div>
 
-            <div className="plate">
+            {/* Her worn look IS the plate now — the orb is gone (his call,
+                2026-07-17: "give place for her images to be fully seen").
+                State lives in the strip + the frame's glow; the core only
+                returns as a fallback when the closet hasn't loaded. */}
+            <div
+              className={`plate m-${mode}`}
+              role="button"
+              tabIndex={0}
+              aria-label="Open wardrobe"
+              onClick={() => setWardrobe(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setWardrobe(true);
+              }}
+            >
               <div className="br tl" />
               <div className="br tr" />
               <div className="br bl" />
               <div className="br brr" />
 
-              {/* Her worn look carries the plate; the core is the fallback
-                  and the speaking indicator (05 §5). */}
-              {wearing?.img && (
-                <div className={`portrait${mode === "alert" ? " alert" : ""}`}>
+              {wearing?.img ? (
+                <div className={`portrait hero${mode === "alert" ? " alert" : ""}`}>
                   <img src={wearing.img} alt={`EVE — ${wearing.name}`} />
+                </div>
+              ) : (
+                <div className="corefall">
+                  <EveEntity mode={mode} />
                 </div>
               )}
 
-              <EveEntity mode={mode} compact={!!wearing?.img} />
-
               <div className="staterow">
                 <span className={`statelab mono${mode === "alert" ? " alert" : ""}`}>
+                  {mode === "thinking" && (
+                    <span className="thinkdots"><i /><i /><i /></span>
+                  )}
+                  {mode === "speaking" && (
+                    <span className="minivox"><i /><i /><i /><i /><i /></span>
+                  )}
                   STATE · {STATE_LABEL[mode]}
                 </span>
                 <span className="statetag mono">
@@ -1292,7 +1314,7 @@ export default function EveApp() {
         {/* ---------- boot ---------- */}
         {!booted && (
           <div className={`boot${bootLeaving ? " boot-out" : ""}`}>
-            <EveEntity mode="idle" compact={false} />
+            <EveEntity mode="idle" />
             <div className="wm disp">EVE</div>
             <div className="ws mono">EXECUTIVE VOICE ENGINE · CHURLISH MEDIA</div>
             <button className="wakeb" onClick={wake}>
