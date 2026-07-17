@@ -57,3 +57,55 @@ export async function osTool(
     clearTimeout(deadline);
   }
 }
+
+// ---- ambient board snapshot (the "seamless OS" path) ----
+// The board question was her slowest turn: she had to emit an os_board tool
+// call, wait for the Railway→Vercel→Supabase round-trip, THEN answer — two LLM
+// turns and a network hop. Instead we keep a compact board line warm in the
+// background and drop it straight into every context pack, so "what's the
+// board" answers in ONE turn with zero round-trip. os_board stays available
+// for authoritative detail/action; this is the fast ambient read.
+
+let boardCache: { line: string; at: number } | null = null;
+let boardRefreshing = false;
+const BOARD_TTL_MS = 45_000;
+
+async function refreshBoard(): Promise<void> {
+  if (boardRefreshing || !ready()) return;
+  boardRefreshing = true;
+  try {
+    const raw = await osTool("get_board");
+    const j = JSON.parse(raw) as {
+      week?: string; goal?: number; collected?: number; signed_in_year?: number;
+      open_pipeline?: number; open_deals?: number; clients?: number;
+      coverage?: number | null; friday_five?: unknown;
+    };
+    const d = (n?: number) => `$${(n ?? 0).toLocaleString("en-US")}`;
+    const ff = j.friday_five && typeof j.friday_five === "object" ? "logged" : "not logged yet";
+    boardCache = {
+      at: Date.now(),
+      line:
+        `OS board (live snapshot, ${j.week ?? "this week"}): ${d(j.collected)} collected of ${d(j.goal)} goal · ` +
+        `${d(j.open_pipeline)} open pipeline across ${j.open_deals ?? 0} deals · ${j.clients ?? 0} clients · ` +
+        `Friday Five ${ff}. (For detail or to change anything, use os_board / os_command.)`,
+    };
+  } catch {
+    // leave the last good snapshot in place; never throw into the pack
+  } finally {
+    boardRefreshing = false;
+  }
+}
+
+// Instant: returns the cached board line (may be up to ~45s stale) and kicks a
+// non-blocking refresh when stale. Null until the first refresh lands — she can
+// still call os_board that once. Never blocks the caller.
+export function boardSnapshot(): string | null {
+  if (!ready()) return null;
+  if (!boardCache || Date.now() - boardCache.at > BOARD_TTL_MS) void refreshBoard();
+  return boardCache?.line ?? null;
+}
+
+// Warm the snapshot at boot so the very first board question is fast too.
+export async function warmBoard(): Promise<void> {
+  await refreshBoard();
+}

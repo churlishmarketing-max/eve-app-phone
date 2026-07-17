@@ -2,6 +2,7 @@ import { db } from "./db.js";
 import { searchMemory } from "./memory.js";
 import * as google from "./google.js";
 import { getWearing } from "./wardrobe.js";
+import { boardSnapshot } from "./os.js";
 
 // Context assembly (03 §4). Layers 1–2 (bible + doctrine) are static in the
 // system prompt; this builds layers 3–6 fresh per exchange: today snapshot,
@@ -145,6 +146,10 @@ export async function buildContextPack(
     nowLine(surface),
     ...wornLine(),
     ...snapshot,
+    // Ambient OS board — kept warm in the background (os.ts), injected instantly
+    // so board questions answer in one turn with no round-trip. Null → omitted
+    // (OS off, or the first snapshot hasn't landed; os_board covers that once).
+    ...(() => { const b = boardSnapshot(); return b ? [b] : []; })(),
     ...loops,
     ...turns,
   ];

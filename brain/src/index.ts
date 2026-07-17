@@ -23,6 +23,7 @@ import { runFloorCheck, runCloseout, runWeekPreview, fireTripwire, runRoutineRis
 import { tickRoutine, actOnAttention, type AttentionAction } from "./ops.js";
 import { transcribe, speakToResponse, listVoices, sttReady, ttsReady } from "./voice.js";
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
+import { warmBoard } from "./os.js";
 import { stamp, getStamp } from "./health.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -381,6 +382,9 @@ initFirebase();
 initDb();
 // Warm the closet cache + her worn look before the first request.
 void initWardrobe();
+// Warm the ambient OS board snapshot so the very first board question is fast
+// (also gives the Vercel /api/eve function an early hit toward staying warm).
+void warmBoard();
 
 app.listen(PORT, () => {
   console.log(`EVE brain listening on :${PORT}`);
