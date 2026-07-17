@@ -111,6 +111,43 @@ export async function warmBoard(): Promise<void> {
   await refreshBoard();
 }
 
+// ---- the fleet roster (shared source of truth) ----
+// EVE reads the SAME fleet_roster table the OS dashboard shows and the
+// second-brain skill syncs to — so she, the OS, and the manifest never drift.
+// Read straight from the Churlish Supabase (creds already in .env), cached 5min.
+export interface FleetUnit {
+  division: string;
+  key: string;
+  name: string;
+  alias: string;
+  job: string;
+  triggers: string;
+  schedule: string | null;
+  loc: string;
+}
+
+let fleetCache: { units: FleetUnit[]; at: number } | null = null;
+const FLEET_TTL_MS = 5 * 60_000;
+
+export async function fleetRoster(): Promise<FleetUnit[]> {
+  if (fleetCache && Date.now() - fleetCache.at < FLEET_TTL_MS) return fleetCache.units;
+  const url = process.env.CHURLISH_SUPABASE_URL?.trim();
+  const key = process.env.CHURLISH_SUPABASE_KEY?.trim();
+  if (!url || !key) return fleetCache?.units ?? [];
+  try {
+    const r = await fetch(
+      `${url}/rest/v1/fleet_roster?select=division,key,name,alias,job,triggers,schedule,loc&order=division,sort`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+    );
+    if (!r.ok) return fleetCache?.units ?? [];
+    const units = (await r.json()) as FleetUnit[];
+    if (Array.isArray(units) && units.length) fleetCache = { units, at: Date.now() };
+    return fleetCache?.units ?? [];
+  } catch {
+    return fleetCache?.units ?? [];
+  }
+}
+
 // Cheap read (no refresh trigger) — lets /health confirm the ambient build is
 // live and the snapshot has landed, so latency measurements target the right
 // build rather than racing a deploy.

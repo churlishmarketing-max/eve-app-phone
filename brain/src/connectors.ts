@@ -57,6 +57,7 @@ export const connectorToolNames = [
   "mcp__eve_hands__send_sms",
   "mcp__eve_hands__os_board",
   "mcp__eve_hands__os_clients",
+  "mcp__eve_hands__fleet_roster",
   "mcp__eve_hands__os_command",
   "mcp__eve_hands__os_draft_proposal",
   "mcp__eve_hands__os_draft_email",
@@ -302,6 +303,37 @@ export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
           } catch (e) {
             return text(os.explainError(e), true);
           }
+        },
+        { annotations: { readOnlyHint: true } },
+      ),
+      tool(
+        "fleet_roster",
+        "The Churlish fleet — every agent, war room, engine, and system in the operation, the SAME " +
+          "roster the OS dashboard shows. Use it to route King ('who handles renewal risk?' → Guardian) " +
+          "or to name what a unit does. Optionally filter by a word (a name, a job, a division like " +
+          "'war-rooms' or 'production'). You can DISPATCH a few of these as live workers here " +
+          "(dispatch_fleet: research / justice-league / jsa / suicide-squad); the rest run in King's " +
+          "workspace or the OS — for those, tell him the unit and its trigger phrase. GREEN — read-only.",
+        { filter: z.string().optional().describe("Optional: a name, job word, or division to narrow the list") },
+        async ({ filter }) => {
+          const units = await os.fleetRoster();
+          if (!units.length) return text("Fleet roster unreachable right now (OS roster store).", true);
+          const q = (filter ?? "").trim().toLowerCase();
+          const rows = q
+            ? units.filter((u) =>
+                [u.name, u.alias, u.job, u.triggers, u.division].some((f) => (f ?? "").toLowerCase().includes(q)),
+              )
+            : units;
+          if (!rows.length) return text(`No fleet unit matches "${filter}". ${units.length} units on the roster.`);
+          const byDiv = new Map<string, typeof rows>();
+          for (const u of rows) byDiv.set(u.division, [...(byDiv.get(u.division) ?? []), u]);
+          const out = [...byDiv.entries()]
+            .map(([div, us]) =>
+              `— ${div.toUpperCase()} —\n` +
+              us.map((u) => `  ${u.name} (${u.alias}) [${u.loc}${u.schedule ? " · " + u.schedule : ""}] — ${u.job}${u.triggers ? `  ·  trigger: ${u.triggers}` : ""}`).join("\n"),
+            )
+            .join("\n");
+          return text(`Fleet — ${rows.length}${q ? ` of ${units.length}` : ""} unit(s):\n${out}`);
         },
         { annotations: { readOnlyHint: true } },
       ),
