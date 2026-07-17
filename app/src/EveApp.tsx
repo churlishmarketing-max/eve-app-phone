@@ -47,33 +47,22 @@ type Look = { id: string; name: string; img?: string; status: string };
 type Msg = { id: string; role: "eve" | "user"; text: string };
 
 // Quick prompts seed a REAL message to the brain — never a canned reply.
-const CHIPS = ["plan my week", "draft me an email", "what's slipping?", "stress-test a decision"];
+// Every one of these lands on a live capability (fleet, OS, pulse, doctrine).
+const CHIPS = ["Run my day", "What's on the board?", "Who's gone quiet?", "What's slipping?"];
 
-const STATE_LABEL: Record<EveMode, string> = {
-  idle: "HERE — LISTENING FOR YOU",
-  listening: "LISTENING",
-  thinking: "THINKING",
-  speaking: "SPEAKING",
-  alert: "TRIPWIRE — ATTENTION",
+// Entity presence meta, straight from his v6 design (dot glyph, label, colors).
+const ENT: Record<EveMode, { dot: string; label: string; col: string; aura: string }> = {
+  idle: { dot: "○", label: "IDLE — HOLDING THE ROOM", col: "rgba(28,185,200,.8)", aura: "rgba(0,122,135,.3)" },
+  listening: { dot: "●", label: "LISTENING — GO AHEAD", col: "#1CB9C8", aura: "rgba(28,185,200,.34)" },
+  thinking: { dot: "◐", label: "WORKING THE PROBLEM", col: "#9BEFF7", aura: "rgba(0,122,135,.32)" },
+  speaking: { dot: "●", label: "SPEAKING", col: "#1CB9C8", aura: "rgba(28,185,200,.36)" },
+  alert: { dot: "▲", label: "ALERT — NEEDS YOUR EYES", col: "#C41E3A", aura: "rgba(196,30,58,.32)" },
 };
-const FOLIO: Record<Tab, string> = {
-  today: "N°01 / 04",
-  eve: "N°02 / 04",
-  ops: "N°03 / 04",
-  wire: "N°04 / 04",
-};
-const STATUS_LINE: Record<Tab, string> = {
-  today: "watching the floor",
-  eve: "right here",
-  ops: "running the fleet",
-  wire: "wires checked, honestly",
-};
-// The wire reads in her language, not the connector registry's.
-const WIRE_NAME: Record<string, string> = {
-  deepgram: "Deepgram — her ears",
-  elevenlabs: "ElevenLabs Voice",
-};
-const HORIZON = ["Meta Ads — later", "Even G2 Glasses — ph.5"];
+const ORB_BG = "radial-gradient(circle at 34% 30%, #C9F7FB 0%, #1CB9C8 30%, #007A87 58%, #06272C 100%)";
+const ORB_BG_RED = "radial-gradient(circle at 34% 30%, #F7C9D2 0%, #E0526E 30%, #C41E3A 58%, #2C060D 100%)";
+const ORB_GLOW = "0 0 36px rgba(28,185,200,.5), 0 0 90px rgba(0,122,135,.35), inset 0 0 20px rgba(201,247,251,.35)";
+const ORB_GLOW_RED = "0 0 36px rgba(196,30,58,.5), 0 0 90px rgba(196,30,58,.3), inset 0 0 20px rgba(247,201,210,.35)";
+const APP_VERSION = "0.6.0";
 
 const CORE_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.85), #1CB9C8 40%, #063A42 80%)";
 const ALERT_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.9), #C41E3A 42%, #4A0E1A 78%)";
@@ -138,22 +127,6 @@ function EveEntity({ mode }: { mode: EveMode }) {
   );
 }
 
-const IconCheck = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#1CB9C8" strokeWidth="2" strokeLinecap="round">
-    <path d="M3 8.5l3.5 3.5L13 4.5" />
-  </svg>
-);
-const IconPause = () => (
-  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="rgba(240,237,232,.6)" strokeWidth="2" strokeLinecap="round">
-    <path d="M5 3v8M9 3v8" />
-  </svg>
-);
-const IconX = () => (
-  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="rgba(240,237,232,.6)" strokeWidth="2" strokeLinecap="round">
-    <path d="M3 3l8 8M11 3l-8 8" />
-  </svg>
-);
-
 export default function EveApp() {
   const [booted, setBooted] = useState(false);
   const [bootLeaving, setBootLeaving] = useState(false);
@@ -178,6 +151,23 @@ export default function EveApp() {
   // Her senses (Phase 4, 05 §7): live enabled state for the Wire row.
   const [smsSense, setSmsSense] = useState(false);
   const [notifSense, setNotifSense] = useState(false);
+  // CORE vs PORTRAIT presence (his v6 wardrobe toggle). null = auto: portrait
+  // the moment a worn look exists, core while the closet is empty.
+  const [plateMode, setPlateMode] = useState<"core" | "portrait" | null>(
+    () => (localStorage.getItem("eve.plateMode") as "core" | "portrait" | null) ?? null,
+  );
+  const pickPlateMode = (m: "core" | "portrait") => {
+    localStorage.setItem("eve.plateMode", m);
+    setPlateMode(m);
+  };
+  // Presence-check pills (wardrobe sheet): preview a state, revert after 3.6s.
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewState = (st: EveMode) => {
+    if (busy.current || recording) return; // never fight a live turn
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    setMode(st);
+    if (st !== "idle") previewTimer.current = setTimeout(() => setMode("idle"), 3600);
+  };
 
   const convId = useRef<string | null>(localStorage.getItem(CONV_KEY));
   const busy = useRef(false);
@@ -520,20 +510,21 @@ export default function EveApp() {
     );
   };
 
-  // ---- live clock / date eyebrow ----
-  const clockStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  const dow = now.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-  const md = now.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase();
+  // ---- clock / date (v6 status bar format: 14:07 · THU 17 JUL) ----
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const clockStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const dateStr = `${now.toLocaleDateString("en-GB", { weekday: "short" }).toUpperCase()} ${pad(now.getDate())} ${now.toLocaleDateString("en-GB", { month: "short" }).toUpperCase()}`;
   const weekNo = Math.ceil(
     ((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000 +
       new Date(now.getFullYear(), 0, 1).getDay() +
       1) /
       7,
   );
-  const greeting = now.getHours() < 12 ? "Morning" : now.getHours() < 18 ? "Afternoon" : "Evening";
-  const statusLine = live.online ? STATUS_LINE[tab] : "brain unreachable";
+  const greeting =
+    (now.getHours() < 5 ? "Late shift, " : now.getHours() < 12 ? "Morning, " : now.getHours() < 18 ? "Afternoon, " : "Evening, ") +
+    "Brandon.";
 
-  // ---- ops slicing + folio numbering (sections are data-driven) ----
+  // ---- ops slicing ----
   const pendings = live.online ? live.pendingConfirms ?? [] : [];
   const attention = live.online ? live.attentionItems ?? [] : [];
   const tripwires = attention.filter((a) => a.kind === "tripwire");
@@ -541,775 +532,768 @@ export default function EveApp() {
   const quietCount = (live.clients ?? []).filter(
     (c) => c.days_quiet !== null && c.days_quiet > c.cadence_days,
   ).length;
-  let opsN = 0;
-  const fConfirm = pendings.length ? String(++opsN).padStart(2, "0") : "";
-  const fJobs = String(++opsN).padStart(2, "0");
-  const fInbox = String(++opsN).padStart(2, "0");
-  const fPulse = String(++opsN).padStart(2, "0");
-  const fTrip = tripwires.length ? String(++opsN).padStart(2, "0") : "";
+  const jobCode = (agent: string) =>
+    ({ eve: "EV", research: "RS", jsa: "JS", "justice-league": "JL", "suicide-squad": "SQ" })[agent] ??
+    agent.slice(0, 2).toUpperCase();
+  const aGlyph = (kind: string) =>
+    kind === "silent_client" ? "@" : kind === "approval" ? "▸" : kind === "inbox" ? "+" : "•";
 
-  // ---- wire grouping: honest status, only what's wired reads LIVE ----
-  const wireItems = [
-    { name: "EVE Brain", connected: live.online },
-    { name: "Supabase — her memory", connected: live.online },
-    ...(live.connectors ?? []).map((c) => ({
-      name: WIRE_NAME[c.key] ?? c.name,
-      connected: c.connected,
-    })),
+  // ---- wire nodes (honest status; only what's wired reads LIVE) ----
+  const conn = (k: string) => !!live.connectors?.find((c) => c.key === k)?.connected;
+  type WNode = { code: string; name: string; role: string; st: "live" | "key" | "off" | "p4" };
+  const wireNodes: WNode[] = [
+    { code: "EV", name: "EVE Brain", role: "reasoning core", st: live.online ? "live" : "off" },
+    { code: "SB", name: "Supabase", role: "memory · ledgers", st: live.online ? "live" : "off" },
+    { code: "GM", name: "Gmail", role: "read · draft · send", st: conn("gmail") ? "live" : "key" },
+    { code: "CL", name: "Calendar", role: "clocks · windows", st: conn("gcal") ? "live" : "key" },
+    { code: "OS", name: "Churlish OS", role: "board · pennyworth", st: conn("churlish_os") ? "live" : "key" },
+    { code: "DG", name: "Deepgram", role: "her ears", st: conn("deepgram") ? "live" : "key" },
+    { code: "11", name: "ElevenLabs", role: "her voice", st: conn("elevenlabs") ? "live" : "key" },
+    { code: "FL", name: "EVE Fleet", role: "research · tribunals", st: live.online ? "live" : "off" },
+    { code: "WB", name: "Live Web", role: "search · sources", st: live.online ? "live" : "off" },
+    { code: "NO", name: "Notion", role: "playbooks · docs", st: conn("notion") ? "live" : "key" },
+    { code: "SL", name: "Slack", role: "team wire", st: conn("slack") ? "live" : "key" },
+    { code: "ST", name: "Stripe", role: "money in", st: conn("stripe") ? "live" : "key" },
+    { code: "G2", name: "G2 Glasses", role: "her eyes · someday", st: "p4" },
   ];
-  const liveWire = wireItems.filter((i) => i.connected);
-  const coldWire = wireItems.filter((i) => !i.connected);
-  const sttOn = !!live.connectors?.find((c) => c.key === "deepgram")?.connected;
-  const ttsOn = !!live.connectors?.find((c) => c.key === "elevenlabs")?.connected;
+  const liveNodeCount = wireNodes.filter((w) => w.st === "live").length;
+  const sttOn = conn("deepgram");
+  const ttsOn = conn("elevenlabs");
 
-  const wireGroups: { label: string; color: string; items: string[] }[] = [
-    ...(liveWire.length ? [{ label: "LIVE", color: "#1CB9C8", items: liveWire.map((i) => i.name) }] : []),
-    ...(coldWire.length
-      ? [
-          {
-            label: live.online ? "KEY NEEDED" : "UNREACHABLE",
-            color: "rgba(240,237,232,.7)",
-            items: coldWire.map((i) => i.name),
-          },
-        ]
-      : []),
-    { label: "ON THE HORIZON", color: "rgba(240,237,232,.4)", items: HORIZON },
-  ];
+  // Portrait vs core: his sheet toggle wins; otherwise her worn look decides.
+  const showPortrait = (plateMode ?? (wearing ? "portrait" : "core")) === "portrait" && !!wearing?.img;
+  const ent = ENT[mode];
+  const red = mode === "alert";
+  const voiceLine = recording
+    ? "LISTENING —\nTAP TO SEND"
+    : micNote
+      ? "EARS NEED\nTHE KEY"
+      : mode === "thinking"
+        ? "PARSING…"
+        : mode === "speaking"
+          ? "SYNTHESISING"
+          : `${sttOn ? "DEEPGRAM ● LIVE" : "EARS — KEY NEEDED"}\n${ttsOn ? "VOICE: LARA" : "VOICE — KEY NEEDED"}`;
+
+  const orbEl = (
+    <div className="ezone">
+      <div className="eaura" style={{ background: `radial-gradient(closest-side, ${ent.aura}, transparent 70%)` }} />
+      {mode === "listening" && (
+        <>
+          <span className="erip" />
+          <span className="erip r2" />
+          <span className="erip r3" />
+        </>
+      )}
+      <div className="ering"><div style={red ? { borderColor: "rgba(196,30,58,.55)", borderBottomColor: "transparent" } : undefined} /></div>
+      <div className="ering2"><div style={red ? { borderColor: "rgba(196,30,58,.4)", borderTopColor: "transparent" } : undefined} /></div>
+      <div className={`efast${mode === "thinking" ? " on" : ""}`}><div /></div>
+      <button
+        className="orb"
+        aria-label="EVE core — open wardrobe"
+        onClick={() => setWardrobe(true)}
+        style={{ background: red ? ORB_BG_RED : ORB_BG, boxShadow: red ? ORB_GLOW_RED : ORB_GLOW }}
+      />
+      {mode === "speaking" && (
+        <div className="ewave"><span /><span /><span /><span /><span /></div>
+      )}
+    </div>
+  );
+
+  const portraitEl = wearing?.img && (
+    <div className="pwrap">
+      <div className="eaura" style={{ background: `radial-gradient(closest-side, ${ent.aura}, transparent 70%)` }} />
+      <button className="pcard" aria-label="Open wardrobe" onClick={() => setWardrobe(true)}>
+        <span className="pc tl" /><span className="pc tr" /><span className="pc bl" /><span className="pc br" />
+        <span className={`pfr${red ? " alert" : ""}`}>
+          <img src={wearing.img} alt={`EVE — ${wearing.name}`} />
+          <span className="sheen" />
+        </span>
+      </button>
+      <div className="pbadge">
+        <span className="wm">EVE</span>
+        <span className="dv" />
+        <span className="sb">{wearing.name.toUpperCase()}</span>
+        <span
+          className="morb"
+          style={{ background: red ? ORB_BG_RED : ORB_BG, boxShadow: red ? "0 0 12px rgba(196,30,58,.6)" : "0 0 12px rgba(28,185,200,.6)" }}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className="eve-root">
       <style>{CSS}</style>
       <div className="eve-frame">
-        <div className="eve-glow" />
-
-        {/* ---------- header ---------- */}
-        <div className="eve-head">
-          <span className="eve-dot" />
-          <span className="eve-wm disp">EVE</span>
-          <span className="eve-sub mono">
-            EXECUTIVE
-            <br />
-            VOICE ENGINE
-          </span>
-          <span className="eve-rule" />
-          <span className="eve-folio mono">{FOLIO[tab]}</span>
+        <div className="aura" />
+        <div className="motes" aria-hidden>
+          <span style={{ left: "14%", top: "78%", width: 2, height: 2, animation: "floatup 13s linear 0s infinite" }} />
+          <span style={{ left: "30%", top: "88%", width: 3, height: 3, opacity: .6, animation: "floatup 17s linear 3s infinite" }} />
+          <span style={{ left: "48%", top: "82%", width: 2, height: 2, background: "rgba(155,239,247,.45)", animation: "floatup 11s linear 6s infinite" }} />
+          <span style={{ left: "63%", top: "90%", width: 2, height: 2, animation: "floatup 15s linear 1.5s infinite" }} />
+          <span style={{ left: "78%", top: "80%", width: 3, height: 3, opacity: .5, animation: "floatup 19s linear 8s infinite" }} />
+          <span style={{ left: "88%", top: "86%", width: 2, height: 2, background: "rgba(155,239,247,.35)", animation: "floatup 14s linear 4.5s infinite" }} />
         </div>
 
-        {/* ---------- TODAY ---------- */}
-        {tab === "today" && (
-          <div className="eve-screen">
-            <div className="eyebrow mono">
-              {dow} · {md} · {clockStr} · WK {weekNo} · OMAHA · {statusLine.toUpperCase()}
-            </div>
-            <h1 className="h1 disp">
-              {greeting},
-              <br />
-              Brandon.
-            </h1>
-            <p className="lede">
-              {live.online && live.latestBrief?.text
-                ? live.latestBrief.text
-                : live.online
-                  ? "No brief on the board yet. Run her day below, or just tell her what matters — she'll set the three."
-                  : "Her brain is unreachable, so this screen is a shell. Everything below fills in the moment she answers."}
-            </p>
+        {/* ---------- status bar ---------- */}
+        <div className="sbar">
+          <span>{clockStr} · {dateStr}</span>
+          <span className="r">
+            <span>EVE//OS {APP_VERSION}</span>
+            <span className={`lnk${live.online ? "" : " down"}`}>●</span>
+            <span className={`lnklab${live.online ? "" : " down"}`}>{live.online ? "LINK" : "DOWN"}</span>
+          </span>
+        </div>
 
-            {/* 01 — the floor */}
-            <section className="sec first">
-              <span className="ghost disp">01</span>
-              <div className="seclab mono">§ THE FLOOR — SALES CONVERSATIONS</div>
-              <div className="floorrow">
-                <span className="floornum disp">
-                  {live.floor?.count ?? 0}
-                  <em>/{live.floor?.goal ?? 3}</em>
-                </span>
-                <span className="floorcap">
-                  conversations
-                  <br />
-                  booked this week
-                </span>
+        <div className="zone">
+          {/* ---------- TODAY ---------- */}
+          {tab === "today" && (
+            <div className="scr">
+              <div className="eyeb mono">
+                <span>▸ EVE//BRIEF — {dateStr} · WK {weekNo}</span>
+                <span className="r">REFRESHED {clockStr}</span>
               </div>
-              <div className="bars">
-                {Array.from({ length: live.floor?.goal ?? 3 }).map((_, i) => (
-                  <span key={i} className={(live.floor?.count ?? 0) > i ? "on" : ""} />
-                ))}
-              </div>
-              <div className="floorfoot">
-                {live.online
-                  ? "Real conversations logged this week — calls and meetings, not drafts."
-                  : "Offline — the count lands when her brain answers."}
-              </div>
-            </section>
+              <h1 className="h1v6 disp">{greeting}</h1>
+              <p className="ledev6">
+                {live.online && live.latestBrief?.text
+                  ? live.latestBrief.text
+                  : live.online
+                    ? "No brief on the board yet. Run her day below, or just tell her what matters."
+                    : "Her brain is unreachable, so this screen is a shell. It fills in the moment she answers."}
+              </p>
 
-            {/* 02 — today's three */}
-            <section className="sec">
-              <span className="ghost disp">02</span>
-              <div className="seclab mono">§ TODAY'S THREE</div>
-              <div className="three">
+              {/* sales floor */}
+              <div className="card" style={{ marginTop: 22 }}>
+                <div className="eyeb mono" style={{ fontSize: 9 }}>
+                  <span>SALES FLOOR — WEEK {weekNo}</span>
+                  <span className="r">FLOOR: {live.floor?.goal ?? 3} / WK</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 10 }}>
+                  <span className="floorbig disp">
+                    {live.floor?.count ?? 0}
+                    <em>/{live.floor?.goal ?? 3}</em>
+                  </span>
+                  <span style={{ fontSize: 13, color: "rgba(240,237,232,.55)" }}>conversations on the floor</span>
+                </div>
+                <div className="fbars">
+                  {Array.from({ length: live.floor?.goal ?? 3 }).map((_, i) => (
+                    <span key={i} className={(live.floor?.count ?? 0) > i ? "on" : ""} />
+                  ))}
+                </div>
+                <div className="mline">
+                  {live.online
+                    ? `> ${Math.max(0, (live.floor?.goal ?? 3) - (live.floor?.count ?? 0))} to go — real conversations, not drafts.`
+                    : "> offline — the count lands when her brain answers."}
+                </div>
+              </div>
+
+              {/* today's three */}
+              <div className="divrow">
+                <span className="l">TODAY'S THREE</span>
+                <span className="rule" />
+                <span className="r">{live.todaysThree?.length ? "SHE SET THE ORDER" : ""}</span>
+              </div>
+              <div className="t3">
                 {live.todaysThree?.length ? (
                   live.todaysThree.map((t) => {
                     const due = !!t.due_at && new Date(t.due_at).getTime() < now.getTime();
                     return (
-                      <div className="item" key={t.id}>
-                        <span className={`n mono${due ? " due" : ""}`}>
-                          {String(t.priority).padStart(2, "0")}
+                      <div className={`t3row${due ? " due" : ""}`} key={t.id}>
+                        <span className="idx mono">{String(t.priority).padStart(2, "0")}</span>
+                        <span style={{ flex: 1 }}>
+                          <span className="tt">{t.title}</span>
+                          {t.detail && <span className="tm" style={{ display: "block" }}>{t.detail.toUpperCase()}</span>}
                         </span>
-                        <div>
-                          <div className="t">{t.title}</div>
-                          {t.detail && <div className="m">{t.detail}</div>}
-                        </div>
                       </div>
                     );
                   })
                 ) : (
-                  <div className="item">
-                    <span className="n mono">—</span>
-                    <div>
-                      <div className="t">{live.online ? "Nothing set yet" : "Waiting on her brain"}</div>
-                      <div className="m">
-                        {live.online
-                          ? "tell her what matters today, or capture it — she'll slot it"
-                          : "the three arrive with the next successful poll"}
-                      </div>
-                    </div>
+                  <div className="t3row">
+                    <span className="idx mono">—</span>
+                    <span style={{ flex: 1 }}>
+                      <span className="tt">{live.online ? "Nothing set yet" : "Waiting on her brain"}</span>
+                      <span className="tm" style={{ display: "block" }}>
+                        {live.online ? "TELL HER WHAT MATTERS — SHE'LL SLOT IT" : "ARRIVES WITH THE NEXT POLL"}
+                      </span>
+                    </span>
                   </div>
                 )}
               </div>
-            </section>
 
-            {/* 03 — run her day (a REAL job, not a preview) */}
-            <section className="sec">
-              <span className="ghost disp">03</span>
-              <div className="seclab mono">§ RUN HER DAY</div>
-              <div className="playrow">
-                <button
-                  className="play"
-                  onClick={runHerDay}
-                  disabled={jobBusy || !live.online}
-                  aria-label="Run her morning brief now"
-                >
-                  <span className="playtri" />
-                </button>
-                <div className="playtxt">
-                  Morning brief → midday nudge → tripwire → close-out. She runs the cadence on
-                  her own clock.
-                  <br />
-                  <span style={{ fontStyle: "italic", color: "rgba(28,185,200,.75)" }}>
-                    {jobBusy
-                      ? "she's writing it now…"
-                      : jobNote
-                        ? jobNote.toLowerCase()
-                        : live.online
-                          ? "this fires the real brief now"
-                          : "needs her brain — currently unreachable"}
-                  </span>
+              {/* run her day — the REAL morning brief, not a scripted preview */}
+              <div className="card" style={{ marginTop: 22, borderColor: "rgba(28,185,200,.14)" }}>
+                <div className="simhead">
+                  <button className="simplay" onClick={runHerDay} disabled={jobBusy || !live.online} aria-label="Run her morning brief now">
+                    <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: "#9BEFF7" }}><path d="M8 5.5l11 6.5-11 6.5z" /></svg>
+                  </button>
+                  <div style={{ flex: 1 }}>
+                    <div className="simtt disp">Run EVE's day</div>
+                    <div className="simsub">Fires her real morning brief, right now, on live data.</div>
+                  </div>
+                  <span className="simtag mono">LIVE // BRIEF</span>
+                </div>
+                <div className="simbar">
+                  <div className={`simfill${jobBusy ? " run" : ""}`} style={{ width: jobBusy ? undefined : jobNote ? "100%" : "0%" }} />
+                </div>
+                <div className="simline mono">
+                  {jobBusy ? (
+                    <>
+                      {"> she's writing it now"}
+                      <span className="c">▌</span>
+                    </>
+                  ) : jobNote ? (
+                    `> ${jobNote.toLowerCase()}`
+                  ) : live.online ? (
+                    "> press play. she writes. you drink your coffee."
+                  ) : (
+                    "> needs her brain — currently unreachable."
+                  )}
                 </div>
               </div>
-            </section>
 
-            {/* 04 — capture */}
-            <section className="sec">
-              <span className="ghost disp">04</span>
-              <div className="seclab mono">§ CAPTURE — ANY DOOR IN</div>
-              <p className="secnote" style={{ fontSize: 15 }}>
-                Speak it, type it, forward it. I date it, file it to the right client, keep the
-                source thread. <b>The inbox exists to be emptied.</b>
-              </p>
-            </section>
+              {/* capture */}
+              <div className="card" style={{ marginTop: 22 }}>
+                <div className="mono" style={{ fontSize: 9, letterSpacing: ".22em", color: "rgba(28,185,200,.85)" }}>
+                  CAPTURE — ANY DOOR IN
+                </div>
+                <div
+                  className="capbox"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setTab("eve")}
+                  onKeyDown={(e) => { if (e.key === "Enter") setTab("eve"); }}
+                >
+                  <span className="ph mono">&gt; brief me — say it, type it, forward it.</span>
+                  <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: "none", stroke: "rgba(28,185,200,.8)", strokeWidth: 1.6, strokeLinecap: "round" }}>
+                    <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" /><path d="M12 18v3" />
+                  </svg>
+                </div>
+                <div className="caphint mono">SPEAK · TYPE · FORWARD — SHE FILES, YOU FORGET.</div>
+              </div>
 
-            {/* 05 — live minis */}
-            <section className="sec last">
-              <div className="twoup">
-                <div className="col">
+              {/* live minis */}
+              <div className="minis">
+                <div className="mini">
                   <div className="k mono">ROUTINES</div>
-                  <div className="v">
+                  <div className="n disp">{live.routines?.length ?? 0}</div>
+                  <div className="s mono">
                     {live.routines?.length
-                      ? live.routines.slice(0, 3).map((r) => (
-                          <div key={r.id}>
-                            {r.name} — {r.streak}d streak
-                          </div>
-                        ))
+                      ? `best streak ${Math.max(...live.routines.map((r) => r.streak))}d`
                       : live.online
                         ? "none tracked yet"
                         : "—"}
                   </div>
-                </div>
-                <div className="div" />
-                <div className="col">
-                  <div className="k mono">CLIENT PULSE</div>
-                  <div className="v">
-                    {live.online ? (
-                      <>
-                        {live.clients?.length ?? 0} on the roster
-                        <br />
-                        {quietCount} past cadence
-                      </>
-                    ) : (
-                      "—"
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* ---------- EVE / TALK ---------- */}
-        {tab === "eve" && (
-          <div className="eve-screen talk">
-            <div className="eyebrow mono">§ FIG.01 — EVE · LIVE PLATE</div>
-
-            {/* Her worn look IS the plate now — the orb is gone (his call,
-                2026-07-17: "give place for her images to be fully seen").
-                State lives in the strip + the frame's glow; the core only
-                returns as a fallback when the closet hasn't loaded. */}
-            <div
-              className={`plate m-${mode}`}
-              role="button"
-              tabIndex={0}
-              aria-label="Open wardrobe"
-              onClick={() => setWardrobe(true)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") setWardrobe(true);
-              }}
-            >
-              <div className="br tl" />
-              <div className="br tr" />
-              <div className="br bl" />
-              <div className="br brr" />
-
-              {wearing?.img ? (
-                <div className={`portrait hero${mode === "alert" ? " alert" : ""}`}>
-                  <img src={wearing.img} alt={`EVE — ${wearing.name}`} />
-                </div>
-              ) : (
-                <div className="corefall">
-                  <EveEntity mode={mode} />
-                </div>
-              )}
-
-              <div className="staterow">
-                <span className={`statelab mono${mode === "alert" ? " alert" : ""}`}>
-                  {mode === "thinking" && (
-                    <span className="thinkdots"><i /><i /><i /></span>
-                  )}
-                  {mode === "speaking" && (
-                    <span className="minivox"><i /><i /><i /><i /><i /></span>
-                  )}
-                  STATE · {STATE_LABEL[mode]}
-                </span>
-                <span className="statetag mono">
-                  {toolNote
-                    ? `· ${toolNote.replace(/_/g, " ").toUpperCase()}`
-                    : live.online
-                      ? "BRAIN LIVE"
-                      : "BRAIN UNREACHABLE"}
-                </span>
-              </div>
-            </div>
-
-            {/* messages — typographic, never bubbles */}
-            {/* The only scroller on this screen — her plate stays put above it. */}
-            <div className="tscroll" ref={scrollRef}>
-            <div className="msgs">
-              {messages.length === 0 && (
-                <div>
-                  <div className="evelab mono">EVE —</div>
-                  <div className="evetext" style={{ color: "rgba(240,237,232,.45)" }}>
-                    Type below or pick a prompt. Every line she says is written live — real
-                    replies, real memory across this conversation.
-                  </div>
-                </div>
-              )}
-              {messages.map((m) =>
-                m.role === "eve" ? (
-                  <div key={m.id}>
-                    <div className="evelab mono">EVE —</div>
-                    {m.text ? (
-                      <div className="evetext" dangerouslySetInnerHTML={{ __html: mdLite(m.text) }} />
-                    ) : (
-                      <div className="evetext">{mode === "thinking" ? "…" : ""}</div>
-                    )}
-                  </div>
-                ) : (
-                  <div key={m.id}>
-                    <div className="youwrap">
-                      <div className="youlab mono">YOU —</div>
-                      <div className="youtext">{m.text}</div>
-                    </div>
-                  </div>
-                ),
-              )}
-              {errNote && <div className="errline mono">CONNECTION: {errNote}</div>}
-
-              {/* RED-tier confirm cards (02 §6): exact payload + approve round-trip */}
-              {confirms.map((c) => (
-                <div className="confirm" key={c.id}>
-                  <div className="hd mono">
-                    RED TIER · {c.kind.replace(/_/g, " ").toUpperCase()} · NOTHING SENDS WITHOUT YOU
-                  </div>
-                  <div className="sum">{c.summary}</div>
-                  {Object.entries(c.payload).map(([k, v]) => (
-                    <div className="field" key={k}>
-                      <b>{k.toUpperCase()}</b>
-                      {String(v).slice(0, 240)}
-                    </div>
+                  {live.routines?.slice(0, 1).map((r) => (
+                    <div className="x mono" key={r.id}>{r.name} — {r.streak}d</div>
                   ))}
-                  {confirmNote[c.id] ? (
-                    <div className={`cnote mono${confirmNote[c.id].startsWith("SENT") ? " ok" : ""}`}>
-                      {confirmNote[c.id]}
+                </div>
+                <div className="mini">
+                  <div className="k mono">CLIENT PULSE</div>
+                  <div className="n disp">
+                    {live.clients?.length ?? 0}
+                    <em> roster</em>
+                  </div>
+                  <div className="s mono">{live.online ? `${quietCount} past cadence` : "—"}</div>
+                  <div className="x mono">{quietCount > 0 ? "she has updates drafted" : "all inside the window"}</div>
+                </div>
+              </div>
+
+              <div className="footnote mono">up since 05:30 so you didn't have to be.</div>
+            </div>
+          )}
+
+          {/* ---------- EVE / TALK ---------- */}
+          {tab === "eve" && (
+            <div className="scr talk">
+              <div className="ehead">
+                <div className="etag mono">EVE // EXECUTIVE VOICE ENGINE</div>
+                {showPortrait ? portraitEl : orbEl}
+                <div className="elabel mono" style={{ color: ent.col }}>
+                  {ent.dot} {ent.label}
+                  {toolNote ? ` · ${toolNote.replace(/_/g, " ").toUpperCase()}` : ""}
+                </div>
+              </div>
+
+              <div className="conv" ref={scrollRef}>
+                {messages.length === 0 && (
+                  <div className="brow eve">
+                    <div className="bub eve">
+                      <div className="bname mono">EVE</div>
+                      <div className="btext" style={{ color: "rgba(240,237,232,.5)" }}>
+                        Type below, talk, or pick a prompt. Every line is written live — real replies, real memory.
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {messages.map((m) =>
+                  m.role === "eve" ? (
+                    <div className="brow eve" key={m.id}>
+                      <div className="bub eve">
+                        <div className="bname mono">EVE</div>
+                        {m.text ? (
+                          <div className="btext" dangerouslySetInnerHTML={{ __html: mdLite(m.text) }} />
+                        ) : mode === "thinking" ? (
+                          <div style={{ display: "flex", gap: 5, padding: "3px 0" }}>
+                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1CB9C8", animation: "typedot 1.1s ease-in-out 0s infinite" }} />
+                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1CB9C8", animation: "typedot 1.1s ease-in-out .18s infinite" }} />
+                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1CB9C8", animation: "typedot 1.1s ease-in-out .36s infinite" }} />
+                          </div>
+                        ) : (
+                          <div className="btext" />
+                        )}
+                      </div>
                     </div>
                   ) : (
-                    <div className="chips" style={{ columnGap: 18, margin: "6px 0 0" }}>
-                      <button className="chip" style={{ color: "#1CB9C8" }} onClick={() => decideConfirm(c, true)}>
-                        approve — send it →
-                      </button>
-                      <button
-                        className="chip"
-                        style={{ color: "rgba(240,237,232,.5)" }}
-                        onClick={() => decideConfirm(c, false)}
-                      >
-                        cancel →
-                      </button>
+                    <div className="brow you" key={m.id}>
+                      <div className="bub you">
+                        <div className="bname mono">YOU</div>
+                        <div className="btext">{m.text}</div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            </div>
-
-            <div className="chips">
-              {CHIPS.map((c) => (
-                <button key={c} className="chip" disabled={mode !== "idle"} onClick={() => runMessage(c)}>
-                  {c} →
-                </button>
-              ))}
-            </div>
-
-            <div className="inrow">
-              <textarea
-                className="tin"
-                ref={inputRef}
-                rows={1}
-                value={draft}
-                onChange={(e) => {
-                  setDraft(e.target.value);
-                  autoGrow(e.target);
-                }}
-                onKeyDown={(e) => {
-                  // Enter sends; Shift+Enter is a newline (05 §2: never a <form>).
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendText();
-                  }
-                }}
-                placeholder="Type to her — she remembers"
-                aria-label="Message EVE"
-              />
-              <button
-                className={`mic${recording ? " rec" : mode === "listening" ? " on" : ""}`}
-                onClick={micTap}
-                aria-label={recording ? "Stop and send" : "Talk to EVE"}
-              >
-                <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="#F0EDE8" strokeWidth="1.5">
-                  <rect x="7" y="2" width="6" height="11" rx="3" />
-                  <path d="M4 9.5a6 6 0 0 0 12 0M10 15.5V19" />
-                </svg>
-              </button>
-              <button className="sendb" onClick={sendText} aria-label="Send">
-                <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="#1CB9C8" strokeWidth="1.6" strokeLinejoin="round">
-                  <path d="M16 2L2 8l5.5 2.5L10 16l6-14z" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="footrow">
-              <span className="foottag mono">
-                {recording ? (
-                  <b style={{ color: "#C41E3A" }}>LISTENING — TAP AGAIN TO SEND</b>
-                ) : micNote ? (
-                  <b style={{ color: "#1CB9C8" }}>HER EARS NEED THE DEEPGRAM KEY</b>
-                ) : (
-                  <>
-                    VOICE ·{" "}
-                    <b>
-                      {sttOn ? "ears live" : "ears await key"} · {ttsOn ? "voice live" : "voice awaits key"}
-                    </b>
-                  </>
+                  ),
                 )}
-              </span>
-              <button className="wardrobe-open mono" onClick={() => setWardrobe(true)}>
-                LOOK · {wearing?.name ?? "CORE"} — WARDROBE →
-              </button>
+                {errNote && <div className="errline mono">LINK: {errNote}</div>}
+
+                {/* RED-tier confirm cards (02 §6): exact payload + approve round-trip */}
+                {confirms.map((c) => (
+                  <div className="confirmv6" key={c.id}>
+                    <div className="hd mono">▲ RED TIER · {c.kind.replace(/_/g, " ").toUpperCase()} — NOTHING SENDS WITHOUT YOU</div>
+                    <div className="sum">{c.summary}</div>
+                    {Object.entries(c.payload).map(([k, v]) => (
+                      <div className="field" key={k}>
+                        <b>{k.toUpperCase()}</b>
+                        {String(v).slice(0, 240)}
+                      </div>
+                    ))}
+                    {confirmNote[c.id] ? (
+                      <div className={`cnote6${confirmNote[c.id].startsWith("SENT") ? " ok" : ""}`}>{confirmNote[c.id]}</div>
+                    ) : (
+                      <div className="row">
+                        <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE — SEND IT</button>
+                        <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="chiprow">
+                {CHIPS.map((c) => (
+                  <button key={c} className="chipv6" disabled={mode !== "idle"} onClick={() => runMessage(c)}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+
+              <div className="inputrow">
+                <textarea
+                  className="tinv6"
+                  ref={inputRef}
+                  rows={1}
+                  value={draft}
+                  onChange={(e) => {
+                    setDraft(e.target.value);
+                    autoGrow(e.target);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendText();
+                    }
+                  }}
+                  placeholder="Type to her — or just talk."
+                  aria-label="Message EVE"
+                />
+                <button className="sendv6 hit44" onClick={sendText} aria-label="Send">
+                  <svg viewBox="0 0 20 20" style={{ width: 17, height: 17, fill: "none", stroke: "#9BEFF7", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" }}>
+                    <path d="M3 10h13" /><path d="M11.5 4.5L17 10l-5.5 5.5" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="microw">
+                <div className={`vline mono${recording ? " rec" : ""}`}>{voiceLine}</div>
+                <button
+                  className={`micv6${recording ? " rec" : mode === "listening" ? " on" : ""}`}
+                  onClick={micTap}
+                  aria-label={recording ? "Stop and send" : "Talk to EVE"}
+                >
+                  <svg viewBox="0 0 24 24" style={{ width: 22, height: 22, fill: "none", stroke: recording ? "#F7C9D2" : "#1CB9C8", strokeWidth: 1.6, strokeLinecap: "round" }}>
+                    <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" /><path d="M12 18v3" />
+                  </svg>
+                </button>
+                <button className="wbtn" onClick={() => setWardrobe(true)}>[ WARDROBE ]</button>
+              </div>
+              <div className="footline mono">push-to-talk only. she never listens uninvited.</div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ---------- OPS ---------- */}
-        {tab === "ops" && (
-          <div className="eve-screen">
-            <div className="eyebrow mono">OPERATIONS · THE FLEET REPORTS</div>
-            <h1 className="h1 sm disp">
-              Your signature,
-              <br />
-              not your time.
-            </h1>
-            <p className="lede ops">
-              Everything below arrives finished. Approve, hold, or send — I handle the rest.
-            </p>
+          {/* ---------- OPS ---------- */}
+          {tab === "ops" && (
+            <div className="scr">
+              <div className="eyeb mono">
+                <span>▸ OPERATIONS // THE FLEET</span>
+                <span className="r">{live.online ? "REPORTING LIVE" : "OFFLINE"}</span>
+              </div>
+              <h1 className="h1v6 disp">OPS</h1>
+              <p className="ledev6">Your signature, not your time.</p>
 
-            {/* RED tier — waiting on your thumb (02 §6) */}
-            {!!pendings.length && (
-              <section className="sec red first">
-                <span className="ghost red disp">{fConfirm}</span>
-                <div className="seclab mono red">§ WAITING ON YOUR THUMB — RED TIER</div>
-                <div className="secbody">
+              {/* RED tier — waiting on your thumb (02 §6) */}
+              {!!pendings.length && (
+                <>
+                  <div className="divrow">
+                    <span className="l" style={{ color: "#C41E3A" }}>WAITING ON YOUR THUMB — RED</span>
+                    <span className="rule" />
+                    <span className="r">{pendings.length}</span>
+                  </div>
                   {pendings.map((c) => (
-                    <div className="oprow" key={c.id}>
-                      <div className="t">
-                        {c.summary}
-                        <small>
-                          expires{" "}
-                          {new Date(c.expiresAt).toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </small>
+                    <div className="confirmv6" style={{ marginBottom: 8 }} key={c.id}>
+                      <div className="sum">{c.summary}</div>
+                      <div className="field">
+                        expires {new Date(c.expiresAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                       </div>
                       {confirmNote[c.id] ? (
-                        <span className="donelab mono">{confirmNote[c.id]}</span>
+                        <div className="cnote6">{confirmNote[c.id]}</div>
                       ) : (
-                        <>
-                          <button className="okb hit44" aria-label="Approve send" onClick={() => decideConfirm(c, true)}>
-                            <IconCheck />
-                          </button>
-                          <button className="ghb hit44" aria-label="Cancel send" onClick={() => decideConfirm(c, false)}>
-                            <IconX />
-                          </button>
-                        </>
+                        <div className="row">
+                          <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE</button>
+                          <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
+                        </div>
                       )}
                     </div>
                   ))}
-                </div>
-              </section>
-            )}
+                </>
+              )}
 
-            {/* jobs in flight */}
-            <section className={`sec${pendings.length ? "" : " first"}`}>
-              <span className="ghost disp">{fJobs}</span>
-              <div className="seclab mono">§ JOBS IN FLIGHT</div>
-              <div className="jobs">
+              <div className="divrow">
+                <span className="l">JOBS IN FLIGHT</span>
+                <span className="rule" />
+                <span className="r">{live.jobs?.length ? `${live.jobs.length} ACTIVE` : "IDLE"}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {live.jobs?.length ? (
                   live.jobs.map((j) => (
-                    <div className="jobrow" key={j.id}>
-                      <div>
-                        <span className="a">{j.agent || "eve"}</span>
-                        <span className="b"> — {j.title}</span>
-                      </div>
-                      <span
-                        className="s mono"
-                        style={{
-                          color:
-                            j.status === "running"
-                              ? "#1CB9C8"
-                              : j.status === "in_approvals"
-                                ? "rgba(240,237,232,.6)"
-                                : "rgba(240,237,232,.38)",
-                        }}
-                      >
-                        {j.status.replace(/_/g, " ").toUpperCase()}
+                    <div className="jobrow6" key={j.id}>
+                      <span className="jcode mono">{jobCode(j.agent || "eve")}</span>
+                      <span className="jmain">
+                        <span className="jname">{j.agent || "eve"}</span>
+                        <span className="jtask mono">{j.title}</span>
+                      </span>
+                      <span className={`jtag mono ${j.status === "running" ? "run" : j.status === "in_approvals" ? "appr" : "que"}`}>
+                        {j.status === "running" ? "● RUNNING" : j.status.replace(/_/g, " ").toUpperCase()}
                       </span>
                     </div>
                   ))
                 ) : (
-                  <div className="secnote">
+                  <div className="secnote6">
                     {live.online
-                      ? "Nothing in flight. Give her the job — by agent name or just the outcome."
+                      ? "Nothing in flight. Give her the job — by name or just the outcome."
                       : "Offline — the fleet reports in when her brain answers."}
                   </div>
                 )}
               </div>
-              {!!live.jobs?.length && (
-                <div className="aside">one approval batch, not a stream of questions</div>
-              )}
-            </section>
 
-            {/* approval inbox — live attention items */}
-            <section className="sec tight">
-              <span className="ghost disp">{fInbox}</span>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                <span className="seclab mono" style={{ marginBottom: 0 }}>
-                  § APPROVAL INBOX
-                </span>
-                <span className="mono" style={{ fontSize: 10, letterSpacing: ".1em", color: "rgba(240,237,232,.4)" }}>
-                  {inbox.length} queued
-                </span>
+              <div className="divrow">
+                <span className="l">APPROVAL INBOX</span>
+                <span className="rule" />
+                <span className="r">{inbox.length ? `${inbox.length} WAITING` : "CLEAR ✓"}</span>
               </div>
-              <div className="secbody">
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {inbox.length ? (
                   inbox.slice(0, 8).map((a) => (
-                    <div className="oprow" key={a.id}>
-                      <span className="tag mono">
-                        {a.kind.replace(/_/g, " ").toUpperCase()} · N{a.nudge_level}
+                    <div className="aprow" key={a.id}>
+                      <span className="aglyph mono">{aGlyph(a.kind)}</span>
+                      <span className="amain">
+                        <span className="atitle">{a.message}</span>
+                        <span className="asub mono">
+                          {a.kind.replace(/_/g, " ").toUpperCase()} · N{a.nudge_level}
+                          {a.kind === "silent_client" && a.ref?.draft ? " · DRAFT READY" : ""}
+                        </span>
                       </span>
-                      <div className="t">
-                        {a.message}
-                        {a.kind === "silent_client" && a.ref?.draft && (
-                          <small>draft ready — approve turns it into a Today task</small>
-                        )}
-                      </div>
                       {opsBusy === a.id ? (
-                        <span className="donelab mono">…</span>
+                        <span className="cnote6">…</span>
                       ) : (
-                        <>
-                          <button className="okb hit44" aria-label="Approve" onClick={() => opsAction(a.id, "approve")}>
-                            <IconCheck />
-                          </button>
-                          <button className="ghb hit44" aria-label="Hold 24h" onClick={() => opsAction(a.id, "hold")}>
-                            <IconPause />
-                          </button>
-                          <button className="ghb hit44" aria-label="Dismiss" onClick={() => opsAction(a.id, "dismiss")}>
-                            <IconX />
-                          </button>
-                        </>
+                        <span className="abtns">
+                          <button className="cbtn ok hit44" onClick={() => opsAction(a.id, "approve")}>APPROVE</button>
+                          <button className="cbtn gh hit44" onClick={() => opsAction(a.id, "hold")}>HOLD</button>
+                          <button className="cbtn gh hit44" aria-label="Dismiss" onClick={() => opsAction(a.id, "dismiss")}>✕</button>
+                        </span>
                       )}
                     </div>
                   ))
                 ) : (
-                  <div className="secnote">
-                    {live.online
-                      ? "Nothing needs you. She'll surface it here when it does."
-                      : "Offline — nothing to show until her brain answers."}
+                  <div className="secnote6">
+                    {live.online ? "Nothing needs you. She'll surface it here when it does." : "Offline — nothing to show until her brain answers."}
                   </div>
                 )}
               </div>
-            </section>
 
-            {/* client pulse */}
-            <section className="sec">
-              <span className="ghost disp">{fPulse}</span>
-              <div className="seclab mono">
-                § CLIENT PULSE{live.online ? ` — ${quietCount} QUIET` : ""}
+              <div className="divrow">
+                <span className="l">CLIENT PULSE</span>
+                <span className="rule" />
+                <span className="r">{live.online ? `${quietCount} QUIET` : "OFFLINE"}</span>
               </div>
-              <div className="pulse">
+              <div className="pulcard">
                 {live.clients?.length ? (
                   live.clients.map((cl) => {
                     const hot = cl.days_quiet !== null && cl.days_quiet > cl.cadence_days;
                     return (
-                      <div className="pulserow" key={cl.id}>
-                        <span className={`d mono${hot ? " hot" : ""}`}>
-                          {cl.days_quiet === null ? "NEW" : `${cl.days_quiet}d`}
+                      <div className="pulrow" key={cl.id}>
+                        <span className="pulname">{cl.name}</span>
+                        <span className={`puldays mono${hot ? " hot" : ""}`}>
+                          {cl.days_quiet === null ? "NEW" : `${cl.days_quiet}D QUIET`}
                         </span>
-                        <div>
-                          <div className="n">{cl.name}</div>
-                          <div className="w">
-                            cadence {cl.cadence_days}d
-                            {hot ? " — past it. She has an update drafted." : " — inside the window."}
-                          </div>
-                        </div>
+                        <span className="pulsay">
+                          cadence {cl.cadence_days}d{hot ? " — past it. update drafted." : " — inside the window."}
+                        </span>
                       </div>
                     );
                   })
                 ) : (
-                  <div className="secnote">
-                    {live.online
-                      ? "No clients in the ledger yet — add them and she starts watching cadences."
-                      : "Offline — the radar lands when her brain answers."}
+                  <div className="pulrow">
+                    <span className="pulsay">
+                      {live.online ? "No clients in the ledger yet — add them and she starts watching cadences." : "Offline — the radar lands when her brain answers."}
+                    </span>
                   </div>
                 )}
               </div>
-            </section>
 
-            {/* tripwires — the only other red on this screen, and only when live */}
-            {!!tripwires.length && (
-              <section className="sec red">
-                <span className="ghost red disp">{fTrip}</span>
-                <div className="seclab mono red">§ TRIPWIRE · {tripwires.length} LIVE</div>
-                <div className="secbody">
-                  {tripwires.map((a) => (
-                    <div className="oprow" key={a.id}>
-                      <div className="t">{a.message}</div>
-                      {opsBusy === a.id ? (
-                        <span className="donelab mono">…</span>
-                      ) : (
-                        <>
-                          <button className="okb hit44" aria-label="Approve" onClick={() => opsAction(a.id, "approve")}>
-                            <IconCheck />
-                          </button>
-                          <button className="ghb hit44" aria-label="Hold 24h" onClick={() => opsAction(a.id, "hold")}>
-                            <IconPause />
-                          </button>
-                          <button className="ghb hit44" aria-label="Dismiss" onClick={() => opsAction(a.id, "dismiss")}>
-                            <IconX />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ))}
+              {tripwires.map((a) => (
+                <div className="trip6" key={a.id}>
+                  <div className="hd mono">
+                    <span>▲ TRIPWIRE — LIVE</span>
+                    <span style={{ flex: 1 }} />
+                    {opsBusy === a.id ? (
+                      <span className="cnote6">…</span>
+                    ) : (
+                      <span className="abtns">
+                        <button className="cbtn ok" onClick={() => opsAction(a.id, "approve")}>APPROVE</button>
+                        <button className="cbtn gh" onClick={() => opsAction(a.id, "hold")}>HOLD</button>
+                        <button className="cbtn gh" aria-label="Dismiss" onClick={() => opsAction(a.id, "dismiss")}>✕</button>
+                      </span>
+                    )}
+                  </div>
+                  <div className="tt">{a.message}</div>
                 </div>
-              </section>
-            )}
-          </div>
-        )}
+              ))}
 
-        {/* ---------- WIRE ---------- */}
-        {tab === "wire" && (
-          <div className="eve-screen">
-            <div className="eyebrow mono">THE WIRE · SIGNAL REPORT</div>
-            <h1 className="h1 sm disp">
-              One face.
-              <br />
-              The whole fleet
-              <br />
-              behind it.
-            </h1>
-            <p className="lede ops">
-              You talk to me. I route to everything else. Status is honest — only what's wired
-              reads LIVE.
-            </p>
-
-            {wireGroups.map((g, i) => (
-              <section className={`sec tight${i === 0 ? " first" : ""}`} key={g.label}>
-                <span className="ghost sm disp">{String(g.items.length).padStart(2, "0")}</span>
-                <div className="wgroup">
-                  <span className="d" style={{ background: g.color, boxShadow: `0 0 6px ${g.color}` }} />
-                  <span className="l mono" style={{ color: g.color }}>
-                    § {g.label}
-                  </span>
-                </div>
-                <div className="wchips">
-                  {g.items.map((n) => (
-                    <span className="wchip" key={n}>
-                      <span className="d" style={{ background: g.color, boxShadow: `0 0 5px ${g.color}` }} />
-                      {n}
-                    </span>
-                  ))}
-                </div>
-              </section>
-            ))}
-
-            {/* HER SENSES (Phase 4, 05 §7): lazy permission asks — the system
-                prompts fire from THESE taps, never on boot. */}
-            <section className="sec tight">
-              <span className="ghost sm disp">{String(wireGroups.length + 1).padStart(2, "0")}</span>
-              <div className="seclab mono" style={{ fontSize: 10.5, letterSpacing: ".22em", marginBottom: 12 }}>
-                § ENABLE HER SENSES
-              </div>
-              <p className="secnote" style={{ marginBottom: 14 }}>
-                Texts and notifications forward to my brain only while the app is open —
-                transient, never long-term memory. Replies always go through your thumb.
-              </p>
-              {smsSupported() ? (
-                <div className="senses">
-                  <button
-                    className={`sense hit44${smsSense ? " on" : ""}`}
-                    disabled={smsSense}
-                    onClick={enableSmsSense}
-                  >
-                    {smsSense ? "SMS — LIVE" : "SMS"}
-                  </button>
-                  <button
-                    className={`sense hit44${notifSense ? " on" : ""}`}
-                    disabled={notifSense}
-                    onClick={enableNotifSense}
-                  >
-                    {notifSense ? "NOTIFICATIONS — LIVE" : "NOTIFICATIONS"}
-                  </button>
-                </div>
-              ) : (
-                <div className="mono" style={{ fontSize: 10, letterSpacing: ".12em", color: "rgba(240,237,232,.35)" }}>
-                  ANDROID BUILD ONLY — THE BROWSER HAS NO SMS OR NOTIFICATION ACCESS
-                </div>
-              )}
-            </section>
-
-            <section className="legend">
-              <div>
-                <span className="k mono" style={{ color: "#1CB9C8" }}>GREEN</span>{" "}
-                <span className="v">— I draft and build everything, unprompted.</span>
-              </div>
-              <div>
-                <span className="k mono" style={{ color: "#F0EDE8" }}>YELLOW</span>{" "}
-                <span className="v">— built to done, assumptions flagged on top.</span>
-              </div>
-              <div>
-                <span className="k mono" style={{ color: "#C41E3A" }}>RED</span>{" "}
-                <span className="v">— nothing external ever sends without you.</span>
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* ---------- wardrobe ---------- */}
-        {wardrobe && (
-          <>
-            <div className="wscrim" onClick={() => setWardrobe(false)} />
-            <div className="wsheet">
-              <div className="grab" />
-              <div className="whead">
-                <span className="wlab mono">§ WARDROBE</span>
-                <button className="wclose mono" onClick={() => setWardrobe(false)}>
-                  CLOSE ✕
-                </button>
-              </div>
-              <h2 className="wh2 disp">How she shows up.</h2>
-              <p className="wp">
-                Looks change the render, never the mission. Every one of these is a render you
-                uploaded — she picks what to wear, and so can you.
-              </p>
-              {looks.length ? (
-                <div className="wgrid">
-                  {looks.map((l) => (
-                    <button
-                      className={`lookc${l.status === "wearing" ? " on" : ""}`}
-                      key={l.id}
-                      onClick={() => wear(l.id)}
-                      aria-label={`Wear ${l.name}`}
-                      aria-pressed={l.status === "wearing"}
-                    >
-                      {l.img && (
-                        <div className="thumb">
-                          <img src={l.img} alt={l.name} loading="lazy" />
-                        </div>
-                      )}
-                      <div className="nm">{l.name}</div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="wp" style={{ color: "rgba(240,237,232,.4)" }}>
-                  Her closet lives on the brain — currently unreachable. It'll be here the moment
-                  she answers.
-                </p>
-              )}
-              <div className="wfoot">
-                same EVE underneath · {looks.length} looks, hers to choose
-              </div>
+              <div className="footnote mono">the fleet works. you sign.</div>
             </div>
-          </>
+          )}
+
+          {/* ---------- WIRE ---------- */}
+          {tab === "wire" && (
+            <div className="scr">
+              <div className="eyeb mono">
+                <span>▸ CONNECTIONS // {wireNodes.length} NODES</span>
+                <span className="r">{liveNodeCount} LIVE</span>
+              </div>
+              <h1 className="h1v6 disp">WIRE</h1>
+              <p className="ledev6">One face. The whole fleet behind it. Only what's wired reads LIVE.</p>
+
+              <div className="wgrid6">
+                {wireNodes.map((w) => (
+                  <div className={`wnode${w.st === "p4" ? " dash" : w.st === "off" ? " dim" : ""}`} key={w.code}>
+                    <div className="top">
+                      <span className="wcode mono">{w.code}</span>
+                      <span className={`wdot ${w.st === "live" ? "live" : w.st === "key" ? "key" : "off"}`}>
+                        {w.st === "p4" ? "◌" : w.st === "off" ? "○" : "●"}
+                      </span>
+                    </div>
+                    <div className="wname6">{w.name}</div>
+                    <div className="wrole mono">{w.role}</div>
+                    <div className={`wstat mono ${w.st}`}>
+                      {w.st === "live" ? "LIVE" : w.st === "key" ? "KEY NEEDED" : w.st === "off" ? "OFFLINE" : "PHASE 5"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* HER SENSES (Phase 4, 05 §7): lazy permission asks — prompts fire
+                  from THESE taps, never on boot. */}
+              <div className="sensecard">
+                <div className="hd mono">ENABLE HER SENSES</div>
+                <div className="bd">
+                  Texts and notifications forward to her brain only while the app is open — transient, never
+                  long-term memory. Replies always go through your thumb.
+                </div>
+                {smsSupported() ? (
+                  <div className="sensebtns">
+                    <button className={`sense6 hit44${smsSense ? " on" : ""}`} disabled={smsSense} onClick={enableSmsSense}>
+                      {smsSense ? "SMS — LIVE" : "[ SMS ]"}
+                    </button>
+                    <button className={`sense6 hit44${notifSense ? " on" : ""}`} disabled={notifSense} onClick={enableNotifSense}>
+                      {notifSense ? "NOTIFICATIONS — LIVE" : "[ NOTIFICATIONS ]"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="caphint mono" style={{ marginTop: 10 }}>
+                    ANDROID BUILD ONLY — THE BROWSER HAS NO SMS OR NOTIFICATION ACCESS
+                  </div>
+                )}
+              </div>
+
+              <div className="card rules" style={{ marginTop: 14 }}>
+                <div className="mono" style={{ fontSize: 9, letterSpacing: ".22em", color: "rgba(28,185,200,.85)" }}>
+                  AUTONOMY — HOUSE RULES
+                </div>
+                <div className="rulerow">
+                  <span className="dot" style={{ background: "#3EA26E", boxShadow: "0 0 8px rgba(62,162,110,.5)" }} />
+                  <span className="k mono" style={{ color: "#3EA26E" }}>GREEN</span>
+                  <span className="v">Acts, then tells you. Filing, drafts, research, the OS board.</span>
+                </div>
+                <div className="rulerow">
+                  <span className="dot" style={{ background: "#C9A54A", boxShadow: "0 0 8px rgba(201,165,74,.5)" }} />
+                  <span className="k mono" style={{ color: "#C9A54A" }}>YELLOW</span>
+                  <span className="v">Drafts, then waits. Anything a client will read.</span>
+                </div>
+                <div className="rulerow">
+                  <span className="dot" style={{ background: "#C41E3A", boxShadow: "0 0 8px rgba(196,30,58,.5)" }} />
+                  <span className="k mono" style={{ color: "#C41E3A" }}>RED</span>
+                  <span className="v">Never without you. Money out, sends, anything public.</span>
+                </div>
+              </div>
+
+              <div className="footnote mono">she only sees what you hand her. keys stay in your vault.</div>
+            </div>
+          )}
+        </div>
+
+        {/* ---------- wardrobe sheet ---------- */}
+        {wardrobe && <div className="scrim6" onClick={() => setWardrobe(false)} />}
+        {wardrobe && (
+          <div className="sheet6">
+            <div className="grab6" />
+            <div className="shead">
+              <div style={{ flex: 1 }}>
+                <div className="lab mono">WARDROBE // PRESENCE</div>
+                <div className="tt disp">How she shows up.</div>
+              </div>
+              <button className="sclose mono" onClick={() => setWardrobe(false)}>[ CLOSE ]</button>
+            </div>
+
+            <div className="modes">
+              <button className={`modec${!showPortrait ? " on" : ""}`} onClick={() => pickPlateMode("core")}>
+                <span className="sw" />
+                <span className="k mono">CORE</span>
+                <span className="s mono">the pure signal</span>
+              </button>
+              <button
+                className={`modec${showPortrait ? " on" : ""}`}
+                onClick={() => pickPlateMode("portrait")}
+                disabled={!wearing?.img}
+              >
+                <span className="sw" style={{ borderRadius: 8, background: wearing?.img ? `url(${wearing.img}) center 12%/cover` : "rgba(28,185,200,.2)" }} />
+                <span className="k mono">PORTRAIT</span>
+                <span className="s mono">{wearing?.img ? "her face, her look" : "closet loading…"}</span>
+              </button>
+            </div>
+
+            <div className="divrow" style={{ margin: "18px 0 4px" }}>
+              <span className="l">HER CLOSET — {looks.length} LOOKS, HERS TO CHOOSE</span>
+              <span className="rule" />
+            </div>
+            {looks.length ? (
+              <div className="lgrid">
+                {looks.map((l) => (
+                  <button
+                    className={`lookc${l.status === "wearing" ? " on" : ""}`}
+                    key={l.id}
+                    onClick={() => {
+                      wear(l.id);
+                      if (plateMode === "core") pickPlateMode("portrait");
+                    }}
+                    aria-label={`Wear ${l.name}`}
+                    aria-pressed={l.status === "wearing"}
+                  >
+                    {l.img && (
+                      <span className="thumb">
+                        <img src={l.img} alt={l.name} loading="lazy" />
+                      </span>
+                    )}
+                    <span className="nm" style={{ display: "block" }}>{l.name}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="secnote6" style={{ marginTop: 10 }}>
+                Her closet lives on the brain — currently unreachable. It'll be here the moment she answers.
+              </p>
+            )}
+
+            <div className="divrow" style={{ margin: "18px 0 10px" }}>
+              <span className="l">VOICE — ELEVENLABS</span>
+              <span className="rule" />
+            </div>
+            <span className="vchip mono">{ttsOn ? "LARA — HER PICK" : "AWAITING KEY"}</span>
+
+            <div className="divrow" style={{ margin: "18px 0 10px" }}>
+              <span className="l">PRESENCE CHECK — TRY HER STATES</span>
+              <span className="rule" />
+            </div>
+            <div className="pillrow">
+              {(["idle", "listening", "thinking", "speaking", "alert"] as EveMode[]).map((st) => (
+                <button
+                  key={st}
+                  className={`pill6${mode === st ? ` on${st === "alert" ? " alert" : ""}` : ""}`}
+                  onClick={() => previewState(st)}
+                >
+                  {st.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            <div className="acclock">
+              <span className="k">ACCENT — TEAL</span>
+              <span className="s">locked. she chose it herself.</span>
+            </div>
+          </div>
         )}
 
-        {/* ---------- bottom nav ---------- */}
-        <nav className="eve-nav">
+        {/* ---------- nav ---------- */}
+        <nav className="nav6">
           {([
-            ["today", "01", "TODAY"],
-            ["eve", "02", "EVE"],
-            ["ops", "03", "OPS"],
-            ["wire", "04", "WIRE"],
-          ] as const).map(([id, n, lab]) => (
+            ["today", "TODAY"],
+            ["eve", "EVE"],
+            ["ops", "OPS"],
+            ["wire", "WIRE"],
+          ] as const).map(([id, lab]) => (
             <button
               key={id}
-              className={`navb${tab === id ? " on" : ""}`}
+              className={`navi${tab === id ? " on" : ""}`}
               onClick={() => setTab(id)}
               aria-label={lab}
               aria-current={tab === id ? "page" : undefined}
             >
-              <span className="bar" />
-              <span className="n disp">{n}</span>
-              <span className="l mono">{lab}</span>
+              <span className="tick" />
+              {id === "today" && (
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinecap: "round" }}>
+                  <circle cx="10" cy="8.5" r="4" /><path d="M2.5 16.5h15" />
+                </svg>
+              )}
+              {id === "eve" && (
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5 }}>
+                  <circle cx="10" cy="10" r="4.2" /><ellipse cx="10" cy="10" rx="8.5" ry="3.2" transform="rotate(-16 10 10)" />
+                </svg>
+              )}
+              {id === "ops" && (
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinecap: "round" }}>
+                  <path d="M3 5.5h14" /><path d="M3 10h9" /><circle cx="16" cy="10" r="1.6" /><path d="M3 14.5h12" />
+                </svg>
+              )}
+              {id === "wire" && (
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.4, strokeLinecap: "round" }}>
+                  <circle cx="4.5" cy="5" r="1.7" /><circle cx="15.5" cy="6.5" r="1.7" /><circle cx="6.5" cy="15" r="1.7" /><circle cx="14.5" cy="14" r="1.7" />
+                  <path d="M6 5.7l7.8 0.6" /><path d="M5.2 6.6l1 6.7" /><path d="M8.2 14.6l4.6-0.4" /><path d="M15 8.2l-0.3 4.1" />
+                </svg>
+              )}
+              <span className="lb mono">{lab}</span>
             </button>
           ))}
         </nav>
+
+        <div className="scan" />
+        <div className="vig" />
 
         {/* ---------- boot ---------- */}
         {!booted && (
