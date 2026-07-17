@@ -39,3 +39,4 @@ Thumbs.db
 # keeps the repo small, deploys fast, and adding a look needs no redeploy.
 brain/data/
 brain/*.log
+brain/prompts/*.bak

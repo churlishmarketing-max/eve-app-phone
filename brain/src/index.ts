@@ -82,7 +82,7 @@ app.get("/console", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     ok: true,
-    phase: "4-her-senses",
+    phase: "5-her-reach",
     pushReady: isPushReady(),
     memoryReady: isDbReady(),
     voiceReady: { stt: sttReady(), tts: ttsReady() },

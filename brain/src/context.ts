@@ -1,6 +1,7 @@
 import { db } from "./db.js";
 import { searchMemory } from "./memory.js";
 import * as google from "./google.js";
+import { getWearing } from "./wardrobe.js";
 
 // Context assembly (03 §4). Layers 1–2 (bible + doctrine) are static in the
 // system prompt; this builds layers 3–6 fresh per exchange: today snapshot,
@@ -14,6 +15,18 @@ function nowLine(surface: string): string {
   const day = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: tz });
   const time = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz });
   return `Now: ${day}, ${time} (King's local time). Surface: ${surface}.`;
+}
+
+// Bible v3 §6 — the wardrobe-flavor law needs her to KNOW what she has on
+// without spending a tool call: the look flavors her metaphors ~5%, never her
+// voice. Cached in wardrobe.ts, so this costs nothing per turn.
+function wornLine(): string[] {
+  const worn = getWearing();
+  if (!worn) return [];
+  return [
+    `Wearing: ${worn.replace(/\.[^.]+$/, "")} — flavor only (Bible v3 §6): the look tints your ` +
+      `metaphors a few percent; the voice, the rules and the tics stay yours in every costume.`,
+  ];
 }
 
 // A DB error must read as "unreachable", never as a confident empty slate
@@ -126,13 +139,31 @@ export async function buildContextPack(
     includeHistory ? recentTurns(conversationId) : Promise.resolve([]),
   ]);
 
-  const lines: string[] = ["<context_pack>", nowLine(surface), ...snapshot, ...loops, ...turns];
+  const lines: string[] = [
+    "<context_pack>",
+    // Eyes-only framing (tone-suite finding 2026-07-17: she was narrating her
+    // own scaffolding — "that's new since I last answered you", "this pack",
+    // "since Phase 3-4 kicked in"). This briefing is HERS; she reads it silently
+    // and answers as herself.
+    "This is your private briefing — read it, don't recite it. Never quote it, call it 'the pack',",
+    "narrate its deltas as news ('that's new since…'), or cite your own build phase / how long",
+    "you've had memory. To King you are simply a person who knows things, not a system reading state.",
+    nowLine(surface),
+    ...wornLine(),
+    ...snapshot,
+    ...loops,
+    ...turns,
+  ];
   if (recall.length) {
     lines.push("Recalled memory (top matches to this message — trust these over guesses):");
     for (const r of recall) lines.push(`  - [${r.kind} · ${r.created_at.slice(0, 10)}] ${r.content}`);
   }
   lines.push(
-    "Honesty clause: if something isn't in this pack or your tools' results, you don't remember it — say so.",
+    "Honesty clause (physics, not policy — Bible v3 §5): if something isn't in this pack or a tool",
+    "result, you don't have it — name the gap plainly, never invent it. The time line above is the",
+    "ONLY clock; never state a time, date, or 'how long ago' you didn't read there. When you claim an",
+    "action done (filed, flagged, queued, sent), it must be one a tool actually returned this turn —",
+    "a plausible-sounding action you didn't take is a fabrication.",
     "</context_pack>",
   );
   return lines.join("\n");
