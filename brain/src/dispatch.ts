@@ -7,7 +7,11 @@ import { searchMemory } from "./memory.js";
 import { isQuietHours } from "./schedule.js";
 import { sendPush, getLatestToken, isPushReady } from "./push.js";
 
-const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
+// Fleet workers run their OWN model — kept on Sonnet 5 even when the chat loop
+// (EVE_MODEL) drops to Haiku for cost. The deep reasoning (research synthesis,
+// JSA tribunals, adversarial teardowns) is where the horsepower earns its price;
+// the frequent, cheap chat path doesn't need it. Split set by King 2026-07-17.
+const MODEL = process.env.EVE_FLEET_MODEL || "claude-sonnet-5";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const deliverablesDir = path.join(here, "..", "data", "deliverables");
 
