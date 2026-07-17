@@ -163,15 +163,19 @@ export const CSS = `
 .br.tr{ top:-1px; right:-1px; border-top:1px solid #1CB9C8; border-right:1px solid #1CB9C8; }
 .br.bl{ bottom:-1px; left:-1px; border-bottom:1px solid #1CB9C8; border-left:1px solid #1CB9C8; }
 .br.brr{ bottom:-1px; right:-1px; border-bottom:1px solid #1CB9C8; border-right:1px solid #1CB9C8; }
-/* Hero portrait: fixed height (clamp, no aspect-ratio — Android WebView law),
-   full-bleed cover anchored to her face. Her renders are 768x1376 (ratio 1.79),
-   so a wide-short box crops to head-and-shoulders — which is the point. Sized
-   to ~a quarter of the screen: big enough to read her face, small enough that
-   the conversation gets real room (his call, 2026-07-17). */
-.portrait.hero{ position:relative; width:100%; flex:1 1 auto;
-  height:clamp(200px, 26vh, 300px); min-height:170px; }
+/* Hero portrait: a CENTERED 3:4 card, not a full-bleed band (his call,
+   2026-07-17). Her renders are tall busts — 768x1376 — so stretching one
+   across the full width cropped a strip out of the middle: giant face, no
+   outfit, and a third of the phone gone. A ~3:4 card top-anchored to her face
+   shows the whole look for less height. Sized in height + width clamps rather
+   than aspect-ratio (Android WebView collapses that one), which also lets the
+   mixed-ratio looks (1.79 and 1.40 both exist in his closet) share a stable
+   layout. */
+.portrait.hero{ position:relative; flex:0 1 auto; align-self:center;
+  height:clamp(190px, 27vh, 290px); min-height:150px;
+  width:clamp(150px, 54%, 230px); }
 .portrait.hero img{ position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; object-position:50% 16%;
+  object-fit:cover; object-position:50% 12%;
   border-radius:3px; border:1px solid rgba(28,185,200,.18); display:block;
   box-shadow:inset 0 0 40px rgba(0,122,135,.14); }
 .portrait.alert img{ opacity:.55; }
