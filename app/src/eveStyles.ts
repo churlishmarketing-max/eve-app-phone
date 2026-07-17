@@ -182,6 +182,9 @@ export const CSS = `
 .evelab{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.24em;
   color:#1CB9C8; margin-bottom:6px; }
 .evetext{ font-size:16px; line-height:1.55; color:#F0EDE8; white-space:pre-wrap; }
+.evetext code{ font-family:'IBM Plex Mono',monospace; font-size:13.5px; background:rgba(255,255,255,.07);
+  padding:1px 5px; border-radius:4px; }
+.evetext b{ color:#FFFFFF; }
 .youwrap{ padding-left:24px; border-left:1px solid rgba(240,237,232,.14); }
 .youlab{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.24em;
   color:rgba(240,237,232,.4); margin-bottom:6px; }

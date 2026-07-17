@@ -7,6 +7,8 @@ import * as google from "./google.js";
 import * as notion from "./notion.js";
 import * as slack from "./slack.js";
 import * as stripe from "./stripe.js";
+import * as os from "./os.js";
+import { runDispatch } from "./dispatch.js";
 
 // EVE's hands (Phase 3, 02 §1): Gmail, Calendar, Notion, Slack, Stripe —
 // plus her senses (Phase 4, 05 §7): SMS + notifications the app forwards.
@@ -31,6 +33,7 @@ export function getConnectorStatus(): ConnectorStatus[] {
     { key: "notion", name: "Notion", connected: notion.ready(), detail: notion.statusDetail() },
     { key: "slack", name: "Slack", connected: slack.ready(), detail: slack.statusDetail() },
     { key: "stripe", name: "Stripe", connected: stripe.ready(), detail: stripe.statusDetail() },
+    { key: "churlish_os", name: "Churlish OS", connected: os.ready(), detail: os.statusDetail() },
     { key: "deepgram", name: "Deepgram (voice in)", connected: !!process.env.DEEPGRAM_API_KEY, detail: process.env.DEEPGRAM_API_KEY ? "key set" : "DEEPGRAM_API_KEY not set" },
     { key: "elevenlabs", name: "ElevenLabs (voice out)", connected: !!process.env.ELEVENLABS_API_KEY, detail: process.env.ELEVENLABS_API_KEY ? "key set" : "ELEVENLABS_API_KEY not set" },
   ];
@@ -57,6 +60,14 @@ export const connectorToolNames = [
   "mcp__eve_hands__read_texts",
   "mcp__eve_hands__read_notifications",
   "mcp__eve_hands__send_sms",
+  "mcp__eve_hands__os_board",
+  "mcp__eve_hands__os_clients",
+  "mcp__eve_hands__os_command",
+  "mcp__eve_hands__os_draft_proposal",
+  "mcp__eve_hands__os_draft_email",
+  "mcp__eve_hands__os_create_invoice",
+  "mcp__eve_hands__os_send_pending_email",
+  "mcp__eve_hands__dispatch_fleet",
 ];
 
 export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
@@ -307,6 +318,180 @@ export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
           return text(
             `Queued for King's confirmation (id ${pending.id}). NOT sent — his approve fires it from ` +
               `his phone; it expires ${pending.expiresAt}.`,
+          );
+        },
+      ),
+      // ---- Churlish OS (Rookie's board + Pennyworth's desk, via /api/eve) ----
+      // Drafts are 🟢 GREEN — everything lands as a DRAFT the operator approves
+      // inside the OS (proposals tab, comms panel, invoices panel, mail room).
+      // The ONE send path (send_pending_email) is 🔴 RED here AND the OS
+      // endpoint independently refuses it without the confirm flag.
+      tool(
+        "os_board",
+        "The Churlish OS war board, live: collected vs the $150K goal, signed, open pipeline + coverage, " +
+          "this week's Friday Five, client count, KPIs. GREEN — read-only.",
+        {},
+        async () => {
+          try {
+            return text(await os.osTool("get_board"));
+          } catch (e) {
+            return text(os.explainError(e), true);
+          }
+        },
+        { annotations: { readOnlyHint: true } },
+      ),
+      tool(
+        "os_clients",
+        "The OS client roster (name, contact, email, status). GREEN — read-only.",
+        {},
+        async () => {
+          try {
+            return text(await os.osTool("list_clients"));
+          } catch (e) {
+            return text(os.explainError(e), true);
+          }
+        },
+        { annotations: { readOnlyHint: true } },
+      ),
+      tool(
+        "os_command",
+        "Run one Rookie tool on the OS — the same surface Rookie has in the cockpit. GREEN: these write " +
+          "internal OS data or read it; nothing here can email a client. Tools and their inputs:\n" +
+          "· add_deal {name, value$, offer?, stage?} · update_deal_stage {name, stage} — stages: Lead, " +
+          "Diagnostic Sent, Diagnostic Done, Proposal, Signed, Collected, Lost\n" +
+          "· add_client {name, contact?, email?, phone?, industry?, status?} · update_client {client_name, ...fields, notes_append?}\n" +
+          "· add_expense {vendor, amount$, category?, recurring?, date?} · add_expenses_bulk {items:[...]}\n" +
+          "· log_friday_five {calls?, offers_out?, signed$?, collected$?, founder_free_pct?}\n" +
+          "· set_sprint {target$?, sellby_date?, deadline_date?, one_thing_title?, one_thing_body?}\n" +
+          "· add_goal {text, type?, target?} · complete_goal {text} · set_strategy {text} · set_kpi {name, value}\n" +
+          "· add_work_item {client_name, title, type?} · add_log {message}\n" +
+          "· propose_automation {name, trigger, task, stage_name?, days?} — created DISABLED, he approves in the Mail Room\n" +
+          "· list_proposals {status?, client_name?} · list_invoices {status?, client_name?}\n" +
+          "Dollar amounts in DOLLARS. The OS answers in plain text; relay its numbers honestly.",
+        {
+          tool: z.enum([
+            "add_deal", "update_deal_stage", "add_client", "update_client",
+            "add_expense", "add_expenses_bulk", "log_friday_five", "set_sprint",
+            "add_goal", "complete_goal", "set_strategy", "set_kpi",
+            "add_work_item", "add_log", "propose_automation",
+            "list_proposals", "list_invoices",
+          ]).describe("Which Rookie tool to run"),
+          input: z.record(z.string(), z.unknown()).optional().describe("That tool's input object (see catalog above)"),
+        },
+        async ({ tool: t, input }) => {
+          try {
+            return text(await os.osTool(t, (input as Record<string, unknown>) ?? {}));
+          } catch (e) {
+            return text(os.explainError(e), true);
+          }
+        },
+      ),
+      tool(
+        "os_draft_proposal",
+        "Hand King's meeting/call notes to Pennyworth to draft a PROPOSAL (Churlish formula + fixed pricing " +
+          "law live in the OS — never restate prices yourself). Pass the notes VERBATIM AND COMPLETE — they " +
+          "are Pennyworth's raw source material; never summarize or trim. Steering (tier to pitch, custom " +
+          "price, angle) goes in guidance. GREEN — it lands as a DRAFT in the Proposals tab; King reviews " +
+          "and sends from there. Takes up to a minute; tell him it's drafting if he's waiting.",
+        {
+          client_name: z.string().describe("Client, fuzzy match ok"),
+          notes: z.string().describe("His meeting/call notes, verbatim and complete"),
+          guidance: z.string().optional().describe("Extra steering he gave outside the notes"),
+        },
+        async ({ client_name, notes, guidance }) => {
+          try {
+            return text(await os.osTool("draft_proposal", { client_name, notes, ...(guidance ? { guidance } : {}) }));
+          } catch (e) {
+            return text(os.explainError(e), true);
+          }
+        },
+      ),
+      tool(
+        "os_draft_email",
+        "Have Pennyworth (the OS client concierge) draft an email to a CLIENT — client-facing mail is his " +
+          "voice, not yours. GREEN: it queues in that client's COMMS panel for King's approval; this tool " +
+          "cannot send. (Sending a queued draft is os_send_pending_email — RED.)",
+        {
+          client_name: z.string().describe("Client, fuzzy match ok"),
+          instruction: z.string().describe("What the email should say / accomplish, plain english"),
+        },
+        async ({ client_name, instruction }) => {
+          try {
+            return text(await os.osTool("draft_client_email", { client_name, instruction }));
+          } catch (e) {
+            return text(os.explainError(e), true);
+          }
+        },
+      ),
+      tool(
+        "os_create_invoice",
+        "Draft an invoice in the OS for a client (fuzzy match). Line-item unit prices in DOLLARS. GREEN — " +
+          "always a DRAFT in the cockpit's Invoices panel; King reviews and sends it there (sending is what " +
+          "emails the pay link). Numbering is automatic (INV-####).",
+        {
+          client_name: z.string(),
+          title: z.string().optional(),
+          items: z.array(z.object({
+            desc: z.string(),
+            qty: z.number().optional().describe("Defaults 1"),
+            unit: z.number().describe("Unit price in DOLLARS"),
+          })).min(1),
+          due_date: z.string().optional().describe("YYYY-MM-DD"),
+          notes: z.string().optional(),
+        },
+        async ({ client_name, title, items, due_date, notes }) => {
+          try {
+            return text(await os.osTool("create_invoice", { client_name, title, items, due_date, notes }));
+          } catch (e) {
+            return text(os.explainError(e), true);
+          }
+        },
+      ),
+      tool(
+        "os_send_pending_email",
+        "Send a client's most recent PENDING Pennyworth draft. RED tier — this NEVER sends directly: it " +
+          "queues for King's explicit confirmation (confirm card in the app); his approve fires the send " +
+          "through the OS. Use only when he said to send; the draft itself stays reviewable in the COMMS panel.",
+        { client_name: z.string().describe("Whose pending draft to send") },
+        async ({ client_name }) => {
+          if (!os.ready()) return text(os.explainError(new os.OsNotConnectedError()), true);
+          const payload = { client_name };
+          const pending = requestConfirm(
+            "os_send_email",
+            `Send Pennyworth's pending draft to ${client_name} (via Churlish OS)`,
+            payload,
+            () => os.osTool("send_pending_email", payload, true),
+          );
+          emitConfirm(pending);
+          return text(
+            `Queued for King's confirmation (id ${pending.id}). NOT sent — his approve fires it through ` +
+              `the OS; it expires ${pending.expiresAt}.`,
+          );
+        },
+      ),
+      // ---- the fleet (02 §3: autonomous workers; deliverables land in approvals) ----
+      tool(
+        "dispatch_fleet",
+        "Launch an autonomous fleet worker on a task. It runs in the background (minutes, with live web " +
+          "search), writes a complete deliverable, and lands it in King's approvals with a ping — you keep " +
+          "talking meanwhile; NEVER pretend to have its results before it lands. Workers by lens:\n" +
+          "· research — deep research: multi-source web sweep, numbers over adjectives, receipts for every claim\n" +
+          "· justice-league — portfolio & sequencing strategy: what to build/sell in what order, capacity-honest\n" +
+          "· jsa — single-decision tribunal: strongest case FOR, strongest case AGAINST, then a verdict with triggers\n" +
+          "· suicide-squad — adversarial teardown: attack a plan/asset like a well-funded enemy; absences ranked by dollars\n" +
+          "· eve — general deliverable in your own doctrine.\n" +
+          "Workers produce DOCUMENTS only (GREEN) — they cannot send anything external.",
+        {
+          task: z.string().describe("The task, specific enough to act on without follow-up questions"),
+          agent: z.enum(["research", "justice-league", "jsa", "suicide-squad", "eve"]).default("eve"),
+          client: z.string().optional().describe("Client/topic name to ground the worker in stored memory"),
+        },
+        async ({ task, agent, client }) => {
+          const r = await runDispatch(task, agent, client);
+          if (!r.ok) return text(`Fleet dispatch failed: ${r.error}`, true);
+          return text(
+            `Dispatched to ${agent} (job ${r.jobId}). It's running now — the deliverable lands in his ` +
+              `approvals with a ping when done (usually a few minutes; deep research can take ten).`,
           );
         },
       ),

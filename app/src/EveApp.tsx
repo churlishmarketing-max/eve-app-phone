@@ -86,6 +86,18 @@ const WEAR_KEY = "eve.wearing";
 /* ---- the entity: rings, core, ripples, thinking arc, speaking bars ----
    Sizes follow the design: compact when her portrait carries the plate,
    full-size when the core IS the portrait. */
+// She writes markdown emphasis by instinct; raw asterisks on screen read as a
+// glitch. Render the inline set (bold/italic/code, header lines as bold) and
+// nothing heavier — escape first so nothing she says can inject markup.
+function mdLite(s: string): string {
+  let h = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  h = h.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  h = h.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+  h = h.replace(/\*([^*\s][^*\n]*)\*/g, "<i>$1</i>");
+  h = h.replace(/^#{1,4}\s+(.+)$/gm, "<b>$1</b>");
+  return h;
+}
+
 function EveEntity({ mode, compact }: { mode: EveMode; compact: boolean }) {
   const alert = mode === "alert";
   const zone = compact ? 86 : 200;
@@ -791,9 +803,11 @@ export default function EveApp() {
                 m.role === "eve" ? (
                   <div key={m.id}>
                     <div className="evelab mono">EVE —</div>
-                    <div className="evetext">
-                      {m.text || (mode === "thinking" ? "…" : "")}
-                    </div>
+                    {m.text ? (
+                      <div className="evetext" dangerouslySetInnerHTML={{ __html: mdLite(m.text) }} />
+                    ) : (
+                      <div className="evetext">{mode === "thinking" ? "…" : ""}</div>
+                    )}
                   </div>
                 ) : (
                   <div key={m.id}>

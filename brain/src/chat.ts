@@ -71,16 +71,21 @@ export async function runChat(
         mcpServers: { eve_memory: memoryServer, eve_hands: connectorServer },
         // Memory + connector tools are pre-approved at the SDK layer. RED-tier
         // enforcement lives INSIDE the send tools (confirm.ts): they queue a
-        // pending confirm and return — they cannot send. Built-in file/web
-        // tools stay off until their phases.
+        // pending confirm and return — they cannot send. Live web (search +
+        // fetch) is on: reads only, nothing external can be sent through it.
+        // File/shell tools stay off — her body is the phone, not this box.
         allowedTools: [
           "mcp__eve_memory__search_memory",
           "mcp__eve_memory__save_memory",
           "mcp__eve_memory__log_touch",
           ...connectorToolNames,
+          "WebSearch",
+          "WebFetch",
         ],
-        disallowedTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch"],
-        maxTurns: 8,
+        disallowedTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep"],
+        // Web hops + OS round-trips stack up fast in one answer; 12 keeps a
+        // real research-then-act turn from dying mid-thought.
+        maxTurns: 12,
         includePartialMessages: true,
         // A disconnected phone must not keep the loop burning tokens (C18);
         // the same controller carries the outage deadline.
