@@ -195,6 +195,25 @@ export default function EveApp() {
     el.style.height = `${Math.min(el.scrollHeight, 124)}px`;
   };
 
+  // ---- voice-turn audio focus ----
+  // ONE focus session spans the whole spoken exchange: grabbed when he taps the
+  // mic (music/YouTube pause while he talks AND while she answers), released
+  // once at the definitive end (her reply finishes, or any failure/no-voice
+  // path). Idempotent so every terminal branch can call release() safely.
+  const voiceFocusHeld = useRef(false);
+  const holdVoiceFocus = () => {
+    if (!voiceFocusHeld.current) {
+      voiceFocusHeld.current = true;
+      void requestAudioFocus();
+    }
+  };
+  const releaseVoiceFocus = () => {
+    if (voiceFocusHeld.current) {
+      voiceFocusHeld.current = false;
+      void abandonAudioFocus();
+    }
+  };
+
   // ---- her senses (Phase 4, 05 §7): forward texts + notifications to the
   // brain's transient buffers while the app is open. Wiring is idempotent,
   // and nothing here ever PROMPTS — the permission asks live behind the
@@ -337,29 +356,34 @@ export default function EveApp() {
         setToolNote(null);
         busy.current = false;
         // Voice loop (05 §3): spoken question → spoken answer. Degrades to
-        // text silently when ElevenLabs isn't wired. While she speaks, we grab
-        // transient audio focus so King's music / YouTube pause and he can
-        // actually hear her — released the instant her reply ends, errors, or
-        // fails to start, so nothing stays paused.
+        // text silently when ElevenLabs isn't wired. Audio focus was already
+        // grabbed at mic-tap (music/YouTube paused through his question); it
+        // stays held across her reply and is released the moment she finishes —
+        // or right now if there's no spoken answer to play.
         if (lastInputWasVoice.current && ttsAvailable.current && fullText.trim()) {
-          void speakText(fullText).then(async (url) => {
-            if (!url) return;
+          void speakText(fullText).then((url) => {
+            if (!url) {
+              releaseVoiceFocus(); // TTS failed — don't leave his music paused
+              return;
+            }
             const audio = new Audio(url);
             let released = false;
             const finish = () => {
               if (!released) {
                 released = true;
-                void abandonAudioFocus();
+                releaseVoiceFocus();
               }
               setMode("idle");
               URL.revokeObjectURL(url);
             };
-            await requestAudioFocus();
             setMode("speaking");
             audio.onended = finish;
             audio.onerror = finish;
             audio.play().catch(finish);
           });
+        } else {
+          // Voice in, but no voice out (text-only reply, or TTS off): resume now.
+          releaseVoiceFocus();
         }
       },
       onError: (m) => {
@@ -367,6 +391,7 @@ export default function EveApp() {
         setMode("idle");
         setToolNote(null);
         busy.current = false;
+        releaseVoiceFocus(); // brain failed mid-turn — resume his music
         // Drop the empty shell so a failure never reads as her saying nothing.
         setMessages((ms) => ms.filter((x) => !(x.id === eveId && !x.text)));
       },
@@ -495,8 +520,10 @@ export default function EveApp() {
         const blob = new Blob(chunks, { type: mime || "audio/webm" });
         const r = await transcribeAudio(blob);
         if (r.ok && r.transcript?.trim()) {
+          // Keep the audio focus held — runMessage releases it when her reply ends.
           runMessage(r.transcript, true, true);
         } else {
+          releaseVoiceFocus(); // nothing to say back — resume his music
           setMode("idle");
           setErrNote(r.error || "didn't catch that — try again");
         }
@@ -505,7 +532,11 @@ export default function EveApp() {
       rec.start();
       setRecording(true);
       setMode("listening");
+      // Pause his music/YouTube the moment she starts listening, so the mic
+      // isn't recording over them and the whole exchange is clean.
+      holdVoiceFocus();
     } catch {
+      releaseVoiceFocus();
       setErrNote("microphone unavailable — check the permission");
     }
   };
