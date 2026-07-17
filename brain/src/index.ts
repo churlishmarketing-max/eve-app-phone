@@ -24,6 +24,7 @@ import { tickRoutine, actOnAttention, type AttentionAction } from "./ops.js";
 import { transcribe, speakToResponse, listVoices, sttReady, ttsReady } from "./voice.js";
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
 import { warmBoard, boardSnapshotReady } from "./os.js";
+import { warmFleet, fleetViewStatus } from "./fleet.js";
 import { rotateLook, initRotationConfig } from "./rotation.js";
 import { stamp, getStamp } from "./health.js";
 
@@ -89,6 +90,7 @@ app.get("/health", (_req, res) => {
     memoryReady: isDbReady(),
     voiceReady: { stt: sttReady(), tts: ttsReady() },
     osBoardWarm: boardSnapshotReady(),
+    fleet: fleetViewStatus(), // { ready, live, count } — live:true = read from the OS
     connectors: getConnectorStatus(),
     // Stamped by BOTH the /job route and the in-process crons (review C9/C24).
     lastDistillation: getStamp("distill"),
@@ -391,6 +393,9 @@ void initWardrobe();
 // Warm the ambient OS board snapshot so the very first board question is fast
 // (also gives the Vercel /api/eve function an early hit toward staying warm).
 void warmBoard();
+// Warm the live fleet roster (read from the OS) so the first "who's on the
+// fleet / who handles X" answers instantly and stays in sync with the board.
+void warmFleet();
 // Seed the editable 2026 holiday list into app_state on first boot (no-op after).
 void initRotationConfig();
 
