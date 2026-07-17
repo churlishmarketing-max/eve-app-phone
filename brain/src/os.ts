@@ -89,7 +89,8 @@ async function refreshBoard(): Promise<void> {
         `${d(j.open_pipeline)} open pipeline across ${j.open_deals ?? 0} deals · ${j.clients ?? 0} clients · ` +
         `Friday Five ${ff}. (For detail or to change anything, use os_board / os_command.)`,
     };
-  } catch {
+  } catch (e) {
+    console.warn("[os] board snapshot refresh failed:", e instanceof Error ? e.message : String(e));
     // leave the last good snapshot in place; never throw into the pack
   } finally {
     boardRefreshing = false;
@@ -108,4 +109,11 @@ export function boardSnapshot(): string | null {
 // Warm the snapshot at boot so the very first board question is fast too.
 export async function warmBoard(): Promise<void> {
   await refreshBoard();
+}
+
+// Cheap read (no refresh trigger) — lets /health confirm the ambient build is
+// live and the snapshot has landed, so latency measurements target the right
+// build rather than racing a deploy.
+export function boardSnapshotReady(): boolean {
+  return !!boardCache;
 }

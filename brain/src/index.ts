@@ -23,7 +23,7 @@ import { runFloorCheck, runCloseout, runWeekPreview, fireTripwire, runRoutineRis
 import { tickRoutine, actOnAttention, type AttentionAction } from "./ops.js";
 import { transcribe, speakToResponse, listVoices, sttReady, ttsReady } from "./voice.js";
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
-import { warmBoard } from "./os.js";
+import { warmBoard, boardSnapshotReady } from "./os.js";
 import { stamp, getStamp } from "./health.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -87,6 +87,7 @@ app.get("/health", (_req, res) => {
     pushReady: isPushReady(),
     memoryReady: isDbReady(),
     voiceReady: { stt: sttReady(), tts: ttsReady() },
+    osBoardWarm: boardSnapshotReady(),
     connectors: getConnectorStatus(),
     // Stamped by BOTH the /job route and the in-process crons (review C9/C24).
     lastDistillation: getStamp("distill"),
