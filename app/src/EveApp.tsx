@@ -33,6 +33,7 @@ import {
   openNotificationAccessSettings,
   onNotificationPosted,
 } from "./native/notifications";
+import { requestAudioFocus, abandonAudioFocus } from "./native/audioFocus";
 
 /* ============================================================
    EVE — Executive Voice Engine · App shell
@@ -336,17 +337,28 @@ export default function EveApp() {
         setToolNote(null);
         busy.current = false;
         // Voice loop (05 §3): spoken question → spoken answer. Degrades to
-        // text silently when ElevenLabs isn't wired.
+        // text silently when ElevenLabs isn't wired. While she speaks, we grab
+        // transient audio focus so King's music / YouTube pause and he can
+        // actually hear her — released the instant her reply ends, errors, or
+        // fails to start, so nothing stays paused.
         if (lastInputWasVoice.current && ttsAvailable.current && fullText.trim()) {
-          void speakText(fullText).then((url) => {
+          void speakText(fullText).then(async (url) => {
             if (!url) return;
             const audio = new Audio(url);
-            setMode("speaking");
-            audio.onended = () => {
+            let released = false;
+            const finish = () => {
+              if (!released) {
+                released = true;
+                void abandonAudioFocus();
+              }
               setMode("idle");
               URL.revokeObjectURL(url);
             };
-            audio.play().catch(() => setMode("idle"));
+            await requestAudioFocus();
+            setMode("speaking");
+            audio.onended = finish;
+            audio.onerror = finish;
+            audio.play().catch(finish);
           });
         }
       },
