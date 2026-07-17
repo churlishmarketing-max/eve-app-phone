@@ -37,6 +37,10 @@ Thumbs.db
 
 # Her closet lives in Supabase Storage (scripts/sync-wardrobe.mjs), not git:
 # keeps the repo small, deploys fast, and adding a look needs no redeploy.
-brain/data/
+# The /* form (not the bare dir) so specific data files can be re-included;
+# wardrobe stays OUT (Supabase). EVE's fleet manifest DOES ship — she reads it
+# at runtime (fleet.ts).
+brain/data/*
+!brain/data/fleet-roster.json
 brain/*.log
 brain/prompts/*.bak

@@ -1,0 +1,512 @@
+[
+  {
+    "division": "command",
+    "key": "eve",
+    "name": "EVE",
+    "alias": "Executive Operator",
+    "job": "Default operating layer. Runs the seven-move loop, routes every job to the right specialist or director (directors bench: Starfire seated; Titans-name chairs open), enforces the goal ledger and the 3-conversations/week floor.",
+    "triggers": "\"EVE\" · \"operator mode\" · \"second brain\" · \"plan my week\" · \"Friday report\" · any open-ended business ask · any delegation",
+    "schedule": "Boots every session",
+    "loc": "WS"
+  },
+  {
+    "division": "command",
+    "key": "fable-mind",
+    "name": "Fable Mind",
+    "alias": "The Doctrine",
+    "job": "Model-agnostic reasoning doctrine — ten laws: interview-first, absence hunting, adversary pass, tournaments, numbers over adjectives, reframed clocks, ship with receipts.",
+    "triggers": "Start of any session · whenever any skill fires · any strategic/pricing/plan output",
+    "schedule": "Boots every session",
+    "loc": "WS"
+  },
+  {
+    "division": "command",
+    "key": "watchtower",
+    "name": "WATCHTOWER",
+    "alias": "Fleet Supervisor",
+    "job": "Verifies every agent ran and produced clean, on-brand output. Flags failures and drift, escalates red items. Also the independent evaluator on finished builds.",
+    "triggers": "\"run WATCHTOWER\" · evaluator mode on goal-runner builds",
+    "schedule": "Daily · 12:00 PM",
+    "loc": "WS"
+  },
+  {
+    "division": "command",
+    "key": "churlish-voice-guard",
+    "name": "Churlish Voice Guard",
+    "alias": "The Law",
+    "job": "Brand voice + visual law: banned words, banned CTAs, call-out structure, color law (red is punctuation), typography.",
+    "triggers": "Before ANY Churlish-voiced output — non-negotiable",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "command",
+    "key": "avatar-bible-loader",
+    "name": "Avatar Bible Loader",
+    "alias": "The Dossier",
+    "job": "Stores and serves client avatar profiles so every skill writes to a real person.",
+    "triggers": "\"avatar for [client]\" · any skill needing audience context",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "command",
+    "key": "second-brain",
+    "name": "Second Brain",
+    "alias": "The Fleet Manifest",
+    "job": "Single source of truth for the operation: every unit's name, job, triggers, schedule, location. Reads, audits, and maintains this roster + the dashboard. Prime directive: roster fixed same session a unit is created or retired.",
+    "triggers": "\"second brain\" · \"show me the fleet\" · \"who handles X\" · \"fleet census\"",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "war-rooms",
+    "key": "jsa",
+    "name": "JSA",
+    "alias": "The Tribunal · formerly LLM Council",
+    "job": "5 blind advisors — Wildcat, Doctor Fate, Alan Scott, Stargirl, Hourman — peer-review anonymously; Mister Terrific rules. Seats Ma Hunkel (The Buyer) for commercial go/no-go: Green-light / Reshape / Kill + cheapest 48-hr test.",
+    "triggers": "\"JSA this\" · \"council this\" · \"pressure-test this\" · real decisions with stakes",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "war-rooms",
+    "key": "youtube-council",
+    "name": "YouTube Council",
+    "alias": "Packaging War Room",
+    "job": "5-seat board for video ideas, titles, thumbnails, hooks, channel calls. Kills yes-man feedback before publish.",
+    "triggers": "\"youtube council this\" · \"would this get the click\"",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "war-rooms",
+    "key": "suicide-squad",
+    "name": "Suicide Squad",
+    "alias": "The Hit Squad",
+    "job": "Four-move assassination of a whole business/offer/funnel: Kill Order, Absence Detector, Decision Archaeology, Council tribunal.",
+    "triggers": "\"suicide squad this\" · \"find the fatal flaw\" · \"try to kill this\"",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "war-rooms",
+    "key": "justice-league",
+    "name": "Justice League",
+    "alias": "The Boardroom · formerly Board of Directors",
+    "job": "Portfolio war room: Booster Gold/Batman/Aquaman/The Atom/John Stewart + Superman in the Chair, ruling against $1M by 2030 · $5M by 2035 · Brandon out of the daily by 2030.",
+    "triggers": "\"convene the League\" · \"convene the board\" · \"portfolio review\" · sequencing ventures",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "starfire",
+    "name": "Starfire",
+    "alias": "Social Media Director",
+    "job": "First seat on EVE's directors bench. Owns organic social end-to-end: master calendar, post production, Canva design, the Approval Inbox, publishing ops, engagement, Friday scoreboard. PRIME LAW: nothing publishes without Brandon's item-level approval.",
+    "triggers": "\"run Starfire\" · \"post this\" · \"what's pending\" · social calendar/approvals",
+    "schedule": "Weekly cadence (Mon batch · Fri scoreboard)",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "kid-flash",
+    "name": "Kid Flash",
+    "alias": "Lead Research",
+    "job": "Sources, qualifies, tiers, verifies prospect lists via Apollo. Feeds Blue Beetle; keeps the funnel floor fed.",
+    "triggers": "\"run Kid Flash\" · list sourcing",
+    "schedule": "Daily · morning",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "blue-beetle",
+    "name": "Blue Beetle",
+    "alias": "Brand Outreach",
+    "job": "Multi-touch email + LinkedIn outreach, routes replies, books 15-min calls (Authority Spark + service side).",
+    "triggers": "\"run Blue Beetle\" · outreach · booking",
+    "schedule": "Daily",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "red-robin",
+    "name": "Red Robin",
+    "alias": "Short-Form & Ad Creative",
+    "job": "Multiplies raw footage/transcripts into walls of clips + ad variations, on-voice and CTA-clean. Owns ad refreshes.",
+    "triggers": "\"run Red Robin\" · shorts · ad creative",
+    "schedule": "Daily",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "iris-west",
+    "name": "Iris West",
+    "alias": "The Reporter",
+    "job": "7-day sweep of niche news, platform shifts, Midwest angles, competitor headlines per client — filed as content angles with expiry dates.",
+    "triggers": "\"run Iris\" · \"anything timely\"",
+    "schedule": "Weekly · Monday AM",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "guardian",
+    "name": "Guardian",
+    "alias": "The Renewal Saver",
+    "job": "Watches every retainer's contract clock + account health; builds receipts-based renewal cases before the window opens.",
+    "triggers": "\"run Guardian\" · \"who's up for renewal\" · churn signals",
+    "schedule": "Weekly",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "cassandra-cain",
+    "name": "Cassandra Cain",
+    "alias": "The Receipts Scorer",
+    "job": "Scores drafts against actual historical performance — the tape, not theory. Refuses to fake a score with no data.",
+    "triggers": "\"score this\" · \"Cass pass\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "martian-manhunter",
+    "name": "Martian Manhunter",
+    "alias": "The Voice Forge",
+    "job": "Extracts a client's real voice into a voice file; the whole fleet wears it. Mandatory before the first copy deliverable ships.",
+    "triggers": "\"build a voice file\" · \"run Manhunter\" · voice drift",
+    "schedule": "Every onboarding",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "doctor-mid-nite",
+    "name": "Doctor Mid-Nite",
+    "alias": "Funnel Page Surgeon",
+    "job": "Audits the page the click lands on — landing pages, opt-ins, checkouts. Mandatory pre-launch surgery on every funnel.",
+    "triggers": "\"run Mid-Nite\" · \"why isn't my page converting\"",
+    "schedule": "Every funnel launch",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "brother-eye",
+    "name": "Brother Eye",
+    "alias": "Answer Engine Visibility",
+    "job": "Makes the client THE answer when someone asks ChatGPT/Claude/Perplexity for \"best X in [city].\" Delivery skill + productized service line.",
+    "triggers": "AEO/GEO mentions · \"run Brother Eye\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "oracle",
+    "name": "Oracle",
+    "alias": "Comms Triage",
+    "job": "Daily inbox brief — what matters, what waits, what needs Brandon.",
+    "triggers": "Daily inbox brief",
+    "schedule": "Daily",
+    "loc": "CC"
+  },
+  {
+    "division": "fleet",
+    "key": "pennyworth",
+    "name": "Pennyworth",
+    "alias": "The Butler · Money Brief",
+    "job": "Daily money brief + proposal agent inside Churlish OS.",
+    "triggers": "Money brief · proposals in OS",
+    "schedule": "Daily",
+    "loc": "CC"
+  },
+  {
+    "division": "fleet",
+    "key": "cyborg",
+    "name": "Cyborg",
+    "alias": "Ad Monitor",
+    "job": "Daily ad brief — spend, results, anything drifting toward scale-or-kill.",
+    "triggers": "Daily ad brief",
+    "schedule": "Daily",
+    "loc": "CC"
+  },
+  {
+    "division": "fleet",
+    "key": "steele",
+    "name": "Steele",
+    "alias": "Production Board",
+    "job": "Keeps the production board current — every project, status, deadline.",
+    "triggers": "Board update",
+    "schedule": "Daily",
+    "loc": "CC"
+  },
+  {
+    "division": "fleet",
+    "key": "the-flash",
+    "name": "The Flash",
+    "alias": "Publish Queue",
+    "job": "Runs the daily publish queue — what ships, where, when.",
+    "triggers": "Publish queue",
+    "schedule": "Daily",
+    "loc": "CC"
+  },
+  {
+    "division": "fleet",
+    "key": "lois-lane",
+    "name": "Lois Lane",
+    "alias": "Episode Kit",
+    "job": "Builds the episode kit when an HLP episode drops.",
+    "triggers": "Episode drop",
+    "schedule": "Per episode",
+    "loc": "CC"
+  },
+  {
+    "division": "fleet",
+    "key": "the-question",
+    "name": "The Question",
+    "alias": "The Intel Brief",
+    "job": "Friday intel brief — market movement, competitor activity.",
+    "triggers": "Friday brief",
+    "schedule": "Weekly · Friday",
+    "loc": "CC"
+  },
+  {
+    "division": "fleet",
+    "key": "huntress",
+    "name": "Huntress",
+    "alias": "Revenue Leak Sweep",
+    "job": "Sweeps for money that should be landing and isn't: unbilled scope, dormant offers, dropped follow-ups.",
+    "triggers": "\"run the leak sweep\"",
+    "schedule": "Periodic",
+    "loc": "CC"
+  },
+  {
+    "division": "production",
+    "key": "alfred",
+    "name": "Alfred",
+    "alias": "The AI Editor",
+    "job": "Long-form YouTube brain: animation plans, storyboards, visual-direction specs, placement tables, Remotion code (Phases 2–3).",
+    "triggers": "\"storyboard this video\" · \"plan the animations\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "hlp-clip-finder",
+    "name": "HLP Clip Finder",
+    "alias": "The Content Engine",
+    "job": "The HLP ladder: trailers (open loops), shorts (Stop/Ride/Button, /25), mid-form (4–7 min complete ideas) + editor briefs.",
+    "triggers": "Any HLP transcript + clip request",
+    "schedule": "Per episode",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "hlp-youtube-package",
+    "name": "HLP YouTube Package",
+    "alias": "Episode Packaging",
+    "job": "Title, description, thumbnail subtitle + prompt for HLP episodes, to the HLP standard.",
+    "triggers": "\"HLP package\" · upload prep",
+    "schedule": "Per episode",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "transcript-clip-finder",
+    "name": "Transcript Clip Finder",
+    "alias": "General Clip Pass",
+    "job": "All-client clip finder: hook-strength scoring, timestamped recommendations, platform targets.",
+    "triggers": "Any non-HLP transcript + \"find clips\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "content-calendar-engine",
+    "name": "Content Calendar Engine",
+    "alias": "The Calendar",
+    "job": "Monthly calendars with funnel tags, cadence, hooks, CTAs — .docx or .xlsx.",
+    "triggers": "\"content calendar for [client]\"",
+    "schedule": "Monthly per client",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "ad-script-factory",
+    "name": "Ad Script Factory",
+    "alias": "Call-Out Creative",
+    "job": "Direct-response scripts: pattern interrupt, pain call-out, pivot, proof, offer, one CTA.",
+    "triggers": "\"write an ad for\" · \"write me a hook\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "ad-diagnostic-engine",
+    "name": "Ad Diagnostic Engine",
+    "alias": "Performance Law",
+    "job": "Benchmarks + prescriptions for CPL/CTR/Hook Rate; scale-or-kill calls; enforces CTA standards on every ad.",
+    "triggers": "Any ad metrics · before any ad ships",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "email-sequence-writer",
+    "name": "Email Sequence Writer",
+    "alias": "The Nurture Desk",
+    "job": "NEPQ + Voss sequences, ready-to-load with timing and trigger logic.",
+    "triggers": "\"nurture sequence for\" · any email flow",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "perry-white",
+    "name": "Perry White",
+    "alias": "Editor-in-Chief · The Email Desk",
+    "job": "Every one-off/situational email: inbound replies, revivals, reactivations, objections, scope pushback, bad news, collections ladder, renewal emails (from Guardian's case), referral/testimonial asks, saying no, Documented-register escalation letters. Also the Desk Law — the 11-gate spike every fleet email must pass. Boundary: flows → Sequence Writer · volume → Blue Beetle.",
+    "triggers": "\"Perry White\" · \"reply to this\" · \"what do I say to\" · \"they ghosted\" · \"chase this invoice\" · any pasted email needing an answer",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "strategy-doc-builder",
+    "name": "Strategy Doc Builder",
+    "alias": "The Gameplan Desk",
+    "job": "Strategy docs, playbooks, KPI trackers — branded .docx/.xlsx with revenue models.",
+    "triggers": "\"gameplan for\" · \"KPI tracker\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "master-plan-formula",
+    "name": "Master Plan Formula",
+    "alias": "The Strategic Formula",
+    "job": "Brain-dump → 10-section master plan + 5-section exec summary.",
+    "triggers": "\"master plan for [business]\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "master-plan-style",
+    "name": "Master Plan Style",
+    "alias": "The Signature Render",
+    "job": "The exact Master Plan visual system — HTML + PDF + DOCX. Never approximated from memory.",
+    "triggers": "\"Master Plan style\" · \"triple output\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "proposal-generator",
+    "name": "Proposal Generator",
+    "alias": "The Pitch Desk",
+    "job": "7-section Authority Engine proposals, tiered pricing, avatar pain language, send-ready .docx.",
+    "triggers": "\"proposal for [client]\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "invoice-scoper",
+    "name": "Invoice Scoper",
+    "alias": "The Billing Desk",
+    "job": "Campaign scope → billable line items for HoneyBook/QuickBooks/Churlish OS.",
+    "triggers": "\"invoice for [client]\" · \"scope this\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "editor-brief-generator",
+    "name": "Editor Brief Generator",
+    "alias": "The Handoff Desk",
+    "job": "Zero-follow-up briefs for editors, VAs, production team. The delegation protocol's hands.",
+    "triggers": "\"brief for [editor]\" · any handoff",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "production",
+    "key": "youtube-metadata",
+    "name": "YouTube Metadata",
+    "alias": "The Publishing Desk",
+    "job": "Titles, descriptions, tags, thumbnails, chapters for client channels.",
+    "triggers": "\"title options\" · \"optimize for YouTube\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "systems",
+    "key": "verification-loop",
+    "name": "Verification Loop",
+    "alias": "Ship With Receipts",
+    "job": "Definition of Done → evidence per item → edge-case stress test. Nothing flagship ships unproven.",
+    "triggers": "Before any flagship build ships",
+    "schedule": null,
+    "loc": "CC"
+  },
+  {
+    "division": "systems",
+    "key": "goal-runner",
+    "name": "Goal Runner",
+    "alias": "The Build Rig",
+    "job": "Large multi-deliverable builds run to \"done\" with parallel sub-agents; graded by WATCHTOWER, never self-approved.",
+    "triggers": "Any large build (not one artifact)",
+    "schedule": null,
+    "loc": "CC"
+  },
+  {
+    "division": "systems",
+    "key": "session-handoff",
+    "name": "Session Handoff",
+    "alias": "The Relay",
+    "job": "Packages session state when context fills, sessions run long, or models switch.",
+    "triggers": "Context full · model switch",
+    "schedule": null,
+    "loc": "CC"
+  },
+  {
+    "division": "systems",
+    "key": "mindctrl-publishing-council",
+    "name": "MindCTRL Publishing Council",
+    "alias": "The Imprint Board",
+    "job": "Publishing war room for MindCTRL Studios releases.",
+    "triggers": "MindCTRL release decisions",
+    "schedule": null,
+    "loc": "CC"
+  },
+  {
+    "division": "clients",
+    "key": "rustic-lumber-store",
+    "name": "Rustic Lumber Store",
+    "alias": "Zach Wedekind · Woodaddy",
+    "job": "Three engines (furniture, lumber, Woodaddy), Macho Man voice, Chisel community, competitive positioning, $1M strategy.",
+    "triggers": "Anything RLS / Woodaddy / Zach",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "clients",
+    "key": "truenorth-clip-finder",
+    "name": "TrueNorth Clip Finder",
+    "alias": "Kambi Pope · TrueNorth",
+    "job": "Clip engine for Kambi's footage: pillar + funnel tags, LinkedIn teaching segments, speech-first lens on guest spots.",
+    "triggers": "Any Kambi/TrueNorth transcript",
+    "schedule": null,
+    "loc": "WS"
+  },
+  {
+    "division": "writers-room",
+    "key": "aqualad",
+    "name": "Aqualad",
+    "alias": "The Story Tactician",
+    "job": "Creative second for the writer's world: stress-tests concepts (SPAR), builds bibles/beat sheets/magic systems (ARCHITECT), drafts in Brandon's voice, doctors his drafts in two registers (RP vs publication), keeps the canon ledger, codes posts into the house templates. Thirteen-author influence engine (Sanderson, Gaiman, Sapkowski, Koontz, Briggs, Green, Romig, Stohl +).",
+    "triggers": "\"Aqualad\" · \"writer's world\" · any fiction/RP/novel/worldbuilding work · CINEFLUX projects · \"next post for\" · \"polish this chapter\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  }
+]

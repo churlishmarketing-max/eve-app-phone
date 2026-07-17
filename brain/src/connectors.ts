@@ -5,6 +5,7 @@ import { listLooks, getWearing, resolveLook, setWearing } from "./wardrobe.js";
 import { recentTexts, recentNotifications } from "./senses.js";
 import * as google from "./google.js";
 import * as os from "./os.js";
+import { fleetRoster } from "./fleet.js";
 import { runDispatch } from "./dispatch.js";
 // Notion / Slack / Stripe connectors retired 2026-07-17 (King's call): the OS
 // is the single spine now — client, money, and deal data all reach her through
@@ -316,8 +317,8 @@ export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
           "workspace or the OS — for those, tell him the unit and its trigger phrase. GREEN — read-only.",
         { filter: z.string().optional().describe("Optional: a name, job word, or division to narrow the list") },
         async ({ filter }) => {
-          const units = await os.fleetRoster();
-          if (!units.length) return text("Fleet roster unreachable right now (OS roster store).", true);
+          const units = fleetRoster();
+          if (!units.length) return text("Fleet roster not loaded.", true);
           const q = (filter ?? "").trim().toLowerCase();
           const rows = q
             ? units.filter((u) =>
