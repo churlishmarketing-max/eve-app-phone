@@ -61,6 +61,18 @@ export const CSS = `
   bottom:calc(76px + env(safe-area-inset-bottom)); left:0; right:0;
   overflow-y:auto; -webkit-overflow-scrolling:touch; z-index:2;
   padding:8px 26px 40px; animation:fadeUp .35s ease both; }
+
+/* Talk is a PINNED COLUMN, not a scrolling page — King must be able to see
+   her at all times (his call, 2026-07-16). The plate and the input rail hold
+   still; only the transcript between them moves. */
+.eve-screen.talk{ overflow:hidden; display:flex; flex-direction:column; padding-bottom:10px; }
+.talk .eyebrow, .talk .plate, .talk .chips, .talk .inrow, .talk .vrow{ flex-shrink:0; }
+.tscroll{ flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  margin:18px 0 2px;
+  /* fade the conversation out under the plate instead of hard-cutting it */
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 16px);
+  mask-image:linear-gradient(180deg,transparent 0,#000 16px); }
+.tscroll::-webkit-scrollbar{ width:0; height:0; }
 .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.24em;
   color:var(--faint); margin-bottom:12px; }
 .h1{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:60px;
@@ -197,7 +209,10 @@ export const CSS = `
 .chip:focus-visible{ outline:2px solid var(--tealHi); outline-offset:3px; border-radius:2px; }
 
 /* ---------- input row ---------- */
-.inrow{ display:flex; gap:12px; align-items:center; border-top:1px solid var(--line); padding-top:18px; }
+/* Mic + send sit RIGHT: King runs the phone right-handed and wants them under
+   his thumb (his call, 2026-07-16). align-end keeps them on the last line as
+   the textarea grows. */
+.inrow{ display:flex; gap:10px; align-items:flex-end; border-top:1px solid var(--line); padding-top:16px; }
 .mic{ width:56px; height:56px; flex-shrink:0; border-radius:50%;
   background:radial-gradient(circle at 50% 35%,rgba(0,122,135,.4),rgba(12,20,23,.9));
   border:1px solid rgba(28,185,200,.35); cursor:pointer; display:flex; align-items:center;
@@ -205,8 +220,13 @@ export const CSS = `
 .mic:active{ transform:scale(.94); }
 .mic.on{ border-color:#1CB9C8; }
 .mic.rec{ border-color:var(--red); box-shadow:0 0 20px rgba(196,30,58,.3); }
+/* Grows with what he types (auto-sized in JS, capped ~5 lines) instead of a
+   single-line rail that hides the sentence he's writing. */
 .tin{ flex:1; min-width:0; background:none; border:none; border-bottom:1px solid rgba(240,237,232,.15);
-  padding:12px 2px; min-height:44px; color:#F0EDE8; font-family:Barlow,sans-serif; font-size:15px; outline:none; }
+  padding:12px 2px; min-height:44px; max-height:124px; color:#F0EDE8;
+  font-family:Barlow,sans-serif; font-size:15px; line-height:1.45; outline:none;
+  resize:none; overflow-y:auto; }
+.tin::-webkit-scrollbar{ width:0; }
 .tin:focus{ border-bottom-color:var(--tealHi); }
 .tin::placeholder{ color:var(--faint); }
 .sendb{ width:44px; height:44px; flex-shrink:0; background:none; border:none; cursor:pointer;
@@ -298,11 +318,20 @@ export const CSS = `
 .wh2{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:36px; line-height:1; margin:0 0 8px; flex-shrink:0; }
 .wp{ margin:0 0 18px; font-size:14.5px; line-height:1.55; color:rgba(240,237,232,.55); text-wrap:pretty; flex-shrink:0; }
 .wgrid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px;
-  overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; }
+  overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0;
+  grid-auto-rows:max-content; align-content:start; }
+.wgrid::-webkit-scrollbar{ width:0; height:0; }
 .lookc{ border:1px solid rgba(240,237,232,.1); border-radius:14px; cursor:pointer; overflow:hidden;
   background:#0C1417; padding:0; text-align:center; }
 .lookc.on{ border-color:rgba(28,185,200,.5); box-shadow:0 0 20px rgba(28,185,200,.14); }
-.lookc img{ width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#0C1417; }
+/* Her renders are tall portraits (768x1376) — a 3:4 thumb keeps the face and
+   the look, where a square crop would cut both. */
+/* Android's WebView collapsed these to slivers under aspect-ratio inside a
+   scrolling grid (rendered fine in desktop Chrome — the phone is the truth).
+   The padding-top ratio box works everywhere. */
+.lookc .thumb{ position:relative; width:100%; padding-top:133%; background:#0C1417; }
+.lookc .thumb img{ position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:50% 18%; display:block; }
 .lookc .nm{ font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.1em;
   color:rgba(240,237,232,.55); padding:7px 4px; line-height:1.3; }
 .lookc.on .nm{ color:#1CB9C8; }

@@ -179,12 +179,18 @@ export default function EveApp() {
   const notifWired = useRef(false);
   const msgSeq = useRef(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const later = (fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms);
     timers.current.push(id);
   };
   const newId = () => `m${++msgSeq.current}`;
+  // The input grows to fit the thought, up to the CSS max-height.
+  const autoGrow = (el: HTMLTextAreaElement) => {
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 124)}px`;
+  };
 
   // ---- her senses (Phase 4, 05 §7): forward texts + notifications to the
   // brain's transient buffers while the app is open. Wiring is idempotent,
@@ -735,7 +741,7 @@ export default function EveApp() {
 
         {/* ---------- EVE / TALK ---------- */}
         {tab === "eve" && (
-          <div className="eve-screen" ref={scrollRef}>
+          <div className="eve-screen talk">
             <div className="eyebrow mono">§ FIG.01 — EVE CORE · LIVE PLATE</div>
 
             <div className="plate">
@@ -769,6 +775,8 @@ export default function EveApp() {
             </div>
 
             {/* messages — typographic, never bubbles */}
+            {/* The only scroller on this screen — her plate stays put above it. */}
+            <div className="tscroll" ref={scrollRef}>
             <div className="msgs">
               {messages.length === 0 && (
                 <div>
@@ -832,6 +840,7 @@ export default function EveApp() {
                 </div>
               ))}
             </div>
+            </div>
 
             <div className="chips">
               {CHIPS.map((c) => (
@@ -842,6 +851,25 @@ export default function EveApp() {
             </div>
 
             <div className="inrow">
+              <textarea
+                className="tin"
+                ref={inputRef}
+                rows={1}
+                value={draft}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  autoGrow(e.target);
+                }}
+                onKeyDown={(e) => {
+                  // Enter sends; Shift+Enter is a newline (05 §2: never a <form>).
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendText();
+                  }
+                }}
+                placeholder="Type to her — she remembers"
+                aria-label="Message EVE"
+              />
               <button
                 className={`mic${recording ? " rec" : mode === "listening" ? " on" : ""}`}
                 onClick={micTap}
@@ -852,16 +880,6 @@ export default function EveApp() {
                   <path d="M4 9.5a6 6 0 0 0 12 0M10 15.5V19" />
                 </svg>
               </button>
-              <input
-                className="tin"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendText();
-                }}
-                placeholder="Type to her — she remembers"
-                aria-label="Message EVE"
-              />
               <button className="sendb" onClick={sendText} aria-label="Send">
                 <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="#1CB9C8" strokeWidth="1.6" strokeLinejoin="round">
                   <path d="M16 2L2 8l5.5 2.5L10 16l6-14z" />
@@ -1213,7 +1231,11 @@ export default function EveApp() {
                       aria-label={`Wear ${l.name}`}
                       aria-pressed={l.status === "wearing"}
                     >
-                      {l.img && <img src={l.img} alt={l.name} loading="lazy" />}
+                      {l.img && (
+                        <div className="thumb">
+                          <img src={l.img} alt={l.name} loading="lazy" />
+                        </div>
+                      )}
                       <div className="nm">{l.name}</div>
                     </button>
                   ))}
