@@ -551,9 +551,6 @@ export default function EveApp() {
     { code: "11", name: "ElevenLabs", role: "her voice", st: conn("elevenlabs") ? "live" : "key" },
     { code: "FL", name: "EVE Fleet", role: "research · tribunals", st: live.online ? "live" : "off" },
     { code: "WB", name: "Live Web", role: "search · sources", st: live.online ? "live" : "off" },
-    { code: "NO", name: "Notion", role: "playbooks · docs", st: conn("notion") ? "live" : "key" },
-    { code: "SL", name: "Slack", role: "team wire", st: conn("slack") ? "live" : "key" },
-    { code: "ST", name: "Stripe", role: "money in", st: conn("stripe") ? "live" : "key" },
     { code: "G2", name: "G2 Glasses", role: "her eyes · someday", st: "p4" },
   ];
   const liveNodeCount = wireNodes.filter((w) => w.st === "live").length;

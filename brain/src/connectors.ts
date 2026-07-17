@@ -4,11 +4,12 @@ import { requestConfirm, type PendingConfirm } from "./confirm.js";
 import { listLooks, getWearing, resolveLook, setWearing } from "./wardrobe.js";
 import { recentTexts, recentNotifications } from "./senses.js";
 import * as google from "./google.js";
-import * as notion from "./notion.js";
-import * as slack from "./slack.js";
-import * as stripe from "./stripe.js";
 import * as os from "./os.js";
 import { runDispatch } from "./dispatch.js";
+// Notion / Slack / Stripe connectors retired 2026-07-17 (King's call): the OS
+// is the single spine now — client, money, and deal data all reach her through
+// os_board / os_command, so a separate Stripe read or Slack/Notion tool is
+// redundant surface. The modules stay on disk, just unwired.
 
 // EVE's hands (Phase 3, 02 §1): Gmail, Calendar, Notion, Slack, Stripe —
 // plus her senses (Phase 4, 05 §7): SMS + notifications the app forwards.
@@ -30,9 +31,6 @@ export function getConnectorStatus(): ConnectorStatus[] {
   return [
     { key: "gmail", name: "Gmail", connected: google.gmailReady(), detail: google.statusDetail("gmail") },
     { key: "gcal", name: "Google Calendar", connected: google.calendarReady(), detail: google.statusDetail("gcal") },
-    { key: "notion", name: "Notion", connected: notion.ready(), detail: notion.statusDetail() },
-    { key: "slack", name: "Slack", connected: slack.ready(), detail: slack.statusDetail() },
-    { key: "stripe", name: "Stripe", connected: stripe.ready(), detail: stripe.statusDetail() },
     { key: "churlish_os", name: "Churlish OS", connected: os.ready(), detail: os.statusDetail() },
     { key: "deepgram", name: "Deepgram (voice in)", connected: !!process.env.DEEPGRAM_API_KEY, detail: process.env.DEEPGRAM_API_KEY ? "key set" : "DEEPGRAM_API_KEY not set" },
     { key: "elevenlabs", name: "ElevenLabs (voice out)", connected: !!process.env.ELEVENLABS_API_KEY, detail: process.env.ELEVENLABS_API_KEY ? "key set" : "ELEVENLABS_API_KEY not set" },
@@ -52,9 +50,6 @@ export const connectorToolNames = [
   "mcp__eve_hands__gmail_send",
   "mcp__eve_hands__calendar_view",
   "mcp__eve_hands__calendar_create_event",
-  "mcp__eve_hands__notion_search",
-  "mcp__eve_hands__slack_read",
-  "mcp__eve_hands__stripe_snapshot",
   "mcp__eve_hands__list_looks",
   "mcp__eve_hands__wear_look",
   "mcp__eve_hands__read_texts",
@@ -188,36 +183,6 @@ export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
           }
         },
       ),
-      // ---- Notion / Slack / Stripe (🟢 reads) ----
-      tool(
-        "notion_search",
-        "Search King's Notion workspace (pages + databases), return titles + gists. GREEN — read-only.",
-        { query: z.string() },
-        async ({ query: q }) => {
-          try {
-            return text(await notion.search(q));
-          } catch (e) {
-            return text(notion.explainError(e), true);
-          }
-        },
-        { annotations: { readOnlyHint: true } },
-      ),
-      tool(
-        "slack_read",
-        "Read recent Slack messages King can see (optionally one channel). GREEN — read-only.",
-        {
-          channel: z.string().optional().describe("Channel name without #; omit for recent across channels"),
-          max: z.number().int().min(1).max(50).default(20),
-        },
-        async ({ channel, max }) => {
-          try {
-            return text(await slack.read(channel, max));
-          } catch (e) {
-            return text(slack.explainError(e), true);
-          }
-        },
-        { annotations: { readOnlyHint: true } },
-      ),
       // ---- her closet (05 §5 + King's grant: wearing is HER call) ----
       tool(
         "list_looks",
@@ -245,19 +210,6 @@ export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
           const r = await setWearing(match);
           return text(r.ok ? `Wearing ${match.replace(/\.[^.]+$/, "")} now.` : `Couldn't change: ${r.error}`, !r.ok);
         },
-      ),
-      tool(
-        "stripe_snapshot",
-        "Stripe money snapshot: recent charges, this month's volume, active subscriptions. GREEN — read-only.",
-        {},
-        async () => {
-          try {
-            return text(await stripe.snapshot());
-          } catch (e) {
-            return text(stripe.explainError(e), true);
-          }
-        },
-        { annotations: { readOnlyHint: true } },
       ),
       // ---- her senses (Phase 4, 05 §7: 🟢 reads, 🔴 send_sms) ----
       tool(

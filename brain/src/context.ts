@@ -37,54 +37,48 @@ async function todaySnapshot(): Promise<string[]> {
   const c = db();
   if (!c) return ["Memory spine: OFFLINE (Supabase not configured). You have this conversation only."];
   const lines: string[] = [];
+  const weekAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
 
-  // Today's Three (tasks with priority slots, not done)
-  const { data: three, error: threeErr } = await c
-    .from("tasks")
-    .select("title, priority, due_at")
-    .not("priority", "is", null)
-    .is("done_at", null)
-    .order("priority", { ascending: true })
-    .limit(3);
-  if (threeErr) return [UNREACHABLE];
+  // This runs on the critical path of EVERY reply, so the independent reads
+  // (three tasks, floor count, attention items, calendar) fire in PARALLEL —
+  // the pack waits for the slowest, not the sum. Calendar carries its own 2s
+  // cap so a slow Google never stalls her.
+  const calendar: Promise<string | null> = google.calendarReady()
+    ? Promise.race([
+        google.listEvents(1),
+        new Promise<string>((_, rej) => setTimeout(() => rej(new Error("calendar timeout")), 2000)),
+      ]).catch(() => null)
+    : Promise.resolve(null);
+
+  const [threeR, floorR, attnR, cal] = await Promise.all([
+    c.from("tasks").select("title, priority, due_at").not("priority", "is", null).is("done_at", null).order("priority", { ascending: true }).limit(3),
+    c.from("touches").select("id", { count: "exact", head: true }).in("channel", ["call", "meeting"]).gte("at", weekAgo),
+    c.from("attention_items").select("kind, message, nudge_level").is("resolved_at", null).order("created_at", { ascending: false }).limit(5),
+    calendar,
+  ]);
+
+  // Today's Three
+  if (threeR.error) return [UNREACHABLE];
   lines.push(
-    three?.length
-      ? "Today's Three: " + three.map((t) => `${t.priority}. ${t.title}`).join(" · ")
+    threeR.data?.length
+      ? "Today's Three: " + threeR.data.map((t) => `${t.priority}. ${t.title}`).join(" · ")
       : "Today's Three: none set yet.",
   );
 
-  // Sales floor: real sales conversations (call/meeting touches) in the last 7 days.
-  // ⚑ASSUMPTION (cheap to reverse): floor counts touches with channel call|meeting.
-  const weekAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
-  const { count: floorCount, error: floorErr } = await c
-    .from("touches")
-    .select("id", { count: "exact", head: true })
-    .in("channel", ["call", "meeting"])
-    .gte("at", weekAgo);
-  lines.push(floorErr ? "Sales floor: count unavailable (ledger error)." : `Sales floor: ${floorCount ?? 0}/3 real conversations this week (floor law: 3).`);
+  // Sales floor (call/meeting touches, last 7 days; floor law: 3)
+  lines.push(floorR.error ? "Sales floor: count unavailable (ledger error)." : `Sales floor: ${floorR.count ?? 0}/3 real conversations this week (floor law: 3).`);
 
-  // Calendar next-up (03 §4 item 3) — live once Google is connected; absent
-  // quietly (not falsely empty) when it isn't.
+  // Calendar (null = not connected or timed out — say so, don't fake empty)
   if (google.calendarReady()) {
-    try {
-      const events = await google.listEvents(1);
-      lines.push("Calendar today:", ...events.split("\n").slice(0, 4).map((l) => "  " + l));
-    } catch {
-      lines.push("Calendar: unreachable right now.");
-    }
+    if (cal) lines.push("Calendar today:", ...cal.split("\n").slice(0, 4).map((l) => "  " + l));
+    else lines.push("Calendar: not fetched this turn (ask me and I'll pull it live).");
   }
 
   // Open attention items
-  const { data: attn, error: attnErr } = await c
-    .from("attention_items")
-    .select("kind, message, nudge_level")
-    .is("resolved_at", null)
-    .order("created_at", { ascending: false })
-    .limit(5);
-  if (attnErr) lines.push("Attention items: unavailable (ledger error).");
-  else if (attn?.length) {
+  if (attnR.error) lines.push("Attention items: unavailable (ledger error).");
+  else if (attnR.data?.length) {
     lines.push("Open attention items:");
-    for (const a of attn) lines.push(`  - [${a.kind} N${a.nudge_level}] ${a.message}`);
+    for (const a of attnR.data) lines.push(`  - [${a.kind} N${a.nudge_level}] ${a.message}`);
   } else {
     lines.push("Open attention items: none.");
   }
