@@ -3,6 +3,7 @@ import { runMorningBrief } from "./brief.js";
 import { runDistill } from "./distill.js";
 import { runPulseSweep } from "./pulse.js";
 import { runFloorCheck, runCloseout, runWeekPreview, runRoutineRiskCheck } from "./proactive.js";
+import { rotateLook } from "./rotation.js";
 import { stamp } from "./health.js";
 
 // Brandon is Central time. Same fallback as context.ts — a missing EVE_TZ
@@ -107,7 +108,18 @@ export function startSchedulers(): void {
     },
     { timezone: TZ },
   );
+  // Automatic wardrobe rotation — 3 look-changes a day (off-round minutes on
+  // purpose). Pool is discovered live each run, so any newly-imported outfit is
+  // eligible instantly. Silent (no push); the night slot inside quiet hours is
+  // fine because nothing pings. Times land in the requested windows.
+  const rotate = (slot: "morning" | "evening" | "night") =>
+    rotateLook(slot)
+      .then((r) => console.log("[wardrobe-rotate]", slot, r.ok ? `→ ${r.chosen} (${r.dayType}, pool ${r.poolSize})` : `skipped: ${r.reason}`))
+      .catch((e) => console.error("[wardrobe-rotate] error", e));
+  cron.schedule("14 7 * * *", () => void rotate("morning"), { timezone: TZ });   // ~07:14
+  cron.schedule("22 18 * * *", () => void rotate("evening"), { timezone: TZ });  // ~18:22
+  cron.schedule("43 22 * * *", () => void rotate("night"), { timezone: TZ });    // ~22:43
   console.log(
-    `[schedule] armed (${TZ}): 07:00 brief · 11:45 floor (wk) · 12:30 pulse · 17:30 closeout · 20:00 routines · Sun 19:00 preview · 02:00 distill; quiet 21:30–06:30`,
+    `[schedule] armed (${TZ}): 07:00 brief · 07:14/18:22/22:43 wardrobe · 11:45 floor (wk) · 12:30 pulse · 17:30 closeout · 20:00 routines · Sun 19:00 preview · 02:00 distill; quiet 21:30–06:30`,
   );
 }

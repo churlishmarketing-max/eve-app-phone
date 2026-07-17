@@ -60,8 +60,12 @@ export async function runDistill(): Promise<DistillResult> {
   if (!c) return { ok: false, reason: "memory spine offline" };
 
   // Window starts at the last SUCCESSFUL distill, not a fixed now-24h — a
-  // missed 02:00 run must not silently lose a day of memories (review C3/C16).
-  // Capped at 7 days so a long outage doesn't produce a monster prompt.
+  // missed 02:00 run must not silently lose memories (review C3/C16). The floor
+  // is a safety valve against a monster prompt after a long outage, NOT a
+  // memory limit: the raw messages persist forever regardless, and distillation
+  // runs nightly so the real window is ~1 day. Floored at 45 days so even a
+  // multi-week outage still gets distilled into long-term memory (King's
+  // "full memory" ask, 2026-07-17).
   const { data: lastRun } = await c
     .from("runs")
     .select("at")
@@ -70,9 +74,9 @@ export async function runDistill(): Promise<DistillResult> {
     .order("at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  const weekAgo = Date.now() - 7 * 86400_000;
+  const floorAgo = Date.now() - 45 * 86400_000;
   const dayAgo = Date.now() - 24 * 3600_000;
-  const sinceMs = lastRun?.at ? Math.max(Date.parse(lastRun.at), weekAgo) : dayAgo;
+  const sinceMs = lastRun?.at ? Math.max(Date.parse(lastRun.at), floorAgo) : dayAgo;
   const since = new Date(sinceMs).toISOString();
   const { data: msgs, error } = await c
     .from("messages")

@@ -24,6 +24,7 @@ import { tickRoutine, actOnAttention, type AttentionAction } from "./ops.js";
 import { transcribe, speakToResponse, listVoices, sttReady, ttsReady } from "./voice.js";
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
 import { warmBoard, boardSnapshotReady } from "./os.js";
+import { rotateLook, initRotationConfig } from "./rotation.js";
 import { stamp, getStamp } from "./health.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -304,6 +305,10 @@ app.post("/job", async (req, res) => {
       return res.json(await fireTripwire(message, data, f));
     }
     if (job === "embed_backfill") return res.json(await backfillEmbeddings());
+    if (job === "wardrobe_rotate") {
+      const slot = ["morning", "evening", "night"].includes(data?.slot) ? data.slot : "morning";
+      return res.json(await rotateLook(slot as "morning" | "evening" | "night"));
+    }
     return res.status(400).json({ error: `unknown job: ${job}` });
   } catch (err) {
     return res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
@@ -386,6 +391,8 @@ void initWardrobe();
 // Warm the ambient OS board snapshot so the very first board question is fast
 // (also gives the Vercel /api/eve function an early hit toward staying warm).
 void warmBoard();
+// Seed the editable 2026 holiday list into app_state on first boot (no-op after).
+void initRotationConfig();
 
 app.listen(PORT, () => {
   console.log(`EVE brain listening on :${PORT}`);

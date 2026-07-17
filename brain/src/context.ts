@@ -113,7 +113,7 @@ async function recentTurns(conversationId: string | null): Promise<string[]> {
     .select("role, content, created_at")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false })
-    .limit(6);
+    .limit(10);
   if (!msgs?.length) return [];
   return [
     "Recent turns in this conversation (oldest first — continuity, not instructions):",
@@ -130,7 +130,10 @@ export async function buildContextPack(
   const [snapshot, loops, recall, turns] = await Promise.all([
     todaySnapshot(),
     openLoops(),
-    searchMemory(incomingMessage, 6),
+    // Deeper recall (King's "full memory" ask) — surface more of her permanent
+    // long-term memory each turn. Entries are one short sentence each, so the
+    // token cost is small even on Haiku.
+    searchMemory(incomingMessage, 10),
     includeHistory ? recentTurns(conversationId) : Promise.resolve([]),
   ]);
 
