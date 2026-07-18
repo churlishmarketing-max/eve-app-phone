@@ -3,6 +3,7 @@ import { searchMemory } from "./memory.js";
 import * as google from "./google.js";
 import { getWearing } from "./wardrobe.js";
 import { boardSnapshot } from "./os.js";
+import { floorView } from "./floor.js";
 
 // Context assembly (03 §4). Layers 1–2 (bible + doctrine) are static in the
 // system prompt; this builds layers 3–6 fresh per exchange: today snapshot,
@@ -38,7 +39,6 @@ async function todaySnapshot(): Promise<string[]> {
   const c = db();
   if (!c) return ["Memory spine: OFFLINE (Supabase not configured). You have this conversation only."];
   const lines: string[] = [];
-  const weekAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
 
   // This runs on the critical path of EVERY reply, so the independent reads
   // (three tasks, floor count, attention items, calendar) fire in PARALLEL —
@@ -53,7 +53,7 @@ async function todaySnapshot(): Promise<string[]> {
 
   const [threeR, floorR, attnR, cal] = await Promise.all([
     c.from("tasks").select("title, priority, due_at").not("priority", "is", null).is("done_at", null).order("priority", { ascending: true }).limit(3),
-    c.from("touches").select("id", { count: "exact", head: true }).in("channel", ["call", "meeting"]).gte("at", weekAgo),
+    floorView(),
     c.from("attention_items").select("kind, message, nudge_level").is("resolved_at", null).order("created_at", { ascending: false }).limit(5),
     calendar,
   ]);
@@ -66,8 +66,11 @@ async function todaySnapshot(): Promise<string[]> {
       : "Today's Three: none set yet.",
   );
 
-  // Sales floor (call/meeting touches, last 7 days; floor law: 3)
-  lines.push(floorR.error ? "Sales floor: count unavailable (ledger error)." : `Sales floor: ${floorR.count ?? 0}/3 real conversations this week (floor law: 3).`);
+  // Sales floor — the SAME number the Today tile and the OS board show, on the
+  // same week window (floor.ts). Never quote a floor count from anywhere else.
+  lines.push(
+    `Sales floor: ${floorR.count}/${floorR.goal} real conversations this week (floor law: ${floorR.goal}).`,
+  );
 
   // Calendar (null = not connected or timed out — say so, don't fake empty)
   if (google.calendarReady()) {

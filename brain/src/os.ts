@@ -66,7 +66,7 @@ export async function osTool(
 // board" answers in ONE turn with zero round-trip. os_board stays available
 // for authoritative detail/action; this is the fast ambient read.
 
-let boardCache: { line: string; at: number } | null = null;
+let boardCache: { line: string; at: number; calls: number | null; week: string | null } | null = null;
 let boardRefreshing = false;
 const BOARD_TTL_MS = 45_000;
 
@@ -81,9 +81,17 @@ async function refreshBoard(): Promise<void> {
       coverage?: number | null; friday_five?: unknown;
     };
     const d = (n?: number) => `$${(n ?? 0).toLocaleString("en-US")}`;
-    const ff = j.friday_five && typeof j.friday_five === "object" ? "logged" : "not logged yet";
+    // friday_five is either the object or the literal string "not logged yet"
+    // (churlish-os lib/rookie-tools.ts boardSummary). `calls` is the OS-side
+    // sales-floor counter the Today tile mirrors — keep it on the warm cache so
+    // the tile costs zero round-trips.
+    const ffObj =
+      j.friday_five && typeof j.friday_five === "object" ? (j.friday_five as { calls?: number }) : null;
+    const ff = ffObj ? "logged" : "not logged yet";
     boardCache = {
       at: Date.now(),
+      calls: typeof ffObj?.calls === "number" ? ffObj.calls : null,
+      week: j.week ?? null,
       line:
         `OS board (live snapshot, ${j.week ?? "this week"}): ${d(j.collected)} collected of ${d(j.goal)} goal · ` +
         `${d(j.open_pipeline)} open pipeline across ${j.open_deals ?? 0} deals · ${j.clients ?? 0} clients · ` +
@@ -116,4 +124,21 @@ export async function warmBoard(): Promise<void> {
 // build rather than racing a deploy.
 export function boardSnapshotReady(): boolean {
   return !!boardCache;
+}
+
+// The OS-side sales-floor number (Friday Five "Calls held"), off the warm cache.
+// null = OS unreachable, or the week has no Friday Five row yet. Kicks a
+// background refresh when stale; never blocks.
+export function boardCalls(): number | null {
+  if (!ready()) return null;
+  if (!boardCache || Date.now() - boardCache.at > BOARD_TTL_MS) void refreshBoard();
+  return boardCache?.calls ?? null;
+}
+
+// Force the snapshot to re-read NOW. Called right after EVE writes the Friday
+// Five so the Today tile reflects the new count immediately instead of showing
+// a stale number for up to the 45s TTL.
+export async function refreshBoardNow(): Promise<void> {
+  boardCache = boardCache ? { ...boardCache, at: 0 } : null; // invalidate, then re-read
+  await refreshBoard();
 }

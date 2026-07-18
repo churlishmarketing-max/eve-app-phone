@@ -1,4 +1,5 @@
 import { db, isDbReady } from "./db.js";
+import { floorView } from "./floor.js";
 import { listPending } from "./confirm.js";
 import { getConnectorStatus } from "./connectors.js";
 import { getLatestBrief } from "./brief.js";
@@ -11,11 +12,12 @@ export async function buildState(): Promise<Record<string, unknown>> {
   // Pending RED confirms + connector tiles work even with the spine offline.
   if (!c) return { online: false, pendingConfirms: listPending(), connectors: getConnectorStatus() };
 
-  const weekAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
-
   const [three, floor, attention, clients, jobs, routines] = await Promise.all([
     c.from("tasks").select("id, title, detail, priority, due_at").not("priority", "is", null).is("done_at", null).order("priority"),
-    c.from("touches").select("id", { count: "exact", head: true }).in("channel", ["call", "meeting"]).gte("at", weekAgo),
+    // The floor now comes from floor.ts — same number as the OS board and her
+    // context pack, on the same week window. (Was: a rolling-7-day touches
+    // count that could never match the OS's calendar week.)
+    floorView(),
     c.from("attention_items").select("id, kind, message, nudge_level, ref, created_at").is("resolved_at", null).order("created_at", { ascending: false }).limit(20),
     c.from("clients").select("id, name, cadence_days, last_touch_at, status").eq("status", "active"),
     c.from("jobs").select("id, agent, title, status, created_at").in("status", ["queued", "running", "in_approvals"]).order("created_at", { ascending: false }).limit(10),
@@ -38,7 +40,7 @@ export async function buildState(): Promise<Record<string, unknown>> {
     online: true,
     latestBrief: getLatestBrief(),
     todaysThree: three.data ?? [],
-    floor: { count: floor.count ?? 0, goal: 3 },
+    floor,
     attentionItems: attention.data ?? [],
     clients: clientPulse,
     jobs: jobs.data ?? [],

@@ -7,6 +7,9 @@ import * as google from "./google.js";
 import * as os from "./os.js";
 import { fleetRoster } from "./fleet.js";
 import { runDispatch } from "./dispatch.js";
+import { postNote, notesReady, notesStatusDetail } from "./notes.js";
+import { saveMemory, matchClient } from "./memory.js";
+import { logConversations } from "./floor.js";
 // Notion / Slack / Stripe connectors retired 2026-07-17 (King's call): the OS
 // is the single spine now — client, money, and deal data all reach her through
 // os_board / os_command, so a separate Stripe read or Slack/Notion tool is
@@ -33,6 +36,7 @@ export function getConnectorStatus(): ConnectorStatus[] {
     { key: "gmail", name: "Gmail", connected: google.gmailReady(), detail: google.statusDetail("gmail") },
     { key: "gcal", name: "Google Calendar", connected: google.calendarReady(), detail: google.statusDetail("gcal") },
     { key: "churlish_os", name: "Churlish OS", connected: os.ready(), detail: os.statusDetail() },
+    { key: "notebook", name: "Notebook (Discord)", connected: notesReady(), detail: notesStatusDetail() },
     { key: "deepgram", name: "Deepgram (voice in)", connected: !!process.env.DEEPGRAM_API_KEY, detail: process.env.DEEPGRAM_API_KEY ? "key set" : "DEEPGRAM_API_KEY not set" },
     { key: "elevenlabs", name: "ElevenLabs (voice out)", connected: !!process.env.ELEVENLABS_API_KEY, detail: process.env.ELEVENLABS_API_KEY ? "key set" : "ELEVENLABS_API_KEY not set" },
   ];
@@ -53,9 +57,11 @@ export const connectorToolNames = [
   "mcp__eve_hands__calendar_create_event",
   "mcp__eve_hands__list_looks",
   "mcp__eve_hands__wear_look",
+  "mcp__eve_hands__save_note",
   "mcp__eve_hands__read_texts",
   "mcp__eve_hands__read_notifications",
   "mcp__eve_hands__send_sms",
+  "mcp__eve_hands__log_conversation",
   "mcp__eve_hands__os_board",
   "mcp__eve_hands__os_clients",
   "mcp__eve_hands__fleet_roster",
@@ -213,6 +219,42 @@ export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
           return text(r.ok ? `Wearing ${match.replace(/\.[^.]+$/, "")} now.` : `Couldn't change: ${r.error}`, !r.ok);
         },
       ),
+      // ---- her notebook (King's private Discord #eve-notes, write-only) ----
+      tool(
+        "save_note",
+        "Save a note to King's notebook — his private Discord channel #eve-notes, where he browses them " +
+          "later. GREEN and yours to use freely: it is HIS OWN private channel, nothing client-facing, so " +
+          "this is not a send and needs no confirmation. The note ALSO lands in your durable memory, so " +
+          "you can recall it later WITHOUT reading Discord (you have no read access there) — so don't " +
+          "call save_memory separately for the same content. Use it when he says 'note that', 'save this', " +
+          "'write this down', 'keep this somewhere' — or when you produce something worth keeping that " +
+          "isn't a clean fact/decision for the spine (a list, a draft, a snippet, a thought to revisit). " +
+          "Markdown renders. Long notes split across messages automatically — nothing gets truncated.",
+        {
+          note: z.string().describe("The note body, complete and self-contained"),
+          title: z.string().optional().describe("Short headline, rendered bold at the top of the note"),
+        },
+        async ({ note, title }) => {
+          // One write, two homes: Discord is the surface HE browses, memory is
+          // the surface SHE recalls from. Report each honestly — a note that
+          // reached only one of them must never be reported as fully saved.
+          const [d, m] = await Promise.all([
+            postNote(note, title),
+            saveMemory("fact", title ? `Note — ${title}: ${note}` : `Note: ${note}`),
+          ]);
+          const spread = d.parts && d.parts > 1 ? ` (${d.parts} messages)` : "";
+          if (d.ok && m.ok) return text(`Noted${title ? ` — "${title}"` : ""}. It's in #eve-notes${spread}, and kept in memory.`);
+          if (d.ok && !m.ok) {
+            return text(
+              `It's in #eve-notes${spread}, but it did NOT reach memory (${m.error}) — so you won't recall this later. Say that plainly.`,
+            );
+          }
+          if (!d.ok && m.ok) {
+            return text(`Kept in memory, but the notebook rejected it: ${d.error}. Tell him it is NOT in Discord.`, true);
+          }
+          return text(`Note saved NOWHERE — notebook: ${d.error}; memory: ${m.error}. Say so plainly; do not claim it's noted.`, true);
+        },
+      ),
       // ---- her senses (Phase 4, 05 §7: 🟢 reads, 🔴 send_sms) ----
       tool(
         "read_texts",
@@ -273,6 +315,46 @@ export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
             `Queued for King's confirmation (id ${pending.id}). NOT sent — his approve fires it from ` +
               `his phone; it expires ${pending.expiresAt}.`,
           );
+        },
+      ),
+      // ---- the sales floor (one write, both ledgers — see floor.ts) ----
+      tool(
+        "log_conversation",
+        "Log REAL sales conversations onto the floor. This is the ONLY thing that moves the " +
+          "'conversations on the floor' tile on his Today screen, and it writes the OS board's 'Calls held' " +
+          "at the same time so the two always agree. GREEN — log freely, no confirmation.\n" +
+          "Use it whenever he reports talking to someone: 'I had a call with…', 'I did 8 calls today', " +
+          "'just got off with…'. THE CLIENT IS OPTIONAL and usually absent — a sales conversation is " +
+          "normally with someone who is NOT a client yet, so NEVER refuse to log one because you can't " +
+          "match a name, and never ask him to add a client first. Count only REAL conversations where a " +
+          "human talked back: not drafts, not emails sent, not voicemails, not no-shows.",
+        {
+          count: z.number().int().min(1).max(50).default(1).describe("How many conversations to log"),
+          summary: z.string().describe("One line — who and what it was about. 'unnamed prospect' is fine."),
+          client: z.string().optional().describe("Only if it was an EXISTING client; omit for prospects"),
+        },
+        async ({ count, summary, client }) => {
+          // A named client links the touch (so pulse/cadence sees it). An
+          // unmatched name must NOT block the log — the floor is the point.
+          let clientId: string | null = null;
+          let clientNote = "";
+          if (client) {
+            const m = await matchClient(client);
+            if (m && !("ambiguous" in m)) clientId = m.id;
+            else clientNote = ` (couldn't match "${client}" to a client — logged it unlinked)`;
+          }
+          const r = await logConversations(count, summary, clientId);
+          const n = count === 1 ? "1 conversation" : `${count} conversations`;
+          if (r.brainOk && r.osOk) {
+            return text(`Logged ${n} on the floor${clientNote}. Today tile and the OS board both read ${r.osCalls} this week.`);
+          }
+          if (r.brainOk && !r.osOk) {
+            return text(`Logged ${n} to the floor${clientNote} — the Today tile will move. The OS board did NOT update (${r.error}), so the board is behind; say that plainly.`);
+          }
+          if (!r.brainOk && r.osOk) {
+            return text(`Logged ${n} to the OS board (now ${r.osCalls}), but NOT to the brain's ledger (${r.error}).`);
+          }
+          return text(`Could not log it anywhere — ${r.error}. Do NOT tell him it's on the floor.`, true);
         },
       ),
       // ---- Churlish OS (Rookie's board + Pennyworth's desk, via /api/eve) ----

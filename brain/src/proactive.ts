@@ -3,6 +3,7 @@ import { staticSystemPrompt } from "./persona.js";
 import { db } from "./db.js";
 import { isQuietHours } from "./schedule.js";
 import { sendPush, getLatestToken, isPushReady } from "./push.js";
+import { floorView } from "./floor.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 const TZ = process.env.EVE_TZ || "America/Chicago";
@@ -22,11 +23,8 @@ function weekdayIndex(d = new Date()): number {
   return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(name) + 1;
 }
 
-function mondayStartIso(d = new Date()): string {
-  const days = weekdayIndex(d) - 1;
-  const monday = new Date(d.getTime() - days * 86400_000);
-  return `${todayInTz(monday)}T00:00:00`;
-}
+// (mondayStartIso removed — the week boundary now lives ONCE, in floor.ts, so
+// the tile, the context pack and this nudge cannot drift apart again.)
 
 async function generateLine(task: string): Promise<string> {
   let out = "";
@@ -59,12 +57,10 @@ async function push(title: string, body: string, channelId: "brief" | "nudge" | 
 export async function runFloorCheck(force = false): Promise<Record<string, unknown>> {
   const c = db();
   if (!c) return { ok: false, reason: "memory spine offline" };
-  const { count } = await c
-    .from("touches")
-    .select("id", { count: "exact", head: true })
-    .in("channel", ["call", "meeting"])
-    .gte("at", mondayStartIso());
-  const have = count ?? 0;
+  // Same unified number as the Today tile and the OS board (floor.ts) — this
+  // used to run its own Monday-start query while /state ran a rolling-7-day one,
+  // so the nudge could disagree with the tile it was nudging about.
+  const have = (await floorView()).count;
   const day = Math.min(weekdayIndex(), 5); // weekends don't add expectation
   const expectedByNow = Math.ceil((3 * day) / 5);
   const behind = have < expectedByNow;

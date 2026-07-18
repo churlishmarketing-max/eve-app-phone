@@ -183,6 +183,10 @@ export default function EveApp() {
   const msgSeq = useRef(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  // Auto-scroll law: stay pinned to the newest line unless he has deliberately
+  // scrolled up to read history. Any send re-arms the pin — asking her a
+  // question IS the intent to watch the answer land.
+  const stick = useRef(true);
 
   const later = (fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms);
@@ -316,17 +320,60 @@ export default function EveApp() {
     };
   }, []);
 
-  // Keep the newest line in view as she streams.
+  // Keep the newest line in view. Instant, never smooth: at streaming rates a
+  // smooth scroll never lands before the next token restarts it, so the view
+  // ends up permanently chasing the text instead of sitting on it.
+  const pinToBottom = useCallback((force = false) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (force) stick.current = true;
+    if (!stick.current) return;
+    el.scrollTop = el.scrollHeight;
+  }, []);
+
+  // He dragged the thread: inside 120px of the floor still counts as watching.
+  // 120 is deliberately wider than the 82px the growing textarea can steal
+  // (eveStyles.ts:228, 42px -> 124px), so typing can never disarm the pin.
+  const onConvScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  }, []);
+
+  // (a) The CONTENT grew: his line, her next token, a confirm card.
   useEffect(() => {
     if (tab !== "eve") return;
+    pinToBottom();
+  }, [messages, tab, confirms.length, pinToBottom]);
+
+  // (b) The BOX shrank — the case the old effect could not see, because none
+  // of it touches React state. Two things shrink .conv while he types:
+  //   1. the textarea growing to fit a multi-line thought (autoGrow, above;
+  //      .inputrow is flex:none so the 82px comes straight out of .conv), and
+  //   2. the keyboard opening — adjustResize (AndroidManifest.xml) resizes the
+  //      WebView, 100dvh recomputes, and the max-height:640px rules strip the
+  //      entity zone / chips / mic row.
+  // A ResizeObserver on .conv catches both with one mechanism.
+  useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, tab, confirms.length]);
+    if (!el) return;
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => pinToBottom()) : null;
+    ro?.observe(el);
+    // adjustResize also fires a plain window resize — free insurance for
+    // WebViews that coalesce the observer through the IME animation.
+    const onResize = () => pinToBottom();
+    window.addEventListener("resize", onResize);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", onResize);
+    };
+  }, [tab, pinToBottom]);
 
   // ---- the live brain call ----
   const runMessage = useCallback(async (text: string, showUser = true, viaVoice = false) => {
     if (busy.current || !text.trim()) return;
     busy.current = true;
+    stick.current = true; // every send re-arms the pin, wherever it came from
     lastInputWasVoice.current = viaVoice;
     abortRef.current = new AbortController();
     setErrNote(null);
@@ -854,7 +901,7 @@ export default function EveApp() {
                 </div>
               </div>
 
-              <div className="conv" ref={scrollRef}>
+              <div className="conv" ref={scrollRef} onScroll={onConvScroll}>
                 {messages.length === 0 && (
                   <div className="brow eve">
                     <div className="bub eve">
@@ -940,6 +987,14 @@ export default function EveApp() {
                       e.preventDefault();
                       sendText();
                     }
+                  }}
+                  onFocus={() => {
+                    // The IME animates in over ~250ms and adjustResize lands the
+                    // new viewport somewhere mid-animation. Pin across it so the
+                    // newest line is under his thumb when it settles.
+                    pinToBottom(true);
+                    later(() => pinToBottom(true), 150);
+                    later(() => pinToBottom(true), 400);
                   }}
                   placeholder="Type to her — or just talk."
                   aria-label="Message EVE"
