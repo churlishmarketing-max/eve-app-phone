@@ -63,7 +63,7 @@ const ORB_BG = "radial-gradient(circle at 34% 30%, #C9F7FB 0%, #1CB9C8 30%, #007
 const ORB_BG_RED = "radial-gradient(circle at 34% 30%, #F7C9D2 0%, #E0526E 30%, #C41E3A 58%, #2C060D 100%)";
 const ORB_GLOW = "0 0 36px rgba(28,185,200,.5), 0 0 90px rgba(0,122,135,.35), inset 0 0 20px rgba(201,247,251,.35)";
 const ORB_GLOW_RED = "0 0 36px rgba(196,30,58,.5), 0 0 90px rgba(196,30,58,.3), inset 0 0 20px rgba(247,201,210,.35)";
-const APP_VERSION = "0.6.0";
+const APP_VERSION = "0.6.6";
 
 const CORE_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.85), #1CB9C8 40%, #063A42 80%)";
 const ALERT_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.9), #C41E3A 42%, #4A0E1A 78%)";
