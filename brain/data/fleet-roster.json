@@ -50,16 +50,6 @@
     "loc": "WS"
   },
   {
-    "division": "command",
-    "key": "second-brain",
-    "name": "Second Brain",
-    "alias": "The Fleet Manifest",
-    "job": "Single source of truth for the operation: every unit's name, job, triggers, schedule, location. Reads, audits, and maintains this roster + the dashboard. Prime directive: roster fixed same session a unit is created or retired.",
-    "triggers": "\"second brain\" · \"show me the fleet\" · \"who handles X\" · \"fleet census\"",
-    "schedule": null,
-    "loc": "WS"
-  },
-  {
     "division": "war-rooms",
     "key": "jsa",
     "name": "JSA",
@@ -196,6 +186,16 @@
     "alias": "Answer Engine Visibility",
     "job": "Makes the client THE answer when someone asks ChatGPT/Claude/Perplexity for \"best X in [city].\" Delivery skill + productized service line.",
     "triggers": "AEO/GEO mentions · \"run Brother Eye\"",
+    "schedule": "On demand",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "perry-white",
+    "name": "Perry White",
+    "alias": "Editor-in-Chief · The Email Desk",
+    "job": "Master writer for every one-off / high-stakes email — inbox replies, inbound lead responses, post-call follow-ups, ghosted-proposal revivals, reactivations, price objections, collections, renewals, referral asks, and Documented-register escalation letters (Meta/BBB). Owns the Desk Law: the 11-gate standard every fleet email passes before it ships. Lois Lane works his newsroom.",
+    "triggers": "\"Perry White\" · \"run Perry\" · \"take this to the desk\" · \"reply to this\" · any pasted email needing an answer",
     "schedule": "On demand",
     "loc": "WS"
   },
@@ -361,16 +361,6 @@
   },
   {
     "division": "production",
-    "key": "perry-white",
-    "name": "Perry White",
-    "alias": "Editor-in-Chief · The Email Desk",
-    "job": "Every one-off/situational email: inbound replies, revivals, reactivations, objections, scope pushback, bad news, collections ladder, renewal emails (from Guardian's case), referral/testimonial asks, saying no, Documented-register escalation letters. Also the Desk Law — the 11-gate spike every fleet email must pass. Boundary: flows → Sequence Writer · volume → Blue Beetle.",
-    "triggers": "\"Perry White\" · \"reply to this\" · \"what do I say to\" · \"they ghosted\" · \"chase this invoice\" · any pasted email needing an answer",
-    "schedule": "On demand",
-    "loc": "WS"
-  },
-  {
-    "division": "production",
     "key": "strategy-doc-builder",
     "name": "Strategy Doc Builder",
     "alias": "The Gameplan Desk",
@@ -477,6 +467,16 @@
     "job": "Publishing war room for MindCTRL Studios releases.",
     "triggers": "MindCTRL release decisions",
     "schedule": null,
+    "loc": "CC"
+  },
+  {
+    "division": "systems",
+    "key": "big-barda",
+    "name": "Big Barda",
+    "alias": "Usage Warden",
+    "job": "Fable Loop enforcement, model-seat routing, session pre-flight, waste audits. One law: the most expensive seat does the least work. Lives at ~/.claude/commands/barda.md; companions: opus-/sonnet-/haiku-executor agents + /fable (the boss).",
+    "triggers": "\"/barda\" · \"Barda check\" · \"usage check\"",
+    "schedule": "On demand · pre-flight before any build day",
     "loc": "CC"
   },
   {
