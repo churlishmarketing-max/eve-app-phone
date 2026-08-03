@@ -324,6 +324,31 @@ export const CSS = `
 .rulerow .k{ flex:none; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.18em; width:52px; }
 .rulerow .v{ font-size:12.5px; color:rgba(240,237,232,.65); }
 
+/* ---------- body (vitals) ---------- */
+/* segmented picker: equal columns, every cell its own 44px target.
+   auto-fit + minmax(44px,1fr) is the whole safety story — the browser lays as
+   many >=44px tracks as the box allows and wraps the remainder to a second
+   row, so a narrow phone costs a row of height instead of shrinking the
+   target under the hit44 floor (:93). auto-fit, not auto-fill: with 5 energy
+   buttons in a 6-track box the empty track collapses instead of leaving a
+   hole. */
+.segrow{ display:grid; grid-template-columns:repeat(auto-fit,minmax(44px,1fr)); gap:6px; margin-top:10px; }
+.seg{ cursor:pointer; min-height:44px; display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.06em; color:rgba(240,237,232,.5);
+  background:var(--panel2); border:1px solid rgba(240,237,232,.12); border-radius:8px; padding:0 2px; }
+.seg.on{ color:var(--ice); font-weight:600; border-color:rgba(28,185,200,.6); background:rgba(28,185,200,.14);
+  box-shadow:inset 0 0 16px rgba(28,185,200,.18), 0 0 10px rgba(28,185,200,.12); }
+/* 7-day strip: minmax(0,…) so seven cells can never force a sideways scroll */
+.wkstrip{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; margin-top:10px; }
+.wkcell{ background:var(--panel2); border:1px solid var(--hair); border-radius:8px; padding:8px 1px 7px; text-align:center; }
+.wkcell.now{ border-color:rgba(28,185,200,.4); }
+.wkcell .d{ font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:.06em; color:rgba(240,237,232,.38); }
+.wkcell .e{ margin-top:5px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:19px; line-height:1; color:var(--cream); }
+.wkcell .e.none{ color:rgba(240,237,232,.22); }
+.wkdots{ margin-top:6px; display:flex; justify-content:center; gap:4px; }
+.wkdots i{ width:5px; height:5px; border-radius:50%; background:rgba(240,237,232,.12); }
+.wkdots i.on{ background:var(--tealHi); box-shadow:0 0 6px rgba(28,185,200,.55); }
+
 /* ---------- wardrobe sheet ---------- */
 .scrim6{ position:absolute; inset:0; z-index:9; background:rgba(3,5,6,.68); backdrop-filter:blur(3px); }
 .sheet6{ position:absolute; left:0; right:0; bottom:0; z-index:10; background:var(--panel);
@@ -369,7 +394,7 @@ export const CSS = `
 .acclock .s{ margin-left:auto; font-size:8.5px; letter-spacing:.06em; color:rgba(240,237,232,.35); }
 
 /* ---------- nav ---------- */
-.nav6{ position:relative; z-index:2; flex:none; display:grid; grid-template-columns:repeat(4,1fr);
+.nav6{ position:relative; z-index:2; flex:none; display:grid; grid-template-columns:repeat(5,1fr);
   background:rgba(7,11,12,.94); border-top:1px solid var(--hair);
   padding:8px 6px calc(14px + env(safe-area-inset-bottom)); }
 .navi{ cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; padding-top:8px;

@@ -160,13 +160,17 @@ export async function runPulseSweep(force = false): Promise<PulseResult> {
       const body = await generate(
         `[System task: CLIENT PULSE push notification. ${quiet.length === 1 ? `${quiet[0].client} has gone ${quiet[0].daysQuiet} days quiet; their update is drafted.` : `${quiet.length} clients gone quiet (${quiet.map((q) => q.client).join(", ")}); updates drafted.`} ≤25 words, substance first, one clause of flavour. Output only the text.]`,
       );
-      await sendPush(token, {
+      const id = await sendPush(token, {
         title: "EVE · CLIENT PULSE",
         body: body || `${quiet.length} client(s) gone quiet. Updates drafted — in your approvals.`,
         channelId: "nudge",
         data: { kind: "silent_client", attention_id: quiet[0].attentionId ?? "pulse", deeplink: "eve://ops" },
       });
-      pushed = true;
+      // Truth, not intent. The send wall (push.ts) returns an EMPTY id when it
+      // refuses to transmit; this flag is written straight into the runs row
+      // below, so claiming true here would poison the observability record with
+      // a push that never left the process.
+      pushed = !!id;
     } catch (err) {
       console.warn("[pulse] push failed:", err instanceof Error ? err.message : err);
     }

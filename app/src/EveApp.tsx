@@ -15,8 +15,15 @@ import {
   forwardNotification,
   reportSmsSent,
   runJob,
+  fetchVitals,
+  logCheckin,
+  tickRoutine,
+  untickRoutine,
+  createRoutine,
   type EveState,
   type PendingConfirm,
+  type Vitals,
+  type VitalsHabit,
 } from "./eveApi";
 import { initPush } from "./push";
 import {
@@ -43,7 +50,7 @@ import { requestAudioFocus, abandonAudioFocus } from "./native/audioFocus";
    ============================================================ */
 
 type EveMode = "idle" | "listening" | "thinking" | "speaking" | "alert";
-type Tab = "today" | "eve" | "ops" | "wire";
+type Tab = "today" | "eve" | "ops" | "wire" | "body";
 type Look = { id: string; name: string; img?: string; status: string };
 type Msg = { id: string; role: "eve" | "user"; text: string };
 
@@ -63,7 +70,7 @@ const ORB_BG = "radial-gradient(circle at 34% 30%, #C9F7FB 0%, #1CB9C8 30%, #007
 const ORB_BG_RED = "radial-gradient(circle at 34% 30%, #F7C9D2 0%, #E0526E 30%, #C41E3A 58%, #2C060D 100%)";
 const ORB_GLOW = "0 0 36px rgba(28,185,200,.5), 0 0 90px rgba(0,122,135,.35), inset 0 0 20px rgba(201,247,251,.35)";
 const ORB_GLOW_RED = "0 0 36px rgba(196,30,58,.5), 0 0 90px rgba(196,30,58,.3), inset 0 0 20px rgba(247,201,210,.35)";
-const APP_VERSION = "0.6.6";
+const APP_VERSION = "0.7.0";
 
 const CORE_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.85), #1CB9C8 40%, #063A42 80%)";
 const ALERT_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.9), #C41E3A 42%, #4A0E1A 78%)";
@@ -149,6 +156,17 @@ export default function EveApp() {
   const [opsBusy, setOpsBusy] = useState<string | null>(null);
   const [jobBusy, setJobBusy] = useState(false);
   const [jobNote, setJobNote] = useState<string | null>(null);
+  // BODY tab (Phase 6). Its own ledger, its own fetch — /state is a 60s poll
+  // the other four tabs need and this one doesn't.
+  const [vitals, setVitals] = useState<Vitals>({ online: false });
+  const [vitalsNote, setVitalsNote] = useState<string | null>(null);
+  // null = "show what the brain has"; a string = he's typing. Keeps the input
+  // from being yanked out from under him by a refresh, with no effect to sync.
+  const [noteDraft, setNoteDraft] = useState<string | null>(null);
+  // A checkbox has no busy affordance, so echo the tap locally until the
+  // refetch lands (same intent as opsBusy, different shape).
+  const [habitEcho, setHabitEcho] = useState<Record<string, boolean>>({});
+  const [habitDraft, setHabitDraft] = useState<string | null>(null);
   // Her senses (Phase 4, 05 §7): live enabled state for the Wire row.
   const [smsSense, setSmsSense] = useState(false);
   const [notifSense, setNotifSense] = useState(false);
@@ -259,6 +277,7 @@ export default function EveApp() {
     initPush((deeplink) => {
       if (deeplink === "eve://today") setTab("today");
       else if (deeplink === "eve://ops") setTab("ops");
+      else if (deeplink === "eve://body") setTab("body");
     });
     // Senses: wire whatever's already granted; re-check with the state poll
     // so flipping notification access in settings lands within a minute.
@@ -368,6 +387,26 @@ export default function EveApp() {
       window.removeEventListener("resize", onResize);
     };
   }, [tab, pinToBottom]);
+
+  // ---- BODY: her vitals ledger, fetched only when the tab is open ----
+  // Deliberately NOT on the 60s /state poll: that call is six parallel reads
+  // the other four tabs need and this one doesn't.
+  const refreshVitals = useCallback(async () => {
+    setVitals(await fetchVitals());
+  }, []);
+
+  // StrictMode double-mounts every effect, so the cancel flag is load-bearing:
+  // the first run's answer must not land after its cleanup has run.
+  useEffect(() => {
+    if (tab !== "body") return;
+    let cancelled = false;
+    void fetchVitals().then((v) => {
+      if (!cancelled) setVitals(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tab]);
 
   // ---- the live brain call ----
   const runMessage = useCallback(async (text: string, showUser = true, viaVoice = false) => {
@@ -525,6 +564,52 @@ export default function EveApp() {
     later(() => setJobNote(null), 9000);
   };
 
+  // ---- BODY writes. The brain stamps the date; the app never sends one. ----
+  const noteWrite = (r: { ok: boolean; error?: string }) => {
+    setVitalsNote(r.ok ? "SAVED" : `NOT SAVED — ${(r.error ?? "her brain didn't answer").toUpperCase()}`);
+    later(() => setVitalsNote(null), 6000);
+  };
+
+  const saveCheckin = async (patch: { energy?: number; sleepHours?: number; note?: string }) => {
+    const r = await logCheckin(patch);
+    noteWrite(r);
+    if (r.ok) await refreshVitals();
+    return r;
+  };
+
+  // Blur, not keystroke: one row per day, written once he's done thinking.
+  const flushNote = async () => {
+    if (noteDraft === null || noteDraft === (vitals.checkin?.note ?? "")) return;
+    const r = await saveCheckin({ note: noteDraft });
+    if (r.ok) setNoteDraft(null); // a failed write keeps his line on screen
+  };
+
+  const toggleHabit = async (h: VitalsHabit) => {
+    const on = habitEcho[h.id] ?? h.done_today;
+    setHabitEcho((e) => ({ ...e, [h.id]: !on }));
+    const r = on ? await untickRoutine(h.id) : await tickRoutine(h.id);
+    noteWrite(r);
+    if (r.ok) await refreshVitals();
+    setHabitEcho((e) => {
+      const { [h.id]: _drop, ...rest } = e;
+      return rest;
+    });
+  };
+
+  const addHabit = async () => {
+    const name = (habitDraft ?? "").trim();
+    if (!name) {
+      setHabitDraft(null);
+      return;
+    }
+    const r = await createRoutine(name);
+    noteWrite(r);
+    if (r.ok) {
+      setHabitDraft(null);
+      await refreshVitals();
+    }
+  };
+
   const wake = () => {
     setBootLeaving(true);
     later(() => {
@@ -627,6 +712,29 @@ export default function EveApp() {
     agent.slice(0, 2).toUpperCase();
   const aGlyph = (kind: string) =>
     kind === "silent_client" ? "@" : kind === "approval" ? "▸" : kind === "inbox" ? "+" : "•";
+
+  // ---- body slicing (every field optional — no /vitals route, no crash) ----
+  const vCheckin = vitals.checkin ?? null;
+  // Array.isArray, not ?? []: the /vitals body is an unchecked cast, so a
+  // malformed payload must degrade to empty instead of throwing on .map.
+  const vWeek = Array.isArray(vitals.week) ? vitals.week : [];
+  const vHabits = Array.isArray(vitals.habits) ? vitals.habits : [];
+  const checkRows = vHabits.filter((h) => h.slot === "checkin");
+  const habitRows = vHabits.filter((h) => h.slot === "habit");
+  const habitDone = (h: VitalsHabit) => habitEcho[h.id] ?? h.done_today;
+  const noteValue = noteDraft ?? vCheckin?.note ?? "";
+  // Teal for done, never --green: green is the GREEN autonomy tier on Wire.
+  const boxStyle = (on: boolean) =>
+    on
+      ? { color: "var(--ice)", borderColor: "rgba(28,185,200,.6)", background: "rgba(28,185,200,.16)" }
+      : { color: "rgba(240,237,232,.28)", borderColor: "rgba(240,237,232,.14)", background: "transparent" };
+  const checkRowStyle = {
+    width: "100%",
+    cursor: "pointer",
+    font: "inherit",
+    color: "inherit",
+    textAlign: "left" as const,
+  };
 
   // ---- wire nodes (honest status; only what's wired reads LIVE) ----
   const conn = (k: string) => !!live.connectors?.find((c) => c.key === k)?.connected;
@@ -1252,6 +1360,261 @@ export default function EveApp() {
               <div className="footnote mono">she only sees what you hand her. keys stay in your vault.</div>
             </div>
           )}
+
+          {/* ---------- BODY ---------- */}
+          {/* Root is a bare .scr — it inherits position:absolute; inset:0;
+              overflow-y:auto (eveStyles.ts:74) and scrolls inside .zone. It
+              sets NO height and NO overflow of its own: that is what keeps the
+              nav on screen. */}
+          {tab === "body" && (
+            <div className="scr">
+              <div className="eyeb mono">
+                <span>▸ BODY // THE ENGINE</span>
+                <span className="r">{vitals.online ? "LOGGED LIVE" : "OFFLINE"}</span>
+              </div>
+              <h1 className="h1v6 disp">BODY</h1>
+              <p className="ledev6">
+                {vitals.online
+                  ? "Two taps a day. Energy, sleep, and the habits you refuse to drop — she reads the pattern so you don't have to."
+                  : "Her brain is unreachable, so this screen is a shell. It fills in the moment she answers."}
+              </p>
+
+              {/* today's check-in */}
+              <div className="card" style={{ marginTop: 22 }}>
+                <div className="eyeb mono" style={{ fontSize: 9 }}>
+                  <span>TODAY'S CHECK-IN</span>
+                  <span className="r">{vitals.today ?? "—"}</span>
+                </div>
+
+                <div className="caphint mono" style={{ marginTop: 12 }}>
+                  ENERGY {vCheckin?.energy != null ? `— ${vCheckin.energy} / 5` : "— NOT LOGGED"}
+                </div>
+                <div className="segrow">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      className={`seg${vCheckin?.energy === n ? " on" : ""}`}
+                      aria-pressed={vCheckin?.energy === n}
+                      onClick={() => void saveCheckin({ energy: n })}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 4 is on the scale on purpose: his Founder OS floors at 5,
+                    which flattens exactly the range a "under 6 hours" read
+                    cares about. */}
+                <div className="caphint mono" style={{ marginTop: 14 }}>
+                  SLEEP (HRS) {vCheckin?.sleep_hours != null ? `— ${vCheckin.sleep_hours}` : "— NOT LOGGED"}
+                </div>
+                <div className="segrow">
+                  {[4, 5, 6, 7, 8, 9].map((n) => (
+                    <button
+                      key={n}
+                      className={`seg${vCheckin?.sleep_hours === n ? " on" : ""}`}
+                      aria-pressed={vCheckin?.sleep_hours === n}
+                      onClick={() => void saveCheckin({ sleepHours: n })}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+
+                {/* the boxes: not local state — habits with slot "checkin" */}
+                <div className="caphint mono" style={{ marginTop: 16 }}>THE BOXES</div>
+                <div className="t3" style={{ marginTop: 10 }}>
+                  {checkRows.length ? (
+                    checkRows.map((h) => {
+                      const done = habitDone(h);
+                      return (
+                        <button
+                          key={h.id}
+                          className="t3row hit44"
+                          style={checkRowStyle}
+                          aria-pressed={done}
+                          onClick={() => void toggleHabit(h)}
+                        >
+                          <span className="jcode mono" style={boxStyle(done)}>{done ? "✓" : ""}</span>
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            <span className="tt">{h.name}</span>
+                            <span className="tm" style={{ display: "block" }}>
+                              {done ? "DONE TODAY" : "NOT YET TODAY"}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <p className="secnote6">
+                      {vitals.online
+                        ? "No boxes yet — they arrive from her brain as habits, not from this screen."
+                        : "The boxes land when her brain answers."}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {vitalsNote && (
+                <div
+                  className={vitalsNote.startsWith("NOT SAVED") ? "errline" : "caphint mono"}
+                  style={{ marginTop: 10, textAlign: "center" }}
+                >
+                  {vitalsNote}
+                </div>
+              )}
+
+              {/* the floor: ONE number, ONE writer. Read-only here by law —
+                  logging a conversation is log_conversation's job, and a second
+                  counter on this screen would drift from it. */}
+              <div className="mini" style={{ marginTop: 10 }}>
+                <div className="k mono">SALES FLOOR — READ ONLY</div>
+                <div className="n disp">
+                  {vitals.floor?.count ?? 0}
+                  <em>/{vitals.floor?.goal ?? 3}</em>
+                </div>
+                <div className="s mono">CONVERSATIONS THIS WEEK</div>
+                <div className="x mono">the floor owns this one. tell her, and it moves.</div>
+              </div>
+
+              {/* one line — saved on blur, never per keystroke */}
+              <div className="card" style={{ marginTop: 10 }}>
+                <div className="eyeb mono" style={{ fontSize: 9 }}>
+                  <span>ONE LINE</span>
+                  <span className="r">SAVES WHEN YOU LOOK AWAY</span>
+                </div>
+                <input
+                  className="tinv6"
+                  style={{ width: "100%", marginTop: 10, minHeight: 44 }}
+                  value={noteValue}
+                  placeholder="how's the head today?"
+                  aria-label="How's the head today?"
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  onBlur={() => void flushNote()}
+                  onFocus={(e) => {
+                    // Same 3-shot pin as the chat input (:1024-1031): the IME
+                    // animates in over ~250ms and adjustResize lands the new
+                    // viewport mid-animation, so pin across it. `later` is the
+                    // house timer — it clears on unmount.
+                    const el = e.currentTarget;
+                    const pin = () => el.scrollIntoView({ block: "center" });
+                    pin();
+                    later(pin, 150);
+                    later(pin, 400);
+                  }}
+                />
+                <div className="caphint mono">SHE READS IT. SHE DOESN'T PERFORM IT BACK.</div>
+              </div>
+
+              {/* last 7 days */}
+              <div className="divrow">
+                <span className="l">LAST 7 DAYS</span>
+                <span className="rule" />
+                <span className="r">{vWeek.length ? "ENERGY · TRAINED · FLOOR" : ""}</span>
+              </div>
+              {vWeek.length ? (
+                <div className="wkstrip">
+                  {vWeek.map((d, i) => (
+                    <div className={`wkcell${d.on_date === vitals.today ? " now" : ""}`} key={d.on_date ?? i}>
+                      <div className="d mono">{d.dow}</div>
+                      <div className={`e disp${d.energy == null ? " none" : ""}`}>{d.energy ?? "·"}</div>
+                      <div className="wkdots">
+                        <i className={d.trained ? "on" : ""} />
+                        <i className={d.calls_ok ? "on" : ""} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="secnote6">
+                  {vitals.online
+                    ? "Nothing logged yet — the strip fills one day at a time."
+                    : "The week lands when her brain answers."}
+                </p>
+              )}
+
+              {/* non-negotiable habits */}
+              <div className="divrow">
+                <span className="l">NON-NEGOTIABLE HABITS</span>
+                <span className="rule" />
+                <span className="r">
+                  {habitRows.length ? `${habitRows.filter((h) => habitDone(h)).length}/${habitRows.length} TODAY` : ""}
+                </span>
+              </div>
+              <div className="t3">
+                {habitRows.length ? (
+                  habitRows.map((h) => {
+                    const done = habitDone(h);
+                    return (
+                      <button
+                        key={h.id}
+                        className="t3row hit44"
+                        style={checkRowStyle}
+                        aria-pressed={done}
+                        onClick={() => void toggleHabit(h)}
+                      >
+                        <span className="jcode mono" style={boxStyle(done)}>{done ? "✓" : ""}</span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span className="tt">{h.name}</span>
+                          {/* streak AND today's state, always together: a streak
+                              survives until yesterday is missed too, so the
+                              number alone would be ambiguous. */}
+                          <span className="tm" style={{ display: "block" }}>
+                            {done ? "DONE TODAY" : "NOT YET TODAY"}
+                          </span>
+                        </span>
+                        <span className={`puldays mono${(h.streak ?? 0) >= 7 ? " hot" : ""}`}>{h.streak ?? 0}d</span>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="t3row">
+                    <span className="idx mono">—</span>
+                    <span style={{ flex: 1 }}>
+                      <span className="tt">{vitals.online ? "Nothing tracked yet" : "Waiting on her brain"}</span>
+                      <span className="tm" style={{ display: "block" }}>
+                        {vitals.online ? "ADD THE FIRST ONE BELOW" : "ARRIVES WHEN SHE ANSWERS"}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {habitDraft === null ? (
+                <button className="sense6 hit44" style={{ marginTop: 12 }} onClick={() => setHabitDraft("")}>
+                  + ADD HABIT
+                </button>
+              ) : (
+                <div style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "center" }}>
+                  <input
+                    className="tinv6"
+                    style={{ flex: 1, minWidth: 0, minHeight: 44 }}
+                    value={habitDraft}
+                    placeholder="name the non-negotiable"
+                    aria-label="New habit name"
+                    onChange={(e) => setHabitDraft(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") void addHabit(); }}
+                  />
+                  <button className="sense6 hit44" onClick={() => void addHabit()}>[ SAVE ]</button>
+                </div>
+              )}
+
+              {/* goals: empty on purpose */}
+              <div className="divrow">
+                <span className="l">GOALS</span>
+                <span className="rule" />
+                <span className="r">EMPTY BY DESIGN</span>
+              </div>
+              <div className="card">
+                <p className="secnote6">
+                  Your goals live in the Churlish OS. She can write one there, but nothing can read them back yet —
+                  so this panel stays empty rather than showing you a copy that might already be wrong.
+                </p>
+              </div>
+
+              <div className="footnote mono">she counts the days so you don't have to.</div>
+            </div>
+          )}
         </div>
 
         {/* ---------- wardrobe sheet ---------- */}
@@ -1352,6 +1715,7 @@ export default function EveApp() {
             ["eve", "EVE"],
             ["ops", "OPS"],
             ["wire", "WIRE"],
+            ["body", "BODY"],
           ] as const).map(([id, lab]) => (
             <button
               key={id}
@@ -1380,6 +1744,11 @@ export default function EveApp() {
                 <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.4, strokeLinecap: "round" }}>
                   <circle cx="4.5" cy="5" r="1.7" /><circle cx="15.5" cy="6.5" r="1.7" /><circle cx="6.5" cy="15" r="1.7" /><circle cx="14.5" cy="14" r="1.7" />
                   <path d="M6 5.7l7.8 0.6" /><path d="M5.2 6.6l1 6.7" /><path d="M8.2 14.6l4.6-0.4" /><path d="M15 8.2l-0.3 4.1" />
+                </svg>
+              )}
+              {id === "body" && (
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
+                  <path d="M2.5 10h3.4l1.7-4.2 2.5 8.4 1.9-4.2h5.5" />
                 </svg>
               )}
               <span className="lb mono">{lab}</span>

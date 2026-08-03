@@ -10,6 +10,8 @@ import { runDispatch } from "./dispatch.js";
 import { postNote, notesReady, notesStatusDetail } from "./notes.js";
 import { saveMemory, matchClient } from "./memory.js";
 import { logConversations } from "./floor.js";
+import { saveCheckin, resolveHabit, buildVitals, rememberCheckinNote } from "./vitals.js";
+import { tickRoutine, untickRoutine } from "./ops.js";
 // Notion / Slack / Stripe connectors retired 2026-07-17 (King's call): the OS
 // is the single spine now — client, money, and deal data all reach her through
 // os_board / os_command, so a separate Stripe read or Slack/Notion tool is
@@ -62,6 +64,9 @@ export const connectorToolNames = [
   "mcp__eve_hands__read_notifications",
   "mcp__eve_hands__send_sms",
   "mcp__eve_hands__log_conversation",
+  "mcp__eve_hands__log_checkin",
+  "mcp__eve_hands__tick_habit",
+  "mcp__eve_hands__list_habits",
   "mcp__eve_hands__os_board",
   "mcp__eve_hands__os_clients",
   "mcp__eve_hands__fleet_roster",
@@ -356,6 +361,114 @@ export function buildConnectorServer(emitConfirm: (c: PendingConfirm) => void) {
           }
           return text(`Could not log it anywhere — ${r.error}. Do NOT tell him it's on the floor.`, true);
         },
+      ),
+      // ---- the body (Phase 6) — energy/sleep/note + the habit ledger ----
+      // Deliberately adjacent to log_conversation: nothing in this block counts
+      // a sales conversation, and the descriptions say so out loud.
+      tool(
+        "log_checkin",
+        "Log King's daily check-in — energy, sleep, and the day's one line. GREEN, no confirmation.\n" +
+          "EVERY FIELD IS OPTIONAL and this MERGES into today's row: send energy now, sleep an hour later, " +
+          "the note at night — they compose instead of clobbering each other. There is exactly ONE row per " +
+          "local day (America/Chicago) and the server picks the day, so you never pass a date.\n" +
+          "THERE IS NO CALLS OR CONVERSATIONS FIELD HERE ON PURPOSE — that is log_conversation's job and " +
+          "only its job. If he says 'did my three calls', call log_conversation, not this.\n" +
+          "The note is REMEMBERED: it also lands in your durable memory, so you can recall what he wrote " +
+          "weeks later. Don't call save_memory separately for the same line. Re-sending the same line for " +
+          "the same day is safe — it dedupes against what the app already saved and the tool tells you " +
+          "whether it was a fresh save or already noted. Report which; never imply a fresh save.",
+        {
+          energy: z.number().int().min(1).max(5).optional().describe("How he feels, 1 (empty) to 5 (full)"),
+          sleepHours: z.number().min(0).max(24).optional().describe("Hours slept last night; halves are fine"),
+          note: z.string().optional().describe("His one line about the day. Send \"\" to clear it."),
+        },
+        async ({ energy, sleepHours, note }) => {
+          const r = await saveCheckin({ energy, sleepHours, note });
+          const day = typeof r.on_date === "string" ? r.on_date : undefined;
+
+          // Full access by King's explicit call: the note goes to the spine too.
+          // It goes through the SAME helper POST /checkin uses (vitals.ts
+          // rememberCheckinNote), so both paths compose the identical string and
+          // dedupe against EACH OTHER. A raw saveMemory here minted a second row
+          // for a line he'd already typed into the BODY tab — and the spine has
+          // no delete tool, so every duplicate is permanent.
+          // Attempted independently of the row write, same as the route: the
+          // spine is a different ledger, and dropping his line because
+          // daily_checkins is unreachable is the worse failure.
+          let memoryNote = "";
+          if (note && note.trim()) {
+            const m = await rememberCheckinNote(note, day);
+            memoryNote = m.ok
+              ? m.deduped
+                ? " That exact line was ALREADY in memory from earlier today — nothing new was written. Say 'already noted', not something that implies a fresh save."
+                : " Kept the line in memory too."
+              : ` The line did NOT reach memory (${m.error}) — say so.`;
+          }
+
+          if (!r.ok) {
+            return text(
+              `The check-in row did NOT save: ${r.error}.${memoryNote} Do not tell him the energy or sleep landed.`,
+              true,
+            );
+          }
+          const bits = [
+            energy !== undefined ? `energy ${energy}/5` : "",
+            sleepHours !== undefined ? `${sleepHours}h sleep` : "",
+            note !== undefined ? "his line" : "",
+          ].filter(Boolean);
+          return text(`Logged for ${r.on_date}: ${bits.join(", ") || "nothing new"}.${memoryNote}`);
+        },
+      ),
+      tool(
+        "tick_habit",
+        "Tick (or untick) one of King's habits for a day. GREEN, and IDEMPOTENT — ticking twice in one day " +
+          "is a no-op, not a double count. Covers his check-in boxes (Trained, Deep-work block, Ate right) " +
+          "as well as his named habits; they are the same kind of row.\n" +
+          "onDate back-dates inside the last 7 local days only — 'I forgot to tick Tuesday' is real, a " +
+          "month-old memory is a guess, and anything in the future is refused.\n" +
+          "THERE IS NO SALES-CONVERSATION HABIT — the floor is log_conversation. If he reports calls, log " +
+          "them there; never tick a habit to represent them.",
+        {
+          habit: z.string().describe("Habit name, fuzzy ok (e.g. 'camera', 'move my body')"),
+          done: z.boolean().default(true).describe("false unticks that day"),
+          onDate: z.string().optional().describe("YYYY-MM-DD, within the last 7 days; omit for today"),
+        },
+        async ({ habit, done, onDate }) => {
+          const match = await resolveHabit(habit);
+          if (!match) return text(`No active habit matches "${habit}".`, true);
+          if ("ambiguous" in match) {
+            // Never guess which one he meant — hand back the candidates.
+            return text(`"${habit}" is ambiguous: ${match.ambiguous.join(", ")}. Ask him which.`, true);
+          }
+          const r = done ? await tickRoutine(match.id, onDate) : await untickRoutine(match.id, onDate);
+          if (!r.ok) return text(`Couldn't update ${match.name}: ${r.error}`, true);
+          if (!done) return text(`Unticked ${match.name} for ${r.on_date}. Streak now ${r.streak}d.`);
+          const already = r.alreadyDone ? " (was already ticked — nothing double-counted)" : "";
+          return text(`${match.name} ticked for ${r.on_date}${already}. Streak ${r.streak}d.`);
+        },
+      ),
+      tool(
+        "list_habits",
+        "King's active habits with today's ticks and their TRUE streaks (computed from the day ledger, not " +
+          "a stored counter), plus today's check-in. GREEN — read-only. A streak survives until the day it " +
+          "is actually missed, so a live run still reads its number in the morning with 'not yet today' " +
+          "beside it — quote both, never the bare number.",
+        {},
+        async () => {
+          const v = await buildVitals(1);
+          if (!v.online) return text(`Can't read the body ledger right now: ${v.error ?? "unavailable"}.`, true);
+          const ck = v.checkin;
+          const head = !ck || (ck.energy === null && ck.sleep_hours === null)
+            ? `${v.today} — not checked in yet (no energy or sleep logged).`
+            : `${v.today} — energy ${ck.energy ?? "not logged"}${ck.energy === null ? "" : "/5"}, ` +
+              `sleep ${ck.sleep_hours === null ? "not logged" : `${ck.sleep_hours}h`}${ck.note ? `, his line: "${ck.note}"` : ""}.`;
+          if (!v.habits.length) return text(`${head}\nNo active habits on the board.`);
+          const rows = v.habits.map(
+            (h) => `- ${h.name} — ${h.done_today ? "done today" : "NOT yet today"}, streak ${h.streak}d`,
+          );
+          return text(`${head}\nHabits:\n${rows.join("\n")}`);
+        },
+        { annotations: { readOnlyHint: true } },
       ),
       // ---- Churlish OS (Rookie's board + Pennyworth's desk, via /api/eve) ----
       // Drafts are 🟢 GREEN — everything lands as a DRAFT the operator approves

@@ -1,5 +1,6 @@
 import { db } from "./db.js";
 import { boardCalls, osTool, ready as osReady, refreshBoardNow } from "./os.js";
+import { zonedToUtc } from "./day.js";
 
 // THE SALES FLOOR — one number, computed one way.
 //
@@ -22,29 +23,6 @@ import { boardCalls, osTool, ready as osReady, refreshBoardNow } from "./os.js";
 
 const TZ = process.env.EVE_TZ || "America/Chicago";
 export const FLOOR_GOAL = 3;
-
-// How far the given instant's wall-clock in `tz` sits from UTC, in ms.
-function tzOffsetMs(date: Date, tz: string): number {
-  const dtf = new Intl.DateTimeFormat("en-US", {
-    timeZone: tz,
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hour12: false,
-  });
-  const p = Object.fromEntries(dtf.formatToParts(date).map((x) => [x.type, x.value])) as Record<string, string>;
-  const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second);
-  return asUTC - date.getTime();
-}
-
-// A wall-clock time in `tz` -> the real UTC instant. Two-pass so it stays correct
-// across a DST boundary (the offset at the guess may differ from the offset at
-// the answer).
-function zonedToUtc(y: number, m: number, d: number, hh: number, tz: string): Date {
-  const guess = Date.UTC(y, m - 1, d, hh, 0, 0);
-  const off1 = tzOffsetMs(new Date(guess), tz);
-  const off2 = tzOffsetMs(new Date(guess - off1), tz);
-  return new Date(guess - off2);
-}
 
 // Monday 00:00 of the current week, in King's timezone, as an ISO instant.
 export function weekStartISO(now = new Date()): string {

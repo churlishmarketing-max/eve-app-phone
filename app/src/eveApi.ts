@@ -149,6 +149,126 @@ export async function actOnAttention(
   }
 }
 
+// ---- BODY tab (Phase 6): the vitals ledger ----
+// The brain owns the calendar: every date here arrives pre-resolved as a
+// string (today, on_date, dow) and the app only renders them. Nothing in
+// this file computes a day — a phone in another timezone must not be able
+// to desync a streak.
+
+export interface VitalsCheckin {
+  on_date: string;
+  energy: number | null;
+  sleep_hours: number | null;
+  note: string | null;
+}
+
+// One cell of the 7-day strip, oldest → newest. `trained` is the tick of the
+// slot:"checkin" habit named Trained; `calls_ok` is the floor's own answer.
+export interface VitalsDay {
+  on_date: string;
+  dow: string;
+  energy: number | null;
+  trained: boolean;
+  calls_ok: boolean;
+}
+
+// slot is presentation only: "checkin" rows draw as the check-in card's
+// checkboxes, "habit" rows draw in NON-NEGOTIABLE HABITS with a streak.
+export interface VitalsHabit {
+  id: string;
+  name: string;
+  cadence: string;
+  slot: "habit" | "checkin";
+  sort_order: number;
+  done_today: boolean;
+  streak: number;
+  days: string[];
+}
+
+// Every field but `online` is optional: a brain without the /vitals route
+// yields an empty screen, never a crash.
+export interface Vitals {
+  online: boolean;
+  today?: string;
+  checkin?: VitalsCheckin | null;
+  week?: VitalsDay[];
+  habits?: VitalsHabit[];
+  floor?: { count: number; goal: number };
+  floorHistorySource?: string;
+}
+
+export type VitalsWrite = { ok: boolean; error?: string };
+
+export async function fetchVitals(days = 7): Promise<Vitals> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/vitals?days=${days}`, {
+      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+    });
+    if (!res.ok) return { online: false };
+    return (await res.json()) as Vitals;
+  } catch {
+    return { online: false };
+  }
+}
+
+// Partial patch — omitted fields are left alone, so a tap and a line she
+// captured in chat compose into one row instead of clobbering each other.
+export async function logCheckin(patch: {
+  energy?: number;
+  sleepHours?: number;
+  note?: string;
+}): Promise<VitalsWrite> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/checkin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      body: JSON.stringify(patch),
+    });
+    return (await res.json()) as VitalsWrite;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network error" };
+  }
+}
+
+export async function tickRoutine(id: string, onDate?: string): Promise<VitalsWrite> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/routine/${id}/tick`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      body: JSON.stringify(onDate ? { onDate } : {}),
+    });
+    return (await res.json()) as VitalsWrite;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network error" };
+  }
+}
+
+export async function untickRoutine(id: string, onDate?: string): Promise<VitalsWrite> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/routine/${id}/untick`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      body: JSON.stringify(onDate ? { onDate } : {}),
+    });
+    return (await res.json()) as VitalsWrite;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network error" };
+  }
+}
+
+export async function createRoutine(name: string): Promise<VitalsWrite> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/routine`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      body: JSON.stringify({ name }),
+    });
+    return (await res.json()) as VitalsWrite;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network error" };
+  }
+}
+
 // ---- manual job kick (Today § RUN HER DAY) ----
 // The brain owns the cadence (04 §1) — this only fires one of her real jobs
 // NOW, on demand. force bypasses the once-a-day guard so a manual tap always

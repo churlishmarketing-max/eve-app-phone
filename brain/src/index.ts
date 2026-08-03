@@ -7,7 +7,7 @@ import path from "node:path";
 import { runChat } from "./chat.js";
 import { initFirebase, isPushReady } from "./firebase.js";
 import { initDb, isDbReady } from "./db.js";
-import { saveToken } from "./push.js";
+import { saveToken, isPushAllowed } from "./push.js";
 import { runMorningBrief } from "./brief.js";
 import { runDistill } from "./distill.js";
 import { runPulseSweep } from "./pulse.js";
@@ -20,7 +20,8 @@ import { addText, addNotification } from "./senses.js";
 import { getConnectorStatus } from "./connectors.js";
 import { runDispatch } from "./dispatch.js";
 import { runFloorCheck, runCloseout, runWeekPreview, fireTripwire, runRoutineRiskCheck } from "./proactive.js";
-import { tickRoutine, actOnAttention, type AttentionAction } from "./ops.js";
+import { tickRoutine, untickRoutine, createRoutine, archiveRoutine, actOnAttention, type AttentionAction } from "./ops.js";
+import { buildVitals, saveCheckin, checkinRangeError, rememberCheckinNote } from "./vitals.js";
 import { transcribe, speakToResponse, listVoices, sttReady, ttsReady } from "./voice.js";
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
 import { warmBoard, boardSnapshotReady } from "./os.js";
@@ -87,6 +88,12 @@ app.get("/health", (_req, res) => {
     ok: true,
     phase: "5-her-reach",
     pushReady: isPushReady(),
+    // pushReady says the WIRE is up; pushAllowed says the send wall (push.ts)
+    // will actually let a notification through, and which rule decided that —
+    // so "will the deployed brain send the 07:00 brief?" is answerable from
+    // outside the container instead of guessed at. /health is UNAUTHENTICATED:
+    // `why` names the matched marker (a KEY name) and never its value.
+    pushAllowed: isPushAllowed(),
     memoryReady: isDbReady(),
     voiceReady: { stt: sttReady(), tts: ttsReady() },
     osBoardWarm: boardSnapshotReady(),
@@ -257,10 +264,92 @@ app.post("/wardrobe/wear", async (req, res) => {
   res.json(await setWearing(file));
 });
 
-// Routine tick — streak increments same-day only (00 Phase-4 DoD).
+// Routine tick — idempotent per (routine, local day); optional onDate back-dates
+// inside the last 7 days (ops.ts). URL unchanged; body may add { onDate }.
 app.post("/routine/:id/tick", async (req, res) => {
   try {
-    res.json(await tickRoutine(req.params.id));
+    const { onDate } = req.body ?? {};
+    res.json(await tickRoutine(req.params.id, typeof onDate === "string" ? onDate : undefined));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.post("/routine/:id/untick", async (req, res) => {
+  try {
+    const { onDate } = req.body ?? {};
+    res.json(await untickRoutine(req.params.id, typeof onDate === "string" ? onDate : undefined));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// New habit. cadence stays 'daily' unless asked otherwise — runRoutineRiskCheck
+// filters .eq("cadence","daily"), so anything else is created and never watched.
+app.post("/routine", async (req, res) => {
+  try {
+    const { name, cadence, slot } = req.body ?? {};
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "name (string) is required" });
+    }
+    if (slot !== undefined && slot !== "habit" && slot !== "checkin") {
+      return res.status(400).json({ error: "slot must be habit | checkin" });
+    }
+    res.json(await createRoutine(name, typeof cadence === "string" && cadence ? cadence : "daily", slot ?? "habit"));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// Retire a habit — active=false, never a delete (routine_days cascades).
+app.post("/routine/:id/archive", async (req, res) => {
+  try {
+    res.json(await archiveRoutine(req.params.id));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// THE BODY (Phase 6) — its own route, deliberately NOT folded into /state:
+// /state already fires six parallel reads on a 60s poll for the other tabs and
+// none of them need this.
+app.get("/vitals", async (req, res) => {
+  try {
+    const raw = Number(req.query.days ?? 7);
+    const days = Number.isFinite(raw) ? Math.min(31, Math.max(1, Math.round(raw))) : 7;
+    res.json(await buildVitals(days));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// Daily check-in — partial merge into TODAY's row (the server stamps the day).
+app.post("/checkin", async (req, res) => {
+  try {
+    const { energy, sleepHours, note } = req.body ?? {};
+    if (energy !== undefined && typeof energy !== "number") {
+      return res.status(400).json({ error: "energy must be a number 1-5" });
+    }
+    if (sleepHours !== undefined && typeof sleepHours !== "number") {
+      return res.status(400).json({ error: "sleepHours must be a number 0-24" });
+    }
+    if (note !== undefined && typeof note !== "string") {
+      return res.status(400).json({ error: "note must be a string" });
+    }
+    const bad = checkinRangeError({ energy, sleepHours });
+    if (bad) return res.status(400).json({ error: bad });
+    const saved = await saveCheckin({ energy, sleepHours, note });
+
+    // King chose FULL access to the journal, and THIS is the path he'll
+    // actually use — the tab's note box, not chat. Attempted independently of
+    // the row write: the spine is a different ledger, and dropping his line
+    // because daily_checkins is unreachable would be strictly worse than
+    // keeping it. Reported separately so nothing is claimed that didn't happen.
+    if (typeof note === "string" && note.trim()) {
+      const m = await rememberCheckinNote(note);
+      return res.json({ ...saved, noteMemory: { remembered: m.ok, deduped: m.deduped, ...(m.error ? { error: m.error } : {}) } });
+    }
+    res.json(saved);
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -299,7 +388,9 @@ app.post("/job", async (req, res) => {
     if (job === "floor_check") return res.json(await runFloorCheck(f));
     if (job === "closeout") return res.json(await runCloseout(f));
     if (job === "week_preview") return res.json(await runWeekPreview(f));
-    if (job === "routine_risk") return res.json(await runRoutineRiskCheck());
+    // force forwarded like every other job here — without it the 20:00 BODY
+    // nudge cannot be exercised by hand outside 06:30–21:30, or twice in a day.
+    if (job === "routine_risk") return res.json(await runRoutineRiskCheck(f));
     if (job === "tripwire") {
       if (typeof message !== "string" || !message.trim()) {
         return res.status(400).json({ error: "tripwire needs a message" });

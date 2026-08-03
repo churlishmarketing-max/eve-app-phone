@@ -75,7 +75,11 @@ export function startSchedulers(): void {
     },
     { timezone: TZ },
   );
-  // 20:00 routine risk — attention item only, no push (04 §2).
+  // 20:00 BODY check — attention items, plus AT MOST ONE consolidated push
+  // naming what's still open (N1→N2→N3 by consecutive missed days, no N4).
+  // Silent when everything's ticked. No new slot was armed for the body: the
+  // 07:00 brief carries the check-in ask as a clause and this slot carries the
+  // evening nudge, both inside quiet hours 21:30–06:30.
   cron.schedule(
     "0 20 * * *",
     () => {

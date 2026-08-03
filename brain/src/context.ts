@@ -4,6 +4,7 @@ import * as google from "./google.js";
 import { getWearing } from "./wardrobe.js";
 import { boardSnapshot } from "./os.js";
 import { floorView } from "./floor.js";
+import { buildVitals } from "./vitals.js";
 
 // Context assembly (03 §4). Layers 1–2 (bible + doctrine) are static in the
 // system prompt; this builds layers 3–6 fresh per exchange: today snapshot,
@@ -51,11 +52,20 @@ async function todaySnapshot(): Promise<string[]> {
       ]).catch(() => null)
     : Promise.resolve(null);
 
-  const [threeR, floorR, attnR, cal] = await Promise.all([
+  // ONE floorView() per reply. It is started here and the SAME promise is both
+  // awaited for the floor line and handed to buildVitals, which would otherwise
+  // run its own — a duplicate count query on the critical path of every message.
+  // Passing the promise (not the resolved value) keeps everything parallel.
+  const floorP = floorView();
+
+  const [threeR, floorR, attnR, cal, vitals] = await Promise.all([
     c.from("tasks").select("title, priority, due_at").not("priority", "is", null).is("done_at", null).order("priority", { ascending: true }).limit(3),
-    floorView(),
+    floorP,
     c.from("attention_items").select("kind, message, nudge_level").is("resolved_at", null).order("created_at", { ascending: false }).limit(5),
     calendar,
+    // Span 1: today only. The streak inside each habit is still computed over
+    // the full history, so a one-day window costs the least and says the most.
+    buildVitals(1, floorP).catch(() => null),
   ]);
 
   // Today's Three
@@ -71,6 +81,33 @@ async function todaySnapshot(): Promise<string[]> {
   lines.push(
     `Sales floor: ${floorR.count}/${floorR.goal} real conversations this week (floor law: ${floorR.goal}).`,
   );
+
+  // The body — energy, sleep, today's ticks, live streaks, and his one line.
+  // The NEGATIVE branch is mandatory: an unlogged day must read as unlogged,
+  // never as a zero-filled reading (same law as UNREACHABLE above). No sales
+  // count appears here — that is the floor line's, and only the floor line's.
+  if (vitals && vitals.online) {
+    const ck = vitals.checkin;
+    if (!ck || (ck.energy === null && ck.sleep_hours === null)) {
+      lines.push("Body today: not checked in yet — no energy or sleep logged.");
+    } else {
+      const bits = [
+        ck.energy === null ? "energy not logged" : `energy ${ck.energy}/5`,
+        ck.sleep_hours === null ? "sleep not logged" : `slept ${ck.sleep_hours}h`,
+      ];
+      lines.push(`Body today: ${bits.join(", ")}.`);
+    }
+    if (vitals.habits.length) {
+      const done = vitals.habits.filter((h) => h.done_today).length;
+      lines.push(
+        `Habits ${done}/${vitals.habits.length} today: ` +
+          vitals.habits.map((h) => `${h.name} ${h.streak}d${h.done_today ? "" : " (not yet today)"}`).join(" · "),
+      );
+    }
+    if (ck?.note) lines.push(`He wrote today: "${ck.note}"`);
+  } else if (vitals) {
+    lines.push("Body: ledger unavailable this turn — say so rather than assuming he skipped it.");
+  }
 
   // Calendar (null = not connected or timed out — say so, don't fake empty)
   if (google.calendarReady()) {
