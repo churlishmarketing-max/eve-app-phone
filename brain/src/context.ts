@@ -5,6 +5,7 @@ import { getWearing } from "./wardrobe.js";
 import { boardSnapshot } from "./os.js";
 import { floorView } from "./floor.js";
 import { buildVitals } from "./vitals.js";
+import { renderDeskCensus, type DeskPack } from "./desk.js";
 
 // Context assembly (03 §4). Layers 1–2 (bible + doctrine) are static in the
 // system prompt; this builds layers 3–6 fresh per exchange: today snapshot,
@@ -166,6 +167,14 @@ export async function buildContextPack(
   incomingMessage: string,
   conversationId: string | null = null,
   includeHistory = false,
+  // Filing hands (FILE-MARSHAL §3.3). Defaulted, so every existing caller —
+  // phone, glasses, proactive jobs — behaves byte-identically. NOTE what is
+  // passed to renderDeskCensus and what is NOT: the census renderer is never
+  // handed index.entries, so no filename can reach this block. Filenames enter
+  // her context through the desk_scan TOOL RESULT and nowhere else, because
+  // this pack is introduced to her as her own briefing and she is told to trust
+  // it. (G-I1 / INJ-1)
+  desk: DeskPack | null = null,
 ): Promise<string> {
   const [snapshot, loops, recall, turns] = await Promise.all([
     todaySnapshot(),
@@ -188,6 +197,7 @@ export async function buildContextPack(
     "you've had memory. To King you are simply a person who knows things, not a system reading state.",
     nowLine(surface),
     ...wornLine(),
+    ...renderDeskCensus(desk),
     ...snapshot,
     // Ambient OS board — kept warm in the background (os.ts), injected instantly
     // so board questions answer in one turn with no round-trip. Null → omitted

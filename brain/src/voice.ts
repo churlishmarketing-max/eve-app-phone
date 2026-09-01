@@ -31,6 +31,32 @@ function voiceId(): string {
   return process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
 }
 
+// ---------------------------------------------------------------------------
+// WHICH VOICE IS SHE IN? — additive, and the desktop rail's only honest source.
+//
+// The desktop used to name her by reading voices[0] off GET /voice/voices. That
+// array is ElevenLabs' own ordering over ~50 voices, not a ranking, so the rail
+// read "ADAM" while she was configured as Lara. A name on that rail is a claim
+// about her; a claim that cannot be resolved is a lie. So the brain now SAYS
+// which id it is configured with, from the same voiceId() the TTS call already
+// uses — one source, so the label and the audio can never disagree.
+// ---------------------------------------------------------------------------
+
+/** The voice id this deployment actually speaks in. */
+export function configuredVoiceId(): string {
+  return voiceId();
+}
+
+/** ElevenLabs voice ids are 20 alphanumeric characters. Strict on purpose: a
+ *  per-utterance override is an id we hand to a paid API, so it is validated
+ *  before it costs a round trip, and anything else is refused rather than
+ *  silently swapped for the default. */
+const VOICE_ID_RE = /^[A-Za-z0-9]{20}$/;
+
+export function isVoiceId(v: unknown): v is string {
+  return typeof v === "string" && VOICE_ID_RE.test(v);
+}
+
 export async function transcribe(audio: Buffer, contentType: string): Promise<{ ok: boolean; transcript?: string; error?: string }> {
   if (!sttReady()) return { ok: false, error: "Deepgram not connected (DEEPGRAM_API_KEY not set)" };
   if (!dg) dg = new DeepgramClient({ apiKey: process.env.DEEPGRAM_API_KEY });
@@ -51,14 +77,25 @@ export async function transcribe(audio: Buffer, contentType: string): Promise<{ 
 
 // Streams mp3 straight through to the client as ElevenLabs generates it —
 // playback can start on the first chunk (quality bar: audio ≤ ~2.5s).
-export async function speakToResponse(text: string, res: Response): Promise<void> {
+export async function speakToResponse(
+  text: string,
+  res: Response,
+  // PURELY ADDITIVE. Absent (every caller that exists today) => the configured
+  // voice, byte-identical behaviour. Present and well formed => this ONE
+  // utterance speaks in that voice; nothing is persisted, the deployment's own
+  // ELEVENLABS_VOICE_ID is untouched, and the next call with no override is
+  // her again. This is what makes the desktop's already-built picker functional
+  // without a config change.
+  overrideVoiceId?: string,
+): Promise<void> {
   if (!ttsReady()) {
     res.status(503).json({ error: "ElevenLabs not connected (ELEVENLABS_API_KEY not set)" });
     return;
   }
   if (!el) el = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
   try {
-    const stream = await el.textToSpeech.stream(voiceId(), {
+    const speakAs = isVoiceId(overrideVoiceId) ? overrideVoiceId : voiceId();
+    const stream = await el.textToSpeech.stream(speakAs, {
       text,
       modelId: "eleven_flash_v2_5",
       outputFormat: "mp3_44100_128",

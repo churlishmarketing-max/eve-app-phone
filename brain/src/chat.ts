@@ -5,6 +5,7 @@ import { ensureConversation, appendMessage } from "./memory.js";
 import { buildMemoryServer } from "./tools.js";
 import { buildConnectorServer, connectorToolNames } from "./connectors.js";
 import type { PendingConfirm } from "./confirm.js";
+import type { DeskPack } from "./desk.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
@@ -28,7 +29,13 @@ export async function runChat(
   surface: string,
   events: ChatEvents,
   abort?: AbortController,
+  // Filing hands. The pack rides in on THIS turn's request or it does not exist
+  // — there is no store, no cache, and no way for a filing plan to be caused by
+  // anything other than a message he sent just now. That is G-I6, and it is why
+  // the two desk tools gate on the pack rather than on a flag.
+  opts?: { desk?: DeskPack | null },
 ): Promise<void> {
+  const desk = opts?.desk ?? null;
   const resumeSession = sessions.get(conversationId);
   let fullText = "";
   let speaking = false;
@@ -51,13 +58,13 @@ export async function runChat(
     // there's no live SDK session to resume — a brain restart must not wipe
     // continuity (review C7), and a resumed session already has the turns.
     const [contextPack] = await Promise.all([
-      buildContextPack(surface, userMessage, conversationId, !resumeSession),
+      buildContextPack(surface, userMessage, conversationId, !resumeSession, desk),
       ensureConversation(conversationId, surface),
     ]);
     void appendMessage(conversationId, "user", userMessage);
 
-    const memoryServer = buildMemoryServer(() => conversationId);
-    const connectorServer = buildConnectorServer((c) => events.onConfirm?.(c));
+    const memoryServer = buildMemoryServer(() => conversationId, desk);
+    const connectorServer = buildConnectorServer((c) => events.onConfirm?.(c), desk);
 
     const q = query({
       // Volatile context rides in the user turn; system prompt stays static
@@ -73,7 +80,10 @@ export async function runChat(
         // enforcement lives INSIDE the send tools (confirm.ts): they queue a
         // pending confirm and return — they cannot send. Live web (search +
         // fetch) is on: reads only, nothing external can be sent through it.
-        // File/shell tools stay off — her body is the phone, not this box.
+        // File/shell tools stay off — her body is the phone and his desk, never
+        // this box. Filing hands do NOT change that line: desk_file_plan queues
+        // a card and the DESKTOP moves the file locally; nothing in this
+        // container ever touches a filesystem on her behalf.
         allowedTools: [
           "mcp__eve_memory__search_memory",
           "mcp__eve_memory__save_memory",
@@ -83,9 +93,11 @@ export async function runChat(
           "WebFetch",
         ],
         disallowedTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep"],
-        // Web hops + OS round-trips stack up fast in one answer; 12 keeps a
-        // real research-then-act turn from dying mid-thought.
-        maxTurns: 12,
+        // Web hops + OS round-trips stack up fast in one answer. A filing turn
+        // is scan + two narrowings + memory + plan + emit — six tool turns
+        // before she has said a word — so 12 died mid-plan on any turn that
+        // also checked his mail.
+        maxTurns: 16,
         includePartialMessages: true,
         // A disconnected phone must not keep the loop burning tokens (C18);
         // the same controller carries the outage deadline.

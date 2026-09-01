@@ -15,14 +15,23 @@ import { runCapture } from "./capture.js";
 import { buildState } from "./state.js";
 import { backfillEmbeddings } from "./memory.js";
 import { startSchedulers } from "./schedule.js";
-import { resolveConfirm } from "./confirm.js";
+import { resolveConfirm, getPending } from "./confirm.js";
+import { deskFromBody } from "./desk.js";
 import { addText, addNotification } from "./senses.js";
 import { getConnectorStatus } from "./connectors.js";
 import { runDispatch } from "./dispatch.js";
 import { runFloorCheck, runCloseout, runWeekPreview, fireTripwire, runRoutineRiskCheck } from "./proactive.js";
 import { tickRoutine, untickRoutine, createRoutine, archiveRoutine, actOnAttention, type AttentionAction } from "./ops.js";
 import { buildVitals, saveCheckin, checkinRangeError, rememberCheckinNote } from "./vitals.js";
-import { transcribe, speakToResponse, listVoices, sttReady, ttsReady } from "./voice.js";
+import {
+  transcribe,
+  speakToResponse,
+  listVoices,
+  sttReady,
+  ttsReady,
+  configuredVoiceId,
+  isVoiceId,
+} from "./voice.js";
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
 import { warmBoard, boardSnapshotReady } from "./os.js";
 import { warmFleet, fleetViewStatus } from "./fleet.js";
@@ -87,6 +96,13 @@ app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     phase: "5-her-reach",
+    // The capability handshake for filing hands. The desktop probes this at
+    // boot and on every reconnect: when the field is ABSENT it disables filing
+    // in the UI with "YOUR BRAIN DOESN'T HAVE THEM YET. REDEPLOY THE BRAIN."
+    // rather than silently attaching a pack no tool will ever read. /health is
+    // unauthenticated by existing design and this names a capability, never a
+    // value. (§3.6 / §3.8)
+    filingHands: true,
     pushReady: isPushReady(),
     // pushReady says the WIRE is up; pushAllowed says the send wall (push.ts)
     // will actually let a notification through, and which rule decided that —
@@ -117,6 +133,20 @@ app.post("/confirm", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
+});
+
+// GET /confirm/:id — authenticated, READ-ONLY. It writes nothing, mints
+// nothing, and creates no injection channel: it returns exactly what the brain
+// already minted from her own tool call, and only to a caller holding the
+// bearer. It exists because listPending() now withholds a file batch's move
+// list from /state (CARD-5), and the one surface that actually executes the
+// batch still has to be able to read it. A POST /desk/report is deliberately
+// NOT here: a durable write endpoint on a shared bearer is a channel for making
+// EVE state permanently that files moved which were never touched (INJ-3).
+app.get("/confirm/:id", (req, res) => {
+  const c = getPending(req.params.id);
+  if (!c) return res.status(404).json({ error: "no such pending confirm (expired or already resolved)" });
+  res.json(c);
 });
 
 // HER SENSES (Phase 4, 05 §7): the app forwards texts + notifications while
@@ -226,15 +256,26 @@ app.post(
 
 // Voice out: text → streamed mp3 in EVE's voice (starts playing on first chunk).
 app.post("/voice/speak", async (req, res) => {
-  const { text } = req.body ?? {};
+  // `voiceId` is OPTIONAL and additive: absent => the configured voice, exactly
+  // as before. Validated strictly (20 alphanumerics) so a malformed id is a 400
+  // here instead of a paid round trip to ElevenLabs, and is never quietly
+  // swapped for the default — a caller that asks for a voice and gets a
+  // different one back is the kind of lie this whole surface exists to avoid.
+  const { text, voiceId } = req.body ?? {};
   if (typeof text !== "string" || !text.trim()) {
     return res.status(400).json({ error: "text (string) is required" });
   }
-  await speakToResponse(text.slice(0, 4000), res);
+  if (voiceId !== undefined && !isVoiceId(voiceId)) {
+    return res.status(400).json({ error: "voiceId must be 20 alphanumeric characters" });
+  }
+  await speakToResponse(text.slice(0, 4000), res, voiceId);
 });
 
+// `configuredVoiceId` is what the desktop rail reads to print her REAL voice
+// name instead of guessing at voices[0]. Additive: the list payload is
+// unchanged, this is one more field beside it.
 app.get("/voice/voices", async (_req, res) => {
-  res.json(await listVoices());
+  res.json({ ...(await listVoices()), configuredVoiceId: configuredVoiceId() });
 });
 
 // Her wardrobe (05 §5): King's approved renders live in the Supabase Storage
@@ -412,27 +453,40 @@ app.post("/job", async (req, res) => {
 // Default: SSE stream of typed events. ?stream=false → single JSON reply
 // (glasses-friendly, 02 §3).
 app.post("/chat", async (req, res) => {
-  const { message, conversationId, surface } = req.body ?? {};
+  const { message, conversationId, surface, desk } = req.body ?? {};
   if (typeof message !== "string" || !message.trim()) {
     return res.status(400).json({ error: "message (string) is required" });
   }
   const convId: string = conversationId || randomUUID();
   const surf: string = surface || "app";
   const streaming = req.query.stream !== "false";
+  // A HARD VALIDATOR, not a cast: anything malformed, oversized, or arriving
+  // with attrSweepOk !== true becomes null, and filing hands are simply absent
+  // for this turn — she is told so by the tool, in words, never by silence.
+  // Absent on every surface that isn't his desk, which is why the phone can
+  // never raise a file batch. (§3.2 / §3.8)
+  const deskPack = deskFromBody(desk);
 
   if (!streaming) {
     let text = "";
-    await runChat(convId, message, surf, {
-      onState: () => {},
-      onToken: (t) => (text += t),
-      onTool: () => {},
-      onDone: () => {
-        res.json({ conversationId: convId, reply: text });
+    await runChat(
+      convId,
+      message,
+      surf,
+      {
+        onState: () => {},
+        onToken: (t) => (text += t),
+        onTool: () => {},
+        onDone: () => {
+          res.json({ conversationId: convId, reply: text });
+        },
+        onError: (msg) => {
+          if (!res.headersSent) res.status(500).json({ error: msg });
+        },
       },
-      onError: (msg) => {
-        if (!res.headersSent) res.status(500).json({ error: msg });
-      },
-    });
+      undefined,
+      { desk: deskPack },
+    );
     return;
   }
 
@@ -474,6 +528,7 @@ app.post("/chat", async (req, res) => {
       },
     },
     abort,
+    { desk: deskPack },
   );
 });
 

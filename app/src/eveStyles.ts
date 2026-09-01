@@ -215,6 +215,16 @@ export const CSS = `
 .cbtn.gh{ color:rgba(240,237,232,.55); background:none; border:1px solid rgba(240,237,232,.16); }
 .cnote6{ margin-top:9px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.12em; color:rgba(240,237,232,.55); }
 .cnote6.ok{ color:var(--tealHi); }
+/* The desk lock. Stands exactly where APPROVE would stand on a card this phone
+   cannot approve — a file batch runs at his desk, not here. Engraved, not
+   pressable: dashed hairline, transparent plate, uppercase mono, and a <p>
+   rather than a disabled <button>, so no opacity rule ever stacks on the one
+   sentence telling him where to go. Deliberately quieter than CANCEL beside it
+   and still comfortably legible. Mirrors the desktop's send_sms .clocked. */
+.confirmv6 .clocked{ margin:0; flex:1; font-family:'IBM Plex Mono',monospace; font-size:8.5px;
+  letter-spacing:.12em; text-transform:uppercase; line-height:1.4; text-align:left;
+  border-radius:5px; padding:8px 11px; color:rgba(240,237,232,.62); background:none;
+  border:1px dashed rgba(240,237,232,.3); }
 
 /* ---------- talk: chips / input / mic ---------- */
 .chiprow{ flex:none; display:flex; gap:8px; overflow-x:auto; padding:8px 18px; }

@@ -80,6 +80,31 @@ const ALERT_SHADOW = "0 0 46px rgba(196,30,58,.55), 0 0 110px rgba(196,30,58,.28
 const CONV_KEY = "eve.conversationId";
 const WEAR_KEY = "eve.wearing";
 
+// DESK-ONLY CONFIRMS — the send_sms law, in reverse.
+//
+// A file_batch confirm carries a clientAction only a DESKTOP can run: the
+// filing engine lives in Electron and this phone has none. The confirm contract
+// is single-use and hash-matched, so approving one HERE deletes the pending
+// entry, moves not one file, and hands back executed:false — which the card
+// then prints as if something were running. That is the honesty law broken and
+// his approval destroyed in the same tap.
+//
+// The desktop already refuses the mirror case: it will not approve a send_sms,
+// because the message leaves HIS SIM, and where APPROVE would be it prints the
+// sentence telling him to use his phone. This is that, pointing the other way.
+// CANCEL stays live on both surfaces — he must be able to kill a card from
+// wherever he is standing.
+//
+// Matched on `kind` because that is all the phone is given: /state strips
+// clientAction from every pending confirm (the full payload is fetched by id,
+// at the desk). The clientAction test is the belt to that braces, for the SSE
+// path and for any future kind that is desk-executed under another name.
+const isDeskOnly = (c: PendingConfirm): boolean =>
+  c.kind === "file_batch" ||
+  (c as { clientAction?: { type?: string } }).clientAction?.type === "apply_file_batch";
+
+const DESK_ONLY_LINE = "APPROVE AT YOUR DESK — THIS ONE MOVES FILES ON YOUR PC";
+
 // She writes markdown emphasis by instinct; raw asterisks on screen read as a
 // glitch. Render the inline set (bold/italic/code, header lines as bold) and
 // nothing heavier — escape first so nothing she says can inject markup.
@@ -496,6 +521,10 @@ export default function EveApp() {
 
   // ---- RED-tier confirm resolution ----
   const decideConfirm = async (c: PendingConfirm, approve: boolean) => {
+    // Unreachable from the UI — the button is not rendered for these — and it
+    // stays here anyway, because the thing being protected is a single-use
+    // approval that cannot be got back once it is spent.
+    if (approve && isDeskOnly(c)) return;
     setConfirmNote((n) => ({ ...n, [c.id]: "…" }));
     const r = await resolveConfirm(c.id, c.hash, approve);
     let note: string;
@@ -1064,7 +1093,14 @@ export default function EveApp() {
                       <div className={`cnote6${confirmNote[c.id].startsWith("SENT") ? " ok" : ""}`}>{confirmNote[c.id]}</div>
                     ) : (
                       <div className="row">
-                        <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE — SEND IT</button>
+                        {isDeskOnly(c) ? (
+                          // An INSTRUCTION, not a control: never a <button>, so
+                          // no disabled-opacity stacks on the one line that
+                          // answers "then what do I do?".
+                          <p className="clocked">{DESK_ONLY_LINE}</p>
+                        ) : (
+                          <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE — SEND IT</button>
+                        )}
                         <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
                       </div>
                     )}
@@ -1159,7 +1195,11 @@ export default function EveApp() {
                         <div className="cnote6">{confirmNote[c.id]}</div>
                       ) : (
                         <div className="row">
-                          <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE</button>
+                          {isDeskOnly(c) ? (
+                            <p className="clocked">{DESK_ONLY_LINE}</p>
+                          ) : (
+                            <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE</button>
+                          )}
                           <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
                         </div>
                       )}

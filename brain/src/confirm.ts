@@ -41,10 +41,42 @@ function sweep(): void {
   }
 }
 
+/**
+ * CARD-1, CRITICAL. The old line was:
+ *
+ *   JSON.stringify(payload, Object.keys(payload).sort())
+ *
+ * `JSON.stringify`'s replacer ARRAY filters keys at EVERY depth, not just the
+ * top one. A payload whose top-level key set does not contain `fromRel` /
+ * `toRel` / `i` / `size` therefore canonicalises its `moves` array to
+ * `[{},{},…]`: the hash covered the op, the intent and the count, and not one
+ * single path. Two batches that move completely different files hashed
+ * identically, which means the card could show one thing and the approve could
+ * execute another.
+ *
+ * This is a recursive canonicaliser: every value at every depth is in the
+ * string. It must stay byte-identical to the desktop's
+ * electron/desk/index.ts canonical(), or every filing confirm fails closed.
+ */
+export function canonical(v: unknown): string {
+  if (v === null || typeof v !== "object") return JSON.stringify(v) ?? "null";
+  if (Array.isArray(v)) return `[${v.map(canonical).join(",")}]`;
+  const o = v as Record<string, unknown>;
+  return `{${Object.keys(o)
+    .sort()
+    .map((k) => `${JSON.stringify(k)}:${canonical(o[k])}`)
+    .join(",")}}`;
+}
+
+/**
+ * 128 bits, not 64 (G-C2). For the three shipped FLAT payloads
+ * ({to,subject,body}, {phoneNumber,message}, {client_name}) the canonical
+ * string is byte-identical to what the old line produced — only the truncation
+ * widens. Clients echo back whatever hash they were handed and the store is
+ * in-memory, so a deploy restart strands nothing.
+ */
 export function payloadHash(payload: Record<string, unknown>): string {
-  // Canonical: stable key order so the same payload always hashes the same.
-  const canonical = JSON.stringify(payload, Object.keys(payload).sort());
-  return createHash("sha256").update(canonical).digest("hex").slice(0, 16);
+  return createHash("sha256").update(canonical(payload)).digest("hex").slice(0, 32);
 }
 
 export function requestConfirm(
@@ -53,6 +85,9 @@ export function requestConfirm(
   payload: Record<string, unknown>,
   execute: (() => Promise<string>) | null,
   clientAction?: ClientAction,
+  // CARD-4: a filing plan rots faster than a text. Per-kind TTL, defaulted so
+  // every existing caller keeps its 30 minutes exactly.
+  ttlMs: number = TTL_MS,
 ): PendingConfirm {
   sweep();
   const id = randomUUID();
@@ -64,7 +99,7 @@ export function requestConfirm(
     payload,
     hash: payloadHash(payload),
     createdAt: new Date(now).toISOString(),
-    expiresAt: new Date(now + TTL_MS).toISOString(),
+    expiresAt: new Date(now + ttlMs).toISOString(),
     execute,
     ...(clientAction ? { clientAction } : {}),
   };
@@ -93,12 +128,18 @@ export async function resolveConfirm(
   pending.delete(id); // single-use either way
   if (!approve) return { ok: true, executed: false, detail: "cancelled" };
   if (!entry.execute) {
-    // Client-executed send: approval hands the action to the app; the PHONE
-    // fires it. executed:false is honest — nothing has left the brain.
+    // Client-executed: approval hands the action back to the surface that can
+    // actually perform it. executed:false is honest — nothing has left the
+    // brain. The detail names the RIGHT surface, because "executes on the
+    // phone" printed under a file batch is exactly the kind of confident wrong
+    // sentence this whole machine exists to prevent.
     return {
       ok: true,
       executed: false,
-      detail: "approved — executes on the phone",
+      detail:
+        entry.clientAction?.type === "apply_file_batch"
+          ? "approved — running on your desk"
+          : "approved — executes on the phone",
       ...(entry.clientAction ? { clientAction: entry.clientAction } : {}),
     };
   }
@@ -110,7 +151,27 @@ export async function resolveConfirm(
   }
 }
 
+/**
+ * CARD-5. `/state` returns this to EVERY surface on a 30 s poll, over whatever
+ * network the phone happens to be on. The full from->to list of a file batch is
+ * a map of his disk, and it does not need to be there: the only surface that
+ * can execute one fetches it by id (GET /confirm/:id). The HEAD of the payload
+ * stays, so the phone can still render a card and CANCEL it. (G-C11)
+ */
 export function listPending(): PendingConfirm[] {
   sweep();
-  return [...pending.values()].map(({ execute: _e, clientAction: _c, ...rest }) => rest);
+  return [...pending.values()].map(({ execute: _e, clientAction: _c, ...rest }) => {
+    if (rest.kind !== "file_batch") return rest;
+    const { moves: _m, ...head } = rest.payload as Record<string, unknown>;
+    return { ...rest, payload: { ...head, moves: "withheld — fetch by id at the desk" } };
+  });
+}
+
+/** The full payload, by id. Read-only, authenticated, mints nothing. (§3.6) */
+export function getPending(id: string): PendingConfirm | null {
+  sweep();
+  const entry = pending.get(id);
+  if (!entry) return null;
+  const { execute: _e, clientAction: _c, ...rest } = entry;
+  return rest;
 }
