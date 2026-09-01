@@ -1,0 +1,31 @@
+{
+  "name": "eve-desktop",
+  "version": "0.8.0",
+  "private": true,
+  "description": "EVE Desktop \u2014 a thin Electron client on the live EVE brain. The shell holds zero intelligence and exactly one secret.",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.json",
+    "smoke": "node scripts/smoke.mjs",
+    "shots": "node scripts/shots.mjs",
+    "verify:desk": "tsc -p verify/tsconfig.desk-harness.json && node verify/desk-harness.mjs",
+    "verify:eye": "tsc -p verify/tsconfig.desk-harness.json && node verify/desk-eye-harness.mjs",
+    "verify:injection": "tsc -p verify/tsconfig.desk-harness.json && node verify/desk-injection-harness.mjs",
+    "verify:e2e": "node verify/desk-e2e-harness.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^44.0.0",
+    "electron-vite": "^5.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.6"
+  }
+}

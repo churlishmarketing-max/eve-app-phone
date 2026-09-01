@@ -1,0 +1,30 @@
+<!-- @dsCard group="EVE Desktop" viewport="1440x1000" subtitle="Global CTRL+SPACE overlay, in-situ over the editing desk" name="B · SUMMON/OVERLAY" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>EVE Desktop — B · SUMMON/OVERLAY</title>
+<link rel="stylesheet" href="eve-desktop.css">
+<script src="../../image-slot.js"></script>
+<script defer src="fit.js"></script>
+</head><body><div class="frame"><div style="position:absolute;inset:0;filter:blur(4px) brightness(.55);background:#101214">
+  <div style="position:absolute;top:0;left:0;right:0;height:34px;background:#191b1e"></div>
+  <div style="position:absolute;top:50px;left:220px;right:340px;height:420px;background:#000;border:1px solid #222"></div>
+  <div style="position:absolute;top:50px;left:16px;width:186px;bottom:260px;background:#16181b;border:1px solid #222"></div>
+  <div style="position:absolute;top:50px;right:16px;width:306px;bottom:260px;background:#16181b;border:1px solid #222"></div>
+  <div style="position:absolute;left:16px;right:16px;bottom:20px;height:220px;background:#141619;border:1px solid #222">
+    <div style="position:absolute;left:70px;right:12px;top:24px;height:34px;background:#1b1f23"><i style="position:absolute;left:30px;width:200px;top:0;bottom:0;background:rgba(70,90,100,.5);display:block"></i></div><div style="position:absolute;left:70px;right:12px;top:70px;height:34px;background:#1b1f23"><i style="position:absolute;left:120px;width:260px;top:0;bottom:0;background:rgba(70,90,100,.5);display:block"></i></div><div style="position:absolute;left:70px;right:12px;top:116px;height:34px;background:#1b1f23"><i style="position:absolute;left:210px;width:320px;top:0;bottom:0;background:rgba(70,90,100,.5);display:block"></i></div><div style="position:absolute;left:70px;right:12px;top:162px;height:34px;background:#1b1f23"><i style="position:absolute;left:300px;width:380px;top:0;bottom:0;background:rgba(70,90,100,.5);display:block"></i></div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(3,5,6,.5)"></div>
+</div>
+<div style="position:absolute;top:140px;left:50%;transform:translateX(-50%);z-index:9">
+<div style="width:680px;background:#0C1417;border:1px solid rgba(28,185,200,.45);border-radius:12px;box-shadow:0 40px 120px rgba(0,0,0,.7), 0 0 60px rgba(0,122,135,.15);padding:18px 20px;backdrop-filter:blur(10px);display:flex;flex-direction:column;gap:14px"><div style="display:flex;align-items:center;gap:14px">
+  <span class="orb " style="width:48px;height:48px;position:relative;flex:none"><span class="ripple" style="border-radius:50%"></span><span class="ripple" style="border-radius:50%;animation-delay:.8s"></span></span>
+  <span class="stateline listen" style="letter-spacing:.22em">&#9679; LISTENING &mdash; GO AHEAD</span>
+  <span class="kbd" style="margin-left:auto">ESC</span></div><div style="font-style:italic;font-size:14.5px;color:rgba(240,237,232,.85)">&ldquo;eve, log a call with the rustic lumber guys&rdquo;</div><div style="border-left:2px solid var(--tealHi);padding-left:12px;font-size:13.5px;line-height:1.48;color:rgba(240,237,232,.92)">Logged. That's 3 of 3 &mdash; floor's closed for the week.<span class="cur">&#9612;</span></div><div class="confirmv6" style="padding:10px 12px">
+  <div class="hd">&#9650; RED TIER &middot; OS BOARD WRITE &mdash; NOTHING SENDS WITHOUT YOU</div>
+  <div class="sum" style="font-size:12.5px">Log the call to the sales floor &mdash; conversation #3 this week.</div>
+  <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><span class="cbtn ok">APPROVE</span><span class="cbtn gh">CANCEL</span><span style="margin-left:auto;display:flex;gap:6px"><span class="kbd">&#9166;</span><span class="kbd">ESC</span></span></div></div><div style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:rgba(240,237,232,.35);text-align:center">HOLD CTRL+SPACE TO TALK &middot; TYPE TO SWITCH &middot; &#8629; SEND</div></div>
+</div>
+<div class="scan"></div><div class="vig"></div></div>
+<div class="notes">
+  <span><b>BEHAVIOR</b> always-on-top &middot; Esc or click-outside dismisses &middot; a reply in flight keeps streaming into the deck's TALK column (same conversationId) &mdash; nothing is lost on dismiss.</span>
+  <span><b>RED</b> Summon can carry a confirm card; approve round-trips POST /confirm like anywhere else.</span>
+  <span><b>BACKDROP</b> neutral editing-suite mock &mdash; no Adobe trade dress.</span>
+</div></body></html>

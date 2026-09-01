@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- The renderer talks IPC only: no remote origins, no eval, no inline
+         script. S2 may add font-src/img-src for the design system and the
+         Supabase wardrobe CDN, but must not add connect-src to the brain —
+         all brain HTTP is main-process work. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' blob:; connect-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EVE</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/renderer/deck.main.tsx"></script>
+  </body>
+</html>

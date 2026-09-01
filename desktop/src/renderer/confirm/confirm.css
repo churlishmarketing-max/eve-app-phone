@@ -1,0 +1,161 @@
+/* ConfirmCard / ConfirmLayer — component-scoped additions on top of the law
+   classes from src/styles/eve-desktop.css (.confirmv6 / .cbtn / .kbd).
+   Owner: S3. */
+
+.confirmv6 {
+  position: relative;
+}
+
+/* THE MODAL'S PLATE, TOKENISED.
+   .confirmv6's own rule in eve-desktop.css paints a `background:` SHORTHAND —
+   a red-wash gradient whose second stop is rgba(var(--rgbPanel),0), i.e. fully
+   transparent — because the INLINE card sits on the talk column's own panel and
+   is meant to let it through. A modal has nothing behind it but the scrim, so
+   ConfirmCard used to inline a hardcoded #0C1417 to give it a body; that hex is
+   the TERMINAL panel and it survived every theme swap, which is what made PAPER
+   unreadable. This supplies the same body from the token instead.
+
+   background-COLOR only: the shorthand above already set background-image, and
+   this rule's specificity (0,2,0 vs 0,1,0) wins on the colour channel without
+   touching the gradient, in either bundle order. */
+.confirm-modal-wrap .confirmv6 {
+  background-color: var(--panel);
+}
+.confirmv6:focus {
+  outline: none;
+}
+
+.confirmv6 .cexpires {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--rgbCream), 0.62);
+  margin-top: 10px;
+}
+
+.confirmv6 .crow {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.confirmv6 .ckbd {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+/* send_sms law: there is no APPROVE on this card at all, because there is
+   nothing on this desktop to approve WITH — the send leaves his SIM. What
+   stands in APPROVE's place is the sentence telling him where to go instead,
+   and it is an INSTRUCTION, not a control.
+
+   IT USED TO BE `<button class="cbtn locked" disabled>`, and that one word
+   `disabled` is what made this the worst-measuring text in the app: app.css's
+   `button.cbtn:disabled { opacity:.4 }` multiplied an already-dimmed .62 cream
+   down to an effective .248, rendering 2.07 / 1.78 / 1.85 / 2.01 — a ghost,
+   sitting next to a CANCEL at 15:1. WCAG exempts disabled CONTROLS, which was
+   never the point: nothing here is a control, and the design law is that any
+   line of this card he cannot read is a defect. Hardest of all for the line
+   that tells him he must act somewhere else.
+   ConfirmCard now renders it as <p class="clocked">, so no opacity stacks on
+   it and nothing offers a click it cannot honour. The engraved look is kept
+   exactly — dashed hairline, transparent plate, uppercase mono — because that
+   is what says "this is where APPROVE would be, and it is not available".
+   .62 cream is deliberately QUIETER than CANCEL (~15:1) and quieter than the
+   summary: legible, not shouting. */
+.confirmv6 .clocked {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 5px;
+  padding: 6px 10px;
+  color: rgba(var(--rgbCream), 0.62);
+  background: transparent;
+  border: 1px dashed rgba(var(--rgbCream), 0.3);
+  white-space: normal;
+  text-align: left;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.confirmv6 .cexpired {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(var(--rgbCream), 0.62);
+  margin-top: 12px;
+}
+
+.confirmv6 .cnote {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  margin-top: 12px;
+}
+.confirmv6 .cnote.pending {
+  color: rgba(var(--rgbCream), 0.62);
+}
+.confirmv6 .cnote.sent {
+  color: var(--tealHi);
+}
+.confirmv6 .cnote.cancelled {
+  color: rgba(var(--rgbCream), 0.68);
+}
+/* THE LINE THAT SAYS THE IRREVERSIBLE THING DID NOT HAPPEN. 9px type, so it
+   takes --redInk, not the law hex: measured on the law hex it rendered
+   3.18 / 3.09 / 4.80 / 3.22 across the four worlds. Nothing else changes —
+   it is still red and it still means FAILED. */
+.confirmv6 .cnote.failed {
+  color: var(--redInk);
+}
+
+/* ConfirmLayer overlay. Fixed, not absolute: App.tsx mounts <ConfirmLayer>
+   as a sibling of <Deck/> (see deck/App.tsx), so there is no .frame/.col
+   ancestor to be relative to, and none of those ancestors carry a transform
+   (the deck's own cant lives on the .col children, not on anything above
+   this component) — fixed-to-viewport is the correct, simplest match for
+   "dims the whole deck". */
+.confirm-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(var(--rgbVoid), 0.4);
+  z-index: 8;
+}
+.confirm-modal-wrap {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  z-index: 9;
+}
+.confirm-more {
+  margin-top: 8px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--rgbCream), 0.62);
+}
+
+/* DESK/S3 — THE FILE-BATCH MODAL.
+   480px is right for a two-field gmail_send. It is wrong for a card whose one
+   job is to show fifty from → to path pairs without grouping any of them: at
+   480 every pair wraps three times and the list becomes a wall he skims, which
+   is the exact failure CARD-3 names ("a 500-row card is not consent").
+   The wrap also gets a viewport ceiling of its own, because the card is now
+   tall enough to push its own APPROVE button off the bottom of a 900px deck. */
+.confirm-modal-wrap.wide {
+  width: 660px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+/* The card is the scroll parent's child, so its own plate has to reach the
+   full width rather than shrink-wrapping the widest row. */
+.confirm-modal-wrap.wide .confirmv6 {
+  width: 100%;
+}

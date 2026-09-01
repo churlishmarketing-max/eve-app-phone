@@ -1,0 +1,855 @@
+/* FILING HANDS — the desk UI. Owner: S3 (DESK/UI).
+   Component-scoped additions on top of the law classes in
+   src/styles/eve-desktop.css (.card / .eyeb / .cbtn / .chipv6 / .kbd /
+   .footline / .mini / .oprow) and src/styles/app.css.
+
+   TOKENS ONLY. Not one colour literal in this file. A hardcoded plate on the
+   confirm card is what produced the CRITICAL "PAPER renders near-black type on
+   a near-black plate" blindness, and this is the second card in the app whose
+   entire job is to be read before something irreversible happens.
+
+   RED IS THE LAW, AND THE RULING IS NARROW. Red appears in this file in
+   exactly three roles and nowhere else:
+     1. INSIDE the RED confirm card — .fbbanner.stop and .fblocked. That card
+        already wears the tier: eve-desktop.css paints .confirmv6 with a 3px
+        --red rail and a red-wash plate, and .clocked (the shipped send_sms
+        lock) is already a dashed red-bordered instruction. These are the same
+        two shapes on the same card.
+     2. THE PHYSICAL STOP — .deskkill. The one control in the app that halts a
+        feature mid-write to his disk (G-A6). If anything outside the tier gets
+        to be unmistakable, it is the stop.
+     3. --redInk on a FAILURE WORD. That is not a new meaning: app.css already
+        spells .errline in --redInk and confirm.css already spells
+        .cnote.failed in --redInk. FAILED / REFUSED here join that language.
+   Everything else that wants attention takes GOLD, which is this app's
+   existing hot-state colour (OVERDUE rows, 12D QUIET clients): dry-run, the
+   sanitiser badges, a refused root's border, an interrupted batch. An
+   armed-and-live root takes TEAL, the "alive" colour. */
+
+/* ------------------------------------------------------------------ */
+/* UNTRUSTED TEXT — the one visual guarantee the card makes (PATH-3)   */
+/* ------------------------------------------------------------------ */
+
+/* isolate-override is the whole defence in CSS form: every character inside
+   this span is forced to the base direction, so a RIGHT-TO-LEFT OVERRIDE that
+   survived the strip pass in untrusted.tsx still cannot reorder what he reads,
+   and cannot reach a single character outside the span either. `direction:ltr`
+   is stated explicitly rather than inherited so a future RTL ancestor cannot
+   quietly flip it. */
+.uname {
+  unicode-bidi: isolate-override;
+  direction: ltr;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: rgba(var(--rgbCream), 0.92);
+  word-break: break-all;
+}
+.uname.dim {
+  color: rgba(var(--rgbCream), 0.62);
+}
+.unamewarn {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.unameraw {
+  appearance: none;
+  background: none;
+  border: 1px solid rgba(var(--rgbCream), 0.24);
+  border-radius: 4px;
+  padding: 1px 6px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: rgba(var(--rgbCream), 0.72);
+}
+.unameraw:hover {
+  border-color: rgba(var(--rgbAccent), 0.6);
+  color: var(--ice);
+}
+.unamerawbox {
+  margin-top: 5px;
+  padding: 6px 8px;
+  border: 1px dashed rgba(var(--rgbGold), 0.5);
+  border-radius: 5px;
+  background: rgba(var(--rgbGold), 0.06);
+}
+.unamerawline {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--cream);
+  word-break: break-all;
+  /* Already pure ASCII by construction, but stated anyway: this box is the
+     last-resort rendering and must never inherit a direction from anywhere. */
+  unicode-bidi: isolate-override;
+  direction: ltr;
+}
+.unamerawnote {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  color: rgba(var(--rgbCream), 0.7);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------ */
+/* THE FILE-BATCH CONFIRM CARD                                         */
+/* ------------------------------------------------------------------ */
+
+.fbwrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ABOVE THE FOLD. Unscrollable, renderer-computed, never from `intent`. */
+.fbfacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--cream);
+}
+.fbfacts b {
+  font-weight: 700;
+  color: var(--cream);
+}
+.fbfacts .sep {
+  color: rgba(var(--rgbCream), 0.4);
+}
+
+.fbroute {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 3px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: rgba(var(--rgbCream), 0.85);
+}
+.fbroute .k {
+  color: rgba(var(--rgbCream), 0.68);
+  letter-spacing: 0.14em;
+  font-size: 8.5px;
+  padding-top: 2px;
+}
+.fbnew {
+  color: var(--gold);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.fbexts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.fbext {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--rgbCream), 0.2);
+  color: rgba(var(--rgbCream), 0.85);
+}
+/* An executable, a script or an installer inside a batch he thinks is invoices
+   is THE tell (CARD-3). It wears the hot-state colour, not red — red is the
+   tier. */
+.fbext.hot {
+  border-color: rgba(var(--rgbGold), 0.7);
+  color: var(--gold);
+}
+
+.fbchecked {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--rgbCream), 0.7);
+}
+.fbchecked em {
+  font-style: normal;
+  color: var(--gold);
+}
+
+/* CONSTANT STRINGS. Not payload fields. A confused or injected plan cannot
+   print its own guarantees. (INJ-4) */
+.fblaw {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--rgbAccent), 0.9);
+  border-top: 1px solid var(--hair2);
+  border-bottom: 1px solid var(--hair2);
+  padding: 6px 0;
+}
+
+.fbbanner {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  line-height: 1.55;
+  padding: 7px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--rgbGold), 0.55);
+  /* MEASURED (.08 -> .045). PAPER's ochre is 5.14:1 on the panel and 4.09:1
+     once an 8% ochre wash is laid under it — the border and the tint carry the
+     meaning, so the tint is the part that gives way. */
+  background: rgba(var(--rgbGold), 0.045);
+  color: var(--gold);
+}
+.fbbanner.stop {
+  border-color: rgba(var(--rgbRed), 0.6);
+  background: rgba(var(--rgbRed), 0.05);
+  color: var(--redInk);
+}
+
+/* DRY RUN IS LOUD. A persistent chip, plus the verb on every line below. */
+.fbdry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(var(--rgbGold), 0.65);
+  /* MEASURED (.1 -> .05): 3.99:1 in PAPER. The DRY RUN chip is the difference
+     between a rehearsal and his disk changing; it does not get to be marginal. */
+  background: rgba(var(--rgbGold), 0.05);
+  color: var(--gold);
+  white-space: nowrap;
+}
+.fblive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(var(--rgbAccent), 0.6);
+  background: rgba(var(--rgbAccent), 0.06);
+  /* --tealHi, not --ice. Both are "her/alive" in the dark worlds, but PAPER
+     resolves --ice to its ochre (4.21:1 on this wash) and --tealHi to full ink.
+     One token, legible in all four. */
+  color: var(--tealHi);
+  white-space: nowrap;
+}
+
+.fbhash {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--rgbCream), 0.7);
+}
+
+/* THE LIST. Every from -> to pair, one row each, nothing grouped, nothing
+   summarised away. (CARD-3) */
+.fblistwrap {
+  border: 1px solid var(--hair2);
+  border-radius: 8px;
+  background: rgba(var(--rgbVoid), 0.28);
+}
+.fblisthd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 9px;
+  border-bottom: 1px solid var(--hair2);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--rgbCream), 0.68);
+}
+.fblisthd .gate {
+  color: var(--gold);
+}
+.fblisthd .gate.done {
+  color: var(--tealHi);
+}
+.fblist {
+  max-height: 268px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.fblist.tall {
+  max-height: 420px;
+}
+
+.fbrow {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 0 8px;
+  padding: 7px 9px;
+  border-bottom: 1px solid rgba(var(--rgbCream), 0.05);
+}
+.fbrow:last-child {
+  border-bottom: none;
+}
+.fbrow .n {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: rgba(var(--rgbCream), 0.45);
+  padding-top: 2px;
+}
+.fbpair {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 2px 8px;
+  align-items: baseline;
+}
+/* MEASURED LIFT (.6 -> .78). These two words are what tell him which half of
+   a row is the source and which is the destination, at 8px. In PAPER they
+   measured 4.21:1 — under AA on the one card that must be read. */
+.fbpair .lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: rgba(var(--rgbCream), 0.78);
+}
+.fbpair .sz {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: rgba(var(--rgbCream), 0.7);
+  white-space: nowrap;
+}
+.fbstat {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.fbstat.ok {
+  color: var(--tealHi);
+}
+.fbstat.warn {
+  color: var(--gold);
+}
+.fbstat.no {
+  color: var(--redInk);
+}
+.fbwhy {
+  grid-column: 2 / -1;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  color: rgba(var(--rgbCream), 0.72);
+}
+
+/* HER REASON — below the fold, demoted, labelled, untrusted. (INJ-4/G-I8) */
+.fbintent {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(var(--rgbCream), 0.8);
+}
+.fbintent b {
+  display: block;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: rgba(var(--rgbCream), 0.68);
+  margin-bottom: 3px;
+}
+
+.fbverdict {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--cream);
+}
+
+/* The refused lock. Same shape as ConfirmCard's send_sms .clocked: an
+   INSTRUCTION is never a <button>, so no disabled-opacity stacks on it. */
+.fblocked {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 5px;
+  padding: 6px 10px;
+  color: var(--cream);
+  background: transparent;
+  border: 1px dashed rgba(var(--rgbRed), 0.55);
+  line-height: 1.4;
+  flex: 1;
+  text-align: left;
+}
+.fbhint {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--rgbCream), 0.7);
+  line-height: 1.5;
+}
+
+/* Progress + outcome */
+.fbprog {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(var(--rgbCream), 0.1);
+  overflow: hidden;
+}
+.fbprog i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--tealHi));
+  transition: width 0.25s ease;
+}
+.fbout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fboutline {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--cream);
+  line-height: 1.6;
+}
+.fboutline .moved {
+  color: var(--tealHi);
+}
+.fboutline .would {
+  color: var(--gold);
+}
+.fboutline .bad {
+  color: var(--redInk);
+}
+
+/* ------------------------------------------------------------------ */
+/* SETTINGS — the filing section                                       */
+/* ------------------------------------------------------------------ */
+
+.deskset {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.deskrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.deskrow.spread {
+  justify-content: space-between;
+}
+
+.deskmaster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+.deskmaster .off {
+  color: rgba(var(--rgbCream), 0.72);
+}
+.deskmaster .on {
+  color: var(--ice);
+}
+
+/* THE DISCLOSURE. Unskippable, shown before the master switch can arm.
+   (G-V3 / PRIV-3) */
+.deskdisc {
+  border: 1px solid rgba(var(--rgbGold), 0.5);
+  background: rgba(var(--rgbGold), 0.05);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.deskdisc h4 {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+}
+.deskdisc p {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: rgba(var(--rgbCream), 0.88);
+}
+.deskdisc p b {
+  color: var(--cream);
+  font-weight: 600;
+}
+
+.deskroot {
+  border: 1px solid var(--hair2);
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: var(--panel2);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+/* RED DISCIPLINE. Red is the RED confirm tier and the live mic. A refused
+   ROOT is neither, so the card border wears --gold (this app's existing
+   hot-state colour, already carrying OVERDUE and QUIET-CLIENT) and only the
+   WORD REFUSED keeps --redInk — which is exactly how .errline and
+   .cnote.failed already spell a failure sentence. */
+.deskroot.refused {
+  border-color: rgba(var(--rgbGold), 0.55);
+}
+.deskroot .lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(var(--rgbAccent), 0.9);
+}
+.deskroot .path {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: rgba(var(--rgbCream), 0.9);
+  word-break: break-all;
+  unicode-bidi: isolate-override;
+  direction: ltr;
+}
+.deskroot .meta {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--rgbCream), 0.7);
+}
+
+.deskprobes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.deskprobe {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--rgbCream), 0.18);
+  color: rgba(var(--rgbCream), 0.75);
+}
+.deskprobe.ok {
+  border-color: rgba(var(--rgbAccent), 0.5);
+  color: var(--ice);
+}
+.deskprobe.bad {
+  border-color: rgba(var(--rgbGold), 0.6);
+  color: var(--redInk);
+}
+.deskprobe.warn {
+  border-color: rgba(var(--rgbGold), 0.6);
+  color: var(--gold);
+}
+
+.desknever {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.desknever i {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--rgbCream), 0.16);
+  color: rgba(var(--rgbCream), 0.78);
+}
+
+.deskgrant {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  color: rgba(var(--rgbCream), 0.82);
+}
+.deskgrant .can {
+  color: var(--ice);
+}
+.deskgrant .cannot {
+  color: rgba(var(--rgbCream), 0.82);
+}
+
+/* ------------------------------------------------------------------ */
+/* THE KILL SWITCH                                                     */
+/* ------------------------------------------------------------------ */
+
+/* Red, and red on purpose: this is the physical stop on a feature that writes
+   to his disk (G-A6). It is the only control in this stream that wears the law
+   colour, and it is a genuine control, so the law hex on the border is right
+   and the WORD takes --redInk like every other piece of small red type. */
+.deskkill {
+  appearance: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border-radius: 6px;
+  color: var(--redInk);
+  /* MEASURED (.12 -> .06): 3.77:1 in PAPER. The law hex stays on the border,
+     which is structure and exempt; the WORD gets a ground it can be read on. */
+  background: rgba(var(--rgbRed), 0.06);
+  border: 1px solid var(--red);
+  transition: background 0.2s;
+}
+.deskkill:hover {
+  background: rgba(var(--rgbRed), 0.22);
+}
+.deskkill:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.deskkilled {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  color: var(--redInk);
+}
+
+/* ------------------------------------------------------------------ */
+/* THE LOG / UNDO PANEL                                                */
+/* ------------------------------------------------------------------ */
+
+.desklog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.desklogbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.desklogsince {
+  appearance: none;
+  background: rgba(var(--rgbVoid), 0.4);
+  border: 1px solid rgba(var(--rgbCream), 0.2);
+  border-radius: 5px;
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  padding: 4px 7px;
+}
+.desklogsince:focus {
+  outline: 1px solid rgba(var(--rgbAccent), 0.6);
+}
+
+.desklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.deskbatch {
+  border: 1px solid var(--hair2);
+  border-left: 2px solid rgba(var(--rgbAccent), 0.45);
+  border-radius: 9px;
+  background: var(--panel2);
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.deskbatch.dry {
+  border-left-color: var(--gold);
+}
+.deskbatch.undone {
+  border-left-color: rgba(var(--rgbCream), 0.3);
+}
+/* An INTERRUPTED batch is an unfinished job, not a RED-tier decision. Gold,
+   like every other hot state in this app. */
+.deskbatch.interrupted {
+  border-left-color: var(--gold);
+}
+.deskbatchhd {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: rgba(var(--rgbCream), 0.78);
+}
+.deskbatchhd .tm {
+  color: var(--cream);
+}
+.deskbatchhd .op {
+  color: rgba(var(--rgbAccent), 0.9);
+}
+.deskbatchhd .hash {
+  margin-left: auto;
+  color: rgba(var(--rgbCream), 0.6);
+}
+.deskcounts {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--cream);
+}
+.deskitems {
+  border-top: 1px solid var(--hair2);
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.deskitem {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 2px 8px;
+  align-items: baseline;
+}
+.deskitem .lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: rgba(var(--rgbCream), 0.6);
+}
+
+.deskempty {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  line-height: 1.7;
+  color: rgba(var(--rgbCream), 0.72);
+}
+
+.deskoffline {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+  color: rgba(var(--rgbAccent), 0.9);
+}
+
+/* The log panel's counts share the card's outcome language. Without these the
+   whole line renders one flat cream and a 20-file failure reads exactly like a
+   20-file success. */
+.deskcounts .moved { color: var(--tealHi); }
+.deskcounts .would { color: var(--gold); }
+.deskcounts .bad { color: var(--redInk); }
+
+/* A half-landed batch, said in words in the log the same way it is said on the
+   card. Gold, not red: the batch is not a failure, it is a SPLIT, and the two
+   halves are both real. (PART-1) */
+.deskhalf {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  line-height: 1.55;
+  color: var(--gold);
+}
+
+/* ------------------------------------------------------------------ */
+/* SHOT DETERMINISM                                                    */
+/* ------------------------------------------------------------------ */
+
+/* A RECEIPT THAT PHOTOGRAPHS A TRANSITION IS A RECEIPT THAT LIES.
+   `.cbtn` carries `transition: background .25s, border-color .25s`, and the
+   shot harness applies the world in a layout effect and captures roughly a
+   quarter-second later — so PUT THE 10 BACK was captured PART-WAY between the
+   dark world's teal wash and PAPER's solid-ink plate. Measured off the PNG it
+   read 2.30:1 and looked like a contrast failure on the recovery button of a
+   half-landed batch. Measured off the live DOM it is 14.19:1: the CSS was
+   always right and the camera was early.
+   The scenarios set data-shot="desk" on <html>, which freezes every transition
+   and animation so a capture is the SETTLED state, never a frame of one. This
+   attribute is set only by ?shot= scenarios and never by the app. */
+:root[data-shot="desk"] *,
+:root[data-shot="desk"] *::before,
+:root[data-shot="desk"] *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* PAPER — the measured last 0.4 of a stop                             */
+/* ------------------------------------------------------------------ */
+
+/* PAPER inverts the ink channel, so every tinted plate under coloured type
+   costs contrast instead of adding it. Measured on the live DOM, not estimated:
+   the ochre banner ran 4.28:1, the DRY RUN chip 4.25:1 and the STOP button
+   4.08:1 — each a few hundredths under AA, each on a sentence that decides
+   whether files move.
+   The fix keeps the HUE and drops the WASH. In this world the border and the
+   glyph carry the signal on their own, which is exactly what paper.css already
+   does elsewhere ("paper's own answer for an active control is not a tinted
+   outline at all"). The dark worlds keep their washes untouched. */
+:root[data-theme="paper"] .fbbanner,
+:root[data-theme="paper"] .fbdry,
+:root[data-theme="paper"] .deskkill,
+.tw-paper .fbbanner,
+.tw-paper .fbdry,
+.tw-paper .deskkill {
+  background: transparent;
+}
+
+/* THE STOP NEEDS A PLATE, NOT NO PLATE. Transparent put paper's dark red on the
+   pane's own desk tone (#C9BFA8) and measured 4.42:1 — still under. On paper's
+   raised slip it is 6.7:1, and a paper plate with an ink rule is this world's
+   own idiom for a control (paper.css says exactly that about .cbtn.gh). */
+:root[data-theme="paper"] .deskkill,
+.tw-paper .deskkill {
+  background: var(--panel);
+}
+
+
+
+/* TWO SHARED LAW CLASSES, LIFTED INSIDE THIS STREAM ONLY.
+   .footline and .eyeb .r are the app's byline classes: .26 and .35 ink, which
+   measured 2.00-2.92:1 in TERMINAL and 4.36:1 in PAPER. Fine for a decorative
+   byline. NOT fine for the sentences this feature puts in them: "nothing in
+   this app empties a trash directory", "she is told only that N entries are
+   hidden from her", "WORKS WITH THE BRAIN OFFLINE". Those are guarantees.
+
+   SPECIFICITY, LEARNED THE MEASURED WAY. The first attempt used a plain
+   `.desklog .footline` (0,2,0) and silently did nothing, because paper.css
+   already lifts `.footline` at `:root[data-theme="paper"]` (0,3,0). The probe
+   caught it: the computed colour came back rgba(28,23,18,.66), not the .78 the
+   rule asked for. The prefixed selectors below are (0,4,0) and actually win;
+   the bare pair covers the frame before initTheme() stamps the attribute.
+   The classes themselves are untouched — every other screen keeps what it has. */
+:root[data-theme] .deskset .footline,
+:root[data-theme] .desklog .footline,
+:root[data-theme] .deskset .eyeb .r,
+:root[data-theme] .desklog .eyeb .r,
+.deskset .footline,
+.desklog .footline,
+.deskset .eyeb .r,
+.desklog .eyeb .r {
+  color: rgba(var(--rgbCream), 0.86);
+}

@@ -1,0 +1,44 @@
+/* WORLD 1 — TERMINAL (default).
+   Source: ui_kits/eve-desktop/eve-desktop.css — the shipped baseline.
+
+   These declarations are value-for-value identical to the :root block in
+   ../eve-desktop.css. The file exists for two reasons and neither of them
+   changes a pixel:
+
+     1. `data-theme` is always set (theme.ts writes it before first paint), so
+        TERMINAL needs a selector to be set *to*, not just a fallback.
+     2. `.tw-terminal` gives the settings mini-preview the same tokens the real
+        world uses, so a preview swatch cannot drift from the world it claims
+        to show — it is literally reading the same declaration.
+
+   Identical values at higher specificity = no computed change. Proven by shot
+   diff against the pre-theme baseline (see the stream report). */
+
+:root[data-theme="terminal"],
+.tw-terminal {
+  --rgbCream: 240, 237, 232;
+  --rgbAccent: 28, 185, 200;
+  --rgbAccentDeep: 0, 122, 135;
+  --rgbPanel: 12, 20, 23;
+  --rgbBg: 7, 11, 12;
+  --rgbVoid: 3, 5, 6;
+  --rgbOrbInner: 201, 247, 251;
+  --rgbIce: 155, 239, 247;
+  --rgbGold: 201, 165, 74;
+
+  --void: #030506;
+  --bg: #070b0c;
+  --panel: #0c1417;
+  --panel2: #0f191d;
+  --hair: rgba(var(--rgbCream), 0.07);
+  --hair2: rgba(var(--rgbCream), 0.09);
+  --teal: #007a87;
+  --tealHi: #1cb9c8;
+  --ice: #9beff7;
+  --cream: #f0ede8;
+  --gold: #c9a54a;
+  --orb1: #c9f7fb;
+  --orb2: #1cb9c8;
+  --orb3: #007a87;
+  --orb4: #06272c;
+}

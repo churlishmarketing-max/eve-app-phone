@@ -1,0 +1,134 @@
+/* WORLD 4 — AMBER COCKPIT.
+   Sources: tokens/colors.css (the real token file eve-os/index.html chain-loads)
+   and ui_kits/eve-fusion/fusion-amber.css (the M1 attempt at this exact remap —
+   prior art, reused rather than re-derived).
+
+   NO LAW REMAP NEEDED. This is the clean world: tokens/colors.css already
+   carries the identical governing comment — "--red:#C41E3A — ONE use:
+   listening / live. Never decorative" — with the identical hex, and a full-tree
+   grep finds no green token or literal anywhere in it. The law arrives intact.
+
+   ONE DELIBERATE CHOICE. eve-os has no --ice. Its nearest "bright highlight" is
+   --amber-hi #FFC96B (its speaking state); fusion-amber.css instead invented a
+   cool #7FE3EF. Warm wins here: a second cool accent next to amber competes
+   with amber for "her", and this world's whole point is that amber is her.
+
+   ONE HONEST COLLISION. --gold (money) and --teal (the support hue under the
+   accent) both resolve to #C8960A. In eve-os that value is --ember, "Churlish
+   Gold — money, laws, premium", and fusion-amber.css independently used it as
+   the low stop of the .fbars gradient. One hex, two roles, because that is what
+   the world does — not because a role was dropped.
+
+   CYAN IS NOT DEAD. --cyan #35C9DB is eve-os's documented "systems secondary".
+   It gets the two code chips (.jcode, .node .code) below and nothing else,
+   which is the only genuinely "systems" surface the desktop has. */
+
+:root[data-theme="amber"],
+.tw-amber {
+  --rgbCream: 239, 230, 214; /* --paper #EFE6D6, warm white, never #FFF */
+  --rgbAccent: 232, 163, 61; /* --amber #E8A33D — her / alive / done */
+  --rgbAccentDeep: 200, 150, 10; /* --ember #C8960A */
+  --rgbPanel: 20, 17, 12; /* --panel #14110C */
+  --rgbBg: 13, 11, 8; /* --hull #0D0B08 */
+  --rgbVoid: 6, 5, 4; /* --void #060504 */
+  --rgbOrbInner: 255, 233, 196; /* #FFE9C4 */
+  --rgbIce: 255, 201, 107;
+  --rgbGold: 200, 150, 10; /* --ember as a channel, for alpha washes */
+  --rgbCyan: 53, 201, 219;
+
+  --void: #060504;
+  --bg: #0d0b08;
+  --panel: #14110c;
+  --panel2: #191510;
+  /* eve-os hairlines are amber, not paper — --line / fusion-amber verbatim. */
+  --hair: rgba(var(--rgbAccentDeep), 0.16);
+  --hair2: rgba(var(--rgbAccentDeep), 0.24);
+  --teal: #c8960a;
+  --tealHi: #e8a33d;
+  --ice: #ffc96b;
+  --cream: #efe6d6;
+  --gold: #c8960a;
+  --cyan: #35c9db;
+  --orb1: #ffe9c4;
+  --orb2: #ffc96b;
+  --orb3: #e8a33d;
+  --orb4: #2c1d06;
+}
+
+/* ---- effects: form only, never colour meaning -------------------------- */
+
+/* Hard cockpit corners. eve-os chamfers with clip-path polygons; fusion-amber
+   approximated the same read with 3px/2px radii, which survives contact with
+   real resizable content instead of clipping it. Taking the approximation. */
+:root[data-theme="amber"] .card,
+:root[data-theme="amber"] .mini,
+:root[data-theme="amber"] .node,
+:root[data-theme="amber"] .oprow,
+:root[data-theme="amber"] .t3row,
+:root[data-theme="amber"] .bub,
+:root[data-theme="amber"] .cmdinput,
+:root[data-theme="amber"] .pfr,
+:root[data-theme="amber"] .confirmv6,
+.tw-amber .card,
+.tw-amber .mini,
+.tw-amber .node,
+.tw-amber .oprow,
+.tw-amber .t3row,
+.tw-amber .bub,
+.tw-amber .cmdinput,
+.tw-amber .pfr,
+.tw-amber .confirmv6 {
+  border-radius: 3px;
+}
+:root[data-theme="amber"] .pbadge,
+:root[data-theme="amber"] .chipv6,
+:root[data-theme="amber"] .cbtn,
+:root[data-theme="amber"] .kbd,
+:root[data-theme="amber"] .jcode,
+:root[data-theme="amber"] .sendb,
+.tw-amber .pbadge,
+.tw-amber .chipv6,
+.tw-amber .cbtn,
+.tw-amber .kbd,
+.tw-amber .jcode,
+.tw-amber .sendb {
+  border-radius: 2px;
+}
+
+/* The hull's ambient glow. fusion-amber's .frame rule, verbatim. */
+:root[data-theme="amber"] .frame,
+.tw-amber .frame {
+  background: radial-gradient(
+      ellipse 70% 60% at 50% 40%,
+      rgba(var(--rgbAccent), 0.05),
+      transparent 65%
+    ),
+    var(--bg);
+}
+
+/* A cockpit's approve is a lit key, not an outline. fusion-amber's .cbtn.ok. */
+:root[data-theme="amber"] .cbtn.ok,
+.tw-amber .cbtn.ok {
+  color: #141005;
+  background: var(--tealHi);
+  border-color: var(--tealHi);
+}
+:root[data-theme="amber"] .cbtn.ok:hover,
+.tw-amber .cbtn.ok:hover {
+  background: var(--ice);
+}
+
+/* Systems secondary — the only two surfaces that are genuinely "systems". */
+:root[data-theme="amber"] .jcode,
+:root[data-theme="amber"] .node .code,
+.tw-amber .jcode,
+.tw-amber .node .code {
+  color: var(--cyan);
+  background: rgba(var(--rgbCyan), 0.08);
+  border-color: rgba(var(--rgbCyan), 0.25);
+}
+
+:root[data-theme="amber"] .stateline,
+.tw-amber .stateline {
+  letter-spacing: 0.3em;
+}

@@ -1,0 +1,198 @@
+/* THE NAV STRIP — owning stream: S2 (this file + NavStrip.tsx only).
+   Imported by NavStrip.tsx, so it lands after styles/app.css in the bundle.
+   Every override of an existing class here is written at HIGHER specificity
+   (.bodystrip.navtarget, not .bodystrip) so it does not depend on that order.
+
+   Colour law, restated because a nav is exactly where it gets broken:
+   the active destination is TEAL. Red is the confirm tier and the live mic,
+   nothing else; green is the autonomy dot, nothing else. Nothing in this file
+   is red or green. */
+
+/* ---- the destination selector -------------------------------------------
+   One instrument switch, not four links: a single bordered group with hairline
+   dividers between the segments, sized to sit inside the 32px title bar with
+   5px of air above and below. */
+.navstrip {
+  display: inline-flex;
+  align-items: stretch;
+  flex: none;
+  height: 22px;
+  border: 1px solid var(--hair2);
+  border-radius: 5px;
+  overflow: hidden;
+  background: rgba(12, 20, 23, 0.55);
+}
+
+.navseg {
+  appearance: none;
+  background: none;
+  border: none;
+  border-radius: 0;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: rgba(240, 237, 232, 0.5);
+  transition: background 0.2s, color 0.2s;
+}
+.navseg + .navseg {
+  box-shadow: inset 1px 0 0 var(--hair2);
+}
+
+/* The keycap IS the documentation: the digit that jumps here is drawn on the
+   segment, so the keyboard route is discoverable without a shortcut sheet. */
+.navseg .navkey {
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  line-height: 11px;
+  padding: 0 3px;
+  border: 1px solid rgba(240, 237, 232, 0.14);
+  border-radius: 3px;
+  color: rgba(240, 237, 232, 0.32);
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.navseg:hover {
+  background: rgba(28, 185, 200, 0.1);
+  color: var(--ice);
+}
+.navseg:hover .navkey {
+  color: rgba(155, 239, 247, 0.7);
+  border-color: rgba(28, 185, 200, 0.4);
+}
+.navseg:focus-visible {
+  outline: 1px solid var(--tealHi);
+  outline-offset: -3px;
+}
+
+/* THE ACTIVE DESTINATION — lit: teal wash, ice type, and a 2px bar burning
+   along the bottom edge of that segment alone. */
+.navseg.on {
+  background: rgba(28, 185, 200, 0.2);
+  color: var(--ice);
+  text-shadow: 0 0 10px rgba(28, 185, 200, 0.45);
+}
+.navseg.on .navkey {
+  color: var(--ice);
+  border-color: rgba(28, 185, 200, 0.55);
+  background: rgba(28, 185, 200, 0.14);
+}
+.navseg.on::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--tealHi);
+  box-shadow: 0 0 8px rgba(28, 185, 200, 0.8);
+}
+
+/* ---- affordance 1: the BODY strip ---------------------------------------
+   It was a status line that happened to be a button. Now it is drawn as a row
+   with a border and an OPEN cap, matching .oprow's language one column over.
+   .bodystrip's own rules (styles/app.css) still supply the type and the flex;
+   this only adds the box. */
+.bodystrip.navtarget {
+  padding: 6px 9px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--panel2);
+  transition: background 0.2s, border-color 0.2s;
+}
+.bodystrip.navtarget:hover {
+  background: rgba(28, 185, 200, 0.05);
+  border-color: rgba(28, 185, 200, 0.45);
+}
+.bodystrip.navtarget:focus-visible {
+  outline: 1px solid var(--tealHi);
+  outline-offset: -2px;
+}
+.bodyopen {
+  flex: none;
+  margin-left: 10px;
+  padding: 1px 5px;
+  border: 1px solid rgba(28, 185, 200, 0.3);
+  border-radius: 4px;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: rgba(28, 185, 200, 0.78);
+  transition: color 0.2s, border-color 0.2s;
+}
+.bodystrip.navtarget:hover .bodyopen {
+  color: var(--ice);
+  border-color: rgba(28, 185, 200, 0.6);
+}
+/* Shrink order, and why it is spelled out: at the 1120px minimum the DATA
+   column renders in 294px and the summary line alone is ~310px wide, so
+   SOMETHING has to give. The first cut of this had the summary at flex:none
+   and the OPEN cap fell off the column edge — the affordance was the only
+   thing you could not see (verify/n/nav-deck-1120.png, first pass). The cap is
+   the point of the row, so it never shrinks; the check-in names collapse
+   first (shrink 200), and only then does the summary ellipsise. An ellipsis is
+   a truncation, not an invented number — the honesty law is untouched. */
+.bodystrip.navtarget .bodysum {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bodyfill {
+  flex: 1 200 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  color: rgba(240, 237, 232, 0.5);
+}
+
+/* ---- affordance 2: her portrait -----------------------------------------
+   RailColumn's .pcard has carried an onClick since it shipped and nothing on
+   screen said so — a hover tooltip on an image is not an affordance. This is
+   the sign on the door. It is a ::after on a class RailColumn already wears,
+   which is why it lives here instead of in that file (another stream owns a
+   region of RailColumn.tsx this round). pointer-events:none so the plate's own
+   click target is completely untouched; z-index 3 so the SHE CHANGED caption
+   (z-index 4) still covers it for its three seconds. */
+.pcard::after {
+  content: "▸ CLOSET";
+  position: absolute;
+  left: 50%;
+  bottom: 9px;
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border: 1px solid rgba(28, 185, 200, 0.35);
+  border-radius: 4px;
+  background: rgba(7, 11, 12, 0.78);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(155, 239, 247, 0.72);
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.pcard:hover::after {
+  color: var(--ice);
+  border-color: rgba(28, 185, 200, 0.75);
+  background: rgba(7, 11, 12, 0.92);
+  box-shadow: 0 0 14px rgba(28, 185, 200, 0.25);
+}
+
+/* ---- five segments at the 1120px minimum --------------------------------
+   CORE joined the strip. At 1440 there is ~650px of title-bar dead space and
+   five segments (~334px) are comfortable; at the enforced 1120x720 minimum
+   there is only ~330px, which is four pixels short. Shaving 2px a side off each
+   segment gives 20px back. Geometry only — no destination is dropped, no keycap
+   is hidden, and nothing here is a colour. */
+@media (max-width: 1279px) {
+  .navseg {
+    padding: 0 7px;
+  }
+}

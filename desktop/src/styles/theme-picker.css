@@ -1,0 +1,216 @@
+/* STREAM T — the THEME section in the settings pane.
+   Imported by src/renderer/settings/SettingsPane.tsx.
+
+   The point of this file is the mini-preview. A theme card does not draw a
+   coloured rectangle and call it a preview — it draws a real (tiny) deck out of
+   the actual law classes (.mini, .eyeb, .t3row, .chipv6, .orb) inside a
+   `.tw-<world>` wrapper. That wrapper is declared in the world's own theme file
+   alongside `:root[data-theme="<world>"]`, in the same rule, so the preview is
+   reading the exact declarations the real window would. A swatch cannot drift
+   from the world it claims to show, because there is only one declaration.
+
+   The card chrome (border, name, selected state) deliberately sits OUTSIDE the
+   .tw-* wrapper so it keeps the currently-applied theme's accent. Only the
+   preview and the swatches speak in the other world's colours. */
+
+.themegrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.themecard {
+  appearance: none;
+  text-align: left;
+  padding: 8px;
+  cursor: pointer;
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: border-color 0.25s, background 0.25s;
+}
+.themecard:hover {
+  border-color: rgba(var(--rgbAccent), 0.45);
+}
+.themecard.on {
+  border-color: var(--tealHi);
+  background: rgba(var(--rgbAccent), 0.06);
+}
+.themecard:focus-visible {
+  outline: 1px solid var(--ice);
+  outline-offset: 2px;
+}
+
+/* ---- the world, drawn small ------------------------------------------- */
+
+.themeworld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.themeprev {
+  height: 92px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* the mini-deck is drawn at desktop proportions and shrunk, so the ratios
+     between type, rule and plate stay the world's own */
+  font-size: 5px;
+}
+.themeprev .tp-bar {
+  height: 11px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 5px;
+  border-bottom: 1px solid var(--hair);
+  font-family: var(--mono);
+  font-size: 4px;
+  letter-spacing: 0.18em;
+  color: rgba(var(--rgbCream), 0.5);
+}
+.themeprev .tp-bar i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--tealHi);
+  flex: none;
+}
+.themeprev .tp-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 5px;
+  padding: 5px;
+}
+.themeprev .tp-plate {
+  width: 30px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.themeprev .orb {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.themeprev .tp-state {
+  font-family: var(--mono);
+  font-size: 3.4px;
+  letter-spacing: 0.22em;
+  color: rgba(var(--rgbAccent), 0.8);
+}
+.themeprev .tp-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+/* the law classes keep their colours and their borders; only their box metrics
+   are shrunk here, and nothing below touches a property a theme file sets */
+.themeprev .eyeb {
+  font-size: 4px;
+  letter-spacing: 0.18em;
+}
+.themeprev .mini {
+  padding: 4px 5px;
+  flex: none;
+}
+.themeprev .mini .k {
+  font-size: 3.4px;
+  letter-spacing: 0.2em;
+}
+.themeprev .mini .n {
+  font-size: 11px;
+}
+.themeprev .t3row {
+  min-height: 0;
+  padding: 3px 5px;
+  gap: 4px;
+}
+.themeprev .t3row .idx {
+  font-size: 6px;
+}
+.themeprev .t3row .tt {
+  font-size: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.themeprev .chipv6 {
+  font-size: 4px;
+  letter-spacing: 0.12em;
+  padding: 2px 4px;
+  align-self: flex-start;
+}
+
+/* ---- swatches: the tokens themselves ---------------------------------- */
+
+.themesw {
+  display: flex;
+  gap: 3px;
+}
+.themesw i {
+  flex: 1;
+  height: 9px;
+  border-radius: 2px;
+  border: 1px solid var(--hair2);
+}
+
+/* ---- card foot --------------------------------------------------------- */
+
+.themename {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--cream);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+.themename .sel {
+  color: var(--tealHi);
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+.themenote {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.08em;
+  color: rgba(var(--rgbCream), 0.42);
+}
+
+/* ---- the two-up row that holds THEME and HER VOICE --------------------- */
+
+.settings-extra {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.settings-extra .voicewrap {
+  display: flex;
+}
+@media (max-width: 1240px) {
+  .settings-extra {
+    grid-template-columns: 1fr;
+  }
+  .themegrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

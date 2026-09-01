@@ -1,0 +1,210 @@
+/* SettingsPane — component-scoped additions on top of the law classes
+   (.eyeb / .card / .node / .chipv6 / .kbd / .footline / .footnote /
+   .panewrap) from src/styles/eve-desktop.css + app.css. Owner: S3.
+
+   deck/Deck.tsx already wraps <SettingsPane> in a .panewrap div (that class
+   is where flex:1 / min-height:0 / overflow-y:auto / position:relative come
+   from in the real app) — .settings-pane below only owns the padding/gap
+   inside that wrapper, so nothing here double-applies the scroll container.
+   For the standalone shot scenario, s3-scenarios.tsx supplies an equivalent
+   flex ancestor by hand. */
+
+.settings-pane {
+  flex: 1;
+  min-height: 0;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.settings-back {
+  align-self: flex-start;
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: rgba(var(--rgbCream), 0.5);
+  transition: color 0.25s;
+}
+.settings-back:hover {
+  color: var(--ice);
+}
+
+.settings-nodegrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.settings-nodehead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-cards {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 10px;
+  min-height: 0;
+}
+.settings-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.settings-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(var(--rgbCream), 0.75);
+}
+.settings-rule {
+  display: flex;
+  gap: 10px;
+}
+.settings-rule .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  margin-top: 5px;
+}
+.settings-rule .k {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  display: block;
+}
+
+.wirecard {
+  display: flex;
+  flex-direction: column;
+}
+
+.wirerow2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--hair);
+}
+.wirerow2.dashed {
+  border-bottom: 1px dashed rgba(var(--rgbCream), 0.14);
+}
+.wirerow2 .k {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--rgbCream), 0.65);
+  white-space: nowrap;
+}
+.wirerow2 .k.dim {
+  color: rgba(var(--rgbCream), 0.35);
+}
+.wirerow2 .v {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(var(--rgbCream), 0.4);
+  text-align: right;
+}
+.wirerow2 .v.link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.settings-linkbtn {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(var(--rgbAccent), 0.8);
+}
+.settings-linkbtn:hover {
+  color: var(--ice);
+}
+
+.settings-outsel {
+  background: var(--panel);
+  border: 1px solid var(--hair2);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 4px 6px;
+  border-radius: 4px;
+  max-width: 220px;
+}
+
+.settings-cfginput {
+  background: var(--panel);
+  border: 1px solid var(--hair2);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  padding: 5px 8px;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 260px;
+  text-align: right;
+}
+.settings-cfginput:focus {
+  outline: none;
+  border-color: rgba(var(--rgbAccent), 0.45);
+}
+.settings-cfginput.bad {
+  border-color: rgba(var(--rgbRed), 0.6);
+}
+
+/* 8.5px error text -> --redInk. The .settings-cfginput.bad BORDER above keeps
+   rgba(--rgbRed,.6): that is structure, and structure keeps the law hex. */
+.settings-error {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: var(--redInk);
+  text-align: right;
+  margin-top: -4px;
+}
+
+.settings-linked {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-align: right;
+  margin-top: -4px;
+}
+.settings-linked.up {
+  color: var(--tealHi);
+}
+.settings-linked.down {
+  color: var(--redInk);
+}
+
+.settings-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}

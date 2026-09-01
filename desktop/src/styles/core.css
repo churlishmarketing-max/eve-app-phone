@@ -1,0 +1,851 @@
+/* THE CORE — the hybrid screen's sheet. Owning stream: this build.
+   Imported by src/renderer/core/CorePane.tsx, so it lands after app.css.
+
+   WHAT THIS FILE IS
+   -----------------
+   THE CORE (ui_kits/eve-anime/G-core.html + neon.css) contributed the LAYOUT
+   and the DEVICES: a full-bleed fleet strip over a three-column body over a
+   telemetry rail, a multi-ring living core, a counter rail, a dot-leader, a
+   terminal prompt. The shipped teal terminal-noir sheet contributed the
+   PALETTE, the COMPONENT VOCABULARY and the LAWS. Layout and palette are
+   separate axes: this is a fifth LAYOUT that renders in all four existing
+   worlds. It is NOT a fifth palette.
+
+   FOUR RULES THIS FILE OBEYS, EACH FOR A SCAR IN THIS CODEBASE
+   -----------------------------------------------------------
+   1. NOT ONE COLOUR LITERAL. Every colour is var(--x) or rgba(var(--rgbX),a).
+      A hardcoded plate caused the confirm-card blindness bug and a hardcoded
+      shadow caused a second one.
+
+   2. NO var(--ink), EVER. --ink is declared ONLY inside themes/neon.css. THE
+      CORE's whole structural language is a 2px ink outline plus a hard ink
+      offset shadow; ported literally that is an INVALID border-color in three
+      of four worlds (it falls back to currentColor — a cream box) and a
+      dropped shadow. Structure here is built from --hair / --hair2 / --panel /
+      --panel2, and every raised surface wears the shipped `.card` or `.node`
+      class, which the four theme files ALREADY dress (neon: 2px ink + hard
+      shadow; paper: 2px square + print offset; amber: 3px chamfer). Nothing
+      new needed a theme-file entry, which matters because the theme files are
+      not mine to edit this round.
+
+   3. EVERY CLASS IS NAMESPACED UNDER .corepane. THE CORE and the shipped sheet
+      collide on bare names — .mini (a 3px bar there, a padded 12px card here),
+      .wave (44 bars vs 5), .frame (a 1440x906 slab vs the window-filling flex
+      shell), plus .tag/.dot/.role/.hd/.nm/.n/.s/.k/.v/.r/.t/.st. Nothing bare
+      is declared here. .frame is never redeclared.
+
+   4. THE TWO LAW COLOURS ARE UNTOUCHED. THE CORE spends #35D07F (which its own
+      CSS misnames "--cyan"; it is GREEN) on ~40 elements and #F11B28 (misnamed
+      "--pink"; it is RED) on ~25 more. Neither crosses over. Green appears on
+      this screen on exactly one surface — the GREEN row of the autonomy
+      ladder, which IS the autonomy dot. Red appears on exactly two — the RED
+      confirm tier and the live microphone. Everything THE CORE painted green
+      because it meant "her / alive / done" is painted with the shipped ACCENT,
+      which is literally that role's token; everything it painted red because it
+      meant "hot but not fatal" is painted --gold, which is the language this
+      app already speaks for 12D QUIET and for overdue. */
+
+/* ---- the shell ---------------------------------------------------------- */
+
+/* Deliberately NOT .panewrap: that one is overflow-y:auto, and this screen fits
+   its frame at every supported size. The page body never scrolls; the columns
+   scroll their own lists. */
+.corewrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+  display: flex;
+}
+
+.corepane {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* THE ONE NEW PIECE OF ATMOSPHERE: THE CORE's 26px dotted grid. Written as an
+   alpha of the ink CHANNEL, so PAPER inverts it to ink dots on cream for free
+   and no theme file has to know this element exists. .07 is the alpha the
+   shipped --hair already uses. The CRT scanlines, the diagonal rain, the
+   vignette and the corner ticks are all already rendered by Deck.tsx OUTSIDE
+   the view branch (.scan / .vig) and are already per-theme — nothing is added
+   for them here. */
+.corepane::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(circle, rgba(var(--rgbCream), 0.07) 1px, transparent 1.4px);
+  background-size: 26px 26px;
+}
+.corepane > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- MEASURED, NOT GUESSED --------------------------------------------
+   Every alpha on small type in this file was measured on the real render in
+   all four worlds before it was written down, by the same method
+   themes/paper.css documents: composite the text colour over the actual
+   ancestor background chain and compute the WCAG ratio.
+
+   THE BINDING WORLD IS NEON, NOT PAPER. Neon's ink channel is a dimmer fog
+   (201,196,184) than terminal's near-white (240,237,232), so on its #161615
+   card it measures .40 -> 2.69, .45 -> 3.08, .50 -> 3.52, .55 -> 3.98,
+   .60 -> 4.49, .62 -> ~4.7. PAPER's inverted ink lands in almost the same
+   place (.62 -> 4.66 on its slip), which is why ONE set of base alphas serves
+   all four worlds here and no theme-gated block was needed: the value that
+   clears NEON clears everything.
+
+   So the floor for anything on this screen that carries WORDS is .62, and
+   .66-.68 for anything at 7.5-8px. THE CORE's own artboard is quieter than
+   this; it is also a static picture nobody has to read a dispatch id off. */
+
+/* ---- section head (THE CORE's .secN, in shipped tokens) ----------------- */
+.corepane .sechead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: none;
+}
+.corepane .sechead .en {
+  font-family: var(--disp);
+  /* 700, not 900: the app self-hosts 500/600/700 only, and 900 would either
+     synthesise or fall back. */
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--cream);
+  flex: none;
+}
+.corepane .sechead .rule {
+  flex: 1;
+  min-width: 10px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(var(--rgbAccent), 0.45), transparent);
+}
+.corepane .sechead .tag {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  /* .50 measured 3.52 NEON / 3.21 PAPER. This caption names the data source
+     for the whole strip, so it is words, so it clears the bar. */
+  color: rgba(var(--rgbCream), 0.66);
+  white-space: nowrap;
+  flex: none;
+}
+
+/* THE CORE's solid state plate. In the source it is a GREEN plate; green is the
+   autonomy dot's and nothing else's, so this is the accent — the token whose
+   documented role ("her / alive / done") is exactly what that plate meant.
+   PAPER needs no inversion here because --rgbAccent IS the ink channel there:
+   a 14% ink wash under full-strength ink type measures ~9:1 on cream. */
+.corepane .coreplate {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--rgbAccent), 0.4);
+  background: rgba(var(--rgbAccent), 0.14);
+  color: var(--tealHi);
+  white-space: nowrap;
+  flex: none;
+}
+.corepane .coreplate.off {
+  background: none;
+  border-color: rgba(var(--rgbCream), 0.3);
+  /* This is the plate that says SOURCE DOWN — the one state of this chip that
+     MUST be read, so it cannot be the dimmest. */
+  color: rgba(var(--rgbCream), 0.66);
+}
+
+/* ---- ZONE A: the fleet strip ------------------------------------------- */
+/* Column count is set inline from the number of cards actually rendered, so a
+   missing unit narrows the grid instead of leaving a hole. */
+.corepane .fleetstrip {
+  display: grid;
+  gap: 8px;
+  flex: none;
+  margin-top: 8px;
+}
+/* .fleetcard always rides on the shipped .node — the agent card this app
+   already had, and which the four theme files already dress. This block only
+   re-doses it: THE CORE's card is ~80px and five rows, .node's own margins are
+   built for a 14px-padded tile. */
+.corepane .fleetcard {
+  padding: 9px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.corepane .fleetcard .hd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.corepane .fleetcard .nm {
+  margin: 0;
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .fleetcard .role,
+.corepane .fleetcard .st {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .fleetcard .st {
+  align-self: flex-start;
+  max-width: 100%;
+}
+/* .node .role uppercases; this one must not, because for a runnable unit it
+   prints the LITERAL dispatch id and the wire spells it lowercase-hyphenated.
+   Two lines are allowed so THE ROSTER's one sentence lands whole instead of
+   ellipsised — the grid stretches every card to match, so the strip stays a
+   single even row. */
+.corepane .fleetcard .role {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: none;
+  white-space: normal;
+  overflow: hidden;
+  line-height: 1.35;
+  display: -webkit-box;
+  /* Three, not two: at the 1120px minimum the card's inner width is ~126px and
+     THE ROSTER's nine-word sentence needs a third line. At 1440 nothing uses
+     it, so the strip stays the same height there. */
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.corepane .fleetcard .st {
+  font-size: 8.5px;
+}
+.corepane .fleetcard .lastrun {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  /* .45 measured 3.08 NEON / 2.82 PAPER / 4.04 TERMINAL. */
+  color: rgba(var(--rgbCream), 0.66);
+  white-space: nowrap;
+}
+/* .node .role and .node .st.dash are SHIPPED at .40 cream, which is 2.69 in
+   NEON — tolerable as a decorative caption on the wire pane, not tolerable
+   here, where the sub-line prints the literal dispatch id and the chip prints
+   the unit's state. Lifted inside .corepane ONLY; the wire pane is untouched,
+   and PAPER's own rules for both are written at higher specificity and still
+   win on that sheet. */
+.corepane .fleetcard .role,
+.corepane .fleetcard .st.dash {
+  color: rgba(var(--rgbCream), 0.68);
+}
+
+/* THE MOST IMPORTANT RULE ON THIS SCREEN.
+   A unit with no execution path must be distinguishable from a runnable one AT
+   A GLANCE, in every world. .node.future is the shipped dress for that — a
+   dashed border — and the first shot matrix proved it does not survive NEON:
+   themes/neon.css sets `.node { border: 2px solid var(--ink) }` at
+   (0,2,1), which outranks .node.future's (0,2,0) AND, being the `border`
+   shorthand, resets border-style back to solid. Under NEON the two dashed
+   cards rendered identically to the five solid ones — the exact failure this
+   strip exists to prevent.
+   So the distinction is restated here at (0,4,1), which outranks every theme
+   file, and it is carried by THREE things rather than one: a dashed hairline,
+   NO fill, and NO raised shadow. A runnable unit is a card that sits up off the
+   board; a name-only unit is an outline drawn on it. That reads at a glance
+   even in greyscale, and it needs no theme file to cooperate.
+   .32 first written measured under the 3:1 non-text floor in every world
+   (2.64 TERMINAL / 2.17 NEON / 2.01 PAPER / 2.55 AMBER — the outline sits on
+   the bare board, not a panel). .5 clears 3:1 in all four; PAPER's ink-on-sheet
+   is the tight one and sets the value. */
+:root[data-theme] .corepane .fleetcard.future {
+  border: 1px dashed rgba(var(--rgbCream), 0.5);
+  background: none;
+  box-shadow: none;
+}
+
+/* The unit light. Tones are RailColumn's own dotStyle() vocabulary, kept
+   identical so a dot means the same thing on both screens. Nothing here is
+   green: live is the accent, attention is gold, no-path is a dashed outline —
+   the app's existing grammar for half-wired. */
+.corepane .fleetdot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-block;
+  background: rgba(var(--rgbCream), 0.22);
+}
+.corepane .fleetdot.live {
+  background: var(--tealHi);
+  box-shadow: 0 0 8px rgba(var(--rgbAccent), 0.8);
+  animation: corepulse 2.4s ease infinite;
+}
+.corepane .fleetdot.hot {
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(var(--rgbGold), 0.7);
+}
+.corepane .fleetdot.none {
+  background: none;
+  border: 1px dashed rgba(var(--rgbCream), 0.35);
+}
+@keyframes corepulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---- ZONE B: the three-column body ------------------------------------- */
+/* 264px is the deck's own rail width, so the CORE's left edge lands exactly
+   where the deck's does when he switches destination with a digit. */
+.corepane .corebody {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr) 360px;
+  gap: 16px;
+}
+.corepane .corecol {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---- the counter rail --------------------------------------------------- */
+.corepane .tickrail {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  min-height: 0;
+  flex: none;
+}
+.corepane .railhead {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  /* .55 measured 3.98 NEON / 3.76 PAPER. */
+  color: rgba(var(--rgbCream), 0.68);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hair2);
+  margin-bottom: 4px;
+  flex: none;
+}
+.corepane .trow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  flex: none;
+}
+.corepane .trow + .trow {
+  border-top: 1px solid var(--hair);
+}
+.corepane .trow .s {
+  font-weight: 700;
+  color: rgba(var(--rgbCream), 0.72);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .trow .n {
+  margin-left: auto;
+  flex: none;
+  font-weight: 700;
+  color: var(--tealHi);
+}
+/* HOT IS GOLD, NOT RED — the ruling this app already made for overdue tasks and
+   for 12D QUIET. The only .n that is red is the count of RED-tier confirms, and
+   it is 9px TYPE, so it wears --redInk and not the law hex — the same split the
+   confirm card, the state line and the ops strip already make. */
+.corepane .trow .n.hot {
+  color: var(--gold);
+}
+.corepane .trow .n.red {
+  color: var(--redInk);
+}
+.corepane .trow .n.off {
+  color: rgba(var(--rgbCream), 0.62);
+}
+
+/* ---- the clearance ladder (THE CORE's LV.0 / LV.1 / LV.2 boxes) --------- */
+/* THE CORE draws three numbered boxes and lights one in red. The numerals map
+   onto something this app already has and already states verbatim on every
+   surface: the GREEN / YELLOW / RED autonomy ladder. So they are drawn as that
+   ladder — the one place on this whole screen where green is lawful, because
+   there it IS the autonomy dot the law names. The RED row lights only when a
+   RED-tier confirm is actually waiting. */
+.corepane .lvrow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.corepane .corelv {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.corepane .corelv .tierdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+/* Structure wears the law hex (the dot, the border); the WORD is 8.5px type and
+   wears the measured variant. Same split as .settings-rule two files over. */
+.corepane .corelv.lit {
+  border-color: var(--red);
+  background: rgba(var(--rgbRed), 0.12);
+  color: var(--redInk);
+}
+
+/* ---- the living core ---------------------------------------------------- */
+.corepane .corestage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  overflow: hidden;
+}
+.corepane .cornertag {
+  position: absolute;
+  top: 12px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  /* .45 measured 3.08 NEON / 2.82 PAPER. */
+  color: rgba(var(--rgbCream), 0.66);
+  z-index: 2;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .cornertag.l {
+  left: 16px;
+}
+.corepane .cornertag.r {
+  right: 16px;
+  text-align: right;
+  color: rgba(var(--rgbAccent), 0.8);
+}
+
+.corepane .orbwrap {
+  position: relative;
+  flex: none;
+  width: var(--coreOrb);
+  height: var(--coreOrb);
+}
+/* WHEN THE LINK IS DOWN THE ORB IS DOWN. The first offline capture had a
+   fully-lit, breathing orb sitting above a board of dashes and a red DOWN
+   light — every other element on the screen told the truth and the biggest one
+   did not. Her presence is not being reported, so it is not painted as if it
+   were. Opacity only: no colour is changed, and the shipped .orb is untouched. */
+.corepane .corestage.down .orbwrap {
+  opacity: 0.28;
+}
+.corepane .orbring {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* Three counter-rotating rings — THE CORE's 18s forward / 26s reverse / 9s
+   forward. The shipped .arc spins at .85s, which is a "working" spinner and far
+   too fast to read as ambient, so these are new. No red, no green: the accent
+   and the ink channel. All three die under prefers-reduced-motion through
+   app.css's blanket rule — they stay drawn, they stop turning. */
+.corepane .orbring.r1 {
+  inset: 0;
+  border: 1px solid rgba(var(--rgbAccent), 0.45);
+  border-left-color: transparent;
+  border-right-color: rgba(var(--rgbAccent), 0.15);
+  animation: corespin 18s linear infinite;
+}
+.corepane .orbring.r2 {
+  inset: 11%;
+  border: 1px dashed rgba(var(--rgbCream), 0.28);
+  animation: corespin 26s linear infinite reverse;
+}
+.corepane .orbring.r3 {
+  inset: 22%;
+  border: 2px solid rgba(var(--rgbAccent), 0.5);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  animation: corespin 9s linear infinite;
+}
+/* The breathing core itself is the SHIPPED .orb (and .orb.red when a RED tier
+   is waiting) — already a four-stop radial in --orb1..4, already cel-flattened
+   under NEON and already print-shadowed under PAPER. Wrapped, never replaced. */
+.corepane .orbcore {
+  position: absolute;
+  inset: 34%;
+}
+@keyframes corespin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* THE WAVEFORM IS NOT DECORATION. It renders ONLY while she is actually
+   speaking or while the microphone is actually open — the rule RailColumn
+   already applies to the shipped 5-bar indicator. A waveform running over an
+   idle assistant is a moving readout of nothing, which is the same category of
+   lie as a percentage bar with no source. Teal while she speaks; red while the
+   mic is live, which is one of red's two lawful jobs. */
+.corepane .corewave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 38px;
+  flex: none;
+}
+.corepane .corewave i {
+  width: 3px;
+  height: 38px;
+  flex: none;
+  border-radius: 1px;
+  background: var(--tealHi);
+  box-shadow: 0 0 8px rgba(var(--rgbAccent), 0.5);
+  transform: scaleY(0.18);
+  animation: corewv 1.1s ease-in-out infinite;
+}
+.corepane .corewave.hot i {
+  background: var(--red);
+  box-shadow: 0 0 8px rgba(var(--rgbRed), 0.5);
+}
+@keyframes corewv {
+  0%,
+  100% {
+    transform: scaleY(0.16);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+/* When the wave is not showing, the row keeps its height so the orb does not
+   jump 38px every time she starts a sentence. */
+.corepane .waveslot {
+  height: 38px;
+  flex: none;
+}
+
+/* ---- the 2x2 readout ---------------------------------------------------- */
+/* Capped, not full-bleed: at 752px two 1fr columns put a label and its own
+   numeral 340px apart and the pair stops reading as one fact. */
+.corepane .readout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 18px;
+  width: 100%;
+  max-width: 460px;
+  flex: none;
+}
+.corepane .rcell {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  border-bottom: 1px solid var(--hair2);
+  padding-bottom: 5px;
+  min-width: 0;
+}
+.corepane .rcell .k {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--rgbAccent), 0.8);
+  white-space: nowrap;
+}
+.corepane .rcell .v {
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--cream);
+  white-space: nowrap;
+}
+.corepane .rcell .v em {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  /* .50 measured 3.50 NEON / 3.25 PAPER. */
+  color: rgba(var(--rgbCream), 0.66);
+  margin-left: 4px;
+}
+/* An absence is dim and it is a dash. It is never a zero. .58 rather than the
+   .38 first written: at 17px/700 this is large text (3:1) and .58 clears that
+   everywhere with room to spare, while still reading as an absence. */
+.corepane .rcell .v.off {
+  color: rgba(var(--rgbCream), 0.58);
+}
+
+/* ---- the dot-leader status line (THE CORE's .lineT) --------------------- */
+/* The shipped .divrow is the same grammar with a hairline instead of a leader.
+   PAPER redraws .divrow .rule as a 3px double rule, which a dot leader cannot
+   inherit — so this is deliberately its own device rather than a .divrow
+   variant that would render inconsistently on the cream sheet. */
+.corepane .dotline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  /* .60 measured 4.49 NEON / 4.38 PAPER — both under the line. */
+  color: rgba(var(--rgbCream), 0.68);
+  flex: none;
+}
+.corepane .dotline .gt {
+  color: var(--tealHi);
+  flex: none;
+}
+.corepane .dotline .dots {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  letter-spacing: 0.3em;
+  color: rgba(var(--rgbCream), 0.3);
+}
+.corepane .dotline .val {
+  flex: none;
+  font-weight: 700;
+  color: var(--tealHi);
+}
+.corepane .dotline .val.off {
+  color: rgba(var(--rgbCream), 0.66);
+}
+
+/* ---- the session log ---------------------------------------------------- */
+/* Type grammar copied from .shellcopy (mono / .1em / 1.9 line), one step down. */
+/* Sized to its contents, not to the column. First pass had this at flex:1 and
+   an empty log rendered as a 500px void with two lines at the top of it — a
+   panel that looks broken rather than a panel that is empty. It now grows with
+   the log, scrolls at the cap, and the slack lives BETWEEN the two cards where
+   it reads as air, exactly as it does in the counter rail opposite. */
+.corepane .logwrap {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.corepane .log {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: min(46vh, 380px);
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  line-height: 1.85;
+  margin-top: 6px;
+}
+.corepane .logrow {
+  display: flex;
+  gap: 8px;
+  color: rgba(var(--rgbCream), 0.62);
+}
+.corepane .logrow .t {
+  flex: none;
+  /* .42 measured 2.84 NEON / 2.60 PAPER / 3.67 TERMINAL — a timestamp is the
+     half of a log line that says WHEN, and it was the worst number on the
+     board. */
+  color: rgba(var(--rgbCream), 0.62);
+}
+.corepane .logrow .m {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .logrow.ok .m {
+  color: var(--tealHi);
+}
+.corepane .logrow.warn .m {
+  color: var(--gold);
+}
+.corepane .logrow.red .m {
+  color: var(--redInk);
+}
+
+/* ---- the command bar ---------------------------------------------------- */
+/* The input, the send key and the disclosure line are the SHIPPED controls
+   (.cmdinput / .sendb / .footline). The only genuinely new parts are the `>_`
+   prefix cap and the eve@hq prompt line above it. */
+.corepane .cmdbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.corepane .pfx {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--tealHi);
+  flex: none;
+}
+.corepane .prompt {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  /* .55 measured 3.98 NEON / 3.76 PAPER. */
+  color: rgba(var(--rgbCream), 0.68);
+  flex: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .prompt .usr {
+  color: var(--tealHi);
+}
+
+/* ---- ZONE C: the telemetry strip ---------------------------------------- */
+.corepane .telem {
+  flex: none;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  overflow: hidden;
+}
+.corepane .tcell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 18px;
+  min-width: 0;
+}
+.corepane .tcell + .tcell {
+  border-left: 1px solid var(--hair2);
+}
+.corepane .tcell.last {
+  margin-left: auto;
+  text-align: right;
+}
+.corepane .tcell .k {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  /* .55 measured 3.98 NEON / 3.76 PAPER. */
+  color: rgba(var(--rgbCream), 0.68);
+  white-space: nowrap;
+}
+.corepane .tcell .v {
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: var(--cream);
+  white-space: nowrap;
+}
+.corepane .tcell .v.acc {
+  color: var(--tealHi);
+}
+.corepane .tcell .v.hot {
+  color: var(--gold);
+}
+.corepane .tcell .v.red {
+  color: var(--redInk);
+}
+.corepane .tcell .v.off {
+  color: rgba(var(--rgbCream), 0.58);
+}
+
+/* ---- the honesty notes -------------------------------------------------- */
+/* THIS SCREEN DOES NOT USE .footline, AND THAT IS DELIBERATE. .footline is the
+   app's deliberate whisper at .26 cream — 2.15:1 in TERMINAL, 1.84 in NEON.
+   themes/paper.css already flagged that value in writing ("the base value in
+   eve-desktop.css is .26 ... that is the default world's deliberate whisper and
+   changing it is his call") and lifted it on the cream sheet ONLY. Every small
+   sentence on this board is an honesty statement — why a counter is a dash, why
+   the command bar will not send, where the ladder is actually set — so they take
+   a class that clears the bar in all four worlds instead of a class that clears
+   it in one. The shipped .footline is untouched. */
+.corepane .corenote {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+  color: rgba(var(--rgbCream), 0.68);
+}
+
+/* ---- offline ------------------------------------------------------------ */
+/* Not a special palette — the canonical shell sentence, and every figure on the
+   board already renders its own dash. This is only the spacing. */
+.corepane .coreshell {
+  margin-top: 6px;
+}
+
+/* ---- the one breakpoint, and it is geometry ----------------------------- */
+/* 1120x720 is the enforced window minimum (electron/windows.ts). Below 1280 the
+   body columns tighten and the telemetry gutters shrink; nothing changes
+   colour, nothing is dropped, no figure is hidden. */
+@media (max-width: 1279px) {
+  .corepane {
+    padding: 12px 12px 8px;
+    gap: 10px;
+  }
+  .corepane .corebody {
+    grid-template-columns: 232px minmax(0, 1fr) 292px;
+    gap: 12px;
+  }
+  .corepane .tcell {
+    padding: 0 11px;
+  }
+  .corepane .tcell .v {
+    font-size: 17px;
+  }
+  .corepane .sechead .en {
+    font-size: 16px;
+  }
+  .corepane .fleetcard .nm {
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,164 @@
+/* WardrobePanel — component-scoped styles. Owner: S3.
+   Uses .chipv6 / .chipv6.on / .footline / .shellcopy from
+   src/styles/eve-desktop.css + app.css for the toggle chips, presence pills
+   and footer; everything panel-shaped (slide-over, grid, thumbs) is new here.
+
+   deck/App.tsx mounts <WardrobePanel> as a sibling of <Deck/>, so — same
+   reasoning as confirm.css — fixed/viewport-relative is correct without a
+   portal: there is no transformed or overflow:hidden ancestor between this
+   component and the viewport. */
+
+.wardrobe-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 5, 6, 0.4);
+  z-index: 6;
+}
+
+.wardrobe-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 480px;
+  background: var(--bg);
+  border-left: 1px solid var(--hair2);
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: -30px 0 60px rgba(0, 0, 0, 0.35);
+}
+
+.wardrobe-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: none;
+}
+.wardrobe-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(28, 185, 200, 0.85);
+}
+.wardrobe-close {
+  appearance: none;
+  background: none;
+  border: 1px solid rgba(240, 237, 232, 0.16);
+  border-radius: 5px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: rgba(240, 237, 232, 0.55);
+  transition: border-color 0.25s;
+}
+.wardrobe-close:hover {
+  border-color: rgba(240, 237, 232, 0.3);
+}
+
+.wardrobe-modes {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.wardrobe-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.wardrobe-thumb {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--hair2);
+  background: var(--panel);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  transition: border-color 0.25s;
+}
+.wardrobe-thumb:hover {
+  border-color: rgba(28, 185, 200, 0.4);
+}
+.wardrobe-thumb.on {
+  border-color: var(--tealHi);
+  box-shadow: inset 0 0 0 1px var(--tealHi);
+}
+.wardrobe-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+}
+.wardrobe-thumb-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--disp);
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(28, 185, 200, 0.35);
+  background: rgba(28, 185, 200, 0.06);
+}
+.wardrobe-wearing-tag {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 1;
+  background: rgba(7, 11, 12, 0.85);
+  border: 1px solid var(--tealHi);
+  color: var(--tealHi);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.wardrobe-thumb-name {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 4px 5px;
+  background: linear-gradient(0deg, rgba(3, 5, 6, 0.85), transparent);
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.05em;
+  color: var(--cream);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wardrobe-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: none;
+}
+.wardrobe-refuse {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: rgba(240, 237, 232, 0.45);
+}
+.wardrobe-footer {
+  flex: none;
+  margin-top: auto;
+  text-align: left;
+}

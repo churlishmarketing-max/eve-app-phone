@@ -1,0 +1,329 @@
+/* WORLD 3 — PAPER.
+   Source: ui_kits/eve-paper/paper.css.
+
+   This is the only world that inverts polarity: the "text ink" channel stops
+   being a near-white and becomes near-black, and every hairline, wash and hover
+   tint in eve-desktop.css follows it automatically because they are all alphas
+   of that one channel. Nothing had to be special-cased for light mode.
+
+   ONE LAW REMAP: paper.css spends red on .marg (rotated marginalia), .redline
+   (a general "emphasise this" utility) and .dirrow .st.red (a generic urgent
+   status) as well as on the signature stamp. Only the stamp is a hot moment.
+   Here red is the RED confirm tier and the live mic and nothing else; the
+   emphasis those other rules wanted is carried by ochre and by this world's
+   real emphasis language — double rules, square corners, hard print offsets.
+
+   ONE VALUE FORCED: paper's native red is #B3212F, a more muted brick. The RED
+   tier is a fixed legal signal, not a decorative choice, so it stays #C41E3A in
+   this world exactly as in the other three. That is inherited, not re-declared
+   — no theme file touches --red.
+
+   TWO INKS, HONESTLY: this world has ink, ochre, and the law's red. It has no
+   third hue, so --ice (bright highlight) and --gold (money) both resolve to
+   ochre. That is a collapse, not an oversight: inventing a fourth colour to
+   keep them apart would be inventing a world he did not draw. --tealHi (her /
+   alive / done) is full-strength ink, which is how paper.css shows "active" —
+   .btn-ink fills solid rather than changing hue. */
+
+:root[data-theme="paper"],
+.tw-paper {
+  --rgbCream: 28, 23, 18; /* --ink — the polarity inversion lives here */
+  --rgbAccent: 28, 23, 18; /* her / alive / done = full-strength ink */
+  --rgbAccentDeep: 138, 106, 31; /* --ochre, the warm wash under her plate */
+  --rgbPanel: 242, 234, 216; /* #F2EAD8 — the raised slip */
+  --rgbBg: 237, 229, 211; /* --paper #EDE5D3 — the sheet */
+  --rgbVoid: 201, 191, 168; /* #C9BFA8 — the desk the sheet lies on */
+  --rgbOrbInner: 255, 252, 240;
+  --rgbIce: 138, 106, 31;
+  --rgbGold: 122, 93, 27; /* the measured ochre #7A5D1B as a channel */
+
+  --void: #c9bfa8;
+  --bg: #ede5d3;
+  --panel: #f2ead8;
+  --panel2: #e5dcc6;
+  /* paper's own hairline is .18; .28 is the second step it draws by doubling. */
+  --hair: rgba(var(--rgbCream), 0.18);
+  --hair2: rgba(var(--rgbCream), 0.28);
+  --teal: #8a6a1f; /* the wash/gradient hue keeps paper's exact ochre */
+  --tealHi: #1c1712;
+  /* MEASURED, NOT GUESSED: paper's native ochre #8A6A1F is 4.02:1 on this
+     sheet, which fails AA for the 8.5px mono it carries (money stats, state
+     lines). #7A5D1B is the same ochre darkened to 4.91:1 / 5.14:1 on panel.
+     The unshifted #8A6A1F survives above as --teal, where it is only ever a
+     wash behind something else and never carries type. */
+  --ice: #7a5d1b;
+  --cream: #1c1712;
+  --gold: #7a5d1b;
+  /* LAW-COLOUR TEXT VARIANT. The GREEN dot keeps #3EA26E — the law hex, on the
+     one element the law names. But #3EA26E as *type* on cream is 2.66:1 and
+     genuinely unreadable, so the word GREEN in the autonomy card wears this
+     darker green (5.36:1). Same colour, same meaning, legible ground. This is
+     exactly the pattern eve-os's own tokens/colors.css uses with --red-text. */
+  --greenText: #256b47;
+  /* AND RED NEEDS ONE AFTER ALL. The line above this one used to read "--red at
+     4.88:1 on this sheet needs no variant and does not get one". 4.88 is the
+     law hex on the flat panel — but the RED card does not print its header on
+     the flat panel, it prints it on the card's own 9%-red wash, and measured
+     there the header is 4.32 and the whole card's header row fails AA in this
+     world too. It gets a variant.
+
+     THE SAME MOVE AS THE DARK WORLDS, THE OTHER WAY. --redInk is #FF6B85 in
+     terminal/neon/amber — the law red lifted along its own lightness axis. A
+     lifted red on cream is worse than the law hex (#FF6B85 measures 1.98
+     here), so this sheet walks the identical axis downward: #C41E3A is
+     hsl(349.9, 73.5%, 44.3%) and #9D182E is hsl(349.9, 73.5%, 35.5%). Hue and
+     saturation are untouched to two decimal places; only lightness moved.
+     Measured on the real render: confirm header 4.32 -> 6.0, .cnote.failed
+     4.80 -> 6.7. The law hex is NOT redeclared — the 3px rail, the card
+     border, the tier dot and the mic ring are all still exactly #C41E3A. */
+  --redInk: #9d182e;
+  /* Her orb printed: paper -> ochre -> ochre -> ink. No stop is invented; all
+     four are values this world already owns. */
+  --orb1: #ede5d3;
+  --orb2: #8a6a1f;
+  --orb3: #8a6a1f;
+  --orb4: #1c1712;
+}
+
+/* ---- effects: form only, never colour meaning -------------------------- */
+
+/* Print has square corners. */
+:root[data-theme="paper"] .card,
+:root[data-theme="paper"] .mini,
+:root[data-theme="paper"] .node,
+:root[data-theme="paper"] .t3row,
+:root[data-theme="paper"] .oprow,
+:root[data-theme="paper"] .bub,
+:root[data-theme="paper"] .pfr,
+:root[data-theme="paper"] .cmdinput,
+:root[data-theme="paper"] .chipv6,
+:root[data-theme="paper"] .cbtn,
+:root[data-theme="paper"] .clocked,
+:root[data-theme="paper"] .jcode,
+:root[data-theme="paper"] .confirmv6,
+.tw-paper .card,
+.tw-paper .mini,
+.tw-paper .node,
+.tw-paper .t3row,
+.tw-paper .oprow,
+.tw-paper .bub,
+.tw-paper .pfr,
+.tw-paper .cmdinput,
+.tw-paper .chipv6,
+.tw-paper .cbtn,
+.tw-paper .clocked,
+.tw-paper .jcode,
+.tw-paper .confirmv6 {
+  border-radius: 2px;
+}
+
+/* The teal inner glow baked into .card is a dark-world device; on a light sheet
+   a card is raised by a hard print offset instead. Value from paper.css. */
+:root[data-theme="paper"] .card,
+:root[data-theme="paper"] .mini,
+:root[data-theme="paper"] .node,
+.tw-paper .card,
+.tw-paper .mini,
+.tw-paper .node {
+  box-shadow: 2px 3px 0 rgba(var(--rgbCream), 0.12);
+}
+
+/* 3px double rule — paper's signature divider. */
+:root[data-theme="paper"] .divrow .rule,
+.tw-paper .divrow .rule {
+  height: 3px;
+  background: none;
+  border-top: 1px solid rgba(var(--rgbCream), 0.55);
+  border-bottom: 1px solid rgba(var(--rgbCream), 0.55);
+}
+
+/* Paper fibre instead of CRT scanlines — and STATIC. The .scan element keeps
+   existing but its drift is switched off here: grain that crawls is wrong, and
+   this is strictly less motion than the build already has. Alphas and the
+   26px pitch are paper.css's own. */
+:root[data-theme="paper"] .scan,
+.tw-paper .scan {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(var(--rgbCream), 0.025) 0 1px,
+    transparent 1px 26px
+  );
+  animation: none;
+}
+/* The aging wash, verbatim from paper.css's .frame. */
+:root[data-theme="paper"] .vig,
+.tw-paper .vig {
+  box-shadow: inset 0 0 90px rgba(90, 70, 40, 0.18);
+}
+:root[data-theme="paper"] .frame,
+.tw-paper .frame {
+  background: radial-gradient(
+      ellipse 90% 70% at 50% 20%,
+      rgba(255, 252, 240, 0.5),
+      transparent 70%
+    ),
+    var(--bg);
+}
+
+/* mix-blend-mode:screen over a cream sheet blows out to white. */
+:root[data-theme="paper"] .pfr .sheen,
+.tw-paper .pfr .sheen {
+  display: none;
+}
+/* A dark halo around her orb reads as a smudge; a print shadow does not. */
+:root[data-theme="paper"] .orb,
+.tw-paper .orb {
+  box-shadow: 2px 3px 0 rgba(var(--rgbCream), 0.18);
+}
+/* On a light ground the frame brackets and the scrollbar need real ink. */
+:root[data-theme="paper"] *:hover::-webkit-scrollbar-thumb,
+.tw-paper *:hover::-webkit-scrollbar-thumb {
+  background: rgba(var(--rgbCream), 0.28);
+}
+
+/* ---- legibility on a light ground -------------------------------------- */
+
+/* THE ALPHA LADDER DOES NOT SURVIVE THE POLARITY FLIP. 26% of near-white over
+   near-black is 2.08:1; 26% of near-black over cream is 1.73:1 — the same
+   number reads worse on paper because luminance is not linear. Every class
+   below carries actual words at 8-9.5px, so each is lifted to an alpha this
+   world already uses (paper.css's own tiers are ink2 .62 and ink3 .38; these
+   land between them). Measured: .55 -> 3.70:1, .58 -> 4.06:1, .62 -> 4.60:1.
+   Nothing decorative is touched — hairlines, washes and hovers stay as drawn.
+
+   RAISED .58 -> .66 (re-measured on the real render: .58 came back 4.12:1, i.e.
+   UNDER AA). .footline is not chrome — every single one of the six places the
+   app uses it carries an honesty statement ("push-to-talk only. she never
+   listens uninvited.", "she chose it herself.", the voice picker's scope
+   disclosure). A disclosure below the reading threshold is the same defect as
+   the voice picker's vanishing caveats, so on this sheet it clears the bar:
+   .66 -> 5.06:1. NOTE FOR THE BOSS: the base value in eve-desktop.css is .26,
+   which measures 2.15:1 in TERMINAL and is worse still — but that is the
+   default world's deliberate whisper and changing it is his call, not a
+   contrast bug I should quietly rule on. Left alone, reported. */
+:root[data-theme="paper"] .footline,
+:root[data-theme="paper"] .footnote,
+:root[data-theme="paper"] .eyeb .r,
+:root[data-theme="paper"] .divrow .r,
+:root[data-theme="paper"] .bname.you,
+.tw-paper .footline,
+.tw-paper .footnote,
+.tw-paper .eyeb .r,
+.tw-paper .divrow .r,
+.tw-paper .bname.you {
+  color: rgba(var(--rgbCream), 0.66);
+}
+:root[data-theme="paper"] .oprow .sub,
+:root[data-theme="paper"] .t3row .tm,
+:root[data-theme="paper"] .node .role,
+:root[data-theme="paper"] .node .st.dash,
+:root[data-theme="paper"] .stat.dim,
+:root[data-theme="paper"] .floorline,
+:root[data-theme="paper"] .mini .n em,
+:root[data-theme="paper"] .floorbig em,
+:root[data-theme="paper"] .shellcopy,
+.tw-paper .oprow .sub,
+.tw-paper .t3row .tm,
+.tw-paper .node .role,
+.tw-paper .node .st.dash,
+.tw-paper .stat.dim,
+.tw-paper .floorline,
+.tw-paper .mini .n em,
+.tw-paper .floorbig em,
+.tw-paper .shellcopy {
+  color: rgba(var(--rgbCream), 0.62);
+}
+/* BOSS RULING (theme-law pass): OVERDUE IS GOLD, NOT RED. This file used to
+   say "a .tm that is DUE is red and must stay red". It cannot: red is the RED
+   confirm tier and the live microphone and nothing else, and an overdue task is
+   neither. Gold is this app's existing hot-state colour (the client-pulse rows
+   already wear it for "12D QUIET"), so overdue joins a language that exists
+   rather than inventing one. In PAPER --gold is the measured ochre #7A5D1B. */
+:root[data-theme="paper"] .t3row .tm.due,
+.tw-paper .t3row .tm.due {
+  color: var(--gold);
+}
+
+/* An ochre label on a 16% ink wash is 3.04:1 and fails. Paper's own answer for
+   an active control is not a tinted outline at all — .btn-ink fills solid ink
+   and prints the label in paper. 14.19:1, and it is this world's real idiom. */
+:root[data-theme="paper"] .cbtn.ok,
+:root[data-theme="paper"] .sendb,
+.tw-paper .cbtn.ok,
+.tw-paper .sendb {
+  background: var(--tealHi);
+  border-color: var(--tealHi);
+  color: var(--bg);
+}
+:root[data-theme="paper"] .cbtn.ok:hover,
+.tw-paper .cbtn.ok:hover {
+  background: rgba(var(--rgbCream), 0.82);
+}
+
+/* The autonomy dots keep their law hexes, and #3EA26E on cream is only 2.66:1
+   as a shape — under the 3:1 a non-text indicator needs. A hairline ink ring
+   gives the boundary without touching the colour that carries the meaning. */
+:root[data-theme="paper"] .settings-rule .dot,
+.tw-paper .settings-rule .dot {
+  box-shadow: 0 0 0 1px rgba(var(--rgbCream), 0.5);
+}
+
+/* ---- the RED confirm card on a light sheet ------------------------------ */
+
+/* THE HIGHEST-STAKES SURFACE IN THE APP, and the alpha ladder fails it worst.
+   The card used to carry a hardcoded #0C1417 plate (ConfirmCard.tsx / the
+   summon panel), so under PAPER near-black ink sat on a near-black plate:
+   measured summary 1.95:1, payload value 1.08:1, payload label 1.16:1,
+   CANCEL 1.02:1, keycaps 1.02:1 — while APPROVE alone survived at 14.19:1
+   because of the .cbtn.ok rule above. That plate is now var(--panel); these
+   rules are the second half — the alphas that the polarity flip breaks, lifted
+   on THIS card's own classes exactly as the ladder above lifts the deck's.
+   Every value below was measured on the real rendered card, not estimated. */
+:root[data-theme="paper"] .confirmv6 .field,
+:root[data-theme="paper"] .confirmv6 .field b,
+:root[data-theme="paper"] .confirmv6 .cexpires,
+:root[data-theme="paper"] .confirmv6 .cexpired,
+:root[data-theme="paper"] .confirmv6 .cnote.pending,
+:root[data-theme="paper"] .confirmv6 .cnote.cancelled,
+:root[data-theme="paper"] .confirmv6 .clocked,
+:root[data-theme="paper"] .confirm-more,
+:root[data-theme="paper"] .kbd,
+.tw-paper .confirmv6 .field,
+.tw-paper .confirmv6 .field b,
+.tw-paper .confirmv6 .cexpires,
+.tw-paper .confirmv6 .cexpired,
+.tw-paper .confirmv6 .cnote.pending,
+.tw-paper .confirmv6 .cnote.cancelled,
+.tw-paper .confirmv6 .clocked,
+.tw-paper .confirm-more,
+.tw-paper .kbd {
+  color: rgba(var(--rgbCream), 0.72);
+}
+/* The keycap and the engraved send_sms button also draw a hairline BOX around
+   words; at .16 ink that box is invisible on cream, so the affordance reads as
+   floating text. Same alpha step the scrollbar thumb takes above. */
+:root[data-theme="paper"] .kbd,
+.tw-paper .kbd {
+  border-color: rgba(var(--rgbCream), 0.32);
+}
+
+/* CANCEL MUST NEVER BE QUIETER THAN APPROVE. paper.css's answer for an active
+   control is .btn-ink — solid ink, paper-coloured label (the .cbtn.ok rule
+   above, 14.19:1). Nothing answered for .cbtn.gh, so CANCEL kept the dark
+   world's 55%-ink-on-nothing and measured 1.02:1 next to it: the one card whose
+   entire job is "you can still back out" rendered the back-out invisible.
+   The paper idiom for the OTHER key is the same ink at the same strength in the
+   opposite arrangement — paper plate, ink label, ink rule. Measured 14.19:1,
+   identical to APPROVE by construction (it is literally the same two colours
+   swapped), while fill-vs-outline still tells them apart at a glance. */
+:root[data-theme="paper"] .cbtn.gh,
+.tw-paper .cbtn.gh {
+  color: var(--cream);
+  background: var(--bg);
+  border-color: rgba(var(--rgbCream), 0.55);
+}
+:root[data-theme="paper"] .cbtn.gh:hover,
+.tw-paper .cbtn.gh:hover {
+  background: var(--panel2);
+  border-color: var(--cream);
+}

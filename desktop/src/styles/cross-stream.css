@@ -1,0 +1,114 @@
+/* STREAM T — CROSS-STREAM COMPENSATION.
+   Imported by src/renderer/theme.ts, so it reaches all three windows.
+ *
+ * WHAT THIS IS AND WHY IT EXISTS IN MY FILE INSTEAD OF THEIRS
+ *
+ * src/renderer/deck/nav.css (stream N) spells its colours as literals —
+ * rgba(28,185,200,…), rgba(240,237,232,…), rgba(155,239,247,…) — exactly as
+ * the rest of the app did before this stream tokenised it. Under TERMINAL that
+ * is invisible and correct. Under PAPER it is a functional bug, not a cosmetic
+ * one: the navigation strip and the CLOSET affordance render pale teal on a
+ * cream sheet and cannot be read (first capture: verify/t/realdeck-paper.png).
+ *
+ * deck/** is another stream's this round, so this file re-states nav.css's
+ * colour declarations in channel-token terms rather than editing it. This is
+ * the same escape hatch stream N itself used against RailColumn.tsx.
+ *
+ * TWO SAFETY PROPERTIES, both deliberate:
+ *   1. Every rule is gated on :root:not([data-theme="terminal"]). Nothing here
+ *      can move a pixel of the default world, whatever I got wrong.
+ *   2. Every selector is written at strictly higher specificity than the rule
+ *      it replaces, so it does not depend on bundle order.
+ *
+ * ONLY colour is restated. No geometry, no state logic, no new selectors —
+ * if stream N restyles the strip, the worst case here is a stale colour, never
+ * a broken layout. Delete this file the day nav.css consumes the tokens itself.
+ */
+
+/* ---- the destination selector ------------------------------------------ */
+:root:not([data-theme="terminal"]) .navstrip {
+  background: rgba(var(--rgbPanel), 0.55);
+}
+:root:not([data-theme="terminal"]) .navseg {
+  color: rgba(var(--rgbCream), 0.5);
+}
+:root:not([data-theme="terminal"]) .navseg .navkey {
+  border-color: rgba(var(--rgbCream), 0.14);
+  color: rgba(var(--rgbCream), 0.32);
+}
+:root:not([data-theme="terminal"]) .navseg:hover {
+  background: rgba(var(--rgbAccent), 0.1);
+}
+:root:not([data-theme="terminal"]) .navseg:hover .navkey {
+  color: rgba(var(--rgbIce), 0.7);
+  border-color: rgba(var(--rgbAccent), 0.4);
+}
+/* the lit destination */
+:root:not([data-theme="terminal"]) .navseg.on {
+  background: rgba(var(--rgbAccent), 0.2);
+  text-shadow: 0 0 10px rgba(var(--rgbAccent), 0.45);
+}
+:root:not([data-theme="terminal"]) .navseg.on .navkey {
+  border-color: rgba(var(--rgbAccent), 0.55);
+  background: rgba(var(--rgbAccent), 0.14);
+}
+:root:not([data-theme="terminal"]) .navseg.on::after {
+  box-shadow: 0 0 8px rgba(var(--rgbAccent), 0.8);
+}
+/* PAPER only: a 20% ink wash behind ink type is not a "lit" state, it is a
+   smudge. On a light ground the active destination inverts instead — solid ink
+   plate, paper-coloured type — which is how paper.css's own .btn-ink shows
+   active. Still the accent, still not red, still not green. */
+:root[data-theme="paper"] .navseg.on {
+  background: var(--tealHi);
+  color: var(--bg);
+  text-shadow: none;
+}
+:root[data-theme="paper"] .navseg.on .navkey {
+  color: var(--bg);
+  border-color: rgba(var(--rgbBg), 0.5);
+  background: rgba(var(--rgbBg), 0.18);
+}
+:root[data-theme="paper"] .navseg:hover {
+  color: var(--tealHi);
+}
+
+/* ---- affordance 1: the BODY strip -------------------------------------- */
+:root:not([data-theme="terminal"]) .bodystrip.navtarget:hover {
+  background: rgba(var(--rgbAccent), 0.05);
+  border-color: rgba(var(--rgbAccent), 0.45);
+}
+:root:not([data-theme="terminal"]) .bodyopen {
+  border-color: rgba(var(--rgbAccent), 0.3);
+  color: rgba(var(--rgbAccent), 0.78);
+}
+:root:not([data-theme="terminal"]) .bodystrip.navtarget:hover .bodyopen {
+  border-color: rgba(var(--rgbAccent), 0.6);
+}
+:root:not([data-theme="terminal"]) .bodyfill {
+  color: rgba(var(--rgbCream), 0.5);
+}
+
+/* ---- affordance 2: her portrait ---------------------------------------- */
+:root:not([data-theme="terminal"]) .pcard::after {
+  border-color: rgba(var(--rgbAccent), 0.35);
+  background: rgba(var(--rgbBg), 0.78);
+  color: rgba(var(--rgbIce), 0.85);
+}
+:root:not([data-theme="terminal"]) .pcard:hover::after {
+  border-color: rgba(var(--rgbAccent), 0.75);
+  background: rgba(var(--rgbBg), 0.92);
+  box-shadow: 0 0 14px rgba(var(--rgbAccent), 0.25);
+}
+/* PAPER: same inversion argument as the nav segment — on cream, the readable
+   chip is ink-on-paper, not paper-on-translucent-ink. */
+:root[data-theme="paper"] .pcard::after {
+  background: var(--bg);
+  color: var(--cream);
+  border-color: rgba(var(--rgbCream), 0.45);
+}
+:root[data-theme="paper"] .pcard:hover::after {
+  background: var(--panel);
+  color: var(--cream);
+  border-color: var(--cream);
+}

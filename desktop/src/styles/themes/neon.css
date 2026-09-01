@@ -1,0 +1,188 @@
+/* WORLD 2 — NEON RONIN.
+   Source: ui_kits/eve-anime/neon.css (+ its README for the cyan it names).
+
+   TWO LAW REMAPS, both deliberate, both away from the source:
+
+   1. neon.css spends its pink (#F11B28) on six things — the wordmark, hot
+      badges, portrait tags, decorative stamps, approval-row keys — and only two
+      of them are hot moments. Copying that literally would make red decorative,
+      which the law forbids. So pink is NOT the accent here. Red stays #C41E3A
+      and stays on the RED tier and the live mic; the shout that pink used to
+      carry is carried by butter (#C8960A, --gold) and by the ink outlines and
+      hard shadows below, which is where this world's volume actually lives.
+
+   2. neon.css calls #35D07F "cyan". It is green. It is used pervasively for
+      systems/done/nominal (.secN .k, .mrow .no, .tabT.on, .coreline .on), and
+      mapping it onto the accent role would reintroduce green as an everywhere
+      colour — the exact thing the law reserves for one dot. The accent is
+      instead #3BE3EC, the cyan this world's own README names and its CSS never
+      got round to using. True green appears nowhere but the autonomy dot.
+
+   BORROWED, NOT INVENTED: --teal (support hue under the accent) and --ice have
+   no counterpart in a world that collapses both into one colour, so they keep
+   the shipped app's values rather than being made up. Same for --orb1/--orb4:
+   her orb is her, only the mid stop moves to this world's cyan. */
+
+:root[data-theme="neon"],
+.tw-neon {
+  --rgbCream: 201, 196, 184; /* --fog: the alpha ladder + every hairline */
+  --rgbAccent: 59, 227, 236; /* #3BE3EC — README's cyan, see remap 2 */
+  --rgbAccentDeep: 0, 122, 135; /* borrowed: this world has no support hue */
+  --rgbPanel: 22, 22, 21; /* --card #161615 */
+  --rgbBg: 16, 16, 16; /* --nite #101010 */
+  --rgbVoid: 8, 8, 8; /* body #080808 */
+  --rgbOrbInner: 201, 247, 251;
+  --rgbIce: 155, 239, 247;
+  --rgbGold: 200, 150, 10; /* --butter as a channel, for alpha washes */
+  --rgbInk: 12, 13, 24; /* the hard-shadow ink, verbatim from neon.css */
+
+  --void: #080808;
+  --bg: #101010;
+  --panel: #161615;
+  --panel2: #131313;
+  /* neon draws structure with 2px ink outlines, so its hairlines sit heavier
+     than terminal's .07/.09 — .10 is the value .wrow uses natively. */
+  --hair: rgba(var(--rgbCream), 0.1);
+  --hair2: rgba(var(--rgbCream), 0.16);
+  --teal: #007a87;
+  --tealHi: #3be3ec;
+  --ice: #9beff7;
+  --cream: #edeae3; /* .secN .en / .mrow .tt headline off-white */
+  --gold: #c8960a; /* --butter */
+  --orb1: #c9f7fb;
+  --orb2: #3be3ec;
+  --orb3: #007a87;
+  --orb4: #06272c;
+
+  --ink: #060606;
+}
+
+/* ---- effects: form only, never colour meaning -------------------------- */
+
+/* Hard ink outlines and hard (never blurred) offset shadows — the single most
+   recognisable thing about this world. Values verbatim from neon.css. */
+/* DEVIATION, STATED: neon.css offsets its hard shadows in rgba(12,13,24,.55),
+   a translucent blue-black. That reads on its lit cel surfaces; over this app's
+   #101010 ground it computes to ~#0D0D11 and disappears. First pass shipped the
+   literal value and the shot proved it invisible (verify/t/theme-neon.png, first
+   capture — indistinguishable from TERMINAL). Solid --ink keeps the world's
+   actual rule — hard offset, never blurred — and is the only change. */
+:root[data-theme="neon"] .card,
+:root[data-theme="neon"] .mini,
+:root[data-theme="neon"] .node,
+.tw-neon .card,
+.tw-neon .mini,
+.tw-neon .node {
+  border: 2px solid var(--ink);
+  box-shadow: 0 8px 0 var(--ink);
+}
+:root[data-theme="neon"] .t3row,
+:root[data-theme="neon"] .oprow,
+:root[data-theme="neon"] .pbadge,
+:root[data-theme="neon"] .bub.eve,
+:root[data-theme="neon"] .bub.you,
+.tw-neon .t3row,
+.tw-neon .oprow,
+.tw-neon .pbadge,
+.tw-neon .bub.eve,
+.tw-neon .bub.you {
+  border-color: var(--ink);
+  border-width: 2px;
+}
+/* the accent bar on her bubble and on a task row survives the outline */
+:root[data-theme="neon"] .bub.eve,
+.tw-neon .bub.eve {
+  border-left-color: var(--tealHi);
+}
+:root[data-theme="neon"] .t3row,
+.tw-neon .t3row {
+  border-left-color: rgba(var(--rgbAccent), 0.55);
+}
+/* OVERDUE IS GOLD (boss ruling, theme-law pass) — not red. Red is the RED
+   confirm tier and the live mic; an overdue task is neither. This world already
+   carries the shout in butter (--gold #C8960A, see remap 1 above), which is
+   exactly where overdue belongs. */
+:root[data-theme="neon"] .t3row.due,
+.tw-neon .t3row.due {
+  border-left-color: var(--gold);
+}
+
+/* Diagonal rain instead of horizontal scanlines. Reuses the existing .scan
+   element and its existing scandrift animation — no new motion is introduced,
+   the same 24s drift now reads as falling rain. Angle and alpha from .rain. */
+:root[data-theme="neon"] .scan,
+.tw-neon .scan {
+  background: repeating-linear-gradient(
+    104deg,
+    rgba(var(--rgbCream), 0.05) 0 1px,
+    transparent 1px 26px
+  );
+}
+:root[data-theme="neon"] .vig,
+.tw-neon .vig {
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.55);
+}
+
+/* CEL SHADING — flat fill, hard ink outline, no gradient. This is what makes a
+   night-cel world legible as one; the accent stops being a tint of the surface
+   and becomes a painted shape sitting on top of it. */
+:root[data-theme="neon"] .jcode,
+:root[data-theme="neon"] .node .code,
+:root[data-theme="neon"] .chipv6.on,
+:root[data-theme="neon"] .cbtn.ok,
+:root[data-theme="neon"] .sendb,
+.tw-neon .jcode,
+.tw-neon .node .code,
+.tw-neon .chipv6.on,
+.tw-neon .cbtn.ok,
+.tw-neon .sendb {
+  background: var(--tealHi);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  text-shadow: none;
+}
+/* Her orb, cel-shaded: one flat disc, one hard outline, one hard shadow. The
+   four-stop radial is a lit-render device and does not belong in this world. */
+:root[data-theme="neon"] .orb,
+.tw-neon .orb {
+  background: var(--tealHi);
+  border: 2px solid var(--ink);
+  box-shadow: 0 8px 0 var(--ink);
+}
+/* The RED tier and the live mic are the two things that must NOT go flat —
+   they keep their glow so a hot moment still reads as hot. */
+:root[data-theme="neon"] .orb.red,
+.tw-neon .orb.red {
+  background: var(--red);
+  box-shadow: 0 8px 0 var(--ink), 0 0 30px rgba(var(--rgbRed), 0.5);
+}
+:root[data-theme="neon"] .micv6,
+.tw-neon .micv6 {
+  border-width: 2px;
+}
+
+/* THE WORDMARK MOVES TO BUTTER. neon.css paints .neon signage and the EVE
+   wordmark in pink; pink is red and red is the law's. Butter (#C8960A) is this
+   world's other shout and carries her identity instead — see remap 1 above. */
+:root[data-theme="neon"] .pbadge .wm,
+.tw-neon .pbadge .wm {
+  color: var(--gold);
+}
+
+/* THE MOON. The one shape that says "this is the anime world" before a single
+   word is read. It replaces the breathing aura — same element, same z-index,
+   and it does NOT animate, so this is strictly less motion than the build has
+   today. Size, colour and both halo rings are neon.css's .moon, verbatim. */
+:root[data-theme="neon"] .aura,
+.tw-neon .aura {
+  top: 30px;
+  left: 50%;
+  right: auto;
+  width: 74px;
+  height: 74px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #edeae3;
+  box-shadow: 0 0 0 10px rgba(242, 235, 212, 0.05), 0 0 0 24px rgba(242, 235, 212, 0.03);
+  animation: none;
+}

@@ -1,0 +1,347 @@
+/* EVE DESKTOP — app sheet (owning stream: S2).
+   eve-desktop.css is the design law and stays as drawn. This file adds only
+   what the real app needs on top of the artboards:
+
+   1. SELF-HOSTED FONTS. index.html ships `default-src 'self'` with no font-src
+      and no connect-src to Google, so the sheet's @import silently died and
+      every board fell back to system-ui. The nine latin-subset woff2 files in
+      ../renderer/assets/fonts are the exact faces that @import asked for; the
+      @import line has been removed from eve-desktop.css.
+   2. A WINDOW-SIZED FRAME. The artboard frame is a fixed 1440x900 slab; the
+      real window is resizable (min 1120x720), so .frame fills it and the deck
+      grid's last column becomes 1fr.
+   3. EXPLICIT CANT. The design tail cants via :first-of-type/:last-of-type,
+      which silently retargets the moment the column order changes. Same ±1.6°,
+      driven by .cant-left / .cant-right instead.
+   4. THE REDUCED-MOTION LAW. The design sheet only kills the cant; here it
+      kills every animation and transition in the app.
+*/
+
+/* ---- fonts (latin subset, fonts.gstatic.com, self-hosted) ---------------- */
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/barlow-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/barlow-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/barlow-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/barlow-400-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/barlow-condensed-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/barlow-condensed-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/barlow-condensed-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/space-mono-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../renderer/assets/fonts/space-mono-700.woff2") format("woff2");
+}
+
+/* ---- the shell ---------------------------------------------------------- */
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--void);
+}
+.frame {
+  width: 100%;
+  height: 100%;
+}
+.deck {
+  grid-template-columns: 264px 1px 560px 1px 1fr;
+}
+
+/* ---- cant: explicit, never positional ----------------------------------- */
+.deck > .col:first-of-type,
+.deck > .col:last-of-type {
+  transform: none;
+}
+.deck > .col.cant-left {
+  transform: perspective(1600px) rotateY(1.6deg);
+  transform-origin: right center;
+}
+.deck > .col.cant-right {
+  transform: perspective(1600px) rotateY(-1.6deg);
+  transform-origin: left center;
+}
+
+/* ---- title bar: the whole strip drags, its controls do not -------------- */
+.tbar {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+.tbar button,
+.tbar .nodrag {
+  -webkit-app-region: no-drag;
+}
+.winbtn {
+  appearance: none;
+  background: none;
+  border: none;
+  color: rgba(var(--rgbCream), 0.5);
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1;
+  width: 26px;
+  height: 22px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.25s, color 0.25s;
+}
+.winbtn:hover {
+  background: rgba(var(--rgbCream), 0.08);
+  color: var(--cream);
+}
+.winbtn.x:hover {
+  background: rgba(var(--rgbRed), 0.7);
+  color: #fff;
+}
+.tbtn {
+  appearance: none;
+  background: none;
+  border: 1px solid rgba(var(--rgbCream), 0.14);
+  border-radius: 4px;
+  color: rgba(var(--rgbCream), 0.45);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  padding: 3px 7px;
+  cursor: pointer;
+  transition: border-color 0.25s, color 0.25s;
+}
+.tbtn:hover {
+  border-color: rgba(var(--rgbAccent), 0.45);
+  color: var(--ice);
+}
+
+/* ---- buttons that wear the design system's chip/button classes ---------- */
+button.chipv6,
+button.cbtn,
+button.sendb {
+  appearance: none;
+  font-family: var(--mono);
+}
+/* THIS RULE IS RIGHT FOR CONTROLS AND POISON FOR SENTENCES. Its opacity
+   multiplies whatever colour the element already has, so a .62-alpha label
+   lands at an effective .248 — which is how the send_sms card's "APPROVE ON
+   YOUR PHONE — THIS ONE SENDS FROM YOUR SIM" came to render at 2.07:1, the
+   faintest text in the app, next to a CANCEL at 15:1. That line was never a
+   control and is no longer a button — see .clocked in confirm.css.
+   THE RULE FOR NEXT TIME: if a disabled element carries an INSTRUCTION rather
+   than an unavailable action, it must not be a <button>; render it as text.
+   Everything this still matches is a genuine control the user cannot use,
+   which is exactly what the dimming is for. */
+button.chipv6:disabled,
+button.cbtn:disabled,
+button.sendb:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button.chipv6:disabled:hover {
+  background: rgba(var(--rgbAccent), 0.05);
+}
+.chipv6.on {
+  color: var(--ice);
+  background: rgba(var(--rgbAccent), 0.18);
+  border-color: rgba(var(--rgbAccent), 0.6);
+}
+
+/* ---- talk column -------------------------------------------------------- */
+.conv {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 16px;
+}
+.convhint {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--cream);
+  opacity: 0.5;
+  text-align: center;
+  padding: 10px 0;
+}
+/* 10px type carrying a failure sentence -> --redInk, not the law hex (the law
+   hex measured 3.34 / 3.26 / 4.66 / 3.32 on the four talk-column grounds). */
+.errline {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--redInk);
+}
+.tnote {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--tealHi);
+}
+.dropzone {
+  position: absolute;
+  inset: 8px;
+  z-index: 4;
+  border: 1px dashed rgba(var(--rgbAccent), 0.7);
+  border-radius: 12px;
+  background: rgba(var(--rgbBg), 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--ice);
+  pointer-events: none;
+}
+
+/* ---- rail --------------------------------------------------------------- */
+.plateCore {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pfrimg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+}
+/* She changed: the new look fades up over the old one, which unmounts at 600ms. */
+.pfrimg.fadein {
+  animation: pfrfade 0.6s ease;
+}
+@keyframes pfrfade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.wearnote {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--ice);
+}
+.wirerow {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ---- data column -------------------------------------------------------- */
+.shellcopy {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  line-height: 1.9;
+  color: rgba(var(--rgbCream), 0.4);
+}
+.bodystrip {
+  appearance: none;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 0;
+}
+.opsscroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ---- full-frame settings pane ------------------------------------------- */
+.panewrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- the law: no motion when the OS says no ----------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .deck > .col {
+    transform: none !important;
+  }
+}
