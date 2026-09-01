@@ -16,7 +16,7 @@ import { buildState } from "./state.js";
 import { backfillEmbeddings } from "./memory.js";
 import { startSchedulers } from "./schedule.js";
 import { resolveConfirm, getPending } from "./confirm.js";
-import { deskFromBody } from "./desk.js";
+import { deskFromBody, deskRefusalFromBody } from "./desk.js";
 import { addText, addNotification } from "./senses.js";
 import { getConnectorStatus } from "./connectors.js";
 import { runDispatch } from "./dispatch.js";
@@ -466,6 +466,12 @@ app.post("/chat", async (req, res) => {
   // Absent on every surface that isn't his desk, which is why the phone can
   // never raise a file batch. (§3.2 / §3.8)
   const deskPack = deskFromBody(desk);
+  // The SAME slot carries the refusal when there is no pack. `pack: null` is the
+  // discriminator and the two validators are mutually exclusive, so one field
+  // means one of: a briefing, a stated reason, or genuine silence. Silence is
+  // still answerable ("I can't see any folders from this surface") — what it is
+  // NOT is a reason to invent one.
+  const deskRefusal = deskPack ? null : deskRefusalFromBody(desk);
 
   if (!streaming) {
     let text = "";
@@ -485,7 +491,7 @@ app.post("/chat", async (req, res) => {
         },
       },
       undefined,
-      { desk: deskPack },
+      { desk: deskPack, deskRefusal },
     );
     return;
   }
@@ -528,7 +534,7 @@ app.post("/chat", async (req, res) => {
       },
     },
     abort,
-    { desk: deskPack },
+    { desk: deskPack, deskRefusal },
   );
 });
 

@@ -14,11 +14,13 @@ import { saveCheckin, resolveHabit, buildVitals, rememberCheckinNote } from "./v
 import { tickRoutine, untickRoutine } from "./ops.js";
 import {
   renderScan,
+  renderDeskRefusal,
   validatePlan,
   human,
   MAX_BATCH,
   DESK_PROTOCOL,
   type DeskPack,
+  type DeskRefusal,
   type ScanQuery,
 } from "./desk.js";
 import { randomUUID } from "node:crypto";
@@ -99,10 +101,19 @@ export const connectorToolNames = [
  * new-brain case safe: no pack in the body means she cannot raise a filing
  * confirm at all, so an old desktop can never be handed a clientAction it does
  * not understand. (§3.8)
+ *
+ * `deskRefusal` is WHY there is no pack, when the desktop said. It changes no
+ * gate — a refusal is still an absent pack and filing is still off — it only
+ * decides which true sentence comes back. `surface` is used for exactly one
+ * thing: the "ask me from your desk" line, which is correct on a phone and was
+ * a circle when he was already at the desk. Both default to the old behaviour,
+ * so an OLD DESKTOP that sends neither still gets an honest answer.
  */
 export function buildConnectorServer(
   emitConfirm: (c: PendingConfirm) => void,
   desk: DeskPack | null = null,
+  deskRefusal: DeskRefusal | null = null,
+  surface = "app",
 ) {
   // Per-TURN scan budget (G-I5). This closure is built fresh inside runChat for
   // every message, so the counter dies with the turn — no module state, and no
@@ -746,9 +757,10 @@ export function buildConnectorServer(
         },
         async (a) => {
           if (!desk) {
+            // NAME THE REAL CAUSE OR NAME THE SILENCE. Never a third thing.
             return text(
-              "I can't see any folders from here — filing hands only work at his desk, and this turn " +
-                "didn't arrive with a desk briefing. Say that plainly; don't pretend.",
+              `${renderDeskRefusal(deskRefusal, surface)} Say that to him plainly, in those terms, and ` +
+                "do not substitute a different reason — you were told this one.",
               true,
             );
           }
@@ -810,8 +822,8 @@ export function buildConnectorServer(
         async ({ intent, op, moves }) => {
           if (!desk) {
             return text(
-              "I can't see any folders from here — no desk briefing this turn, so there's nothing I could " +
-                "plan against. Say that plainly.",
+              `${renderDeskRefusal(deskRefusal, surface)} So there is nothing I could plan against. Say ` +
+                "that to him plainly, in those terms, and do not substitute a different reason.",
               true,
             );
           }

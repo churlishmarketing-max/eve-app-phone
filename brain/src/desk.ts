@@ -86,6 +86,31 @@ export interface DeskPack {
   lastBatches: DeskBatchSummary[];
 }
 
+/**
+ * WHY THERE IS NO PACK THIS TURN. The desktop's own words, validated.
+ *
+ * The desktop mints this (electron/desk/index.ts `packRefusalObject`) and puts
+ * it in the SAME `desk` slot a pack would have used; `pack: null` is the
+ * discriminator, so `deskFromBody` rejects it on protocol and filing stays off
+ * for the turn exactly as before. What changes is that the refusal she reads
+ * out is now a FACT she was handed rather than a guess she made.
+ *
+ * The bug this closes: King typed "sort my desk-test folder" INTO THE DESKTOP
+ * APP with filing never armed. The desktop sent nothing, the tool said "this
+ * turn didn't arrive with a desk briefing — try from the desktop app", and he
+ * was already in it. A refusal that names the wrong cause is worse than no
+ * refusal: it sends him in a circle.
+ */
+export type DeskRefusalCode = "OFF" | "NO_ROOTS" | "ATTR" | "OVERSIZE" | "NOT_READY";
+
+export interface DeskRefusal {
+  code: DeskRefusalCode;
+  /** The desktop's prose, sanitised. Context for her, never the whole answer. */
+  why: string;
+  /** Root LABELS the refusal is about. Config labels King typed; never paths. */
+  roots: string[];
+}
+
 export type DeskOp = "move" | "rename" | "stage";
 
 /** One row of the minted payload. Byte-compatible with the desktop's FileMove. */
@@ -870,6 +895,132 @@ export function deskFromBody(raw: unknown): DeskPack | null {
     },
     lastBatches,
   };
+}
+
+// ---------------------------------------------------------------------------
+// deskRefusalFromBody / renderDeskRefusal — the truth about WHY
+//
+// Same discipline as deskFromBody: a hard validator, and anything odd becomes
+// null. Null here means "the desktop told me nothing", which is its own honest
+// answer — NOT a licence to pick a cause.
+// ---------------------------------------------------------------------------
+
+const REFUSAL_CODES: readonly DeskRefusalCode[] = ["OFF", "NO_ROOTS", "ATTR", "OVERSIZE", "NOT_READY"];
+
+/** Surfaces that ARE his desk. Everything else is a phone, glasses, or a cron. */
+const DESK_SURFACES = new Set(["desktop", "desk"]);
+
+export function isDeskSurface(surface: string): boolean {
+  return DESK_SURFACES.has(String(surface ?? "").trim().toLowerCase());
+}
+
+/**
+ * Reads the refusal the desktop put in the pack slot. Returns null for a pack,
+ * for a missing field, and for anything malformed alike — she is never handed a
+ * reason that did not survive validation.
+ */
+export function deskRefusalFromBody(raw: unknown): DeskRefusal | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const b = raw as Record<string, unknown>;
+  // `pack: null` is the discriminator. A real pack has no `pack` key at all, so
+  // this can never fire on a briefing, and a forged {pack:null, protocol:1}
+  // still fails deskFromBody's census checks — the two validators cannot both
+  // say yes to one object.
+  if (!("pack" in b) || b.pack !== null) return null;
+  if (typeof b.code !== "string" || !REFUSAL_CODES.includes(b.code as DeskRefusalCode)) return null;
+  // INJ — the desktop's prose is still text crossing a wire. Sanitised and
+  // capped like every other string in this file.
+  const why = typeof b.why === "string" ? sanitise(b.why).display.slice(0, 240) : "";
+  const roots: string[] = [];
+  if (Array.isArray(b.roots)) {
+    for (const r of b.roots.slice(0, 12)) {
+      if (typeof r !== "string" || r.length === 0) continue;
+      const clean = sanitise(r).display.slice(0, 48);
+      if (clean) roots.push(clean);
+    }
+  }
+  return { code: b.code as DeskRefusalCode, why, roots };
+}
+
+function rootList(roots: string[]): string {
+  if (roots.length === 0) return "";
+  if (roots.length === 1) return roots[0];
+  return `${roots.slice(0, -1).join(", ")} and ${roots[roots.length - 1]}`;
+}
+
+const TURN_ON = "Turn them on in the desktop app: Settings, Filing hands.";
+
+/**
+ * THE SENTENCE SHE SAYS. One reason in, one truthful line out.
+ *
+ * The whole point of this function is that every branch is a fact somebody
+ * measured. There is no default branch that picks the likeliest cause: when
+ * `refusal` is null the answer says the surface cannot see any folders and
+ * stops, and the "ask me from your desk" line appears ONLY when the request
+ * body itself said this turn came from somewhere that is not his desk.
+ */
+export function renderDeskRefusal(refusal: DeskRefusal | null, surface: string): string {
+  if (refusal) {
+    switch (refusal.code) {
+      case "OFF":
+        return (
+          "Filing hands are switched off — you have never turned them on, so I have no folders at all, " +
+          `not even an empty list. ${TURN_ON}`
+        );
+      case "NO_ROOTS":
+        return refusal.roots.length
+          ? `Filing hands are on, but no folder survived enrollment — ${rootList(refusal.roots)} could not be ` +
+              "opened, so I have nothing to look at. Check that folder exists and re-add it in the desktop " +
+              "app: Settings, Filing hands."
+          : "Filing hands are on, but no folders have been handed to me yet — nothing is enrolled. Add the " +
+              "folder you want me in from the desktop app: Settings, Filing hands.";
+      case "ATTR":
+        return (
+          `Filing hands are paused: ${refusal.roots.length ? rootList(refusal.roots) : "your enrolled folders"} ` +
+          "failed the Windows attribute check just now, so I cannot tell a shortcut from a real file and I " +
+          "will not guess. Usually a sync or a permission that settles on its own — ask me again in a minute."
+        );
+      case "NOT_READY":
+        return (
+          "Filing hands are on, but I have not finished looking at your folders yet, so there is nothing to " +
+          "search. Give it a moment and ask me again."
+        );
+      case "OVERSIZE":
+        return (
+          "Filing hands are on, but the folder briefing was too big to send this turn, so none of it reached " +
+          "me. Point me at one folder by name and I will ask for that instead."
+        );
+    }
+  }
+  // NOTHING WAS SAID. Two honest answers, and neither of them is a guess about
+  // where he is standing: the surface is a fact the request carried.
+  if (!isDeskSurface(surface)) {
+    return (
+      "Filing hands only work at your desk, and this turn did not come from it. Ask me from the desktop app " +
+      "and I can look at your folders."
+    );
+  }
+  return (
+    "I cannot see any folders from this surface — nothing came in with this turn, and nothing told me why, " +
+    "so I am not going to guess at a cause. Check Filing hands in the desktop app's settings."
+  );
+}
+
+/**
+ * One line for <context_pack> when a refusal arrived. Empty when it did not, so
+ * every surface that sends no desk field is byte-identical to before.
+ *
+ * She reads this silently. It exists so she is never in the position of
+ * explaining an absence she was told nothing about.
+ */
+export function renderDeskAbsence(refusal: DeskRefusal | null, surface: string): string[] {
+  if (!refusal) return [];
+  return [
+    `Filing hands: NO briefing this turn (${refusal.code}). ${renderDeskRefusal(refusal, surface)} ` +
+      "That is the reason. Do not offer a different one" +
+      (isDeskSurface(surface) ? ", and do not tell him to try from the desktop app — he is in it." : ".") +
+      (refusal.why ? ` The desk's own words: "${refusal.why}"` : ""),
+  ];
 }
 
 // ---------------------------------------------------------------------------

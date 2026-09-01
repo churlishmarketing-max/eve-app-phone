@@ -5,7 +5,7 @@ import { getWearing } from "./wardrobe.js";
 import { boardSnapshot } from "./os.js";
 import { floorView } from "./floor.js";
 import { buildVitals } from "./vitals.js";
-import { renderDeskCensus, type DeskPack } from "./desk.js";
+import { renderDeskCensus, renderDeskAbsence, type DeskPack, type DeskRefusal } from "./desk.js";
 
 // Context assembly (03 §4). Layers 1–2 (bible + doctrine) are static in the
 // system prompt; this builds layers 3–6 fresh per exchange: today snapshot,
@@ -175,6 +175,11 @@ export async function buildContextPack(
   // this pack is introduced to her as her own briefing and she is told to trust
   // it. (G-I1 / INJ-1)
   desk: DeskPack | null = null,
+  // WHY there is no pack, when the desktop said so. Defaulted to null, so every
+  // surface that sends no desk field produces a byte-identical pack to before.
+  // It is here for one reason: without it she has to EXPLAIN an absence she was
+  // told nothing about, and explaining an absence is where she started guessing.
+  deskRefusal: DeskRefusal | null = null,
 ): Promise<string> {
   const [snapshot, loops, recall, turns] = await Promise.all([
     todaySnapshot(),
@@ -198,6 +203,7 @@ export async function buildContextPack(
     nowLine(surface),
     ...wornLine(),
     ...renderDeskCensus(desk),
+    ...renderDeskAbsence(desk ? null : deskRefusal, surface),
     ...snapshot,
     // Ambient OS board — kept warm in the background (os.ts), injected instantly
     // so board questions answer in one turn with no round-trip. Null → omitted

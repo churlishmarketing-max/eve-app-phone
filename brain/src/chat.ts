@@ -5,7 +5,7 @@ import { ensureConversation, appendMessage } from "./memory.js";
 import { buildMemoryServer } from "./tools.js";
 import { buildConnectorServer, connectorToolNames } from "./connectors.js";
 import type { PendingConfirm } from "./confirm.js";
-import type { DeskPack } from "./desk.js";
+import type { DeskPack, DeskRefusal } from "./desk.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
@@ -33,9 +33,14 @@ export async function runChat(
   // — there is no store, no cache, and no way for a filing plan to be caused by
   // anything other than a message he sent just now. That is G-I6, and it is why
   // the two desk tools gate on the pack rather than on a flag.
-  opts?: { desk?: DeskPack | null },
+  opts?: { desk?: DeskPack | null; deskRefusal?: DeskRefusal | null },
 ): Promise<void> {
   const desk = opts?.desk ?? null;
+  // WHY there is no pack, when the desktop said so. Gates nothing; it only
+  // decides which true sentence the filing tools return. Null means the desktop
+  // told us nothing, and "nothing" is its own honest answer — not a licence to
+  // guess which surface he is standing at.
+  const deskRefusal = desk ? null : opts?.deskRefusal ?? null;
   const resumeSession = sessions.get(conversationId);
   let fullText = "";
   let speaking = false;
@@ -58,13 +63,13 @@ export async function runChat(
     // there's no live SDK session to resume — a brain restart must not wipe
     // continuity (review C7), and a resumed session already has the turns.
     const [contextPack] = await Promise.all([
-      buildContextPack(surface, userMessage, conversationId, !resumeSession, desk),
+      buildContextPack(surface, userMessage, conversationId, !resumeSession, desk, deskRefusal),
       ensureConversation(conversationId, surface),
     ]);
     void appendMessage(conversationId, "user", userMessage);
 
     const memoryServer = buildMemoryServer(() => conversationId, desk);
-    const connectorServer = buildConnectorServer((c) => events.onConfirm?.(c), desk);
+    const connectorServer = buildConnectorServer((c) => events.onConfirm?.(c), desk, deskRefusal, surface);
 
     const q = query({
       // Volatile context rides in the user turn; system prompt stays static
