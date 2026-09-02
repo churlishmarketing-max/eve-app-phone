@@ -8,7 +8,8 @@
 import { useCallback, useState } from "react";
 import type { AttentionAction, EveState } from "@shared/contract";
 import { Cbtn, Divrow, OpRow, StatLine } from "../../components/atoms";
-import { agentCode, kindGlyph, kindLabel } from "../format";
+import { agentCode, kindGlyphExt, kindLabel } from "../format";
+import { isInFlight } from "../../core/jobs";
 import { SHELL_COPY } from "./shell";
 
 export interface OpsPaneProps {
@@ -49,7 +50,10 @@ export default function OpsPane({ state, onRefresh }: OpsPaneProps) {
 
   const confirms = state.pendingConfirms ?? [];
   const items = state.attentionItems ?? [];
-  const jobs = state.jobs ?? [];
+  // DISPATCH v0.1 (CONTRACT-v0.1 §1): `jobs[]` is now every job of the last
+  // 24 h, any status. "In flight" is a FILTER, not a length — done and failed
+  // rows live on THE CORE's 24 h list, not under this header.
+  const jobs = (state.jobs ?? []).filter((j) => isInFlight(j.status));
   const clients = state.clients ?? [];
 
   return (
@@ -102,7 +106,7 @@ export default function OpsPane({ state, onRefresh }: OpsPaneProps) {
             const note = notes[a.id];
             return (
               <OpRow key={a.id}>
-                <span className="gl">{kindGlyph(a.kind)}</span>
+                <span className="gl">{kindGlyphExt(a.kind)}</span>
                 <div style={{ minWidth: 0 }}>
                   <div className="tt">{a.message}</div>
                   <div className="sub">{`${kindLabel(a.kind)} · N${a.nudge_level}${draft}`}</div>
@@ -136,7 +140,7 @@ export default function OpsPane({ state, onRefresh }: OpsPaneProps) {
             const approvals = st.includes("approval");
             return (
               <OpRow key={j.id}>
-                <span className="jcode">{agentCode(j.agent)}</span>
+                <span className="jcode">{agentCode(j.unit ?? j.agent)}</span>
                 <div className="tt">{j.title}</div>
                 <StatLine
                   text={running ? "● RUNNING" : approvals ? "IN APPROVALS" : st.replace(/_/g, " ").toUpperCase()}

@@ -27,6 +27,12 @@ export interface PendingConfirm {
   hash: string;
   createdAt: string;
   expiresAt: string;
+  /**
+   * DISPATCH v0.1 (CONTRACT-v0.1 §5). Present ONLY on a card a job raised —
+   * the pennyworth send card. The job detail on THE CORE reads this to mount
+   * the card inline; nothing else does.
+   */
+  jobId?: string;
 }
 
 // Approve on a client-executed confirm (send_sms) hands back a clientAction —
@@ -46,6 +52,13 @@ export interface ConfirmResolution {
    * the desk outcome is the honest statement of what happened on the disk.
    */
   deskJobId?: string;
+  /**
+   * DISPATCH v0.1 (CONTRACT-v0.1 §5). When the card carried a job, the brain
+   * settles that job in the same reply: approve → done, cancel → failed,
+   * send-threw → failed. Absent on every card a job did not raise.
+   */
+  jobId?: string;
+  job?: { id: string; status: string };
   /** Set when the desk refused the batch outright. Plain English, shown verbatim. */
   deskRefusal?: string;
 }
@@ -92,12 +105,118 @@ export interface ClientPulse {
   status?: string;
 }
 
+// ---------------------------------------------------------------------------
+// DISPATCH v0.1 — CONTRACT-v0.1.md (desktop/design-reference/hub), written from
+// the shipping brain on 2026-09-01. Everything below the legacy four fields is
+// OPTIONAL because the brain runs in two modes: post-migration (sql/004
+// applied) every field rides on the row; pre-migration `why / tier /
+// confirm_id / result / spec / conversation_id / host / cost_usd` exist only in
+// the brain's memory for jobs created since its last restart and are null for
+// the rest. `unit` is always present on a v0.1 brain (it rides in `agent`);
+// an OLDER brain omits it, which is why it is optional here too. A null or
+// absent value renders as a dash. Nothing is ever invented to fill a slot.
+// ---------------------------------------------------------------------------
+
+export type JobStatus = "queued" | "running" | "in_approvals" | "done" | "failed";
+
+/** §1.1 — `result`, discriminated on `kind`. Never written speculatively. */
+export type JobResult =
+  | { kind: "draft"; client?: string; draft?: string; confirmId?: string; at?: string }
+  | { kind: "confirm"; approved: boolean; executed: boolean; detail?: string; at?: string }
+  | { kind: "deliverable"; chars?: number; path?: string | null; at?: string }
+  | { kind: "failure"; reason?: string; at?: string };
+
+export interface JobSpec {
+  said?: string;
+  unit?: string;
+  routedBy?: string;
+  routedWhy?: string;
+  inputs?: Record<string, unknown>;
+}
+
 export interface JobRow {
   id: string;
   agent?: string | null;
   title: string;
   status: string;
   created_at?: string;
+  /** Roster key. v0.1: always present (falls back to `agent` brain-side). */
+  unit?: string | null;
+  /** "brain" | "desk" — every v0.1 job is "brain". */
+  host?: string | null;
+  /** Her one-line routing reason, or null. */
+  why?: string | null;
+  /** "green" | "red" — tier of the job's NEXT/LAST action — or null. */
+  tier?: string | null;
+  /** The pending confirm this job is waiting on, or null. */
+  confirm_id?: string | null;
+  result?: JobResult | null;
+  /** Legacy: local deliverable path for worker jobs, or null. */
+  result_ref?: string | null;
+  /** ACTUAL SDK spend, or null = unmeasured → render "—". */
+  cost_usd?: number | null;
+  conversation_id?: string | null;
+  spec?: JobSpec | null;
+  finished_at?: string | null;
+  /** Post-migration only; null before. */
+  updated_at?: string | null;
+}
+
+/** §1 — rides beside `jobs[]`: the window the list covers. */
+export interface JobsWindow {
+  hours: number;
+  limit: number;
+  /** Present when the jobs read failed (jobs is then []). */
+  error?: string;
+}
+
+/** §2 — one unit of the fleet block. Badge is the most important pixel on the hub. */
+export type FleetBadge = "RUNNABLE" | "DESK" | "WORKSPACE_ONLY";
+
+export interface FleetUnitRow {
+  key: string;
+  name: string;
+  /** Roster job line; for research it is the registry's `does`. */
+  role: string;
+  badge: FleetBadge | string;
+  /** The runner is wired + reachable from this brain RIGHT NOW. */
+  live: boolean;
+  /** false only for research (a brain worker, not an OS roster row). */
+  roster: boolean;
+  division?: string;
+  loc?: string;
+  /** Newest job created_at for this unit INSIDE the 24 h window. KEY ABSENT when none. */
+  lastRunAt?: string;
+}
+
+/** §2 — `/state.fleet`, bearer-gated. THE strip reads from here, never /health. */
+export interface FleetBlock {
+  /** units.length — roster rows + brain-only workers. Never hard-coded. */
+  registered: number;
+  /** Units with badge RUNNABLE. */
+  dispatchable: number;
+  /** "os" = read live from Churlish OS this window; "bundled" = cached copy. */
+  source: "os" | "bundled" | string;
+  /** When that roster view was built. */
+  at: string;
+  units: FleetUnitRow[];
+}
+
+/**
+ * §3 — SSE `event: job` on POST /chat. Keys are exactly these; `why` / `tier` /
+ * `confirmId` are OMITTED (not null) when unknown. Best-effort: transitions the
+ * brain makes after the stream closes reach the desktop through /state on the
+ * next poll, not through this frame.
+ */
+export interface JobFrame {
+  id: string;
+  status: string;
+  unit: string;
+  title: string;
+  host: string;
+  why?: string;
+  tier?: string;
+  confirmId?: string;
 }
 
 export interface RoutineRow {
@@ -135,6 +254,11 @@ export interface EveState {
   routines?: RoutineRow[];
   pendingConfirms?: PendingConfirm[];
   connectors?: ConnectorStatus[];
+  // DISPATCH v0.1 — two more keys, both possibly absent (an older brain, or
+  // the degraded return). `jobs[]` is now EVERY job of the last 24 h, any
+  // status: filter by status before calling anything "in flight".
+  jobsWindow?: JobsWindow;
+  fleet?: FleetBlock;
 }
 
 // What the poll cache hands the renderer: the state plus when it was fetched.
@@ -350,7 +474,12 @@ export type ChatFrame =
   | { type: "tool"; name: string }
   | { type: "confirm_request"; confirm: PendingConfirm }
   | { type: "done"; conversationId: string; fullText: string }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  // DISPATCH v0.1 — the brain's `event: job` frame (CONTRACT-v0.1 §3).
+  // electron/api.ts parseFrame() passes it through whole; useChat feeds THE
+  // CORE's rail and feed from it, and the 30s /state poll reconciles behind it
+  // so a missed frame can never leave a row stale.
+  | { type: "job"; job: JobFrame };
 
 // Every frame is tagged with the chatId returned by chat.start, so two live
 // turns (deck + summon) can never cross-contaminate.

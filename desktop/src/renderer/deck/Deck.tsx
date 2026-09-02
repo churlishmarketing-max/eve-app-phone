@@ -40,6 +40,11 @@ export interface DeckProps {
       so it is threaded down here alongside `view`. */
   closetOpen: boolean;
   vitals: Vitals | null;
+  /** DISPATCH v0.1 — a shot fixture opens THE CORE on this job's detail.
+   *  App never sets it; the live screen opens detail by click. */
+  coreJobId?: string;
+  /** DISPATCH v0.1 — a shot fixture opens THE CORE with the roster panel open. */
+  coreRosterOpen?: boolean;
   onSend: (text: string) => void;
   onConfirmResolved: (id: string) => void;
   onToggleSilent: () => void;
@@ -89,7 +94,10 @@ export default function Deck(p: DeckProps) {
             chat={p.chat}
             mode={p.mode}
             quietHours={p.quietHours}
+            initialJobId={p.coreJobId}
+            initialRosterOpen={p.coreRosterOpen}
             onSend={p.onSend}
+            onConfirmResolved={p.onConfirmResolved}
           />
         </div>
       ) : p.view === "settings" ? (

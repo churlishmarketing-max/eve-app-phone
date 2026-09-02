@@ -102,6 +102,17 @@ export function kindGlyph(kind: string): string {
   return "•";
 }
 
+/**
+ * DISPATCH v0.1 — the glyph for a `job_failed` attention item (CONTRACT-v0.1
+ * §4). "!" and not "✕": the row is a report that a job ended without a
+ * deliverable, not a control that deletes anything. Kept out of kindGlyph's
+ * three-way chain so the verified map above stays byte-identical.
+ */
+export function kindGlyphExt(kind: string): string {
+  if (kind === "job_failed") return "!";
+  return kindGlyph(kind);
+}
+
 /** "SILENT CLIENT" from "silent_client". */
 export function kindLabel(kind: string): string {
   return kind.replace(/_/g, " ").toUpperCase();

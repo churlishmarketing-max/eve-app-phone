@@ -22,7 +22,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { EveState } from "@shared/contract";
-import { mockState, mockVitals } from "@shared/fixtures";
+import {
+  mockDispatchJobs,
+  mockFleet,
+  mockJobConfirm,
+  mockJobFailedItem,
+  mockState,
+  mockVitals,
+} from "@shared/fixtures";
 import App from "../deck/App";
 import Deck, { type DeckProps } from "../deck/Deck";
 import type { DeckMsg, EveMode } from "../deck/types";
@@ -55,6 +62,30 @@ function base(over: Partial<DeckProps> = {}): DeckProps {
     onCloseWardrobe: () => undefined,
     onView: () => undefined,
     ...over,
+  };
+}
+
+// THE CORE's boards carry the P1 v0.1 fleet block (CONTRACT-v0.1 §2) on top of
+// the canonical mock state: mockState() itself is untouched, because the
+// EVE_MOCK brain answering the live app must keep answering exactly as every
+// earlier receipt was judged. "core-fleet-nofleet" below is the board WITHOUT
+// it — the honest no-answer state an older brain produces.
+function coreState(over: Partial<EveState> = {}): EveState {
+  return { ...mockState(), pendingConfirms: [], fleet: mockFleet(), ...over };
+}
+
+// The dispatcher's state: one job per status (in_approvals · queued · running
+// · done · failed), the failed one's job_failed attention item, and the RED
+// send card the in_approvals one is waiting on, linked both ways by id.
+function dispatchState(): EveState {
+  const base = mockState();
+  return {
+    ...base,
+    fleet: mockFleet(),
+    jobs: mockDispatchJobs(),
+    jobsWindow: { hours: 24, limit: 50 },
+    attentionItems: [...(base.attentionItems ?? []), mockJobFailedItem()],
+    pendingConfirms: [mockJobConfirm()],
   };
 }
 
@@ -147,7 +178,7 @@ export const scenarios: Record<string, () => JSX.Element> = {
   // fleet.count 24). Nothing on these boards is a hand-written figure.
 
   // The hero board: calm queue, two jobs in flight, the wire 8 of 10.
-  core: () => <Deck {...base({ view: "core" })} />,
+  core: () => <Deck {...base({ view: "core", state: coreState() })} />,
 
   // HER BRAIN UNREACHABLE. Every counter dashes, the fleet header says SOURCE
   // DOWN, the telemetry LINK cell says DOWN, and the command bar refuses to
@@ -159,7 +190,9 @@ export const scenarios: Record<string, () => JSX.Element> = {
   // A RED CONFIRM WAITING: the orb goes to .orb.red, the RED rung of the
   // clearance ladder lights, and RED WAITING reads 1 in --redInk. This is the
   // only board where anything on this screen is red.
-  "core-red": () => <Deck {...base({ view: "core", state: mockState(), mode: "alert" })} />,
+  "core-red": () => (
+    <Deck {...base({ view: "core", state: coreState({ pendingConfirms: mockState().pendingConfirms }), mode: "alert" })} />
+  ),
 
   // SHE IS SPEAKING: the 28-bar waveform is the only board it appears on,
   // because it renders only while she is actually speaking or the mic is open.
@@ -167,6 +200,7 @@ export const scenarios: Record<string, () => JSX.Element> = {
     <Deck
       {...base({
         view: "core",
+        state: coreState(),
         mode: "speaking",
         chat: {
           messages: STREAM,
@@ -180,14 +214,47 @@ export const scenarios: Record<string, () => JSX.Element> = {
     />
   ),
 
-  // THE FLEET IS MOSTLY NAME-ONLY. Nothing is dispatched, so all five runnable
-  // units read IDLE — and the header states the gap out loud: the brain reports
-  // 24 REGISTERED and exactly 5 of them are DISPATCHABLE. Two dashed cards
-  // (PENNYWORTH, THE ROSTER) carry the rest. The strip must read truthfully
-  // here or it does not read truthfully anywhere.
-  "core-nameonly": () => (
-    <Deck {...base({ view: "core", state: { ...mockState(), pendingConfirms: [], jobs: [] } })} />
-  ),
+  // THE FLEET IS MOSTLY NAME-ONLY. Nothing is dispatched, so the runnable
+  // units read IDLE (or NEEDS WIRING — Pennyworth with the OS unwired) — and
+  // the header states the gap out loud: N REGISTERED, 5 DISPATCHABLE, both
+  // computed from the fleet block's array. One dashed card carries the rest
+  // with a REAL numeral. The strip must read truthfully here or it does not
+  // read truthfully anywhere.
+  "core-nameonly": () => <Deck {...base({ view: "core", state: coreState({ jobs: [] }) })} />,
+
+  // ---- P1 v0.1: the dispatcher's hub -------------------------------------
+  // ONE JOB PER STATUS + A FLEET BLOCK. The chips on the strip read the jobs
+  // (Pennyworth NEEDS YOU, Research RUNNING, Suicide Squad 1 HELD, JSA DONE
+  // 24H, Justice League FAILED 24H), THE WIRE's four rows read 1 / 1 / 1 / 1,
+  // the JOBS rail lists all five newest-first, and the session log's mount
+  // line states the 24 h list's own numbers. RED WAITING is 1 because the
+  // send card is pending; the failed job is GOLD everywhere, never red.
+  "core-jobs": () => <Deck {...base({ view: "core", state: dispatchState() })} />,
+
+  // THE ONE NEW SURFACE. The in_approvals pennyworth job is open in the centre
+  // column: his sentence verbatim, who she picked and why, the [BRAIN] badge,
+  // the four-station timeline, NEXT: RED, the OS draft, and the RED send card
+  // INLINE — the shipped ConfirmCard, inline variant, not a second renderer.
+  // Nothing is approved here; the card is photographed, not answered.
+  "core-job-detail": () => <Deck {...base({ view: "core", state: dispatchState(), coreJobId: "job-pw-1" })} />,
+
+  // NO FLEET BLOCK ON THE WIRE. The canonical mock state has no `fleet` key —
+  // exactly what an older brain (or a failed roster read) serves. The header
+  // says NO ANSWER YET, the tag says the block was not on this answer, one
+  // dashed card says why, and the FLEET readout is a dash. No zero anywhere.
+  "core-fleet-nofleet": () => <Deck {...base({ view: "core" })} />,
+
+  // THE ROSTER, OPEN. The "+N ON ROSTER" card is a button; this is what it
+  // opens: every unit the brain served, division-grouped, every row badged —
+  // RUNNABLE as an accent plate, everything else a dashed outline. The most
+  // important pixel on the screen, photographed.
+  "core-roster": () => <Deck {...base({ view: "core", state: dispatchState(), coreRosterOpen: true })} />,
+
+  // THE DECK'S OPS PANE WITH THE DISPATCHER'S STATE: the job_failed attention
+  // item renders as an approval-inbox row (glyph "!", JOB FAILED · N1), and
+  // JOBS IN FLIGHT lists the three in-flight rows only — done and failed are
+  // filtered out, because jobs[] is a 24 h list now, not an in-flight list.
+  "deck-jobs": () => <Deck {...base({ state: dispatchState() })} />,
 
   "nav-probe": () => {
     holdShutter();

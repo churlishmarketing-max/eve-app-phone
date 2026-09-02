@@ -10,10 +10,15 @@
 // Owning stream: S1. New fixtures for new panes: add, never edit in place.
 
 import type {
+  AttentionItem,
   ChatFrame,
   ConfirmResolution,
   EveState,
+  FleetBlock,
+  FleetUnitRow,
   Health,
+  JobRow,
+  PendingConfirm,
   Transcript,
   Vitals,
   VoiceList,
@@ -248,3 +253,214 @@ export function mockChatFrames(
 }
 
 export const MOCK_STAMP = { at: nowIso() };
+
+// ---------------------------------------------------------------------------
+// DISPATCH v0.1 fixtures — added 2026-09-01 for THE CORE's hub half. Shapes
+// are CONTRACT-v0.1.md §1 / §2 / §4 / §5 verbatim. New exports only:
+// mockState() is untouched, so the EVE_MOCK brain still answers the way every
+// earlier receipt was judged against (no fleet block = the strip's honest
+// no-answer state, which is exactly what an older brain produces).
+// ---------------------------------------------------------------------------
+
+/** §2 — a fleet block shaped like the real one: 5 RUNNABLE, 0 DESK, the rest
+ *  WORKSPACE_ONLY. `registered` and `dispatchable` are computed from the
+ *  array, never typed. */
+export function mockFleet(): FleetBlock {
+  const runnable: FleetUnitRow[] = [
+    { key: "research", name: "Research", role: "deep web research → document", badge: "RUNNABLE", live: true, roster: false, division: "brain-workers", loc: "BRAIN", lastRunAt: minutesAgo(41) },
+    { key: "justice-league", name: "Justice League", role: "Portfolio & sequencing verdict → document.", badge: "RUNNABLE", live: true, roster: true, division: "councils", loc: "CC", lastRunAt: minutesAgo(340) },
+    { key: "jsa", name: "JSA", role: "Single-decision tribunal → verdict.", badge: "RUNNABLE", live: true, roster: true, division: "councils", loc: "CC", lastRunAt: minutesAgo(120) },
+    { key: "suicide-squad", name: "Suicide Squad", role: "Adversarial teardown → document.", badge: "RUNNABLE", live: true, roster: true, division: "councils", loc: "CC", lastRunAt: minutesAgo(9) },
+    { key: "pennyworth", name: "Pennyworth", role: "Daily money brief + proposal agent inside Churlish OS.", badge: "RUNNABLE", live: false, roster: true, division: "fleet", loc: "OS", lastRunAt: minutesAgo(4) },
+  ];
+  const workspace: [string, string, string, string][] = [
+    ["perry-white", "Perry White", "Client email + proposal writer.", "comms"],
+    ["jimmy-olsen", "Jimmy Olsen", "Minutes desk — meetings to filed records.", "comms"],
+    ["mister-miracle", "Mister Miracle", "Code review desk — read-only findings.", "engineering"],
+    ["big-barda", "Big Barda", "Usage warden — pre-flights build days.", "engineering"],
+    ["brainiac", "Brainiac", "Research synthesis + citation ledger.", "research"],
+    ["martian-manhunter", "Martian Manhunter", "Competitive intelligence sweep.", "research"],
+    ["iris-west", "Iris West", "Content calendar engine.", "content"],
+    ["kid-flash", "Kid Flash", "Short-form clip finder.", "content"],
+    ["starfire", "Starfire", "Thumbnail + title packaging.", "content"],
+    ["cyborg", "Cyborg", "Automation + n8n wiring.", "engineering"],
+    ["guardian", "Guardian", "Security review + injection audit.", "engineering"],
+    ["cassandra-cain", "Cassandra Cain", "Silent-client detection.", "ops"],
+    ["red-robin", "Red Robin", "Invoice scoping + chase.", "ops"],
+    ["doctor-mid-nite", "Doctor Mid-Nite", "Vitals + habits coach.", "ops"],
+    ["alfred", "Alfred", "Editor brief generator.", "content"],
+    ["watchtower", "Watchtower", "Grades finished builds.", "engineering"],
+  ];
+  const units: FleetUnitRow[] = [
+    ...runnable,
+    ...workspace.map(([key, name, role, division]) => ({
+      key,
+      name,
+      role,
+      badge: "WORKSPACE_ONLY" as const,
+      live: false,
+      roster: true,
+      division,
+      loc: "CC",
+    })),
+  ];
+  return {
+    registered: units.length,
+    dispatchable: units.filter((u) => u.badge === "RUNNABLE").length,
+    source: "bundled",
+    at: minutesAgo(2),
+    units,
+  };
+}
+
+/** §5 — the RED send card a pennyworth job raised. `jobId` links it to
+ *  mockDispatchJobs()[0]; that job's `confirm_id` links back. */
+export function mockJobConfirm(): PendingConfirm {
+  return {
+    id: "confirm-mock-job",
+    kind: "os_send_email",
+    summary: "Email Acacia Wellness — moving the shoot to the 12th, as you said it.",
+    payload: { client_name: "Acacia Wellness", jobId: "job-pw-1" },
+    hash: "mock-hash-job",
+    createdAt: minutesAgo(3),
+    expiresAt: minutesOut(27),
+    jobId: "job-pw-1",
+  };
+}
+
+/** §1 — one job per status, newest first, every one inside the 24 h window. */
+export function mockDispatchJobs(): JobRow[] {
+  return [
+    {
+      id: "job-pw-1",
+      unit: "pennyworth",
+      agent: "pennyworth",
+      title: "email Acacia about moving the shoot to the 12th",
+      status: "in_approvals",
+      host: "brain",
+      why: "client email desk",
+      tier: "red",
+      confirm_id: "confirm-mock-job",
+      result: {
+        kind: "draft",
+        client: "Acacia Wellness",
+        draft:
+          "Hi Acacia — quick one. We would like to move the shoot from the 9th to the 12th: same crew, same run-of-show, and it gives us the extra light in the afternoon slot. If the 12th works on your side I will lock it in and send the updated call sheet today.",
+        confirmId: "confirm-mock-job",
+        at: minutesAgo(3),
+      },
+      result_ref: null,
+      cost_usd: null,
+      conversation_id: "conv-mock",
+      spec: {
+        said: "email Acacia about moving the shoot to the 12th",
+        unit: "pennyworth",
+        routedBy: "model",
+        routedWhy: "client email desk",
+        inputs: { client: "Acacia Wellness" },
+      },
+      created_at: minutesAgo(4),
+      finished_at: minutesAgo(3),
+      updated_at: null,
+    },
+    {
+      id: "job-sq-3",
+      unit: "suicide-squad",
+      agent: "suicide-squad",
+      title: "tear down the Chisel launch plan",
+      status: "queued",
+      host: "brain",
+      why: "adversarial teardown → document",
+      tier: "green",
+      confirm_id: null,
+      result: null,
+      result_ref: null,
+      cost_usd: null,
+      conversation_id: "conv-mock",
+      spec: null,
+      created_at: minutesAgo(9),
+      finished_at: null,
+      updated_at: null,
+    },
+    {
+      id: "job-rs-2",
+      unit: "research",
+      agent: "research",
+      title: "sweep the market for a Rubio Monocoat alternative under $40",
+      status: "running",
+      host: "brain",
+      why: "deep web research → document",
+      tier: "green",
+      confirm_id: null,
+      result: null,
+      result_ref: null,
+      cost_usd: null,
+      conversation_id: "conv-mock",
+      spec: {
+        said: "sweep the market for a Rubio Monocoat alternative under $40",
+        unit: "research",
+        routedBy: "model",
+        routedWhy: "deep web research → document",
+      },
+      created_at: minutesAgo(41),
+      finished_at: null,
+      updated_at: null,
+    },
+    {
+      id: "job-jsa-4",
+      unit: "jsa",
+      agent: "jsa",
+      title: "rule on the thumbnail — A or B",
+      status: "done",
+      host: "brain",
+      why: "single-decision tribunal → verdict",
+      tier: "green",
+      confirm_id: null,
+      result: { kind: "deliverable", chars: 8123, path: "data/deliverables/job-jsa-4.md", at: minutesAgo(96) },
+      result_ref: "data/deliverables/job-jsa-4.md",
+      cost_usd: 0.4172,
+      conversation_id: "conv-mock",
+      spec: null,
+      created_at: minutesAgo(120),
+      finished_at: minutesAgo(96),
+      updated_at: null,
+    },
+    {
+      id: "job-jl-5",
+      unit: "justice-league",
+      agent: "justice-league",
+      title: "sequence Q4 — what ships first",
+      status: "failed",
+      host: "brain",
+      why: "portfolio & sequencing verdict → document",
+      tier: "green",
+      confirm_id: null,
+      result: { kind: "failure", reason: "worker ended: error_max_turns — no deliverable landed", at: minutesAgo(300) },
+      result_ref: null,
+      cost_usd: 1.0311,
+      conversation_id: "conv-mock",
+      spec: null,
+      created_at: minutesAgo(340),
+      finished_at: minutesAgo(300),
+      updated_at: null,
+    },
+  ];
+}
+
+/** §4 — the attention item the failed job above raised. */
+export function mockJobFailedItem(): AttentionItem {
+  return {
+    id: "a-job-5",
+    kind: "job_failed",
+    message:
+      "justice-league — sequence Q4 — what ships first: worker ended: error_max_turns — no deliverable landed",
+    nudge_level: 1,
+    ref: {
+      jobId: "job-jl-5",
+      job_id: "job-jl-5",
+      unit: "justice-league",
+      reason: "worker ended: error_max_turns — no deliverable landed",
+    },
+    created_at: minutesAgo(300),
+  };
+}

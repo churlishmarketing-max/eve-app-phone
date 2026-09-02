@@ -17,7 +17,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChatFrame, PendingConfirm } from "@shared/contract";
-import type { ChatView, DeckMsg, EveMode } from "../deck/types";
+import type { ChatView, DeckMsg, EveMode, SeenJobFrame } from "../deck/types";
+
+/** Job frames kept per window. The feed caps lower; this is the reducer's ceiling. */
+const JOB_FRAME_CAP = 200;
+let jobSeq = 0;
 import { CONV_KEY, newId } from "../deck/format";
 
 interface Turn {
@@ -43,6 +47,7 @@ export function useChat(): ChatApi {
   const [toolNote, setToolNote] = useState<string | null>(null);
   const [errNote, setErrNote] = useState<string | null>(null);
   const [frameConfirms, setFrameConfirms] = useState<PendingConfirm[]>([]);
+  const [jobFrames, setJobFrames] = useState<SeenJobFrame[]>([]);
   const [liveCount, setLiveCount] = useState(0);
   const [streamingId, setStreamingId] = useState<string | null>(null);
 
@@ -108,6 +113,17 @@ export function useChat(): ChatApi {
                 : m,
             ),
           );
+          break;
+        }
+        case "job": {
+          // DISPATCH v0.1 — one line per frame, never merged here: the CORE's
+          // feed wants every transition, and its rail upserts by id itself.
+          // A frame with no id is a torn frame and is dropped, not guessed at.
+          const j = frame.job;
+          if (!j || typeof j.id !== "string" || !j.id) break;
+          jobSeq += 1;
+          const seen: SeenJobFrame = { frame: j, at: new Date().toISOString(), seq: jobSeq };
+          setJobFrames((fs) => (fs.length >= JOB_FRAME_CAP ? [...fs.slice(1), seen] : [...fs, seen]));
           break;
         }
         case "done":
@@ -209,6 +225,7 @@ export function useChat(): ChatApi {
     toolNote,
     errNote,
     busy: liveCount > 0,
+    jobFrames,
     frameConfirms,
     sendMessage,
     appendYou,

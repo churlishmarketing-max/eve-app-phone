@@ -1,4 +1,4 @@
-// THE CORE — the hybrid screen. Owning stream: THE CORE.
+// THE CORE — the hybrid screen. Owning stream: THE CORE (P1 v0.1 hub half).
 //
 // THE FUSION, IN ONE PARAGRAPH. THE CORE (ui_kits/eve-anime/G-core.html)
 // supplied the LAYOUT and the DEVICES: a full-bleed fleet strip over a
@@ -10,10 +10,18 @@
 // palette are separate axes, and this app already has four palettes — so this
 // is a fifth LAYOUT that renders in all four worlds, not a fifth world.
 //
+// P1 v0.1 — THE HUB HALF. This screen is now the dispatcher's hub (D-DISPATCH
+// §7): the fleet strip reads /state.fleet, THE WIRE carries the dispatch four,
+// the session log is the job event feed, a JOBS rail lists the 24 h window
+// under the log, and clicking any job row or feed line opens the ONE new
+// surface — the job detail — in the centre column in place of the living
+// core. The command bar is unchanged: typing a sentence is a chat turn, the
+// brain routes it, and the job frame (or the next poll) is what lights the row.
+//
 // PRESENTATIONAL ON PURPOSE, exactly like Deck.tsx: every figure arrives as a
 // prop, so a shot scenario can drive the whole board from a fixture with no
 // brain, no poll and no bridge round-trip. CoreScreen.tsx is the thin container
-// that supplies /health and the session log to the real app.
+// that supplies /health, the merged jobs view, the selection and the log.
 //
 // WHAT IS NOT HERE, AND WHY — the short list. Leads, clips, spend, angles,
 // tribunal, threads, vectors, latency, confidence, the weather, signed-today,
@@ -25,13 +33,15 @@
 // prompt echoes his last real turn or it stays empty.
 
 import { useCallback, useRef, useState } from "react";
-import type { EveState, Health } from "@shared/contract";
+import type { EveState, Health, JobRow, PendingConfirm } from "@shared/contract";
 import type { ChatView, EveMode } from "../deck/types";
-import { APP_VERSION, pad3 } from "../deck/format";
+import { APP_VERSION, agentCode, pad3 } from "../deck/format";
 import { SHELL_COPY } from "../deck/panes/shell";
 import FleetStrip from "./FleetStrip";
+import JobDetail from "./JobDetail";
 import LivingCore from "./LivingCore";
 import { DASH, railCounters, telemetryCells, type Tone } from "./counters";
+import { statusTone, statusWord, unitOf, type JobsView } from "./jobs";
 import type { CoreLogEntry } from "./useCoreLog";
 import "../../styles/core.css";
 
@@ -46,7 +56,7 @@ export interface CorePaneProps {
   sessionNo: number;
   state: EveState;
   fetchedAt: string | null;
-  /** GET /health — the ONLY source of the REGISTERED count and MEMORY. */
+  /** GET /health — the ONLY source of MEMORY now. The fleet reads /state.fleet. */
   health: Health | null;
   /** api.ts's error from the most recent /health poll, or null when it answered. */
   healthError?: string | null;
@@ -54,20 +64,34 @@ export interface CorePaneProps {
   /** The resolved presence mode: preview > voice override > chat-derived. */
   mode: EveMode;
   quietHours: boolean;
+  /** The merged poll+frame jobs view (jobs.ts). */
+  jobs: JobsView;
   /** Real events observed this session. Never seeded with plausible history. */
   log: CoreLogEntry[];
+  /** Lines the log's cap let go this session. */
+  logDropped: number;
+  /** The job whose detail is open, or null for the living core. */
+  selectedJob: JobRow | null;
+  /** The pending card that job is waiting on, if this window knows of one. */
+  selectedConfirm: PendingConfirm | null;
+  /** This session's log lines for that job, oldest first. */
+  selectedEvents: CoreLogEntry[];
+  onSelectJob: (id: string | null) => void;
+  /** Open the strip's roster panel on mount (shot fixtures). */
+  rosterOpen?: boolean;
   /** The existing chat path. This screen starts no second chat state machine. */
   onSend: (text: string) => void;
+  onConfirmResolved: (id: string) => void;
 }
 
 export default function CorePane(p: CorePaneProps) {
-  const rows = railCounters(p.state);
-  const cells = telemetryCells(p.state, p.health, p.quietHours);
+  const rows = railCounters(p.state, p.jobs);
+  const cells = telemetryCells(p.state, p.health, p.quietHours, p.jobs);
   const reds = p.state.online ? (p.state.pendingConfirms ?? []).length : null;
 
   return (
     <div className="corepane">
-      <FleetStrip state={p.state} health={p.health} />
+      <FleetStrip state={p.state} jobs={p.jobs} initialRosterOpen={p.rosterOpen} />
 
       <div className="corebody">
         {/* ---- left: the counter rail + the clearance ladder ------------- */}
@@ -84,6 +108,11 @@ export default function CorePane(p: CorePaneProps) {
               <div className="corenote coreshell">
                 Every counter above reads a field her brain serves. It is not
                 answering, so they read as dashes rather than zeroes.
+              </div>
+            ) : p.jobs.absent ? (
+              <div className="corenote coreshell">
+                RUNNING · WAITING · HELD · FAILED read /state.jobs. This answer
+                carried no jobs list, so they are dashes, not zeroes.
               </div>
             ) : null}
           </div>
@@ -128,18 +157,29 @@ export default function CorePane(p: CorePaneProps) {
           <div style={{ flex: 1, minHeight: 0 }} />
         </div>
 
-        {/* ---- centre: the living core ----------------------------------- */}
-        <LivingCore
-          mode={p.mode}
-          toolNote={p.chat.toolNote}
-          streaming={p.chat.streamingId !== null}
-          state={p.state}
-          health={p.health}
-          healthError={p.healthError ?? null}
-          fetchedAt={p.fetchedAt}
-        />
+        {/* ---- centre: the living core, or the one job he opened ---------- */}
+        {p.selectedJob ? (
+          <JobDetail
+            key={p.selectedJob.id}
+            job={p.selectedJob}
+            confirm={p.selectedConfirm}
+            events={p.selectedEvents}
+            onClose={() => p.onSelectJob(null)}
+            onConfirmResolved={p.onConfirmResolved}
+          />
+        ) : (
+          <LivingCore
+            mode={p.mode}
+            toolNote={p.chat.toolNote}
+            streaming={p.chat.streamingId !== null}
+            state={p.state}
+            health={p.health}
+            healthError={p.healthError ?? null}
+            fetchedAt={p.fetchedAt}
+          />
+        )}
 
-        {/* ---- right: the session log + the command bar ------------------ */}
+        {/* ---- right: the session log (the job event feed) + the command bar -- */}
         <div className="corecol">
           <div className="card logwrap" style={{ padding: "12px 14px" }}>
             <div className="railhead" style={{ borderBottom: "none", paddingBottom: 0 }}>
@@ -148,24 +188,56 @@ export default function CorePane(p: CorePaneProps) {
             {p.log.length === 0 ? (
               <div className="shellcopy coreshell">
                 Nothing has happened on this screen yet. It fills as she works —
-                turns, tools, refreshes, failures, RED cards. It is never seeded.
+                turns, tools, refreshes, failures, RED cards, jobs changing
+                state. It is never seeded.
               </div>
             ) : (
               <div className="log">
-                {p.log.map((e) => (
-                  <div className={`logrow ${e.tone === "dim" ? "" : e.tone}`.trim()} key={e.id}>
-                    <span className="t">{e.at}</span>
-                    <span className="m">{e.text}</span>
-                  </div>
-                ))}
+                {p.log.map((e) =>
+                  e.jobId ? (
+                    <div
+                      className={`logrow click ${e.tone === "dim" ? "" : e.tone}${p.selectedJob?.id === e.jobId ? " on" : ""}`.trim()}
+                      key={e.id}
+                      role="button"
+                      tabIndex={0}
+                      title="Open this job"
+                      onClick={() => p.onSelectJob(e.jobId ?? null)}
+                      onKeyDown={(ev) => {
+                        if (ev.key === "Enter" || ev.key === " ") {
+                          ev.preventDefault();
+                          p.onSelectJob(e.jobId ?? null);
+                        }
+                      }}
+                    >
+                      <span className="t">{e.at}</span>
+                      <span className="m">{e.text}</span>
+                    </div>
+                  ) : (
+                    <div className={`logrow ${e.tone === "dim" ? "" : e.tone}`.trim()} key={e.id}>
+                      <span className="t">{e.at}</span>
+                      <span className="m">{e.text}</span>
+                    </div>
+                  ),
+                )}
               </div>
             )}
+            {p.logDropped > 0 ? (
+              <div className="corenote logdrop">
+                {p.logDropped} OLDER LINE{p.logDropped === 1 ? "" : "S"} DROPPED — the log keeps the last{" "}
+                {p.log.length}.
+              </div>
+            ) : null}
           </div>
 
-          {/* The slack sits BETWEEN the two cards, so the command bar stays
-              pinned to the bottom of the column and the log card stays the
-              size of the log. */}
-          <div style={{ flex: 1, minHeight: 0 }} />
+          {/* The JOBS rail takes the column's slack between the log and the
+              command bar (it lives here, not under the counters, because at
+              the 1120x720 minimum the left column has no room for it). */}
+          <JobsRail
+            online={p.state.online}
+            jobs={p.jobs}
+            selectedId={p.selectedJob?.id ?? null}
+            onSelect={p.onSelectJob}
+          />
 
           <CommandCard
             online={p.state.online}
@@ -190,12 +262,79 @@ export default function CorePane(p: CorePaneProps) {
   );
 }
 
+/* ---- the jobs rail --------------------------------------------------------
+   Every job of the last 24 h, newest first, from the merged view. A row is a
+   real button: click it and the detail opens in the centre column. The header
+   count is the length of the list actually drawn. */
+
+function JobsRail({
+  online,
+  jobs,
+  selectedId,
+  onSelect,
+}: {
+  online: boolean;
+  jobs: JobsView;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+}) {
+  const head = !online ? "—" : jobs.absent ? "NO LIST" : `${jobs.rows.length} · 24 H`;
+  return (
+    <div className="card jobsrail">
+      <div className="railhead" style={{ display: "flex", gap: 8 }}>
+        <span>// JOBS</span>
+        <span style={{ marginLeft: "auto" }}>{head}</span>
+      </div>
+      {!online ? (
+        <div className="corenote coreshell">The jobs list rides on /state. The link is down.</div>
+      ) : jobs.absent ? (
+        <div className="corenote coreshell">This answer carried no jobs list.</div>
+      ) : jobs.rows.length === 0 ? (
+        <div className="corenote coreshell">
+          Nothing in the last 24 hours. Give her the job — by name or just the outcome.
+        </div>
+      ) : (
+        <div className="jobrows">
+          {jobs.rows.map((j) => {
+            const unit = unitOf(j);
+            const tone = statusTone(j.status);
+            return (
+              <button
+                type="button"
+                className={selectedId === j.id ? "jobrow on" : "jobrow"}
+                key={j.id}
+                onClick={() => onSelect(selectedId === j.id ? null : j.id)}
+                title={j.title}
+              >
+                <span className="jcode">{agentCode(unit)}</span>
+                <span className="jbody">
+                  <span className="jt">{j.title}</span>
+                  <span className="js">
+                    <span className={tone === "run" ? "stat run" : tone === "gold" ? "stat gold" : "stat dim"}>
+                      {statusWord(j.status)}
+                    </span>
+                    <span className="jsep"> · </span>
+                    {unit ?? DASH}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {jobs.error ? <div className="corenote coreshell">JOBS READ FAILED — {jobs.error}</div> : null}
+    </div>
+  );
+}
+
 /* ---- the command bar ------------------------------------------------------
    A REAL input on the REAL chat path. `onSend` is App.tsx's sendMessage, the
    same function the deck's composer calls, so this screen adds no second chat
    state machine, no second conversationId and no second frame reducer. The
    prompt line above it echoes his LAST ACTUAL TURN — never a typed command he
-   did not type. */
+   did not type. Nothing dispatch-specific lives here (D-DISPATCH §7.4): the
+   sentence goes to her as a turn, she routes it, and the job frame — or the
+   next /state poll — is what lights the row. */
 
 function CommandCard({
   online,

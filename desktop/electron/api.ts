@@ -400,6 +400,11 @@ export function parseFrame(raw: string): ChatFrame | null {
       };
     case "error":
       return { type: "error", message: typeof p.message === "string" ? p.message : "unknown error" };
+    case "job":
+      // DISPATCH v0.1 — the brain emits `event: job` at every transition of a
+      // job this turn dispatched. Passed through whole; the renderer drops any
+      // frame without a string id rather than guessing (useChat.ts).
+      return { type: "job", job: p as unknown as Extract<ChatFrame, { type: "job" }>["job"] };
     default:
       return null;
   }

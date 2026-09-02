@@ -66,7 +66,10 @@ export default function LivingCore(p: LivingCoreProps) {
   const hotMic = p.mode === "listening";
 
   const tasks = p.state.todaysThree?.length;
-  const registered = p.health?.fleet?.count;
+  // P0.4: the fleet count reads /state.fleet (bearer-gated), the same block
+  // the strip above draws from, so the two figures cannot disagree. /health's
+  // count is the OS roster count, not the fleet's registered count.
+  const registered = online ? p.state.fleet?.registered : undefined;
   const memory = memoryCell(p.health);
   // /health failing is not silent and not "DOWN": the cell says NO ANSWER (or
   // holds the last good reading) and this line says why, in the app's own

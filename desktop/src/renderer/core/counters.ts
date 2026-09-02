@@ -30,6 +30,7 @@
 // a measurement. A dash is the truth when nothing was measured.
 
 import type { EveState, Health } from "@shared/contract";
+import { jobCounts, type JobsView } from "./jobs";
 
 export type Tone = "acc" | "hot" | "red" | "off";
 
@@ -90,11 +91,45 @@ export function quietPulse(state: EveState): { past: number; worst: number | nul
 }
 
 /**
- * THE WIRE — LIVE COUNTERS. Eight rows, eight named sources.
- * Offline returns the same eight rows with every value dashed, so the rail does
- * not change shape when her brain drops — it just stops claiming things.
+ * THE DISPATCH FOUR (P1 v0.1, CONTRACT-v0.1 §1). `jobs[]` is every job of the
+ * last 24 h, any status, so a length is no longer a count of anything. Four
+ * filters, four rows, one shared source:
+ *
+ *   RUNNING   status running        — the SDK subagent is working
+ *   WAITING   status needs_input    — v0.2; does not exist yet, renders a dash
+ *   HELD      status in_approvals   — on his thumb (a card is up, or a
+ *                                     deliverable sits in the inbox)
+ *   FAILED    status failed         — ended without a deliverable, in the window
+ *
+ * When the brain served no `jobs` key at all (`view.absent`) all four are a
+ * dash — that is "not measured", which is not zero. FAILED is HOT (gold), never
+ * red: red is the RED confirm tier's and the live mic's, and a failed job is
+ * neither. D-DISPATCH §7.2 wrote "FAILED n (red)"; the colour law outranks it.
  */
-export function railCounters(state: EveState): Counter[] {
+export function dispatchRows(view: JobsView): Counter[] {
+  const off = (key: string, label: string): Counter => ({ key, label, value: DASH, tone: "off" });
+  if (view.absent) return [off("run", "RUNNING"), off("wait", "WAITING"), off("held", "HELD"), off("fail", "FAILED")];
+  const c = jobCounts(view.rows);
+  return [
+    { key: "run", label: "RUNNING", value: String(c.running), tone: "acc" },
+    // CONTRACT v0.1 line 62: WAITING = needs_input, which does not exist until
+    // v0.2 — a dash, never a number borrowed from another state.
+    { key: "wait", label: "WAITING", value: DASH, tone: "off" },
+    // HELD = in_approvals: the job is on his thumb. jobs.ts still names that
+    // count `waiting` (the field predates the contract); the label is what he reads.
+    { key: "held", label: "HELD", value: String(c.waiting), tone: c.waiting > 0 ? "hot" : "acc" },
+    { key: "fail", label: "FAILED", value: String(c.failed), tone: c.failed > 0 ? "hot" : "acc" },
+  ];
+}
+
+/**
+ * THE WIRE — LIVE COUNTERS. Eleven rows, eleven named sources.
+ * Offline returns the same eleven rows with every value dashed, so the rail
+ * does not change shape when her brain drops — it just stops claiming things.
+ * `jobs` is the merged poll+frame view (jobs.ts); IN FLIGHT became the
+ * dispatch four above.
+ */
+export function railCounters(state: EveState, jobs: JobsView): Counter[] {
   const online = state.online;
   const off = (key: string, label: string): Counter => ({ key, label, value: DASH, tone: "off" });
   if (!online) {
@@ -102,7 +137,7 @@ export function railCounters(state: EveState): Counter[] {
       off("red", "RED WAITING"),
       off("appr", "APPROVALS"),
       off("draft", "DRAFTS READY"),
-      off("jobs", "IN FLIGHT"),
+      ...dispatchRows({ rows: [], absent: true, error: null }),
       off("past", "PAST CADENCE"),
       off("quiet", "WORST QUIET"),
       off("wire", "WIRE"),
@@ -113,7 +148,6 @@ export function railCounters(state: EveState): Counter[] {
   const reds = (state.pendingConfirms ?? []).length;
   const appr = (state.attentionItems ?? []).length;
   const drafts = draftCount(state);
-  const jobs = (state.jobs ?? []).length;
   const { past, worst } = quietPulse(state);
   const wire = wireCount(state);
   const floor = state.floor;
@@ -124,7 +158,7 @@ export function railCounters(state: EveState): Counter[] {
     { key: "red", label: "RED WAITING", value: String(reds), tone: reds > 0 ? "red" : "acc" },
     { key: "appr", label: "APPROVALS", value: String(appr), tone: appr > 0 ? "hot" : "acc" },
     { key: "draft", label: "DRAFTS READY", value: String(drafts), tone: "acc" },
-    { key: "jobs", label: "IN FLIGHT", value: String(jobs), tone: "acc" },
+    ...dispatchRows(jobs),
     // Past cadence is HOT, and hot is gold. Never red — that ruling is already
     // written into .t3row.due and the client-pulse rows.
     { key: "past", label: "PAST CADENCE", value: String(past), tone: past > 0 ? "hot" : "acc" },
@@ -158,10 +192,12 @@ export function telemetryCells(
   state: EveState,
   health: Health | null,
   quietHours: boolean,
+  jobs: JobsView,
 ): Counter[] {
   const online = state.online;
   const reds = (state.pendingConfirms ?? []).length;
-  const jobs = (state.jobs ?? []).length;
+  // IN FLIGHT is a FILTER now (queued | running | in_approvals) — CONTRACT §1.
+  const inFlight = jobs.absent ? null : jobCounts(jobs.rows).inFlight;
   const wire = wireCount(state);
   const floor = state.floor;
 
@@ -187,8 +223,8 @@ export function telemetryCells(
     {
       key: "jobs",
       label: "IN FLIGHT",
-      value: online ? String(jobs) : DASH,
-      tone: online ? "acc" : "off",
+      value: online && inFlight !== null ? String(inFlight) : DASH,
+      tone: online && inFlight !== null ? "acc" : "off",
     },
     {
       key: "wire",

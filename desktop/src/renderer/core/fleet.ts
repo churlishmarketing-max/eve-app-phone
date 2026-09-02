@@ -1,193 +1,223 @@
-// THE FLEET TRUTH — owning stream: THE CORE.
+// THE FLEET TRUTH — owning stream: THE CORE (P1 v0.1 hub half).
 //
 // THE ONE THING ON THIS SCREEN IT WOULD BE WORST TO GET WRONG.
 //
-// THE CORE's board draws eight agent cards, all identical, all with a live dot,
-// a state chip and a 0-100% load bar. The roster behind this app has ~50 names.
-// A strip that draws a card per name says "these all run"; a strip that draws a
-// load bar says "and here is how hard each one is working". Neither is true.
+// v1 of this file carried a five-name executable set in a constant, because
+// nothing on the wire said which units could run. That is over. The brain now
+// serves `/state.fleet` (CONTRACT-v0.1 §2) behind the bearer gate: every unit,
+// with a BADGE the brain's own registry computed — RUNNABLE, DESK,
+// WORKSPACE_ONLY — and a `live` bit that says whether the runner is reachable
+// from that brain right now. This module reads that block and adds nothing to
+// it. There is no local list of names any more; a strip that knew names the
+// brain did not would be a strip that lies.
 //
-// WHAT IS ACTUALLY TRUE, established from the code and not from the roster:
-// src/renderer/deck/format.ts's AGENT_CODES is the app's own map of agent ids to
-// job codes, and it holds FIVE — eve, research, jsa, justice-league,
-// suicide-squad. window.eve.dispatch(task, agent?) takes a free string, so the
-// wire will ACCEPT any of the fifty names; the brain will do nothing with the
-// other forty-five. A card that looks dispatchable but is not is worse than no
-// card at all.
+// FOUR RULES, RESTATED FOR THE NEW SOURCE:
 //
-// SO THE STRIP OBEYS THREE RULES:
+//   1. A SOLID CARD IS A PROMISE THAT dispatch_unit(key) RUNS SOMETHING. Only
+//      badge RUNNABLE gets one. DESK and WORKSPACE_ONLY wear the shipped dashed
+//      no-execution dress (.node.future), whatever their names are.
+//   2. THE CHIP IS THE JOB STATE; THE DOT IS READINESS. Chip from jobs[] filtered
+//      by unit (running > needs you > held > failed > done > idle). Dot: pulsing
+//      teal while a job runs, steady teal for a runnable unit whose runner is
+//      live, grey for a runnable unit whose runner is NOT (Pennyworth with the
+//      OS unwired), and the dashed hollow for anything with no runner at all.
+//   3. EIGHT CARDS, NOT FIFTY-TWO. The strip shows the units with live state
+//      plus every RUNNABLE unit, capped, then ONE terminal card that says how
+//      many more are on the roster — a REAL number now, computed from the
+//      array, because the roster crosses the wire. Click it and the whole
+//      roster opens under the strip, division-grouped, every row badged.
+//   4. NO FLEET BLOCK = NO ANSWER, NEVER ZEROS. An older brain, a degraded
+//      return, or the link being down all produce the same honest state: a
+//      header that says so and one dashed card that says why.
 //
-//   1. A CARD IS A PROMISE THAT A JOB CAN BE GIVEN HERE. Only the five ids in
-//      the executable set get a solid card with a live dot.
-//   2. HALF-WIRED WEARS THE SHIPPED HALF-WIRED DRESS. Pennyworth is not an
-//      agent id — it reaches this app only as half of the Churlish OS
-//      connector's role string ("board · pennyworth"). Its card is derived FROM
-//      that connector, is drawn with .node.future (the dashed border this app
-//      already uses for gated nodes) and carries a hollow glyph instead of a
-//      dot. If that connector is not present, the card is not drawn.
-//   3. ONE TERMINAL CARD SPEAKS FOR THE REST, ONCE. THE ROSTER: dashed, no dot,
-//      nine words. It carries NO numeral, because no roster manifest crosses
-//      the wire and 45 or 51 would be exactly the invented figure the honesty
-//      law forbids.
-//
-// AND THE LOAD BAR IS DELETED. There is no load, utilisation, progress or
-// percentage field anywhere in shared/contract.ts. Eight percentage bars with
-// no source is the literal definition of "a hub full of plausible-looking
-// figures". What replaces it is the one thing that IS on the wire and is also
-// the question he actually asks of an idle agent: when did it last pick
-// something up (jobs[].created_at), or a dash.
+// AND THE LOAD BAR STAYS DELETED. Still no progress field on the wire. What
+// replaces it is `lastRunAt` — when the unit last picked something up inside
+// the 24 h window, or a dash.
 
-import type { ConnectorStatus, EveState, JobRow } from "@shared/contract";
+import type { EveState, FleetUnitRow } from "@shared/contract";
 import { agentCode, clockStr } from "../deck/format";
+import { normStatus, unitOf, type JobsView } from "./jobs";
 
-/**
- * THE EXECUTABLE SET. Mirrors the keys of AGENT_CODES in deck/format.ts, which
- * is private to that module. The two-letter CODE is never spelled here — it is
- * read back through that module's own agentCode(), so the codes cannot drift
- * even though the id list is restated.
- *
- * Adding a name to this array is a claim that window.eve.dispatch(task, id)
- * reaches something that runs. Do not add one for any other reason.
- */
-export const DISPATCHABLE: readonly string[] = [
-  "eve",
-  "research",
-  "jsa",
-  "justice-league",
-  "suicide-squad",
-];
+export { humanise } from "./jobs";
+
+/** How many unit cards the strip draws before the "+N ON ROSTER" card. */
+export const STRIP_CARDS = 8;
 
 export type UnitTone = "run" | "gold" | "dim";
-export type UnitDot = "live" | "hot" | "idle" | "none";
+/** live = pulsing (a job is running) · ready = steady teal (runner reachable) ·
+ *  idle = grey (runnable, runner unreachable) · none = dashed hollow (no runner). */
+export type UnitDot = "live" | "ready" | "idle" | "none";
 
 export interface FleetUnit {
-  /** React key + the string window.eve.dispatch would be given. */
+  /** React key + the roster key dispatch_unit() would be given. */
   id: string;
-  /** The 2-letter job code, from deck/format.ts's own map. */
+  /** 2-letter job code, from deck/format.ts's own map (or derived from the key). */
   code: string;
-  /** Display name: the id, humanised. Never a nickname this app cannot source. */
+  /** The roster name, as the brain spelled it. */
   name: string;
-  /** The mono sub-line. For a dispatchable unit it is the literal string
-   *  window.eve.dispatch() would be handed — the most useful true thing a card
-   *  can say, and the one claim that cannot be wrong. Rendered with
-   *  text-transform:none so the id is readable exactly as the wire spells it. */
+  /** The roster's one-line job. */
   role: string;
-  /** The state chip's words, derived from state.jobs (or "—" when offline). */
+  /** RUNNABLE | DESK | WORKSPACE_ONLY — the brain's badge, verbatim. */
+  badge: string;
+  /** The badge, spelled for the card ("WORKSPACE ONLY"). */
+  badgeWord: string;
+  /** The state chip's words, derived from jobs[] for this unit. */
   status: string;
   statusTone: UnitTone;
   dot: UnitDot;
-  /** "SINCE 13:51" off jobs[].created_at, or an honest absence. */
+  /** "SINCE 13:51" off fleet.units[].lastRunAt, or an honest absence. */
   lastRun: string;
-  /** true -> .node.future, the shipped dashed "not all the way wired" dress. */
+  /** true -> .node.future, the shipped dashed "no execution path" dress. */
   future: boolean;
+  /** The unit's own runner is reachable right now (fleet.units[].live). */
+  live: boolean;
+  division: string;
+  /** For ordering: 0 = nothing happening. */
+  heat: number;
 }
 
-/** "justice-league" -> "JUSTICE LEAGUE". A reformat of the real id, not a name. */
-export function humanise(id: string): string {
-  return id.replace(/[-_]+/g, " ").toUpperCase();
+export interface RosterGroup {
+  division: string;
+  units: FleetUnit[];
 }
 
-function jobsFor(jobs: JobRow[], id: string): JobRow[] {
-  // A job with no agent is hers: agentCode(null) returns "EV" in format.ts.
-  return jobs.filter((j) => (j.agent ?? "eve") === id);
+export type FleetView =
+  | { kind: "offline" }
+  | { kind: "absent" }
+  | {
+      kind: "ready";
+      registered: number;
+      dispatchable: number;
+      source: string;
+      at: string;
+      /** The cards the strip draws, in order. */
+      cards: FleetUnit[];
+      /** Everything not on a card. */
+      rest: FleetUnit[];
+      /** The whole fleet, division-grouped, for the roster panel. */
+      groups: RosterGroup[];
+    };
+
+function badgeWord(b: string): string {
+  return b.replace(/_/g, " ").toUpperCase();
 }
 
-function newest(jobs: JobRow[]): string | null {
-  let best: number | null = null;
-  for (const j of jobs) {
-    if (!j.created_at) continue;
-    const t = Date.parse(j.created_at);
-    if (Number.isFinite(t) && (best === null || t > best)) best = t;
+function toUnit(u: FleetUnitRow, jobs: JobsView): FleetUnit {
+  const runnable = u.badge === "RUNNABLE";
+  const mine = jobs.rows.filter((j) => unitOf(j) === u.key);
+  const has = (s: string) => mine.some((j) => normStatus(j.status) === s);
+  const held = mine.filter((j) => normStatus(j.status) === "queued").length;
+
+  let status: string;
+  let statusTone: UnitTone = "dim";
+  let dot: UnitDot = runnable ? (u.live ? "ready" : "idle") : "none";
+  let heat = 0;
+
+  if (has("running")) {
+    status = "● RUNNING";
+    statusTone = "run";
+    if (runnable) dot = "live";
+    heat = 6;
+  } else if (has("in_approvals")) {
+    status = "NEEDS YOU";
+    statusTone = "gold";
+    heat = 5;
+  } else if (held > 0) {
+    status = `${held} QUEUED`;
+    statusTone = "gold";
+    heat = 4;
+  } else if (has("failed")) {
+    status = "FAILED 24H";
+    statusTone = "gold";
+    heat = 3;
+  } else if (has("done")) {
+    status = "DONE 24H";
+    statusTone = "run";
+    heat = 2;
+  } else if (runnable && !u.live) {
+    status = "NEEDS WIRING";
+    heat = 1;
+  } else if (runnable) {
+    status = "IDLE";
+    heat = 1;
+  } else if (u.badge === "DESK") {
+    status = "DESK — NOT WIRED";
+  } else {
+    status = "NO RUNNER HERE";
   }
-  return best === null ? null : clockStr(new Date(best));
+
+  const lastAt = u.lastRunAt ? Date.parse(u.lastRunAt) : NaN;
+  return {
+    id: u.key,
+    code: agentCode(u.key),
+    name: u.name,
+    role: u.role,
+    badge: u.badge,
+    badgeWord: badgeWord(u.badge),
+    status,
+    statusTone,
+    dot,
+    lastRun: Number.isFinite(lastAt) ? `SINCE ${clockStr(new Date(lastAt))}` : "—",
+    future: !runnable,
+    live: u.live,
+    division: u.division ?? "—",
+    heat,
+  };
 }
 
 /**
- * The Churlish OS connector, IF it names Pennyworth in its own detail string.
- * Nothing is assumed: no connector saying so means no card.
+ * The whole strip, from the fleet block and the merged jobs view. Offline and
+ * no-block are distinct states with distinct words; neither carries a number.
  */
-export function pennyworthConnector(connectors: ConnectorStatus[]): ConnectorStatus | null {
-  return connectors.find((c) => c.detail.toLowerCase().includes("pennyworth")) ?? null;
+export function fleetView(state: EveState, jobs: JobsView): FleetView {
+  if (!state.online) return { kind: "offline" };
+  const f = state.fleet;
+  if (!f || !Array.isArray(f.units)) return { kind: "absent" };
+
+  const units = f.units.map((u) => toUnit(u, jobs));
+
+  // Cards: anything with live state, then every RUNNABLE unit, capped. Stable
+  // within a heat band so the same fleet draws the same strip twice.
+  const ranked = units
+    .map((u, i) => ({ u, i }))
+    .sort((a, b) => b.u.heat - a.u.heat || a.i - b.i)
+    .map((x) => x.u);
+  const cards = ranked.filter((u) => u.heat > 0 || !u.future).slice(0, STRIP_CARDS);
+  const onCard = new Set(cards.map((u) => u.id));
+  const rest = units.filter((u) => !onCard.has(u.id));
+
+  const byDiv = new Map<string, FleetUnit[]>();
+  for (const u of units) {
+    const k = u.division;
+    const list = byDiv.get(k);
+    if (list) list.push(u);
+    else byDiv.set(k, [u]);
+  }
+  const groups: RosterGroup[] = [...byDiv.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([division, us]) => ({ division, units: us }));
+
+  // Both numbers are computed from the array the brain served. The brain's own
+  // figures are carried only when they agree; if they ever disagree the ARRAY
+  // wins, because it is the thing actually drawn.
+  const registered = units.length;
+  const dispatchable = units.filter((u) => u.badge === "RUNNABLE").length;
+
+  return {
+    kind: "ready",
+    registered,
+    dispatchable,
+    source: typeof f.source === "string" ? f.source : "—",
+    at: typeof f.at === "string" ? f.at : "",
+    cards,
+    rest,
+    groups,
+  };
 }
 
-/**
- * The whole strip, in render order. Offline collapses every derived figure to a
- * dash — never to zero, and never to a stale-looking IDLE.
- */
-export function fleetUnits(state: EveState): FleetUnit[] {
-  const online = state.online;
-  const jobs = state.jobs ?? [];
-  const out: FleetUnit[] = [];
-
-  for (const id of DISPATCHABLE) {
-    const mine = online ? jobsFor(jobs, id) : [];
-    const running = mine.find((j) => (j.status ?? "").toLowerCase() === "running");
-    const approvals = mine.find((j) => (j.status ?? "").toLowerCase().includes("approval"));
-    const other = mine[0];
-
-    let status = "IDLE";
-    let statusTone: UnitTone = "dim";
-    let dot: UnitDot = "idle";
-
-    if (!online) {
-      status = "—";
-    } else if (running) {
-      status = "● RUNNING";
-      statusTone = "run";
-      dot = "live";
-    } else if (approvals) {
-      status = "IN APPROVALS";
-      statusTone = "gold";
-      dot = "hot";
-    } else if (other) {
-      status = (other.status ?? "").replace(/_/g, " ").toUpperCase() || "IN FLIGHT";
-      statusTone = "gold";
-      dot = "hot";
-    }
-
-    const at = newest(mine);
-    out.push({
-      id,
-      code: agentCode(id),
-      name: humanise(id),
-      role: `agent: ${id}`,
-      status,
-      statusTone,
-      dot,
-      lastRun: !online ? "—" : at ? `SINCE ${at}` : mine.length > 0 ? "IN FLIGHT" : "—",
-      future: false,
-    });
-  }
-
-  const os = pennyworthConnector(state.connectors ?? []);
-  if (os) {
-    out.push({
-      id: `via-${os.key}`,
-      code: os.key,
-      // The name comes out of the connector's own detail string, not out of a
-      // roster this app cannot read.
-      name: "PENNYWORTH",
-      role: `reached through ${os.name}`,
-      status: online ? (os.connected ? "OS LINKED" : "OS DOWN") : "—",
-      statusTone: online && os.connected ? "gold" : "dim",
-      dot: "none",
-      lastRun: "NO DIRECT DISPATCH",
-      future: true,
-    });
-  }
-
-  // The one sentence of apology on the whole board, and it is nine words long.
-  out.push({
-    id: "the-roster",
-    code: "··",
-    name: "THE ROSTER",
-    role: "names only — nothing dispatches here",
-    status: "NO EXECUTION PATH",
-    statusTone: "dim",
-    dot: "none",
-    lastRun: "—",
-    future: true,
-  });
-
-  return out;
+/** The provenance word for the header tag. Read the true source, never assume it. */
+export function sourceWord(source: string): string {
+  if (source === "os") return "OS LIVE";
+  if (source === "bundled") return "BUNDLED COPY";
+  return source && source !== "—" ? source.toUpperCase() : "—";
 }

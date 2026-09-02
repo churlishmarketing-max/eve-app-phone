@@ -4,7 +4,7 @@
 // that the contract does not already carry is defined here (the OWNERSHIP.md
 // rule: "If a type is missing, define it in your own files").
 
-import type { PendingConfirm } from "@shared/contract";
+import type { JobFrame, PendingConfirm } from "@shared/contract";
 
 /** Her five presence states (handoff §5). Matches voice/events.ts's mode union. */
 export type EveMode = "idle" | "listening" | "thinking" | "speaking" | "alert";
@@ -34,6 +34,22 @@ export interface ChatView {
   toolNote: string | null;
   errNote: string | null;
   busy: boolean;
+  /**
+   * DISPATCH v0.1 — every `job` frame this window has seen, in arrival order,
+   * each stamped with the instant it arrived (so a stale frame can never
+   * overrule a newer /state poll). Optional so a fixture that predates the
+   * dispatcher still typechecks; absent reads as "none seen".
+   */
+  jobFrames?: SeenJobFrame[];
+}
+
+/** A `job` SSE frame plus the local clock at arrival. */
+export interface SeenJobFrame {
+  frame: JobFrame;
+  /** ISO, local clock, stamped in the reducer. */
+  at: string;
+  /** Monotonic per window — the feed keys on it. */
+  seq: number;
 }
 
 /** What useWardrobe hands the rail. */

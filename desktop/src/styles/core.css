@@ -849,3 +849,417 @@
     font-size: 13px;
   }
 }
+
+/* =========================================================================
+   P1 v0.1 — THE HUB HALF. Added 2026-09-01. Same four rules as the rest of
+   this sheet: not one colour literal, no var(--ink), everything under
+   .corepane, red and green untouched (red = the RED tier's dot on the tier
+   chip, structure; green = the GREEN autonomy dot on the same chip). Every
+   alpha below is one already measured above (.62 / .66 / .68 / .72).
+   ========================================================================= */
+
+/* ---- the fleet strip: readiness dot + the roster card -------------------- */
+/* Steady teal, no pulse: the runner is reachable and nothing is running. The
+   pulse (.live) is reserved for a job actually in progress, so five idle
+   runnable cards do not all breathe as if they were working. */
+.corepane .fleetdot.ready {
+  background: var(--tealHi);
+  box-shadow: 0 0 6px rgba(var(--rgbAccent), 0.55);
+}
+/* The "+N ON ROSTER" card is a real button wearing the dashed card's dress. */
+.corepane .fleetcard.more {
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  align-items: stretch;
+}
+.corepane .fleetcard.more .st {
+  align-self: flex-start;
+}
+:root[data-theme] .corepane .fleetcard.more.on {
+  border-style: solid;
+  border-color: rgba(var(--rgbAccent), 0.5);
+}
+
+/* The roster panel: every unit, division-grouped, every row badged. Capped and
+   scrolling so fifty rows cannot push the body off the frame. */
+.corepane .rosterlist {
+  flex: none;
+  margin-top: 8px;
+  padding: 10px 14px 12px;
+  max-height: 196px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.corepane .rostergrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px 18px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.corepane .rdiv {
+  min-width: 0;
+}
+.corepane .rdivhead {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: rgba(var(--rgbAccent), 0.85);
+  padding: 4px 0 2px;
+  border-bottom: 1px solid var(--hair2);
+  margin-bottom: 2px;
+}
+.corepane .rosterrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+}
+.corepane .rosterrow .rnm {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(var(--rgbCream), 0.88);
+  text-transform: uppercase;
+}
+/* THE MOST IMPORTANT PIXEL: the badge. RUNNABLE is an accent plate; everything
+   else is a dashed outline — the same solid-vs-dashed grammar as the cards. */
+.corepane .rbadge {
+  margin-left: auto;
+  flex: none;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px dashed rgba(var(--rgbCream), 0.5);
+  color: rgba(var(--rgbCream), 0.68);
+  white-space: nowrap;
+}
+.corepane .rbadge.run {
+  border: 1px solid rgba(var(--rgbAccent), 0.5);
+  background: rgba(var(--rgbAccent), 0.14);
+  color: var(--tealHi);
+}
+
+/* ---- the jobs rail ------------------------------------------------------- */
+/* Takes the left column's slack under the counters and the ladder; scrolls at
+   the cap instead of pushing the telemetry strip off the frame. */
+.corepane .jobsrail {
+  flex: 1;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+}
+.corepane .jobrows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+.corepane .jobrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 4px;
+  margin: 0 -4px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  color: inherit;
+  font: inherit;
+  transition: background 0.2s;
+}
+.corepane .jobrow + .jobrow {
+  border-top: 1px solid var(--hair);
+  border-radius: 0 0 6px 6px;
+}
+.corepane .jobrow:hover {
+  background: rgba(var(--rgbAccent), 0.06);
+}
+.corepane .jobrow.on {
+  background: rgba(var(--rgbAccent), 0.12);
+}
+.corepane .jobrow .jcode {
+  width: 24px;
+  height: 24px;
+  font-size: 8.5px;
+}
+.corepane .jobrow .jbody {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.corepane .jobrow .jt {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: rgba(var(--rgbCream), 0.88);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .jobrow .js {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--rgbCream), 0.66);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .jobrow .js .stat {
+  font-size: 8px;
+}
+/* .stat.dim ships at .40 cream; on a row he has to read it is lifted here only. */
+.corepane .jobrow .stat.dim {
+  color: rgba(var(--rgbCream), 0.66);
+}
+
+/* ---- the session log as a feed: clickable job lines + the honest cap ----- */
+.corepane .logrow.click {
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+.corepane .logrow.click:hover {
+  background: rgba(var(--rgbAccent), 0.06);
+}
+.corepane .logrow.click.on {
+  background: rgba(var(--rgbAccent), 0.12);
+}
+.corepane .logrow.click:focus-visible {
+  outline: 1px solid rgba(var(--rgbAccent), 0.6);
+}
+.corepane .logdrop {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--hair2);
+}
+
+/* ---- the job detail ------------------------------------------------------ */
+/* Sits where the living core sits: flex:1 in the centre column, scrolls inside
+   itself. Same .card as everything else, so the four worlds dress it. */
+.corepane .jdetail {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 18px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.corepane .jdetail .jclose {
+  margin-left: auto;
+  flex: none;
+  padding: 3px 8px;
+  font-size: 8px;
+}
+.corepane .jhead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.corepane .jname {
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--cream);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.corepane .jelapsed {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(var(--rgbCream), 0.68);
+  white-space: nowrap;
+}
+.corepane .jsec {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+}
+.corepane .jlab {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(var(--rgbAccent), 0.85);
+  margin-bottom: 6px;
+}
+/* His sentence, verbatim — the one line on this panel set in the display face,
+   so a mis-route is obvious at a glance. */
+.corepane .jsaid {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--cream);
+  word-break: break-word;
+}
+.corepane .jline {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(var(--rgbCream), 0.88);
+  word-break: break-word;
+}
+.corepane .jstrong {
+  font-weight: 600;
+  color: var(--cream);
+}
+.corepane .jdim {
+  color: rgba(var(--rgbCream), 0.68);
+}
+/* The timeline: four stations on one rule. A reached station is a filled
+   accent dot; the current one pulses; a failed terminal is gold. */
+.corepane .jtl {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+.corepane .jst {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  position: relative;
+  padding-top: 4px;
+}
+.corepane .jst::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 0;
+  top: 8px;
+  height: 1px;
+  background: var(--hair2);
+}
+.corepane .jst:last-child::before {
+  display: none;
+}
+.corepane .jst .jdot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--rgbCream), 0.35);
+  background: var(--panel);
+  position: relative;
+  z-index: 1;
+  flex: none;
+}
+.corepane .jst.reached .jdot {
+  background: var(--tealHi);
+  border-color: var(--tealHi);
+}
+.corepane .jst.reached::before {
+  background: rgba(var(--rgbAccent), 0.55);
+}
+.corepane .jst.now .jdot {
+  box-shadow: 0 0 8px rgba(var(--rgbAccent), 0.8);
+  animation: corepulse 2.4s ease infinite;
+}
+.corepane .jst.failed .jdot {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(var(--rgbGold), 0.7);
+}
+.corepane .jst .jsl {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: rgba(var(--rgbCream), 0.62);
+}
+.corepane .jst.reached .jsl {
+  color: rgba(var(--rgbCream), 0.88);
+}
+.corepane .jst .jss {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--rgbCream), 0.66);
+}
+/* The tier chip reuses .kbd.corelv from the ladder; the word takes the ink the
+   ladder's lit RED rung takes. */
+.corepane .jtier.red {
+  border-color: var(--red);
+  background: rgba(var(--rgbRed), 0.12);
+  color: var(--redInk);
+}
+.corepane .jtier.green {
+  border-color: rgba(var(--rgbAccent), 0.45);
+}
+/* The OS draft, as the OS returned it. Mono, wrapped, on the inner panel. */
+.corepane .jdraft {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--panel2);
+  border: 1px solid var(--hair);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: rgba(var(--rgbCream), 0.88);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow-y: auto;
+}
+/* The engraved "no card here" sentence — confirm.css's .clocked, restated
+   under .corepane because that sheet scopes it to .confirmv6. */
+.corepane .jclocked {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 5px;
+  padding: 6px 10px;
+  color: rgba(var(--rgbCream), 0.68);
+  background: transparent;
+  border: 1px dashed rgba(var(--rgbCream), 0.35);
+  line-height: 1.6;
+}
+
+@media (max-width: 1279px) {
+  .corepane .rostergrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .corepane .jname {
+    font-size: 17px;
+  }
+}
+
+/* The log now shares its column with the JOBS rail: a shorter ceiling, so a
+   full log at the 720px minimum still leaves the rail its rows. */
+.corepane .log {
+  max-height: min(30vh, 260px);
+}
