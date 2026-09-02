@@ -6,6 +6,7 @@ import { buildMemoryServer } from "./tools.js";
 import { buildConnectorServer, connectorToolNames } from "./connectors.js";
 import type { PendingConfirm } from "./confirm.js";
 import type { DeskPack, DeskRefusal } from "./desk.js";
+import type { JobFrame } from "./dispatch.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
@@ -19,6 +20,10 @@ export interface ChatEvents {
   onTool: (name: string) => void;
   // RED-tier tool queued an external send — app renders the confirm card (02 §6).
   onConfirm?: (confirm: PendingConfirm) => void;
+  // A dispatched job changed status this turn — the hub row moves within a
+  // second instead of on the next /state poll (D-DISPATCH §1.4). Best-effort:
+  // transitions after the stream ends reach him through /state only.
+  onJob?: (job: JobFrame) => void;
   onDone: (info: { conversationId: string; fullText: string }) => void;
   onError: (message: string) => void;
 }
@@ -69,7 +74,10 @@ export async function runChat(
     void appendMessage(conversationId, "user", userMessage);
 
     const memoryServer = buildMemoryServer(() => conversationId, desk);
-    const connectorServer = buildConnectorServer((c) => events.onConfirm?.(c), desk, deskRefusal, surface);
+    const connectorServer = buildConnectorServer((c) => events.onConfirm?.(c), desk, deskRefusal, surface, {
+      emitJob: (j) => events.onJob?.(j),
+      conversationId,
+    });
 
     const q = query({
       // Volatile context rides in the user turn; system prompt stays static

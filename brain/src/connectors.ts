@@ -6,7 +6,8 @@ import { recentTexts, recentNotifications } from "./senses.js";
 import * as google from "./google.js";
 import * as os from "./os.js";
 import { fleetRoster } from "./fleet.js";
-import { runDispatch } from "./dispatch.js";
+import { dispatchUnit, type JobEmit } from "./dispatch.js";
+import { runnable } from "./registry.js";
 import { postNote, notesReady, notesStatusDetail } from "./notes.js";
 import { saveMemory, matchClient } from "./memory.js";
 import { logConversations } from "./floor.js";
@@ -88,6 +89,8 @@ export const connectorToolNames = [
   "mcp__eve_hands__os_create_invoice",
   "mcp__eve_hands__os_send_pending_email",
   "mcp__eve_hands__dispatch_fleet",
+  // The dispatcher (D-DISPATCH §2.4). A tool omitted here is invisible to her.
+  "mcp__eve_hands__dispatch_unit",
   // Filing hands. THIS LIST IS THE SILENT FAILURE MODE IN THIS CODEBASE: it is
   // re-passed to allowedTools on every query, so a tool defined below but
   // missing from here is invisible to the model and simply never gets called.
@@ -114,6 +117,10 @@ export function buildConnectorServer(
   desk: DeskPack | null = null,
   deskRefusal: DeskRefusal | null = null,
   surface = "app",
+  // The dispatcher's wiring for THIS turn: where `job` frames go (the SSE
+  // stream) and which conversation a job belongs to. Defaulted, so every
+  // existing caller behaves byte-identically.
+  dispatch: { emitJob?: JobEmit; conversationId?: string } = {},
 ) {
   // Per-TURN scan budget (G-I5). This closure is built fresh inside runChat for
   // every message, so the counter dies with the turn — no module state, and no
@@ -547,10 +554,10 @@ export function buildConnectorServer(
         "The Churlish fleet — every agent, war room, engine, and system in the operation, read LIVE from " +
           "the Churlish OS (the SAME roster the OS dashboard shows, so you're always in sync with it). Use " +
           "it to route King ('who handles renewal risk?' → Guardian) or to name what a unit does. Optionally " +
-          "filter by a word (a name, a job, a division like 'war-rooms' or 'production'). You can DISPATCH a " +
-          "few of these as live workers here (dispatch_fleet: research / justice-league / jsa / " +
-          "suicide-squad); the rest run in King's workspace or the OS — for those, tell him the unit and its " +
-          "trigger phrase. GREEN — read-only.",
+          "filter by a word (a name, a job, a division like 'war-rooms' or 'production'). Only the units your " +
+          "context lists as RUNNABLE can be handed a job here (dispatch_unit); the rest run in King's " +
+          "workspace or the OS — for those, tell him the unit and its trigger phrase, never claim to run " +
+          "them. GREEN — read-only.",
         { filter: z.string().optional().describe("Optional: a name, job word, or division to narrow the list") },
         async ({ filter }) => {
           const { units, live, osCount } = await fleetRoster();
@@ -699,30 +706,66 @@ export function buildConnectorServer(
           );
         },
       ),
-      // ---- the fleet (02 §3: autonomous workers; deliverables land in approvals) ----
+      // ---- THE DISPATCHER (D-DISPATCH §2.4) — registry-backed, no enum, no substitution ----
+      //
+      // The description is built once per chat session, so a unit added to the
+      // registry mid-conversation shows up on her NEXT session. Said here on
+      // purpose rather than hidden.
+      tool(
+        "dispatch_unit",
+        "Hand a job to a named fleet unit. Your context's Fleet line says who is RUNNABLE from here; " +
+          "fleet_roster has all of them. Runnable now: " +
+          runnable().map((c) => `${c.key} — ${c.does}`).join("; ") +
+          ". A unit that is WORKSPACE_ONLY can be NAMED but not run — this tool refuses it and tells you who " +
+          "can; say that to him with the unit's trigger phrase and NEVER pretend to have dispatched it. " +
+          "Workers produce documents in the background (minutes) and land in his approvals with a ping; " +
+          "pennyworth drafts a client email into the OS and raises a RED send card — nothing external is " +
+          "ever sent by a worker or by this tool. NEVER claim a result before a report lands. " +
+          "Pass his sentence VERBATIM as task; `why` is your one-line routing reason (it shows on the job " +
+          "row so he can re-route with one word). pennyworth needs `client` (the OS client, fuzzy ok).",
+        {
+          unit: z.string().describe("Roster key or name, e.g. 'pennyworth', 'jsa', 'research'. No default."),
+          task: z.string().describe("His sentence, verbatim"),
+          why: z.string().describe("One line: why this unit"),
+          client: z.string().optional().describe("The client this is about (required for pennyworth)"),
+        },
+        async ({ unit, task, why, client }) => {
+          const r = await dispatchUnit({
+            unit,
+            task,
+            why,
+            client,
+            conversationId: dispatch.conversationId,
+            emitJob: dispatch.emitJob,
+            emitConfirm,
+          });
+          if (!r.ok) return text(r.say, true);
+          return text(r.say);
+        },
+      ),
+      // Thin alias kept for one release (D-DISPATCH §2.4) so nothing in flight
+      // breaks. Same registry path, same refusals; the generic "eve" lens is
+      // gone — a worker with no named doctrine was the costume this fixes.
       tool(
         "dispatch_fleet",
-        "Launch an autonomous fleet worker on a task. It runs in the background (minutes, with live web " +
-          "search), writes a complete deliverable, and lands it in King's approvals with a ping — you keep " +
-          "talking meanwhile; NEVER pretend to have its results before it lands. Workers by lens:\n" +
-          "· research — deep research: multi-source web sweep, numbers over adjectives, receipts for every claim\n" +
-          "· justice-league — portfolio & sequencing strategy: what to build/sell in what order, capacity-honest\n" +
-          "· jsa — single-decision tribunal: strongest case FOR, strongest case AGAINST, then a verdict with triggers\n" +
-          "· suicide-squad — adversarial teardown: attack a plan/asset like a well-funded enemy; absences ranked by dollars\n" +
-          "· eve — general deliverable in your own doctrine.\n" +
-          "Workers produce DOCUMENTS only (GREEN) — they cannot send anything external.",
+        "Deprecated alias of dispatch_unit for the four document workers (research / justice-league / jsa / " +
+          "suicide-squad). Prefer dispatch_unit.",
         {
           task: z.string().describe("The task, specific enough to act on without follow-up questions"),
-          agent: z.enum(["research", "justice-league", "jsa", "suicide-squad", "eve"]).default("eve"),
+          agent: z.enum(["research", "justice-league", "jsa", "suicide-squad"]),
           client: z.string().optional().describe("Client/topic name to ground the worker in stored memory"),
         },
         async ({ task, agent, client }) => {
-          const r = await runDispatch(task, agent, client);
-          if (!r.ok) return text(`Fleet dispatch failed: ${r.error}`, true);
-          return text(
-            `Dispatched to ${agent} (job ${r.jobId}). It's running now — the deliverable lands in his ` +
-              `approvals with a ping when done (usually a few minutes; deep research can take ten).`,
-          );
+          const r = await dispatchUnit({
+            unit: agent,
+            task,
+            why: "legacy dispatch_fleet call",
+            client,
+            conversationId: dispatch.conversationId,
+            emitJob: dispatch.emitJob,
+            emitConfirm,
+          });
+          return text(r.say, !r.ok);
         },
       ),
       // ---- FILING HANDS (tier 1) — 🟢 desk_scan read-only, 🔴 desk_file_plan ----

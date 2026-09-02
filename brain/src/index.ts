@@ -19,7 +19,7 @@ import { resolveConfirm, getPending } from "./confirm.js";
 import { deskFromBody, deskRefusalFromBody } from "./desk.js";
 import { addText, addNotification } from "./senses.js";
 import { getConnectorStatus } from "./connectors.js";
-import { runDispatch } from "./dispatch.js";
+import { runDispatch, probeDispatchSchema, dispatchReady, settleJobFromConfirm } from "./dispatch.js";
 import { runFloorCheck, runCloseout, runWeekPreview, fireTripwire, runRoutineRiskCheck } from "./proactive.js";
 import { tickRoutine, untickRoutine, createRoutine, archiveRoutine, actOnAttention, type AttentionAction } from "./ops.js";
 import { buildVitals, saveCheckin, checkinRangeError, rememberCheckinNote } from "./vitals.js";
@@ -114,6 +114,11 @@ app.get("/health", (_req, res) => {
     voiceReady: { stt: sttReady(), tts: ttsReady() },
     osBoardWarm: boardSnapshotReady(),
     fleet: fleetViewStatus(), // { ready, live, count } — live:true = read from the OS
+    // Dispatcher v0.1 (D-DISPATCH §1.1 / sql/004_dispatch.sql). migrated:false =
+    // the brain is running against the legacy jobs table in pre-migration
+    // mode: unit rides in `agent`, why/tier/confirmId/result live in memory
+    // only. A capability flag, never a value — /health is unauthenticated.
+    dispatchReady: dispatchReady(),
     connectors: getConnectorStatus(),
     // Stamped by BOTH the /job route and the in-process crons (review C9/C24).
     lastDistillation: getStamp("distill"),
@@ -129,7 +134,21 @@ app.post("/confirm", async (req, res) => {
     if (typeof id !== "string" || typeof hash !== "string" || typeof approve !== "boolean") {
       return res.status(400).json({ error: "id (string), hash (string), approve (boolean) required" });
     }
-    res.json(await resolveConfirm(id, hash, approve));
+    const result = await resolveConfirm(id, hash, approve);
+    // Confirm ↔ job linkage (D-DISPATCH §3.1 item 4): a card minted as a job's
+    // next action closes that job with the resolution as its result — done on
+    // an executed approve, failed on cancel or a send that threw. This is the
+    // seam that makes "she told me it sent" true rather than hopeful.
+    if (result.jobId) {
+      const settled = await settleJobFromConfirm(result.jobId, {
+        approved: result.ok ? approve : true,
+        executed: result.ok ? result.executed : false,
+        detail: result.ok ? result.detail : result.error,
+        ...(result.ok ? {} : { error: result.error }),
+      });
+      return res.json({ ...result, ...(settled ? { job: { id: result.jobId, status: settled.status } } : {}) });
+    }
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -224,15 +243,21 @@ app.post("/register-push", async (req, res) => {
   }
 });
 
-// Fleet dispatch (02 §3): returns immediately; worker reports via jobs row,
-// approval item, and done-ping.
+// Fleet dispatch (02 §3 / D-DISPATCH §2.4): registry-backed, no default unit,
+// no silent substitution. `unit` (or legacy `agent`) is REQUIRED; an unknown
+// or non-runnable unit is a 422 carrying the spoken refusal + the runnable
+// list. Accepted jobs return immediately; the worker reports via the row,
+// an attention item, and the done-ping.
 app.post("/dispatch", async (req, res) => {
   try {
-    const { task, agent, client } = req.body ?? {};
+    const { task, agent, unit, client, why } = req.body ?? {};
     if (typeof task !== "string" || !task.trim()) {
       return res.status(400).json({ error: "task (string) is required" });
     }
-    res.json(await runDispatch(task, typeof agent === "string" && agent ? agent : "eve", client));
+    const who = typeof unit === "string" && unit ? unit : typeof agent === "string" && agent ? agent : "";
+    if (!who) return res.status(400).json({ error: "unit (string) is required — there is no default worker" });
+    const r = await runDispatch(task, who, typeof client === "string" ? client : undefined, typeof why === "string" && why ? why : "POST /dispatch");
+    res.status(r.ok ? 200 : 422).json(r);
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -524,6 +549,11 @@ app.post("/chat", async (req, res) => {
       onToken: (text) => send("token", { text }),
       onTool: (name) => send("tool", { name }),
       onConfirm: (confirm) => send("confirm_request", confirm),
+      // SSE `job` frame (D-DISPATCH §1.4): {id, status, unit, title, host,
+      // why?, tier?, confirmId?} at every status transition this turn. The
+      // desktop broadcasts chat frames to all its windows; other clients
+      // ignore unknown events.
+      onJob: (job) => send("job", job),
       onDone: (info) => {
         send("done", info);
         if (!res.writableEnded) res.end();
@@ -540,6 +570,9 @@ app.post("/chat", async (req, res) => {
 
 initFirebase();
 initDb();
+// One probing select decides whether sql/004_dispatch.sql has been applied.
+// Absent → pre-migration mode (dispatch.ts), reported on /health.dispatchReady.
+void probeDispatchSchema();
 // Warm the closet cache + her worn look before the first request.
 void initWardrobe();
 // Warm the ambient OS board snapshot so the very first board question is fast

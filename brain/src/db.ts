@@ -24,3 +24,9 @@ export function db(): SupabaseClient | null {
 export function isDbReady(): boolean {
   return client !== null;
 }
+
+// Test seam (verify/dispatch-harness.ts): swap in a fake client so the job
+// writers can be proven without a network. Never called by the server.
+export function _setDbForTests(c: SupabaseClient | null): void {
+  client = c;
+}

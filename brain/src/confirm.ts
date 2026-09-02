@@ -16,6 +16,10 @@ export interface PendingConfirm {
   hash: string; // sha256 of canonical payload — approval must echo it
   createdAt: string;
   expiresAt: string;
+  // D-DISPATCH §3.1 item 4: a confirm raised as a job's next action carries the
+  // job id, so the card and the hub row can find each other, and so resolving
+  // the card can close the job (dispatch.ts settleJobFromConfirm).
+  jobId?: string;
 }
 
 // Some sends execute on the PHONE, not the brain (SMS leaves from King's SIM,
@@ -88,6 +92,7 @@ export function requestConfirm(
   // CARD-4: a filing plan rots faster than a text. Per-kind TTL, defaulted so
   // every existing caller keeps its 30 minutes exactly.
   ttlMs: number = TTL_MS,
+  jobId?: string,
 ): PendingConfirm {
   sweep();
   const id = randomUUID();
@@ -102,15 +107,19 @@ export function requestConfirm(
     expiresAt: new Date(now + ttlMs).toISOString(),
     execute,
     ...(clientAction ? { clientAction } : {}),
+    ...(jobId ? { jobId } : {}),
   };
   pending.set(id, entry);
   const { execute: _e, clientAction: _c, ...publicEntry } = entry;
   return publicEntry;
 }
 
+// `jobId` rides back on every arm that RESOLVED the entry (approve, cancel, or a
+// send that threw) so the caller can settle the linked job. A hash mismatch or
+// a missing entry resolves nothing and carries none.
 export type ConfirmResult =
-  | { ok: true; executed: boolean; detail: string; clientAction?: ClientAction }
-  | { ok: false; error: string };
+  | { ok: true; executed: boolean; detail: string; clientAction?: ClientAction; jobId?: string }
+  | { ok: false; error: string; jobId?: string };
 
 export async function resolveConfirm(
   id: string,
@@ -126,7 +135,8 @@ export async function resolveConfirm(
     return { ok: false, error: "payload hash mismatch — refresh and re-approve" };
   }
   pending.delete(id); // single-use either way
-  if (!approve) return { ok: true, executed: false, detail: "cancelled" };
+  const link = entry.jobId ? { jobId: entry.jobId } : {};
+  if (!approve) return { ok: true, executed: false, detail: "cancelled", ...link };
   if (!entry.execute) {
     // Client-executed: approval hands the action back to the surface that can
     // actually perform it. executed:false is honest — nothing has left the
@@ -141,13 +151,14 @@ export async function resolveConfirm(
           ? "approved — running on your desk"
           : "approved — executes on the phone",
       ...(entry.clientAction ? { clientAction: entry.clientAction } : {}),
+      ...link,
     };
   }
   try {
     const detail = await entry.execute();
-    return { ok: true, executed: true, detail };
+    return { ok: true, executed: true, detail, ...link };
   } catch (err) {
-    return { ok: false, error: `send failed: ${err instanceof Error ? err.message : String(err)}` };
+    return { ok: false, error: `send failed: ${err instanceof Error ? err.message : String(err)}`, ...link };
   }
 }
 

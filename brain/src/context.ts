@@ -6,6 +6,7 @@ import { boardSnapshot } from "./os.js";
 import { floorView } from "./floor.js";
 import { buildVitals } from "./vitals.js";
 import { renderDeskCensus, renderDeskAbsence, type DeskPack, type DeskRefusal } from "./desk.js";
+import { fleetLine } from "./registry.js";
 
 // Context assembly (03 §4). Layers 1–2 (bible + doctrine) are static in the
 // system prompt; this builds layers 3–6 fresh per exchange: today snapshot,
@@ -181,7 +182,7 @@ export async function buildContextPack(
   // told nothing about, and explaining an absence is where she started guessing.
   deskRefusal: DeskRefusal | null = null,
 ): Promise<string> {
-  const [snapshot, loops, recall, turns] = await Promise.all([
+  const [snapshot, loops, recall, turns, fleet] = await Promise.all([
     todaySnapshot(),
     openLoops(),
     // Deeper recall (King's "full memory" ask) — surface more of her permanent
@@ -189,6 +190,10 @@ export async function buildContextPack(
     // token cost is small even on Haiku.
     searchMemory(incomingMessage, 10),
     includeHistory ? recentTurns(conversationId) : Promise.resolve([]),
+    // The ambient fleet line (D-DISPATCH §2.3): names + badges only, ~55
+    // tokens, cached roster — so "send Pennyworth" resolves without a tool
+    // call and "have Perry White…" is refused without a guess. Null → omitted.
+    fleetLine().catch(() => null),
   ]);
 
   const lines: string[] = [
@@ -209,6 +214,7 @@ export async function buildContextPack(
     // so board questions answer in one turn with no round-trip. Null → omitted
     // (OS off, or the first snapshot hasn't landed; os_board covers that once).
     ...(() => { const b = boardSnapshot(); return b ? [b] : []; })(),
+    ...(fleet ? [fleet] : []),
     ...loops,
     ...turns,
   ];

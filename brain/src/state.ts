@@ -5,6 +5,8 @@ import { getConnectorStatus } from "./connectors.js";
 import { getLatestBrief } from "./brief.js";
 import { streakFrom } from "./vitals.js";
 import { localDay, addLocalDays } from "./day.js";
+import { recentJobsQuery, shapeJob, JOBS_WINDOW_MS, JOBS_LIMIT } from "./dispatch.js";
+import { buildFleetBlock } from "./registry.js";
 
 // GET /state — the Today/Ops screens read live data THROUGH the brain
 // (05 §4: the app never holds a Supabase key).
@@ -22,7 +24,11 @@ export async function buildState(): Promise<Record<string, unknown>> {
     floorView(),
     c.from("attention_items").select("id, kind, message, nudge_level, ref, created_at").is("resolved_at", null).order("created_at", { ascending: false }).limit(20),
     c.from("clients").select("id, name, cadence_days, last_touch_at, status").eq("status", "active"),
-    c.from("jobs").select("id, agent, title, status, created_at").in("status", ["queued", "running", "in_approvals"]).order("created_at", { ascending: false }).limit(10),
+    // P0.3: EVERY job created in the last 24 h, any status, newest first,
+    // limit 50 (dispatch.ts). The old three-status filter made a job vanish
+    // from the hub the instant it completed — the opposite of "tell me it's
+    // done". Consumers count queued|running|in_approvals for "in flight".
+    recentJobsQuery(c),
     c.from("routines").select("id, name, streak, last_done_on, slot, active").eq("active", true),
     c.from("routine_days").select("routine_id, on_date").gte("on_date", addLocalDays(localDay(), -400)),
   ]);
@@ -53,6 +59,13 @@ export async function buildState(): Promise<Record<string, unknown>> {
     streak: routineDays.error ? r.streak : streakFrom(tickDays.get(r.id as string) ?? new Set<string>(), today),
   }));
 
+  // A jobs read error stays OUT of the outage gate (same law as routines):
+  // an empty list plus jobsError is honest; blacking out Today is not.
+  const jobList = (jobs.data ?? []).map((r) => shapeJob(r as unknown as Record<string, unknown>));
+  // /state.fleet — the bearer-gated door for the hub strip (D-DISPATCH §7.1).
+  // /health.fleet keeps its counts for the phone; the roster itself lives here.
+  const fleet = await buildFleetBlock(jobList);
+
   const clientPulse = (clients.data ?? []).map((cl) => ({
     ...cl,
     days_quiet: cl.last_touch_at
@@ -67,7 +80,9 @@ export async function buildState(): Promise<Record<string, unknown>> {
     floor,
     attentionItems: attention.data ?? [],
     clients: clientPulse,
-    jobs: jobs.data ?? [],
+    jobs: jobList,
+    jobsWindow: { hours: JOBS_WINDOW_MS / 3600_000, limit: JOBS_LIMIT, ...(jobs.error ? { error: jobs.error.message } : {}) },
+    fleet,
     routines: routineList,
     pendingConfirms: listPending(),
     connectors: getConnectorStatus(),
