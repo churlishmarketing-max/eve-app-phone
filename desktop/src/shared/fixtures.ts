@@ -25,6 +25,7 @@ import type {
   Wardrobe,
   WriteResult,
 } from "./contract.js";
+import { FLEET_V02_UNITS } from "./fixtures-fleet-v02.js";
 
 // The mock clock. Everything time-shaped hangs off ONE instant so the confirm
 // card's "expires" is always ~35 minutes out from "now", not from Aug 2026.
@@ -307,6 +308,36 @@ export function mockFleet(): FleetBlock {
   return {
     registered: units.length,
     dispatchable: units.filter((u) => u.badge === "RUNNABLE").length,
+    source: "bundled",
+    at: minutesAgo(2),
+    units,
+  };
+}
+
+/** §v0.2.1 — the fleet block as the brain serves it since his skills became
+ *  units: 56 registered against the bundled roster, 42 RUNNABLE, 9 pinned,
+ *  kinds 4 / 1 / 37. Every row is the brain's own (fixtures-fleet-v02.ts is
+ *  generated from brain/data/fleet-roster.json + brain/skills/MANIFEST.json +
+ *  registry.ts's code rows); only the `lastRunAt` stamps are the mock clock's.
+ *  mockFleet() above is left exactly as it was — it is the v0.1 shape an older
+ *  brain still serves, and every earlier receipt was judged against it. */
+export function mockFleetV2(): FleetBlock {
+  const stamp: Record<string, string> = {
+    research: minutesAgo(41),
+    "justice-league": minutesAgo(340),
+    jsa: minutesAgo(120),
+    "suicide-squad": minutesAgo(9),
+    pennyworth: minutesAgo(4),
+    starfire: minutesAgo(65),
+  };
+  const units: FleetUnitRow[] = FLEET_V02_UNITS.map((u) => (stamp[u.key] ? { ...u, lastRunAt: stamp[u.key] } : { ...u }));
+  const kinds = { worker: 0, tool: 0, skill: 0 };
+  for (const u of units) if (u.kind) kinds[u.kind] += 1;
+  return {
+    registered: units.length,
+    dispatchable: units.filter((u) => u.badge === "RUNNABLE").length,
+    pinned: units.filter((u) => u.pinned).length,
+    kinds,
     source: "bundled",
     at: minutesAgo(2),
     units,

@@ -1,4 +1,4 @@
-// ZONE A — THE FLEET STRIP. Owning stream: THE CORE (P1 v0.1 hub half).
+// ZONE A — THE FLEET STRIP. Owning stream: THE CORE (P1 v0.2 hub half).
 //
 // THE CORE's centrepiece, rebuilt on the shipped .node card so it inherits all
 // four worlds' treatments for free (NEON's 2px ink outline + hard shadow,
@@ -10,21 +10,28 @@
 // (CONTRACT-v0.1 §2): the count, the badge, the live bit, the roster line and
 // the last-run stamp. /health is not consulted by this component at all.
 //
-// THE HEADER CARRIES TWO NUMBERS FROM ONE SOURCE and both are computed from
-// the array the strip draws (fleet.ts), so the plate can never claim a unit the
+// v0.2 — THE CARDS ARE THE PINNED UNITS. Forty-two runnable units do not fit
+// on a strip; the brain's `pinned` default (through his local pins) does, at
+// most eight, runnable first. The big inline roster panel is gone: the
+// "+N ON ROSTER" card is now the door to the FLEET tab (key 6), where every
+// unit sits in a row with its badge, its triggers, its last run, a DISPATCH
+// button and its PIN toggle.
+//
+// THE HEADER CARRIES ITS NUMBERS FROM ONE SOURCE and all are computed from the
+// array the strip draws (fleet.ts), so the plate can never claim a unit the
 // cards do not show. The provenance tag reads the TRUE source the brain named
 // — OS LIVE or BUNDLED COPY — and the time that view was built.
 //
 // A MISSING FLEET BLOCK RENDERS THE NO-ANSWER STATE, NEVER ZEROS. See fleet.ts
 // rule 4.
 
-import { useState } from "react";
 import type { EveState } from "@shared/contract";
 import { clockStr } from "../deck/format";
 import { fleetView, sourceWord, type FleetUnit, type FleetView } from "./fleet";
 import type { JobsView } from "./jobs";
+import { NO_PINS, type PinOverrides } from "./pins";
 
-function dotClass(d: FleetUnit["dot"]): string {
+export function dotClass(d: FleetUnit["dot"]): string {
   if (d === "live") return "fleetdot live";
   if (d === "ready") return "fleetdot ready";
   if (d === "none") return "fleetdot none";
@@ -41,13 +48,14 @@ export interface FleetStripProps {
   state: EveState;
   /** The merged poll+frame jobs view — the chips read it. */
   jobs: JobsView;
-  /** Open the roster panel on mount (shot fixtures only). */
-  initialRosterOpen?: boolean;
+  /** His local pin overrides (pins.ts). Default: none — the brain's set. */
+  pins?: PinOverrides;
+  /** The "+N ON ROSTER" card's click: open the FLEET tab. */
+  onOpenFleet: () => void;
 }
 
-export default function FleetStrip({ state, jobs, initialRosterOpen }: FleetStripProps) {
-  const view = fleetView(state, jobs);
-  const [rosterOpen, setRosterOpen] = useState(!!initialRosterOpen);
+export default function FleetStrip({ state, jobs, pins, onOpenFleet }: FleetStripProps) {
+  const view = fleetView(state, jobs, pins ?? NO_PINS);
 
   // Three honest headers, not one header with a fallback number in it.
   const plate =
@@ -55,7 +63,9 @@ export default function FleetStrip({ state, jobs, initialRosterOpen }: FleetStri
       ? "FLEET — SOURCE DOWN"
       : view.kind === "absent"
         ? "FLEET — NO ANSWER YET"
-        : `${view.registered} REGISTERED · ${view.dispatchable} DISPATCHABLE`;
+        : `${view.registered} REGISTERED · ${view.dispatchable} DISPATCHABLE · ${
+            view.fallback ? "NONE PINNED" : `${view.pinnedCount} PINNED`
+          }`;
 
   const tag =
     view.kind === "offline"
@@ -73,71 +83,59 @@ export default function FleetStrip({ state, jobs, initialRosterOpen }: FleetStri
         <span className="tag">{tag}</span>
       </div>
 
-      {view.kind === "ready" ? (
-        <ReadyStrip view={view} rosterOpen={rosterOpen} onToggleRoster={() => setRosterOpen((o) => !o)} />
-      ) : (
-        <NoAnswer kind={view.kind} />
-      )}
+      {view.kind === "ready" ? <ReadyStrip view={view} onOpenFleet={onOpenFleet} /> : <FleetNoAnswer kind={view.kind} />}
     </div>
   );
 }
 
 /* ---- the strip proper ---------------------------------------------------- */
 
-function ReadyStrip({
-  view,
-  rosterOpen,
-  onToggleRoster,
-}: {
-  view: Extract<FleetView, { kind: "ready" }>;
-  rosterOpen: boolean;
-  onToggleRoster: () => void;
-}) {
+function ReadyStrip({ view, onOpenFleet }: { view: Extract<FleetView, { kind: "ready" }>; onOpenFleet: () => void }) {
   const more = view.rest.length;
   const cols = view.cards.length + (more > 0 ? 1 : 0);
   // Only the categories that are actually there: "0 desk" is a true count,
   // but printing it on every board is noise, not information.
-  const breakdown = (["WORKSPACE_ONLY", "DESK", "RUNNABLE"] as const)
+  const breakdown = (["RUNNABLE", "DESK", "WORKSPACE_ONLY"] as const)
     .map((b) => [view.rest.filter((u) => u.badge === b).length, b] as const)
     .filter(([n]) => n > 0)
     .map(([n, b]) => `${n} ${b.replace(/_/g, "-").toLowerCase()}`)
     .join(" · ");
 
   return (
-    <>
-      <div
-        className="fleetstrip"
-        // Set from the number of cards actually rendered: a missing unit
-        // narrows the grid instead of leaving a hole where a card should be.
-        style={{ gridTemplateColumns: `repeat(${Math.max(1, cols)}, minmax(0, 1fr))` }}
-      >
-        {view.cards.map((u) => (
-          <UnitCard key={u.id} u={u} />
-        ))}
+    <div
+      className="fleetstrip"
+      // Set from the number of cards actually rendered: a missing unit
+      // narrows the grid instead of leaving a hole where a card should be.
+      style={{ gridTemplateColumns: `repeat(${Math.max(1, cols)}, minmax(0, 1fr))` }}
+    >
+      {view.cards.map((u) => (
+        <UnitCard key={u.id} u={u} />
+      ))}
 
-        {more > 0 ? (
-          // ONE TERMINAL CARD SPEAKS FOR THE REST, and its numeral is real now:
-          // it is the length of the array of units not drawn as a card.
-          <button
-            type="button"
-            className={rosterOpen ? "node fleetcard future more on" : "node fleetcard future more"}
-            onClick={onToggleRoster}
-            aria-expanded={rosterOpen}
-            title="Open the whole roster, division-grouped, every row badged."
-          >
-            <div className="hd">
-              <span className="fleetdot none" aria-hidden="true" />
-              <span className="nm">+{more} ON ROSTER</span>
-            </div>
-            <div className="role">{breakdown || "nothing more on the roster"}</div>
-            <span className="st dash">{rosterOpen ? "CLOSE ▴" : "OPEN ▾"}</span>
-            <span className="lastrun">NAMES + BADGES ONLY</span>
-          </button>
-        ) : null}
-      </div>
-
-      {rosterOpen ? <RosterPanel view={view} /> : null}
-    </>
+      {more > 0 ? (
+        // ONE TERMINAL CARD SPEAKS FOR THE REST, and its numeral is real: it is
+        // the length of the array of units not drawn as a card. It is the door
+        // to the FLEET tab, not a panel of its own any more.
+        <button
+          type="button"
+          className="node fleetcard future more"
+          onClick={onOpenFleet}
+          title="Open the FLEET tab — every unit, badged, with its triggers, last run, DISPATCH and PIN. Key 6."
+        >
+          <div className="hd">
+            <span className="fleetdot none" aria-hidden="true" />
+            <span className="nm">+{more} ON ROSTER</span>
+          </div>
+          <div className="role">{breakdown || "nothing more on the roster"}</div>
+          <span className="st dash">FLEET TAB ▸</span>
+          {/* Sized to the same ~120px the unit cards get: the longer forms
+              ("PIN CARDS THERE · KEY 6") ellipsised away the key they existed
+              to teach. The keycap is drawn on the nav strip and the full
+              sentence is on this card's title. */}
+          <span className="lastrun">{view.fallback ? "NOTHING PINNED YET" : "PIN CARDS · KEY 6"}</span>
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -161,45 +159,32 @@ function UnitCard({ u }: { u: FleetUnit }) {
           runs. A card that can never run a job has no job code to print. */}
       <div className="role">{u.future ? u.role : `${u.code} · ${u.role}`}</div>
       <span className={stClass(u.statusTone)}>{u.status}</span>
-      <span className="lastrun">
-        {u.badgeWord} · {u.lastRun}
+      {/* NO "PINNED" WORD HERE. Outside the fallback the card pool IS the
+          pinned set (fleet.ts selectCards), so stamping every card with it
+          restated the header's own "N PINNED" nine times and cost the ~9
+          characters that pushed the stamp past the card's edge. The pin is
+          stated once in the header, and toggled on the FLEET tab.
+
+          AND THE BARE CLOCK, NOT `u.lastRun`. The shared string is "SINCE
+          23:44", which is right in the FLEET tab's wide LAST RUN column and six
+          characters too long for a card that is ~120px inside its padding at
+          nine columns. The chip directly above already names the state, so the
+          word SINCE is carried by the layout here; the instant behind it is the
+          same `lastRunMs`, formatted by the same clock. A missing stamp is the
+          same dash it is everywhere — never a zero, never a guessed time. */}
+      {/* The title carries the untruncated form, because at the 1120px minimum
+          nine columns leave ~106px and even this short line ellipsises. Hover
+          recovers it here; the FLEET tab's LAST RUN column prints it in full. */}
+      <span className="lastrun" title={`${u.badgeWord} · ${u.lastRun}`}>
+        {u.badgeWord} · {u.lastRunMs === null ? "—" : clockStr(new Date(u.lastRunMs))}
       </span>
-    </div>
-  );
-}
-
-/* ---- the roster panel: every unit, division-grouped, every row badged ----- */
-
-function RosterPanel({ view }: { view: Extract<FleetView, { kind: "ready" }> }) {
-  return (
-    <div className="card rosterlist" role="region" aria-label="The whole roster">
-      <div className="railhead" style={{ borderBottom: "none", paddingBottom: 4 }}>
-        // THE ROSTER — {view.registered} UNITS · {view.dispatchable} RUNNABLE FROM HERE · SOURCE{" "}
-        {sourceWord(view.source)}
-      </div>
-      <div className="rostergrid">
-        {view.groups.map((g) => (
-          <div className="rdiv" key={g.division}>
-            <div className="rdivhead">
-              {g.division.toUpperCase()} · {g.units.length}
-            </div>
-            {g.units.map((u) => (
-              <div className="rosterrow" key={u.id} title={u.role}>
-                <span className={dotClass(u.dot)} aria-hidden="true" />
-                <span className="rnm">{u.name}</span>
-                <span className={u.badge === "RUNNABLE" ? "rbadge run" : "rbadge"}>{u.badgeWord}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
 
 /* ---- no answer ------------------------------------------------------------ */
 
-function NoAnswer({ kind }: { kind: "offline" | "absent" }) {
+export function FleetNoAnswer({ kind }: { kind: "offline" | "absent" }) {
   return (
     <div className="fleetstrip" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
       <div className="node fleetcard future" style={{ maxWidth: 560 }}>

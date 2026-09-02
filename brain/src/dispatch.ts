@@ -18,7 +18,14 @@ import {
   type DispatchRefusal,
   type ToolRunner,
   type WorkerRunner,
+  type SkillRunner,
 } from "./registry.js";
+
+// The ONLY tools a background worker (worker kind AND skill kind) ever holds.
+// Read-only web. No send/post/publish/schedule/save — D-DISPATCH weakness #3:
+// a bad deliverable is the worst case a worker can produce, never a bad action.
+// A manifest row cannot widen this; it is code.
+export const WORKER_TOOLS: readonly string[] = ["WebSearch", "WebFetch"];
 
 // THE DISPATCHER, v0.1 (D-DISPATCH §1, §2.4, §3, §6, §8.2).
 //
@@ -332,8 +339,9 @@ export async function dispatchUnit(input: DispatchInput): Promise<DispatchOutcom
   const jobId = ins.id;
   input.emitJob?.(frameFor(jobId, "queued", title, overlay.get(jobId)));
 
-  if (cap.runner.kind === "worker") {
+  if (cap.runner.kind === "worker" || cap.runner.kind === "skill") {
     // Fire-and-forget: the worker reports through the row + attention item + push.
+    // A "skill" row rides the SAME path with its SKILL.md as doctrine (v0.2).
     void workerRunner(c, jobId, key, cap.name, title, task, cap.runner, input.client, input.emitJob).catch(async (err) => {
       console.error("[dispatch] worker crashed", err);
       await failJob(jobId, key, title, `worker crashed: ${err instanceof Error ? err.message : String(err)}`, input.emitJob, c);
@@ -346,8 +354,12 @@ export async function dispatchUnit(input: DispatchInput): Promise<DispatchOutcom
       status: "queued",
       tier,
       say:
-        `${cap.name} has it (job ${jobId.slice(0, 8)}). It's running in the background — the deliverable lands in ` +
-        `his approvals with a ping when done (minutes; research can take twenty). Don't claim its results before it lands.`,
+        cap.runner.kind === "skill"
+          ? `${cap.name} has it (job ${jobId.slice(0, 8)}). Drafting in the background — the deliverable lands in his ` +
+            `approvals with a ping when done (minutes). It drafts, then waits for him: nothing is sent, posted, or ` +
+            `published by a skill worker. Don't claim its results before it lands.`
+          : `${cap.name} has it (job ${jobId.slice(0, 8)}). It's running in the background — the deliverable lands in ` +
+            `his approvals with a ping when done (minutes; research can take twenty). Don't claim its results before it lands.`,
     };
   }
 
@@ -535,7 +547,7 @@ type WorkerFn = (
   name: string,
   title: string,
   task: string,
-  runner: WorkerRunner,
+  runner: WorkerRunner | SkillRunner,
   client: string | undefined,
   emit?: JobEmit,
 ) => Promise<void>;
@@ -570,8 +582,8 @@ const runWorker: WorkerFn = async (c, jobId, unit, name, title, task, runner, cl
       options: {
         model: MODEL,
         systemPrompt: runner.doctrine,
-        tools: ["WebSearch", "WebFetch"],
-        allowedTools: ["WebSearch", "WebFetch"],
+        tools: [...WORKER_TOOLS],
+        allowedTools: [...WORKER_TOOLS],
         permissionMode: "bypassPermissions",
         persistSession: false,
         maxTurns: runner.cost.maxTurns,

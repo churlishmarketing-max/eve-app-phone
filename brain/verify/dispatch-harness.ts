@@ -1,4 +1,5 @@
-// Brain-side proof for THE DISPATCHER v0.1 (P0 truth pass + P1). Pure,
+// Brain-side proof for THE DISPATCHER v0.1 (P0 truth pass + P1) and v0.2
+// (skills as units: skills/MANIFEST.json → "skill" rows on the worker path). Pure,
 // offline, no env, no network, no real DB — a fake Supabase client that
 // behaves like Postgres on the one thing that matters here: an unknown column
 // is an error, so "store what fits" is proven, not assumed.
@@ -8,6 +9,9 @@
 // Every deny has an allow twin: a dispatcher that refuses everything also passes.
 
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // No live roster read, no OS line: the bundled roster and an unwired OS are the
@@ -27,12 +31,28 @@ import {
   shapeJob,
   settleJobFromConfirm,
   DISPATCH_COLUMNS,
+  WORKER_TOOLS,
   _test,
   type JobFrame,
 } from "../src/dispatch.js";
 import { requestConfirm, resolveConfirm, listPending } from "../src/confirm.js";
-import { buildFleetBlock, fleetLine, REGISTRY, badgeFor, resolveUnitKey } from "../src/registry.js";
+import {
+  buildFleetBlock,
+  fleetLine,
+  REGISTRY,
+  badgeFor,
+  resolveUnitKey,
+  manifestState,
+  alternativesFor,
+  dispatchUnitDescription,
+  registryCounts,
+  capability,
+  MAX_ALTERNATIVES,
+} from "../src/registry.js";
 import { connectorToolNames } from "../src/connectors.js";
+import { fleetRoster } from "../src/fleet.js";
+
+const brainDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 let pass = 0;
 let fail = 0;
@@ -145,39 +165,121 @@ async function main() {
   // =========================================================================
   console.log("\n=== P0.1 — NO SILENT SUBSTITUTION: an unknown unit is a spoken error ===");
   {
-    const r = await resolveDispatch("perry-white");
-    ok("U1", "ok" in r && r.ok === false && r.code === "unit_not_runnable", `perry-white → ${"ok" in r ? r.code : "RESOLVED (wrong)"}`);
+    // cyborg: on the roster (fleet, CC) AND classified WORKSPACE_ONLY by the
+    // skill sync (Meta Ads MCP) — the v0.2 stand-in for perry-white, who runs now.
+    const r = await resolveDispatch("cyborg");
+    ok("U1", "ok" in r && r.ok === false && r.code === "unit_not_runnable", `cyborg → ${"ok" in r ? r.code : "RESOLVED (wrong)"}`);
     if ("ok" in r) {
-      ok("U1a", /I don't have a runner for Perry White/.test(r.say), "the sentence names him and says there is no runner");
-      ok("U1b", REGISTRY.every((c) => r.say.includes(c.key)) && r.runnable.length === 5, `…and names all 5 runnable alternatives (${r.runnable.map((x) => x.key).join(", ")})`);
+      ok("U1a", /I don't have a runner for Cyborg/.test(r.say) && /Meta Ads MCP/.test(r.say), "the sentence names him, says there is no runner, and says WHY (the sync's reason)");
+      ok("U1b", r.runnable.length > 0 && r.runnable.length <= MAX_ALTERNATIVES && r.runnable.every((x) => r.say.includes(x.key)), `…and names ${r.runnable.length} alternatives (≤ ${MAX_ALTERNATIVES}, not all ${REGISTRY.length}): ${r.runnable.map((x) => x.key).join(", ")}`);
+      ok("U1b2", r.runnable.some((x) => /^ad-/.test(x.key)), "alternatives are chosen by ROLE relevance (an ads unit for the ads unit), not list order");
       ok("U1c", r.badge === "WORKSPACE_ONLY" && /WORKSPACE_ONLY/.test(r.say), `badge ${r.badge} spoken`);
+      ok("U1d", /tell him which unit ran it and why/.test(r.say), "the refusal carries the re-route honesty clause");
       loud("U1x", `=> ${r.say}`);
     }
-    const byName = await resolveDispatch("Perry White");
-    ok("U2", "ok" in byName && byName.code === "unit_not_runnable" && byName.unit === "perry-white", `"Perry White" resolves to the key, then refuses (no fuzzy guess)`);
+    const byName = await resolveDispatch("Cyborg");
+    ok("U2", "ok" in byName && byName.code === "unit_not_runnable" && byName.unit === "cyborg", `"Cyborg" resolves to the key, then refuses (no fuzzy guess)`);
     const ghost = await resolveDispatch("nobody-here");
-    ok("U3", "ok" in ghost && ghost.code === "unit_unknown" && /no unit by that name/.test(ghost.say), `an unknown key is unit_unknown: "${"ok" in ghost ? ghost.say.slice(0, 70) : ""}…"`);
+    ok("U3", "ok" in ghost && ghost.code === "unit_unknown" && /no unit by that name/.test(ghost.say) && ghost.runnable.length <= MAX_ALTERNATIVES, `an unknown key is unit_unknown: "${"ok" in ghost ? ghost.say.slice(0, 70) : ""}…"`);
     const eve = await resolveDispatch("eve");
-    ok("U4", "ok" in eve && eve.code === "unit_not_runnable", `"eve" — the OLD default fallback persona — is now refused (${"ok" in eve ? eve.code : "ran"})`);
+    ok("U4", "ok" in eve && eve.code === "unit_not_runnable", `"eve" — the OLD default fallback persona — is still refused (${"ok" in eve ? eve.code : "ran"})`);
     ok("U5", resolveUnitKey("  PERRY_WHITE ", []) === "perry-white" && resolveUnitKey("The Flash", []) === "flash" || resolveUnitKey("The Flash", [{ key: "the-flash", name: "The Flash" } as never]) === "the-flash", "key normalisation: case, spaces, underscores");
 
     const fk = fakeDb(false);
     _setDbForTests(fk.client);
     _test.setSchema({ migrated: false, probedAt: "t", reason: "test" });
-    const d = await dispatchUnit({ unit: "perry-white", task: "write the Acacia email", why: "test", emitJob: emit });
-    ok("U6", !d.ok && fk.tables.jobs.length === 0 && frames.length === 0, `dispatch_unit(perry-white) inserts NO job row and emits NO frame (rows=${fk.tables.jobs.length})`);
+    const d = await dispatchUnit({ unit: "cyborg", task: "build the GE Outdoors campaign", why: "test", emitJob: emit });
+    ok("U6", !d.ok && fk.tables.jobs.length === 0 && frames.length === 0, `dispatch_unit(cyborg) inserts NO job row and emits NO frame (rows=${fk.tables.jobs.length})`);
   }
 
-  console.log("\n=== ALLOW TWINS — the five runnable units resolve; nothing else does ===");
+  console.log("\n=== ALLOW TWINS — the five code units resolve, and so do bundled skills ===");
   {
     for (const key of ["research", "jsa", "justice-league", "suicide-squad", "pennyworth"]) {
       const r = await resolveDispatch(key);
-      ok(`A-${key.slice(0, 4)}`, !("ok" in r) && r.key === key && r.cap.host === "brain", `${key} → registry row (${!("ok" in r) ? r.cap.runner.kind : "refused"})`);
+      ok(`A-${key.slice(0, 4)}`, !("ok" in r) && r.key === key && r.cap.host === "brain" && r.cap.origin === "code", `${key} → registry row (${!("ok" in r) ? r.cap.runner.kind : "refused"}, code)`);
     }
     const byName = await resolveDispatch("Pennyworth");
     ok("A-name", !("ok" in byName) && byName.key === "pennyworth", `"Pennyworth" (name) → pennyworth`);
-    ok("A-cnt", REGISTRY.length === 5 && REGISTRY.filter((c) => c.runner.kind === "worker").length === 4, `registry = 4 workers + 1 tool = ${REGISTRY.length}`);
+    const ms = manifestState();
+    ok("A-cnt", REGISTRY.length === 5 + ms.units && REGISTRY.filter((c) => c.runner.kind === "worker").length === 4 && REGISTRY.filter((c) => c.runner.kind === "skill").length === ms.units, `registry = 4 workers + 1 tool + ${ms.units} skills = ${REGISTRY.length}`);
     ok("A-tool", connectorToolNames.includes("mcp__eve_hands__dispatch_unit"), "dispatch_unit is in connectorToolNames (or the model could never see it)");
+  }
+
+  // =========================================================================
+  console.log("\n=== v0.2 — SKILLS ARE UNITS: MANIFEST.json → skill rows on the worker path ===");
+  {
+    const ms = manifestState();
+    ok("K1", ms.loaded && ms.units >= 30 && ms.generatedAt !== null && !ms.error, `manifest loaded: ${ms.units} skill units, ${ms.excluded} excluded, generated ${ms.generatedAt}${ms.error ? " ERROR " + ms.error : ""}`);
+    const manifest = JSON.parse(readFileSync(path.join(brainDir, "skills", "MANIFEST.json"), "utf8")) as { units: Array<{ key: string; pinned: boolean; files: string[] }>; excluded: Array<{ key: string }> };
+    ok("K1b", manifest.units.length === ms.units && manifest.units.every((u) => !!capability(u.key)), `every manifest unit is a registry row (${manifest.units.length})`);
+    ok("K1c", ["jsa", "justice-league", "suicide-squad"].every((k) => manifest.excluded.some((x) => x.key === k) && capability(k)?.origin === "code"), "jsa / justice-league / suicide-squad are NOT double-registered — code rows only");
+
+    const sf = await resolveDispatch("starfire");
+    ok("K2", !("ok" in sf) && sf.cap.runner.kind === "skill" && sf.cap.origin === "manifest" && sf.cap.pinned && sf.cap.tier === "yellow", `starfire → skill row (pinned=${!("ok" in sf) && sf.cap.pinned}, tier=${!("ok" in sf) && sf.cap.tier})`);
+    if (!("ok" in sf) && sf.cap.runner.kind === "skill") {
+      const skillMd = readFileSync(path.join(brainDir, "skills", "starfire", "SKILL.md"), "utf8");
+      ok("K2a", sf.cap.runner.doctrine.includes(skillMd), `the doctrine text CONTAINS the bundled SKILL.md verbatim (${skillMd.length} chars inside ${sf.cap.runner.doctrine.length})`);
+      const refs = sf.cap.runner.files.filter((f) => f !== "SKILL.md");
+      ok("K2b", refs.every((f) => sf.cap.runner.doctrine.includes(`bundled reference: ${f}`) && sf.cap.runner.doctrine.includes(readFileSync(path.join(brainDir, "skills", "starfire", f), "utf8"))), `…and every bundled reference inline (${refs.join(", ") || "none"})`);
+      ok("K2c", /NO send, post, publish, schedule, or save tools/.test(sf.cap.runner.doctrine) && /waits for his approval/.test(sf.cap.runner.doctrine), "the preamble tells the skill it has no send tools and that drafts wait for him");
+      ok("K2d", sf.cap.runner.cost.maxTurns <= 32 && sf.cap.runner.cost.maxBudgetUsd <= 3 && sf.cap.runner.cost.minutes <= 20, `caps bounded by code: ${JSON.stringify(sf.cap.runner.cost)}`);
+    }
+    for (const key of ["perry-white", "kid-flash", "red-robin", "blue-beetle", "jimmy-olsen", "watchtower"]) {
+      const r = await resolveDispatch(key);
+      ok(`K3-${key.slice(0, 5)}`, !("ok" in r) && r.cap.runner.kind === "skill" && r.cap.pinned, `${key} → skill row, pinned`);
+    }
+    const jo = await resolveDispatch("Jimmy Olsen");
+    ok("K3-name", !("ok" in jo) && jo.key === "jimmy-olsen", `"Jimmy Olsen" (a brain-only skill NOT on the roster) resolves by registry name`);
+    const un = await resolveDispatch("youtube-metadata");
+    ok("K3-unpin", !("ok" in un) && un.cap.runner.kind === "skill" && !un.cap.pinned, "youtube-metadata → skill row, NOT pinned");
+
+    // dispatch_unit("starfire") is ACCEPTED and rides the worker path with the skill's doctrine.
+    const fk = fakeDb(true);
+    _setDbForTests(fk.client);
+    _test.setSchema({ migrated: true, probedAt: "t" });
+    frames.length = 0;
+    const seen: Array<{ unit: string; kind: string; doctrineHead: string; maxTurns: number }> = [];
+    _test.setWorker(async (_c, jobId, unit, _name, _t, _task, runner) => {
+      seen.push({ unit, kind: runner.kind, doctrineHead: runner.doctrine.slice(0, 40), maxTurns: runner.cost.maxTurns });
+      await failJob(jobId, unit, "GE post", "stubbed worker", emit, fk.client);
+    });
+    const acc = await dispatchUnit({ unit: "Starfire", task: "we need a social media post for GE Outdoors", why: "social post → Starfire owns organic social", emitJob: emit, conversationId: "conv-3" });
+    await new Promise((res) => setTimeout(res, 10));
+    _test.setWorker(null);
+    const row = fk.tables.jobs[0];
+    ok("K4", acc.ok && acc.status === "queued" && acc.unit === "starfire" && acc.name === "Starfire" && /drafts, then waits/.test(acc.say), `dispatch_unit("Starfire") ACCEPTED: ${acc.ok ? acc.say.slice(0, 90) : acc.say}…`);
+    ok("K4a", seen.length === 1 && seen[0].unit === "starfire" && seen[0].kind === "skill" && /^You are Starfire, running as a Churlish/.test(seen[0].doctrineHead), `the skill doctrine reached the worker path: ${JSON.stringify(seen[0])}`);
+    ok("K4b", !!row && row.unit === "starfire" && row.host === "brain" && row.tier === "green" && row.why === "social post → Starfire owns organic social", `job row: unit=${row?.unit} host=${row?.host} tier=${row?.tier} (job.tier stays the v0.1 green|red wire; the unit's default tier is on /state.fleet)`);
+    ok("K4c", frames.map((f) => f.status).join(">") === "queued>failed", `frames ${frames.map((f) => f.status).join(">")} (stub fails immediately)`);
+
+    // dispatch_unit("docx") is refused as WORKSPACE_ONLY — with the sync's reason.
+    const fk2 = fakeDb(false);
+    _setDbForTests(fk2.client);
+    _test.setSchema({ migrated: false, probedAt: "t", reason: "test" });
+    frames.length = 0;
+    const dx = await dispatchUnit({ unit: "docx", task: "make the proposal a Word doc", why: "test", emitJob: emit });
+    ok("K5", !dx.ok && dx.code === "unit_not_runnable" && dx.badge === "WORKSPACE_ONLY" && /python scripts/.test(dx.say) && fk2.tables.jobs.length === 0 && frames.length === 0, `dispatch_unit("docx") → ${!dx.ok ? dx.code + " / " + dx.badge : "RAN (wrong)"}; no row, no frame`);
+    ok("K5a", !dx.ok && dx.runnable.length <= MAX_ALTERNATIVES && dx.runnable.some((x) => /proposal|invoice|strategy|master-plan/.test(x.key)), `…alternatives by relevance: ${!dx.ok ? dx.runnable.map((x) => x.key).join(", ") : ""}`);
+    for (const key of ["pptx", "xlsx", "pdf", "reel-vision", "big-barda", "eve-super-brain"]) {
+      const r = await resolveDispatch(key);
+      ok(`K5-${key.slice(0, 5)}`, "ok" in r && r.code === "unit_not_runnable" && r.badge === "WORKSPACE_ONLY", `${key} → ${"ok" in r ? r.code : "RAN (wrong)"}`);
+    }
+
+    // A skill worker holds NO send tools — the tool list is code, and it is read-only web.
+    const sendish = /send|mail|slack|sms|post|publish|schedule|write|edit|bash|mcp__|os_/i;
+    ok("K6", WORKER_TOOLS.length === 2 && WORKER_TOOLS.every((t) => ["WebSearch", "WebFetch"].includes(t)) && WORKER_TOOLS.every((t) => !sendish.test(t)), `worker/skill tool list = [${WORKER_TOOLS.join(", ")}] — no send tools`);
+    ok("K6a", REGISTRY.filter((c) => c.runner.kind === "skill").every((c) => !("tools" in c.runner) && !("adapter" in c.runner)), "no skill row carries a tool grant or an adapter (the manifest cannot widen the worker)");
+
+    // The alternatives helper never returns more than 8, and prefers relevance.
+    const alts = alternativesFor("perry-white-x", { key: "x", name: "Email Desk", job: "writes client emails", triggers: "email", division: "fleet" } as never);
+    ok("K7", alts.length <= MAX_ALTERNATIVES && alts.some((c) => /email|perry|pennyworth/.test(c.key)), `alternatives for an email-shaped unit: ${alts.map((c) => c.key).join(", ")}`);
+
+    // The dispatch_unit description carries the re-route sentence and no 40-name list.
+    const desc = dispatchUnitDescription();
+    ok("K8", /RE-ROUTE HONESTY/.test(desc) && /which unit you used instead and why/.test(desc) && /If the unit he named IS runnable, run THAT unit/.test(desc), "dispatch_unit description: re-route honesty sentence present");
+    ok("K8a", desc.length < 2200 && !/youtube-metadata/.test(desc) && /Pinned: [^.]*starfire/.test(desc) && new RegExp(`${REGISTRY.length} units are RUNNABLE`).test(desc), `description is counts + pinned, not the whole list (${desc.length} chars)`);
+    const rc = registryCounts();
+    ok("K9", rc.dispatchable === REGISTRY.length && rc.kinds.skill === ms.units && rc.kinds.worker === 4 && rc.kinds.tool === 1 && rc.pinned === 9 && rc.manifest.loaded, `/health.fleet counts: ${JSON.stringify({ dispatchable: rc.dispatchable, kinds: rc.kinds, pinned: rc.pinned })}`);
   }
 
   // =========================================================================
@@ -318,35 +420,53 @@ async function main() {
   }
 
   // =========================================================================
-  console.log("\n=== P0.4 — /state.fleet: 5 dispatchable against the bundled roster ===");
+  console.log("\n=== P0.4 — /state.fleet: dispatchable = 5 code rows + bundled skills, against the bundled roster ===");
   {
     const jobs = [{ unit: "jsa", created_at: "2026-09-01T10:00:00Z" }, { unit: "jsa", created_at: "2026-09-01T11:00:00Z" }, { unit: "pennyworth", created_at: "2026-09-01T09:00:00Z" }];
     const f = await buildFleetBlock(jobs);
-    ok("S1", f.dispatchable === 5, `dispatchable = ${f.dispatchable}`);
-    ok("S2", f.registered === 52 && f.units.length === 52 && f.units.filter((u) => u.roster).length === 51, `registered = ${f.registered} (51 roster + research, brain-only); source=${f.source}`);
+    const ms = manifestState();
+    const rosterKeys = new Set((await fleetRoster()).units.map((u) => u.key));
+    const offRoster = REGISTRY.filter((c) => !rosterKeys.has(c.key));
+    ok("S1", f.dispatchable === 5 + ms.units && f.dispatchable === REGISTRY.length, `dispatchable = ${f.dispatchable} (5 code + ${ms.units} skills)`);
+    ok("S2", rosterKeys.size === 51 && f.registered === 51 + offRoster.length && f.units.length === f.registered && f.units.filter((u) => u.roster).length === 51, `registered = ${f.registered} (51 roster + ${offRoster.length} brain-only: ${offRoster.map((c) => c.key).join(", ")}); source=${f.source}`);
     const badges = Object.fromEntries(f.units.map((u) => [u.key, u.badge]));
-    ok("S3", badges.pennyworth === "RUNNABLE" && badges.jsa === "RUNNABLE" && badges.research === "RUNNABLE" && badges["perry-white"] === "WORKSPACE_ONLY" && badges.eve === "WORKSPACE_ONLY", `badges: pennyworth=${badges.pennyworth} jsa=${badges.jsa} perry-white=${badges["perry-white"]} eve=${badges.eve}`);
-    ok("S4", f.units.filter((u) => u.badge === "WORKSPACE_ONLY").length === 47 && f.units.every((u) => u.badge !== "DESK"), "47 WORKSPACE_ONLY, 0 DESK (nothing desk-wired in v0.1)");
+    ok("S3", badges.pennyworth === "RUNNABLE" && badges.jsa === "RUNNABLE" && badges.research === "RUNNABLE" && badges["perry-white"] === "RUNNABLE" && badges.starfire === "RUNNABLE" && badges.eve === "WORKSPACE_ONLY" && badges.cyborg === "WORKSPACE_ONLY", `badges: pennyworth=${badges.pennyworth} jsa=${badges.jsa} perry-white=${badges["perry-white"]} starfire=${badges.starfire} eve=${badges.eve} cyborg=${badges.cyborg}`);
+    const ws = f.units.filter((u) => u.badge === "WORKSPACE_ONLY").length;
+    ok("S4", ws === f.registered - f.dispatchable && f.units.every((u) => u.badge !== "DESK"), `${ws} WORKSPACE_ONLY, 0 DESK (nothing desk-wired) — computed, not literal`);
     const pw = f.units.find((u) => u.key === "pennyworth")!;
     const jsa = f.units.find((u) => u.key === "jsa")!;
-    ok("S5", pw.live === false && jsa.live === true && f.units.find((u) => u.key === "perry-white")!.live === false, `live: pennyworth=${pw.live} (OS unwired) jsa=${jsa.live} perry-white=false`);
+    ok("S5", pw.live === false && jsa.live === true && f.units.find((u) => u.key === "perry-white")!.live === true && f.units.find((u) => u.key === "cyborg")!.live === false, `live: pennyworth=${pw.live} (OS unwired) jsa=${jsa.live} perry-white=true cyborg=false`);
     ok("S6", jsa.lastRunAt === "2026-09-01T11:00:00Z" && pw.lastRunAt === "2026-09-01T09:00:00Z" && !("lastRunAt" in f.units.find((u) => u.key === "research")!), "lastRunAt = newest job in the window per unit; ABSENT when none (never a guess)");
     ok("S7", f.units.every((u) => typeof u.name === "string" && typeof u.role === "string" && typeof u.key === "string"), "every unit carries key/name/role");
     ok("S8", badgeFor("katana") === "WORKSPACE_ONLY", "an unregistered key badges WORKSPACE_ONLY, never RUNNABLE");
+    // v0.2 per-unit fields
+    const sf = f.units.find((u) => u.key === "starfire")!;
+    const cy = f.units.find((u) => u.key === "cyborg")!;
+    const jo = f.units.find((u) => u.key === "jimmy-olsen")!;
+    ok("S9", sf.kind === "skill" && sf.pinned === true && sf.tier === "yellow" && sf.division === "fleet" && sf.triggers.length > 0 && sf.triggers.length <= 80, `starfire: kind=${sf.kind} pinned=${sf.pinned} tier=${sf.tier} division=${sf.division} triggers="${sf.triggers}"`);
+    ok("S10", cy.kind === null && cy.pinned === false && !("tier" in cy) && cy.triggers.length > 0, `cyborg (WORKSPACE_ONLY): kind=null pinned=false no tier, triggers="${cy.triggers}"`);
+    ok("S11", jo.kind === "skill" && jo.roster === false && jo.division === "brain-skills" && jo.loc === "BRAIN" && jo.pinned, `jimmy-olsen (not a roster row): roster=false division=${jo.division} loc=${jo.loc} pinned=${jo.pinned}`);
+    ok("S12", f.pinned === 9 && f.units.filter((u) => u.pinned).map((u) => u.key).sort().join(",") === "blue-beetle,jimmy-olsen,kid-flash,pennyworth,perry-white,red-robin,research,starfire,watchtower", `pinned = ${f.pinned}: ${f.units.filter((u) => u.pinned).map((u) => u.key).sort().join(", ")}`);
+    ok("S13", f.kinds.worker === 4 && f.kinds.tool === 1 && f.kinds.skill === ms.units && f.units.every((u) => typeof u.triggers === "string" && u.triggers.length <= 80), `kinds = ${JSON.stringify(f.kinds)}; every triggers ≤ 80 chars`);
   }
 
   // =========================================================================
-  console.log("\n=== P1.7 — the ambient fleet line: ≤ ~60 tokens, names and badges only ===");
+  console.log("\n=== P1.7 — the ambient fleet line: under ~90 tokens, counts + pinned names only ===");
   {
     const line = await fleetLine();
     const words = line.split(/\s+/).length;
     const tokens = Math.ceil(line.length / 4);
-    ok("L1", tokens <= 60 && words <= 55, `≈${tokens} tokens (${line.length} chars, ${words} words)`);
-    ok("L2", /RUNNABLE/.test(line) && /WORKSPACE_ONLY/.test(line) && /DESK/.test(line), "names all three badges");
-    ok("L3", ["research", "jsa", "justice-league", "suicide-squad", "pennyworth(email)"].every((k) => line.includes(k)), "names every runnable unit");
-    ok("L4", /51 roster units \+ 1 brain-only/.test(line) && /47 are WORKSPACE_ONLY/.test(line), "counts come from the roster + registry, not a literal");
+    // chars/4 under-counts here (hyphenated keys, WORKSPACE_ONLY): the real
+    // tokenizer read 118 for the 340-char v0.2 draft. Budget by chars: ≤ 300.
+    ok("L1", line.length <= 300 && words <= 60, `≈${tokens} tokens by chars/4 (${line.length} chars, ${words} words) — real count in CONTRACT §v0.2`);
+    ok("L2", /RUNNABLE/.test(line) && /WORKSPACE_ONLY/.test(line) && (/DESK/.test(line) || (await buildFleetBlock([])).units.every((u) => u.badge !== "DESK")), "names the badges in play (DESK only when something is desk-wired)");
+    ok("L3", ["starfire", "kid-flash", "red-robin", "blue-beetle", "perry-white", "jimmy-olsen", "watchtower", "pennyworth", "research"].every((k) => line.includes(k)) && !/youtube-metadata|aqualad/.test(line), "names the pinned units and NOT the rest");
+    const m = line.match(/Fleet: (\d+) units — (\d+) RUNNABLE, (?:(\d+) DESK, )?(\d+) WORKSPACE_ONLY/);
+    const f = await buildFleetBlock([]);
+    ok("L4", !!m && Number(m[1]) === f.registered && Number(m[2]) === f.dispatchable && Number(m[3] ?? 0) === 0 && Number(m[1]) === Number(m[2]) + Number(m[3] ?? 0) + Number(m[4]), `counts match /state.fleet (${m?.slice(1).join("/")}) and sum`);
     ok("L5", !/trigger:|·/.test(line) && !/Daily money brief/.test(line), "no job descriptions or triggers (that is fleet_roster's job)");
-    loud("L6", `=> ${line}`);
+    ok("L6", /fleet_roster lists them/.test(line) && /others can't run here/.test(line) && /Re-routing\? say which unit and why/.test(line), "points at fleet_roster for the list, says the rest can't run, and carries the re-route clause");
+    loud("L7", `=> ${line}`);
   }
 
   // =========================================================================

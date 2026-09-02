@@ -18,7 +18,7 @@
 // is a lit segment (teal wash, ice type, a 2px bar under it) rather than an
 // underline-on-hover link.
 //
-// The five destinations are the whole map. DECK / BODY / WIRE / CORE are
+// The six destinations are the whole map. DECK / BODY / WIRE / CORE / FLEET are
 // `DeckView` values; CLOSET is App.tsx's separate `closetOpen` overlay, which is
 // why this component takes both and why NavDest is a superset of DeckView.
 //
@@ -74,6 +74,12 @@ export const NAV_ITEMS: NavItem[] = [
     dest: "core",
     label: "CORE",
     hint: "The core — the fleet, her presence, the counters.  Key 5, Esc back to the deck.",
+  },
+  {
+    key: "6",
+    dest: "fleet",
+    label: "FLEET",
+    hint: "The fleet — every unit, badged, with triggers, last run, DISPATCH and PIN.  Key 6, Esc back to the deck.",
   },
 ];
 

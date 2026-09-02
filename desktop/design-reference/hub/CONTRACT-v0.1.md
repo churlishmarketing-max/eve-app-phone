@@ -211,3 +211,89 @@ Fleet: 51 roster units + 1 brain-only. RUNNABLE via dispatch_unit: research, jus
 - A `job` frame may never arrive for a transition the brain made after the stream closed; `/state` is the truth, the frame is the fast path.
 - `cost_usd` is null for every pennyworth job and for worker jobs the SDK did not price; render `—`.
 - `DESK` badge and `needs_input` status exist in the type space and in nothing shipped; render nothing for them.
+
+---
+
+## v0.2 fleet additions — skills are units (2026-09-01)
+
+**Written from the shipping brain source after the v0.2 build (`registry.ts`, `dispatch.ts`, `index.ts`, `skills/MANIFEST.json`). Not deployed yet.** Proof: `cd C:\dev\eve\brain && npx tsx verify/dispatch-harness.ts` (111 assertions, pure, no network). Everything in §0–§8 above still holds; this section lists ONLY what is new or changed.
+
+### v0.2.0 What changed, in one paragraph
+
+His on-disk skills are now dispatchable. `scripts/sync-skills.mjs` classifies every SKILL.md directory (RUNNABLE = text-in/text-out from the brain; WORKSPACE_ONLY otherwise, each with a written reason), bundles the runnable ones (SKILL.md + `.md/.txt/.json/.csv` references, ≤ 400 KB each) into `brain/skills/<key>/`, and writes `brain/skills/MANIFEST.json`. `registry.ts` loads the manifest at boot and merges it with the 5 code rows (code wins on conflict). A manifest row has runner **kind `"skill"`**: it runs on the SAME SDK-subagent path as `research` (same turn/budget/minute caps, same `WebSearch`/`WebFetch`-only tool list — **no send tools**, that list is code), with the skill's SKILL.md + references as the system prompt, and lands `deliverable → approvals → done` exactly like research. The sync on 2026-09-01: **37 skills bundled, 22 excluded** (jsa / justice-league / suicide-squad stay code rows and are not double-registered), so the registry is **42 units** (4 workers + 1 tool + 37 skills).
+
+### v0.2.1 `GET /state` — `fleet` block: new fields
+
+```jsonc
+"fleet": {
+  "registered": 58,        // units.length. LIVE OS roster (53 on 2026-09-01) + 5 brain-only units → 58; bundled roster (51) → 56. Never hard-code.
+  "dispatchable": 42,      // badge === RUNNABLE  (was 5)
+  "pinned": 9,             // NEW — units with pinned:true (the CORE default set)
+  "kinds": { "worker": 4, "tool": 1, "skill": 37 },   // NEW — registry units by runner kind (sums to dispatchable while nothing is DESK)
+  "source": "os",
+  "at": "…",
+  "units": [
+    {
+      "key": "starfire", "name": "Starfire",
+      "role": "First seat on EVE's directors bench. Owns organic social end-to-end: …",   // roster job line (unchanged); for brain-only skills it is the skill's short role
+      "badge": "RUNNABLE", "live": true, "roster": true, "division": "fleet", "loc": "WS",
+      "kind": "skill",         // NEW — "worker" | "tool" | "skill" | null. null ⇔ WORKSPACE_ONLY
+      "pinned": true,          // NEW — boolean, always present
+      "triggers": "\"run Starfire\" · \"post this\" · \"what's pending\" · social calendar/approvals",   // NEW — string, always present, ≤ 80 chars, "" when unknown; whole " · " phrases only, never cut mid-phrase
+      "tier": "yellow"         // NEW — the UNIT'S DEFAULT tier: "green" | "yellow" | "red". KEY ABSENT for WORKSPACE_ONLY units. yellow = drafts, then waits for him (every worker + every skill); red = pennyworth (needs his approve to act); green = none today
+      // "lastRunAt" unchanged (absent when none)
+    },
+    { "key": "cyborg", "badge": "WORKSPACE_ONLY", "kind": null, "pinned": false, "triggers": "Daily ad brief", "live": false, … },   // no "tier" key
+    { "key": "jimmy-olsen", "badge": "RUNNABLE", "kind": "skill", "roster": false, "division": "brain-skills", "loc": "BRAIN", "pinned": true, "tier": "yellow", "role": "the minutes desk", … }
+  ]
+}
+```
+
+- `division` gains the value **`"brain-skills"`** (a bundled skill with no roster row: `brainiac`, `cinemarketer-sales-coach`, `jimmy-olsen`, `mister-miracle`); `research` keeps `"brain-workers"`. Both carry `loc:"BRAIN"`, `roster:false`.
+- Observed on 2026-09-01 against the LIVE OS roster: 42 RUNNABLE, 0 DESK, 16 WORKSPACE_ONLY (`eve, oracle, cyborg, steele, the-flash, lois-lane, the-question, huntress, rookie, diagnostic-agent, master-plan-style, verification-loop, goal-runner, session-handoff, mindctrl-publishing-council, big-barda`). Against the bundled roster: 42 / 0 / 14. Counts are computed; render what arrives.
+- **The pinned set (9):** `research, pennyworth, starfire, kid-flash, red-robin, blue-beetle, perry-white, jimmy-olsen, watchtower`. THE CORE shows `pinned:true` units by default; everything else is behind the fleet_roster/full list. The set lives in `scripts/sync-skills.mjs` (skills) and `registry.ts` (code rows) and can change on a re-sync — read `pinned`, never a literal list.
+- Card dot per D-DISPATCH §7.1, extended: `kind:"skill"` behaves exactly like `"worker"` (teal when `live`, which is always true for skills — they ride the chat loop's credentials). `tier` is the unit's default, NOT the job's tier (see v0.2.2).
+
+### v0.2.2 `GET /state` — `jobs[]`: what a skill job looks like
+
+Shape unchanged. `unit` may now be any of the 42 registry keys (e.g. `"starfire"`, `"perry-white"`, `"jimmy-olsen"`). Status meaning for a skill job is the **worker** column of the §1 table: `queued → running → in_approvals (deliverable landed; approve → done) | failed`. `job.tier` stays the v0.1 wire (`"green" | "red" | null`): a skill job carries `"green"` like a worker job (nothing external happens on its last step); the unit's yellow default is on `/state.fleet.units[].tier`, not on the job. `cost_usd` is the SDK's actual spend when it reports one. `result.kind:"deliverable"` unchanged.
+
+### v0.2.3 `/health.fleet` (unauthenticated) — counts only, never a name
+
+```jsonc
+"fleet": { "ready": true, "live": true, "count": 53,          // unchanged: roster rows
+           "dispatchable": 42, "kinds": { "worker": 4, "tool": 1, "skill": 37 }, "pinned": 9,   // NEW — equal to /state.fleet's
+           "manifest": { "loaded": true, "units": 37, "excluded": 22, "generatedAt": "2026-09-02T01:34:49.146Z" } }   // NEW; + "error": "<why>" when loaded:false or rows were dropped
+```
+
+`manifest.loaded:false` means the brain booted without `skills/MANIFEST.json` — the 5 code rows still run; render a small "SKILLS NOT LOADED" tag, not an error.
+
+### v0.2.4 `dispatch_unit` / `POST /dispatch` — refusal shape changes
+
+```jsonc
+// 422 DispatchRefusal — `runnable` is now AT MOST 8 rows chosen by role relevance to the unit he named (its name, roster job/triggers/division, and the sync's exclusion reason), never the whole list.
+{
+  "ok": false, "code": "unit_not_runnable", "unit": "cyborg", "name": "Cyborg", "badge": "WORKSPACE_ONLY",
+  "say": "I don't have a runner for Cyborg — it's a Claude Code unit (trigger: Daily ad brief), WORKSPACE_ONLY from here (builds live Meta campaign objects through the Meta Ads MCP, which the brain does not hold). Closest units that can run from here: ad-diagnostic-engine (…), red-robin (…), … If you hand it to one of them instead, tell him which unit ran it and why, in one clause.",
+  "runnable": [ { "key": "ad-diagnostic-engine", "name": "Ad Diagnostic Engine", "does": "…" }, … ≤ 8 rows … ]
+}
+```
+
+- `unit_not_runnable` (with `badge:"WORKSPACE_ONLY"` and a titleized `name`) is now ALSO returned for a skill that exists on his disk but was classified WORKSPACE_ONLY and is not a roster row (`docx`, `pptx`, `xlsx`, `pdf`, `reel-vision`, `eve-super-brain`, …) — with the classification reason in `say`. `unit_unknown` is reserved for names on neither the roster nor the sync's lists.
+- **Re-route honesty** (his ask): the `say` of every refusal ends with the clause above; the tool description tells her that when the unit he named is not runnable and she routes elsewhere she must say which unit ran it and why, and that when the unit IS runnable she runs THAT unit. `perry-white`, `starfire`, `kid-flash`, … are runnable now and are no longer refused. Acceptance `say` for a skill: `"<Name> has it (job xxxxxxxx). Drafting in the background — the deliverable lands in his approvals with a ping when done (minutes). It drafts, then waits for him: nothing is sent, posted, or published by a skill worker. Don't claim its results before it lands."`
+
+### v0.2.5 The ambient fleet line (context pack, not on the wire)
+
+```
+Fleet: 58 units — 42 RUNNABLE, 16 WORKSPACE_ONLY. dispatch_unit runs them by name; fleet_roster lists them; others can't run here. Pinned: research, pennyworth, blue-beetle, jimmy-olsen, kid-flash, perry-white, red-robin, starfire, watchtower. Re-routing? say which unit and why.
+```
+
+Counts per badge (DESK named only when > 0) + the pinned names + the re-route clause; the 42 names live in `fleet_roster`. `(cached)` is appended after the counts when the roster came from the bundled copy. Measured with the real tokenizer (`count_tokens`, claude-haiku-4-5, 2026-09-01): the cached-roster line is **~92 content tokens** (100 reported; the live line drops " (cached)" → ~90) (reported count minus the 8-token single-message baseline); chars/4 under-counts it (≈72) because hyphenated keys and `WORKSPACE_ONLY` tokenize expensively. The harness bounds it by length (≤ 300 chars).
+
+### v0.2.6 What the desktop must NOT assume (additions)
+
+- `dispatchable` is not 5 and `registered` is not 52/54 — both moved and both are computed. `WORKSPACE_ONLY` is `registered − dispatchable` while nothing is DESK.
+- `tier` on a fleet unit is a DEFAULT, not a job state; `job.tier` still never carries `"yellow"`.
+- `triggers` is always a string (possibly `""`); `kind` is `null` (not absent) for WORKSPACE_ONLY units; `tier` is ABSENT (not null) for them.
+- A unit's `role` for brain-only skills is the skill's short role (e.g. `"the minutes desk"`), not a roster job line.
+- The skill bundle is only as fresh as the last `node scripts/sync-skills.mjs` + redeploy; a skill edited on disk does not change the brain until then. `/health.fleet.manifest.generatedAt` says when.

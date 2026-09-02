@@ -253,6 +253,14 @@
   /* .45 measured 3.08 NEON / 2.82 PAPER / 4.04 TERMINAL. */
   color: rgba(var(--rgbCream), 0.66);
   white-space: nowrap;
+  /* v0.2 — the ellipsis .nm/.role/.st have carried since v0.1, which this line
+     alone was missing. With five cards it never showed; the pinned set runs the
+     strip to nine columns, the card's inner width drops to ~120px, and
+     "RUNNABLE · SINCE 23:44" stops fitting — without these two the line spilled
+     and was cut by the card's own edge mid-glyph, which reads as a broken
+     render rather than as a truncation. */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* .node .role and .node .st.dash are SHIPPED at .40 cream, which is 2.69 in
    NEON — tolerable as a decorative caption on the wire pane, not tolerable

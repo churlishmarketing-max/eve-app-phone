@@ -35,6 +35,7 @@ import {
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
 import { warmBoard, boardSnapshotReady } from "./os.js";
 import { warmFleet, fleetViewStatus } from "./fleet.js";
+import { registryCounts } from "./registry.js";
 import { rotateLook, initRotationConfig } from "./rotation.js";
 import { stamp, getStamp } from "./health.js";
 
@@ -60,7 +61,10 @@ app.use((req, res, next) => {
   next();
 });
 
-const PORT = Number(process.env.PORT || 8787);
+// EVE_PORT beats .env's PORT (env.ts loads .env with override:true, so a bare
+// `PORT=x` in a subshell is silently ignored) — for a local verification boot
+// beside the deployed one. Railway sets PORT, never EVE_PORT.
+const PORT = Number(process.env.EVE_PORT || process.env.PORT || 8787);
 const TOKEN = process.env.EVE_BRAIN_TOKEN;
 if (!TOKEN) {
   console.error("EVE_BRAIN_TOKEN is not set. Copy .env.example to .env first.");
@@ -113,7 +117,11 @@ app.get("/health", (_req, res) => {
     memoryReady: isDbReady(),
     voiceReady: { stt: sttReady(), tts: ttsReady() },
     osBoardWarm: boardSnapshotReady(),
-    fleet: fleetViewStatus(), // { ready, live, count } — live:true = read from the OS
+    // { ready, live, count } — live:true = read from the OS; count = roster rows.
+    // v0.2 adds the registry side (counts only, never a name): dispatchable =
+    // units with a runner here, kinds = by runner kind, pinned, and whether
+    // skills/MANIFEST.json loaded. Equal to /state.fleet.dispatchable.
+    fleet: { ...fleetViewStatus(), ...registryCounts() },
     // Dispatcher v0.1 (D-DISPATCH §1.1 / sql/004_dispatch.sql). migrated:false =
     // the brain is running against the legacy jobs table in pre-migration
     // mode: unit rides in `agent`, why/tier/confirmId/result live in memory

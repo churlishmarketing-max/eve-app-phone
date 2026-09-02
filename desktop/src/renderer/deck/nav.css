@@ -196,3 +196,21 @@
     padding: 0 7px;
   }
 }
+
+/* ---- six segments at the 1120px minimum ---------------------------------
+   FLEET (key 6) joined the strip after CORE. Six segments at the 7px shave
+   above measure ~380px, fifty over the ~330px of dead space at 1120. Below
+   1280 every segment now gives back more padding (→5px a side), a pixel of
+   keycap gap and some tracking (.16em → .1em): six segments in ~325px.
+   Geometry only — no destination is dropped, no keycap is hidden, and
+   nothing here is a colour. */
+@media (max-width: 1279px) {
+  .navseg {
+    padding: 0 5px;
+    gap: 4px;
+    letter-spacing: 0.1em;
+  }
+  .navseg .navkey {
+    padding: 0 2px;
+  }
+}

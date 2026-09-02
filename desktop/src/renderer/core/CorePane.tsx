@@ -32,9 +32,10 @@
 // fiction on the one device whose whole job is to take his commands — the
 // prompt echoes his last real turn or it stays empty.
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { EveState, Health, JobRow, PendingConfirm } from "@shared/contract";
-import type { ChatView, EveMode } from "../deck/types";
+import type { ChatView, CorePrefill, EveMode } from "../deck/types";
+import type { PinOverrides } from "./pins";
 import { APP_VERSION, agentCode, pad3 } from "../deck/format";
 import { SHELL_COPY } from "../deck/panes/shell";
 import FleetStrip from "./FleetStrip";
@@ -77,8 +78,12 @@ export interface CorePaneProps {
   /** This session's log lines for that job, oldest first. */
   selectedEvents: CoreLogEntry[];
   onSelectJob: (id: string | null) => void;
-  /** Open the strip's roster panel on mount (shot fixtures). */
-  rosterOpen?: boolean;
+  /** v0.2 — his local pin overrides; the strip's cards are the pinned units. */
+  pins: PinOverrides;
+  /** v0.2 — a sentence the FLEET tab's DISPATCH put in the command bar. */
+  prefill: CorePrefill | null;
+  /** v0.2 — the "+N ON ROSTER" card opens the FLEET tab. */
+  onOpenFleet: () => void;
   /** The existing chat path. This screen starts no second chat state machine. */
   onSend: (text: string) => void;
   onConfirmResolved: (id: string) => void;
@@ -91,7 +96,7 @@ export default function CorePane(p: CorePaneProps) {
 
   return (
     <div className="corepane">
-      <FleetStrip state={p.state} jobs={p.jobs} initialRosterOpen={p.rosterOpen} />
+      <FleetStrip state={p.state} jobs={p.jobs} pins={p.pins} onOpenFleet={p.onOpenFleet} />
 
       <div className="corebody">
         {/* ---- left: the counter rail + the clearance ladder ------------- */}
@@ -242,6 +247,7 @@ export default function CorePane(p: CorePaneProps) {
           <CommandCard
             online={p.state.online}
             busy={p.chat.busy}
+            prefill={p.prefill}
             onSend={p.onSend}
           />
         </div>
@@ -339,15 +345,33 @@ function JobsRail({
 function CommandCard({
   online,
   busy,
+  prefill,
   onSend,
 }: {
   online: boolean;
   busy: boolean;
+  prefill: CorePrefill | null;
   onSend: (text: string) => void;
 }) {
   const [draft, setDraft] = useState("");
   const [lastSent, setLastSent] = useState<string | null>(null);
   const box = useRef<HTMLInputElement | null>(null);
+
+  // v0.2 — the FLEET tab's DISPATCH lands here: the sentence goes in the box
+  // and the box takes focus with the caret at the end. He finishes it; nothing
+  // is sent by this effect. A fresh object per press (App bumps `seq`), so the
+  // same unit pressed twice still refocuses.
+  useEffect(() => {
+    if (!prefill) return;
+    setDraft(prefill.text);
+    const el = box.current;
+    if (!el) return;
+    el.focus();
+    requestAnimationFrame(() => {
+      const n = el.value.length;
+      el.setSelectionRange(n, n);
+    });
+  }, [prefill]);
 
   const blocked = !online || busy;
 

@@ -1,10 +1,11 @@
-// THE CORE's container — owning stream: THE CORE (P1 v0.1 hub half).
+// THE CORE's container — owning stream: THE CORE (P1 v0.2 hub half).
 //
 // Deck.tsx is pure presentation and stays that way: this is the one component
 // between it and CorePane that owns the things the deck's props do not already
 // carry — GET /health (MEMORY only, now), the merged jobs view, the session
-// log (derived by watching real events go past), the selected job and the set
-// of pending cards the detail panel can mount inline.
+// log (derived by watching real events go past), the selected job, the set
+// of pending cards the detail panel can mount inline, and (v0.2) his local
+// pins, which decide which units are cards on the strip.
 //
 // The same shape SettingsPane already has: Deck renders it, it fetches its own
 // slice, and the presentational component below it takes everything as props
@@ -12,11 +13,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import type { EveState } from "@shared/contract";
-import type { ChatView, EveMode } from "../deck/types";
+import type { ChatView, CorePrefill, EveMode } from "../deck/types";
 import CorePane from "./CorePane";
 import { confirmFor, jobsView, pendingConfirmsOf } from "./jobs";
 import { eventsFor, useCoreLog } from "./useCoreLog";
 import { useHealth } from "./useHealth";
+import { usePins } from "./usePins";
 
 export interface CoreScreenProps {
   sessionNo: number;
@@ -27,8 +29,10 @@ export interface CoreScreenProps {
   quietHours: boolean;
   /** Open on this job's detail (shot fixtures). Live use opens by click. */
   initialJobId?: string;
-  /** Open the roster panel on mount (shot fixtures). */
-  initialRosterOpen?: boolean;
+  /** A sentence the FLEET tab's DISPATCH button put in the command bar. */
+  prefill: CorePrefill | null;
+  /** The "+N ON ROSTER" card: open the FLEET tab. */
+  onOpenFleet: () => void;
   onSend: (text: string) => void;
   onConfirmResolved: (id: string) => void;
 }
@@ -37,6 +41,7 @@ export default function CoreScreen(p: CoreScreenProps) {
   // Asking a dead brain for /health once a minute is noise; the MEMORY cell
   // says NO ANSWER on its own when this is null. (The fleet no longer reads it.)
   const { health, error: healthError } = useHealth(p.state.online);
+  const { pins } = usePins();
 
   const frames = p.chat.jobFrames ?? [];
   const jobs = useMemo(() => jobsView(p.state, p.fetchedAt, frames), [p.state, p.fetchedAt, frames]);
@@ -61,13 +66,15 @@ export default function CoreScreen(p: CoreScreenProps) {
       mode={p.mode}
       quietHours={p.quietHours}
       jobs={jobs}
+      pins={pins}
       log={log.rows}
       logDropped={log.dropped}
       selectedJob={selected}
       selectedConfirm={selectedConfirm}
       selectedEvents={selectedEvents}
       onSelectJob={onSelectJob}
-      rosterOpen={p.initialRosterOpen}
+      prefill={p.prefill}
+      onOpenFleet={p.onOpenFleet}
       onSend={p.onSend}
       onConfirmResolved={p.onConfirmResolved}
     />

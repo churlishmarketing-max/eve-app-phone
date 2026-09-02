@@ -7,7 +7,7 @@ import * as google from "./google.js";
 import * as os from "./os.js";
 import { fleetRoster } from "./fleet.js";
 import { dispatchUnit, type JobEmit } from "./dispatch.js";
-import { runnable } from "./registry.js";
+import { dispatchUnitDescription } from "./registry.js";
 import { postNote, notesReady, notesStatusDetail } from "./notes.js";
 import { saveMemory, matchClient } from "./memory.js";
 import { logConversations } from "./floor.js";
@@ -713,18 +713,12 @@ export function buildConnectorServer(
       // purpose rather than hidden.
       tool(
         "dispatch_unit",
-        "Hand a job to a named fleet unit. Your context's Fleet line says who is RUNNABLE from here; " +
-          "fleet_roster has all of them. Runnable now: " +
-          runnable().map((c) => `${c.key} — ${c.does}`).join("; ") +
-          ". A unit that is WORKSPACE_ONLY can be NAMED but not run — this tool refuses it and tells you who " +
-          "can; say that to him with the unit's trigger phrase and NEVER pretend to have dispatched it. " +
-          "Workers produce documents in the background (minutes) and land in his approvals with a ping; " +
-          "pennyworth drafts a client email into the OS and raises a RED send card — nothing external is " +
-          "ever sent by a worker or by this tool. NEVER claim a result before a report lands. " +
-          "Pass his sentence VERBATIM as task; `why` is your one-line routing reason (it shows on the job " +
-          "row so he can re-route with one word). pennyworth needs `client` (the OS client, fuzzy ok).",
+        // v0.2: counts + pinned + the re-route sentence (registry.ts) — forty
+        // runnable names no longer fit in a description; the registry matches
+        // by name and fleet_roster lists them.
+        dispatchUnitDescription(),
         {
-          unit: z.string().describe("Roster key or name, e.g. 'pennyworth', 'jsa', 'research'. No default."),
+          unit: z.string().describe("Roster key or name, e.g. 'pennyworth', 'starfire', 'perry-white', 'research'. No default."),
           task: z.string().describe("His sentence, verbatim"),
           why: z.string().describe("One line: why this unit"),
           client: z.string().optional().describe("The client this is about (required for pennyworth)"),

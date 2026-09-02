@@ -1,0 +1,235 @@
+/* THE FLEET tab — owning stream: THE CORE (P1 v0.2 hub half).
+   Imported by src/renderer/core/FleetPane.tsx, after core.css.
+
+   The pane wears .corepane so it inherits the dotted ground, .sechead,
+   .coreplate, .railhead, .fleetdot and .rbadge — the strip's own grammar —
+   and this sheet adds only the row geometry. Same four rules as core.css:
+   not one colour literal, no var(--ink), everything under .corepane.fleetpane,
+   red and green untouched (nothing here is either). Every alpha is one
+   core.css already measured (.62 / .66 / .68 / .72 / .88). */
+
+/* The tab scrolls where THE CORE does not: fifty-six rows do not fit a frame. */
+.corepane.fleetpane {
+  overflow: hidden;
+}
+.corepane.fleetpane .fleetscroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 2px;
+}
+
+/* ---- the one-line summary under the head ------------------------------- */
+.corepane.fleetpane .fleetsum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--rgbCream), 0.72);
+}
+.corepane.fleetpane .fleetsum .fs.off {
+  color: rgba(var(--rgbCream), 0.62);
+}
+.corepane.fleetpane .fleetsum .fsep {
+  color: rgba(var(--rgbAccent), 0.7);
+}
+
+/* ---- the grid every row and the column head share ---------------------- */
+.corepane.fleetpane .fleetcols,
+.corepane.fleetpane .frow {
+  display: grid;
+  grid-template-columns: 7px 168px 118px minmax(0, 1.25fr) minmax(0, 1fr) 118px 78px 92px;
+  gap: 0 12px;
+  align-items: center;
+  min-width: 0;
+}
+.corepane.fleetpane .fleetcols {
+  flex: none;
+  padding: 0 14px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: rgba(var(--rgbAccent), 0.85);
+}
+
+/* ---- a division ---------------------------------------------------------- */
+.corepane.fleetpane .fdiv {
+  flex: none;
+  padding: 10px 14px 6px;
+  display: flex;
+  flex-direction: column;
+}
+.corepane.fleetpane .fdivhead {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.corepane.fleetpane .fdivhead .fcount {
+  margin-left: auto;
+  font-weight: 400;
+}
+
+/* ---- a row ---------------------------------------------------------------- */
+.corepane.fleetpane .frow {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--hair2);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+}
+.corepane.fleetpane .frow:last-child {
+  border-bottom: none;
+}
+/* A unit with no runner is drawn quieter, not hidden: the badge still says
+   WORKSPACE ONLY in the same dashed dress the strip's cards wear. */
+.corepane.fleetpane .frow.future .fname,
+.corepane.fleetpane .frow.future .frole,
+.corepane.fleetpane .frow.future .ftrig {
+  color: rgba(var(--rgbCream), 0.68);
+}
+
+.corepane.fleetpane .fnm {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.corepane.fleetpane .fname {
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The literal dispatch key, lowercase-hyphenated as the wire spells it. */
+.corepane.fleetpane .fkey {
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--rgbAccent), 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.corepane.fleetpane .fbadge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+.corepane.fleetpane .fbadge .rbadge {
+  margin-left: 0;
+}
+.corepane.fleetpane .fkind {
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  color: rgba(var(--rgbCream), 0.66);
+  white-space: nowrap;
+}
+
+.corepane.fleetpane .frole,
+.corepane.fleetpane .ftrig {
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  line-height: 1.45;
+  color: rgba(var(--rgbCream), 0.88);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-width: 0;
+}
+.corepane.fleetpane .ftrig {
+  color: rgba(var(--rgbCream), 0.72);
+}
+
+.corepane.fleetpane .flast {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.corepane.fleetpane .fstate {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--rgbCream), 0.68);
+  white-space: nowrap;
+}
+.corepane.fleetpane .fstate.run {
+  color: var(--tealHi);
+}
+.corepane.fleetpane .fstate.gold {
+  color: var(--gold);
+}
+.corepane.fleetpane .fwhen {
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--rgbCream), 0.66);
+  white-space: nowrap;
+}
+
+/* ---- the two controls ---------------------------------------------------- */
+/* Both wear the shipped .tbtn (app.css) so they match the title bar's own
+   buttons in every world; only the lit PIN state is new. */
+.corepane.fleetpane .pinb,
+.corepane.fleetpane .dispb {
+  white-space: nowrap;
+  justify-self: stretch;
+  text-align: center;
+  padding: 4px 6px;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+.corepane.fleetpane .pinb.on {
+  border-color: rgba(var(--rgbAccent), 0.55);
+  background: rgba(var(--rgbAccent), 0.14);
+  color: var(--ice);
+}
+.corepane.fleetpane .dispb {
+  border-color: rgba(var(--rgbAccent), 0.45);
+  color: var(--tealHi);
+}
+.corepane.fleetpane .dispb:hover {
+  background: rgba(var(--rgbAccent), 0.12);
+  color: var(--ice);
+}
+.corepane.fleetpane .fnorun {
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: rgba(var(--rgbCream), 0.62);
+  border: 1px dashed rgba(var(--rgbCream), 0.35);
+  border-radius: 4px;
+  padding: 4px 6px;
+  white-space: nowrap;
+}
+.corepane.fleetpane .frow button:focus-visible {
+  outline: 1px solid var(--tealHi);
+  outline-offset: 1px;
+}
+
+/* ---- the one breakpoint: geometry only ---------------------------------- */
+@media (max-width: 1279px) {
+  .corepane.fleetpane .fleetcols,
+  .corepane.fleetpane .frow {
+    grid-template-columns: 7px 140px 104px minmax(0, 1.2fr) minmax(0, 1fr) 104px 70px 84px;
+    gap: 0 9px;
+  }
+  .corepane.fleetpane .fname {
+    font-size: 11px;
+  }
+}

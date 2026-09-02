@@ -16,8 +16,9 @@ import TalkColumn from "./TalkColumn";
 import DataColumn from "./DataColumn";
 import { SettingsPane } from "./s3-contracts";
 import CoreScreen from "../core/CoreScreen";
+import FleetScreen from "../core/FleetScreen";
 import type { NavDest } from "./NavStrip";
-import type { ChatView, DeckView, EveMode, WardrobeView } from "./types";
+import type { ChatView, CorePrefill, DeckView, EveMode, WardrobeView } from "./types";
 
 export interface DeckProps {
   now: Date;
@@ -43,8 +44,11 @@ export interface DeckProps {
   /** DISPATCH v0.1 — a shot fixture opens THE CORE on this job's detail.
    *  App never sets it; the live screen opens detail by click. */
   coreJobId?: string;
-  /** DISPATCH v0.1 — a shot fixture opens THE CORE with the roster panel open. */
-  coreRosterOpen?: boolean;
+  /** v0.2 — the FLEET tab's DISPATCH put this in THE CORE's command bar.
+   *  App owns it; a fixture may set it to photograph the prefilled bar. */
+  corePrefill?: CorePrefill | null;
+  /** v0.2 — a FLEET row's DISPATCH: App jumps to THE CORE, prefilled. */
+  onDispatchUnit: (key: string) => void;
   onSend: (text: string) => void;
   onConfirmResolved: (id: string) => void;
   onToggleSilent: () => void;
@@ -95,10 +99,18 @@ export default function Deck(p: DeckProps) {
             mode={p.mode}
             quietHours={p.quietHours}
             initialJobId={p.coreJobId}
-            initialRosterOpen={p.coreRosterOpen}
+            prefill={p.corePrefill ?? null}
+            onOpenFleet={() => go("fleet")}
             onSend={p.onSend}
             onConfirmResolved={p.onConfirmResolved}
           />
+        </div>
+      ) : p.view === "fleet" ? (
+        // THE FLEET tab (key 6) — the whole roster, one row per unit, with
+        // his pins. Mounts exactly like THE CORE and scrolls inside its own
+        // pane; the "+N ON ROSTER" card on THE CORE is its other door.
+        <div className="corewrap">
+          <FleetScreen state={p.state} fetchedAt={p.fetchedAt} chat={p.chat} onDispatchUnit={p.onDispatchUnit} />
         </div>
       ) : p.view === "settings" ? (
         // Artboard F is a FULL-FRAME pane under the title bar — no rail, no

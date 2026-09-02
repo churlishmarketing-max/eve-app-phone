@@ -1,0 +1,1085 @@
+{
+  "generatedAt": "2026-09-02T01:34:49.146Z",
+  "generator": "scripts/sync-skills.mjs",
+  "sources": [
+    "C:/Users/mrkin/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/cae82843-359e-4be7-8cdb-7e9039f69fb3/fb4f662d-e133-4c51-97b4-17c756ca0e45/skills",
+    "C:/Users/mrkin/.claude/skills"
+  ],
+  "maxBytesPerSkill": 409600,
+  "pinned": [
+    "blue-beetle",
+    "jimmy-olsen",
+    "kid-flash",
+    "perry-white",
+    "red-robin",
+    "starfire",
+    "watchtower"
+  ],
+  "units": [
+    {
+      "key": "ad-diagnostic-engine",
+      "name": "Ad Diagnostic Engine",
+      "role": "Diagnoses paid ad performance and prescribes creative, targeting, or CTA fixes for Churlish Media clients and Churlish campaigns.",
+      "triggers": "Any ad metrics · before any ad ships",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "ad-diagnostic-engine",
+      "files": [
+        "SKILL.md",
+        "references/benchmarks.md",
+        "references/cta-standards.md",
+        "references/diagnostic-matrices.md"
+      ],
+      "bytes": 20589,
+      "skipped": [],
+      "trimmed": [],
+      "why": "diagnoses pasted ad numbers → prescription; the optional .docx packaging stays workspace"
+    },
+    {
+      "key": "ad-script-factory",
+      "name": "Ad Script Factory",
+      "role": "Generates direct-response ad scripts, video scripts, and ad creative copy in the Churlish Media call-out style.",
+      "triggers": "\"write an ad for\" · \"write me a hook\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "ad-script-factory",
+      "files": [
+        "SKILL.md",
+        "references/ad-formats.md",
+        "references/hook-library.md"
+      ],
+      "bytes": 23816,
+      "skipped": [],
+      "trimmed": [],
+      "why": "writes ad scripts/hooks from a brief; pure copy"
+    },
+    {
+      "key": "alfred",
+      "name": "Alfred",
+      "role": "Alfred is Churlish Media's AI Editor brain — a long-form YouTube editor that thinks like a high-level human editor.",
+      "triggers": "\"storyboard this video\" · \"plan the animations\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "alfred-editor",
+      "files": [
+        "SKILL.md",
+        "references/analyze.md",
+        "references/animation-plan.md",
+        "references/branding.md",
+        "references/remotion.md"
+      ],
+      "bytes": 22829,
+      "skipped": [],
+      "trimmed": [],
+      "why": "Phase 2 (analyze → plan → brand → mockup) is text from a pasted transcript; Remotion build + Premiere placement stay workspace",
+      "note": "planning phases only"
+    },
+    {
+      "key": "aqualad",
+      "name": "Aqualad",
+      "role": "Aqualad — the assistant in Brandon King's writer's world: the CINEFLUX side of the operation.",
+      "triggers": "\"Aqualad\" · \"writer's world\" · any fiction/RP/novel/worldbuilding work",
+      "division": "writers-room",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 3,
+        "minutes": 12
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "aqualad",
+      "files": [
+        "SKILL.md",
+        "references/formats.md",
+        "references/heat-playbook.md",
+        "references/influence-engine.md",
+        "references/rabbit-hole-bible.md",
+        "references/voice-bible.md"
+      ],
+      "bytes": 85074,
+      "skipped": [],
+      "trimmed": [],
+      "why": "fiction/RP/worldbuilding writer; text references only"
+    },
+    {
+      "key": "avatar-bible-loader",
+      "name": "Avatar Bible Loader",
+      "role": "Stores and serves detailed client avatar profiles for Churlish Media engagements, providing the target audience context that other skills need to produce…",
+      "triggers": "\"avatar for [client]\" · any skill needing audience context",
+      "division": "command",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "avatar-bible-loader",
+      "files": [
+        "SKILL.md",
+        "references/active-avatars.md",
+        "references/avatar-template.md"
+      ],
+      "bytes": 19993,
+      "skipped": [],
+      "trimmed": [],
+      "why": "serves avatar profiles from its text references; builds new ones from pasted material"
+    },
+    {
+      "key": "blue-beetle",
+      "name": "Blue Beetle",
+      "role": "Blue Beetle — brand outreach engine for Brandon King's Churlish Media.",
+      "triggers": "\"run Blue Beetle\" · outreach · booking",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": true,
+      "source": "plugin",
+      "sourceDir": "blue-beetle",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 4155,
+      "skipped": [],
+      "trimmed": [],
+      "why": "drafts outreach sequences and reply routing; the worker holds no send tools so nothing goes out",
+      "note": "drafts only — Smartlead/LinkedIn/Calendar stay workspace"
+    },
+    {
+      "key": "brainiac",
+      "name": "Brainiac",
+      "role": "Brainiac — the prompt engine for Brandon King's Churlish Media fleet.",
+      "triggers": "\"run Brainiac\" · \"Brainiac this\" · \"bottle this\"",
+      "division": null,
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "brainiac",
+      "files": [
+        "SKILL.md",
+        "references/model-profiles.md",
+        "references/self-update.md",
+        "references/task-styles.md",
+        "references/token-conservation.md"
+      ],
+      "bytes": 29195,
+      "skipped": [],
+      "trimmed": [],
+      "why": "rewrites a request into a model-tuned prompt; text only"
+    },
+    {
+      "key": "brother-eye",
+      "name": "Brother Eye",
+      "role": "Brother Eye — answer engine visibility (AEO) for Brandon King's Churlish Media.",
+      "triggers": "AEO/GEO mentions · \"run Brother Eye\"",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "brother-eye",
+      "files": [
+        "SKILL.md",
+        "references/query-battery.md"
+      ],
+      "bytes": 9919,
+      "skipped": [],
+      "trimmed": [],
+      "why": "AEO query battery + visibility report; needs web search, which workers have"
+    },
+    {
+      "key": "cassandra-cain",
+      "name": "Cassandra Cain",
+      "role": "Cassandra Cain — the receipts scorer for Brandon King's Churlish Media.",
+      "triggers": "\"score this\" · \"Cass pass\"",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "cassandra-cain",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 6249,
+      "skipped": [],
+      "trimmed": [],
+      "why": "scores a draft against pasted performance data; text in, score out",
+      "note": "pattern files cannot be saved from the brain — the score is the deliverable"
+    },
+    {
+      "key": "churlish-voice-guard",
+      "name": "Churlish Voice Guard",
+      "role": "Enforces Churlish Media's brand voice, visual identity, and writing style across all outputs.",
+      "triggers": "Before ANY Churlish-voiced output — non-negotiable",
+      "division": "command",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "churlish-voice-guard",
+      "files": [
+        "SKILL.md",
+        "references/visual-identity.md",
+        "references/voice-rules.md"
+      ],
+      "bytes": 14950,
+      "skipped": [],
+      "trimmed": [],
+      "why": "voice/style rules as a review pass over pasted copy; reference text only"
+    },
+    {
+      "key": "cinemarketer-sales-coach",
+      "name": "Cinemarketer Sales Coach",
+      "role": "Analyze a sales call and produce a scored Cinemarketer-style feedback report — overall score out of 100, a weighted score for every section of the call, the…",
+      "triggers": "\"handle-it-differently\" · \"grade my call\" · \"analyze my Fathom call\"",
+      "division": null,
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "cinemarketer-sales-coach",
+      "files": [
+        "SKILL.md",
+        "references/constitution.md",
+        "references/offer.md",
+        "references/rubric.md"
+      ],
+      "bytes": 24269,
+      "skipped": [
+        "scripts/build_report.js"
+      ],
+      "trimmed": [],
+      "why": "scores a pasted sales-call transcript → chat report; scripts/build_report.js (the .docx) is skipped"
+    },
+    {
+      "key": "content-calendar-engine",
+      "name": "Content Calendar Engine",
+      "role": "Generates monthly content calendars with funnel-stage tagging, platform cadence, hooks, and CTAs for Churlish Media clients or for Churlish itself.",
+      "triggers": "\"content calendar for [client]\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "content-calendar-engine",
+      "files": [
+        "SKILL.md",
+        "references/calendar-framework.md",
+        "references/content-formats.md"
+      ],
+      "bytes": 20085,
+      "skipped": [],
+      "trimmed": [],
+      "why": "monthly calendar as a markdown table; .xlsx/.docx packaging stays workspace"
+    },
+    {
+      "key": "doctor-mid-nite",
+      "name": "Doctor Mid-Nite",
+      "role": "Doctor Mid-Nite — funnel page surgeon for Brandon King's Churlish Media.",
+      "triggers": "\"run Mid-Nite\" · \"why isn't my page converting\"",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "doctor-mid-nite",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 7998,
+      "skipped": [],
+      "trimmed": [],
+      "why": "fetches the live page (WebFetch) and writes the Bleed Report"
+    },
+    {
+      "key": "editor-brief-generator",
+      "name": "Editor Brief Generator",
+      "role": "Generates standardized project briefs and instruction forms for editors, VAs, and production team members working on Churlish Media client content.",
+      "triggers": "\"brief for [editor]\" · any handoff",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "editor-brief-generator",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 5231,
+      "skipped": [],
+      "trimmed": [],
+      "why": "writes editor/VA briefs from a description"
+    },
+    {
+      "key": "email-sequence-writer",
+      "name": "Email Sequence Writer",
+      "role": "Generates email sequences, nurture flows, follow-up campaigns, and automated email copy using the NEPQ and Chris Voss methodologies for Churlish Media clients…",
+      "triggers": "\"nurture sequence for\" · any email flow",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "email-sequence-writer",
+      "files": [
+        "SKILL.md",
+        "references/sequence-blueprints.md"
+      ],
+      "bytes": 14489,
+      "skipped": [],
+      "trimmed": [],
+      "why": "writes nurture/follow-up sequences; copy only"
+    },
+    {
+      "key": "fable-mind",
+      "name": "Fable Mind",
+      "role": "The Fable 5 reasoning doctrine — the permanent, model-agnostic brain layer every Churlish skill runs on.",
+      "triggers": "Start of any session · whenever any skill fires",
+      "division": "command",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "fable-mind",
+      "files": [
+        "SKILL.md",
+        "references/proven-calls.md",
+        "references/reasoning-patterns.md"
+      ],
+      "bytes": 18596,
+      "skipped": [],
+      "trimmed": [],
+      "why": "the operator-mode reasoning doctrine applied to a pasted problem; text only"
+    },
+    {
+      "key": "guardian",
+      "name": "Guardian",
+      "role": "Guardian — the renewal saver for Brandon King's Churlish Media EVE fleet.",
+      "triggers": "\"run Guardian\" · \"who's up for renewal\" · churn signals",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "guardian",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 6499,
+      "skipped": [],
+      "trimmed": [],
+      "why": "renewal/churn shield report from pasted account facts; text only",
+      "note": "needs the account facts in the task — no CRM read from the brain"
+    },
+    {
+      "key": "hlp-clip-finder",
+      "name": "HLP Clip Finder",
+      "role": "The HLP Content Engine — builds podcast trailers, short-form clips (≤90s), and mid-form clips (4–7 min, YouTube/LinkedIn) from High Level Pros episodes using…",
+      "triggers": "Any HLP transcript + clip request",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "hlp-clip-finder",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 16834,
+      "skipped": [
+        "assets/HLP-Clip-System-v2.docx",
+        "assets/HLP-Clip-System-v2.pdf",
+        "assets/HLP-Content-Engine-v3.docx",
+        "assets/HLP-Content-Engine-v3.pdf"
+      ],
+      "trimmed": [],
+      "why": "HLP transcript → clip sheet; the workflow is in SKILL.md, the .docx/.pdf assets are skipped"
+    },
+    {
+      "key": "hlp-youtube-package",
+      "name": "HLP YouTube Package",
+      "role": "Generates the complete YouTube publishing package for a High Level Pros (HLP) podcast episode — title, description, thumbnail subtitle, and thumbnail prompt —…",
+      "triggers": "\"HLP package\" · upload prep",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "hlp-youtube-package",
+      "files": [
+        "SKILL.md",
+        "references/description-blueprint.md",
+        "references/thumbnail-system.md",
+        "references/titles-and-subtitles.md"
+      ],
+      "bytes": 19107,
+      "skipped": [],
+      "trimmed": [],
+      "why": "episode transcript → title/description/thumbnail package"
+    },
+    {
+      "key": "invoice-scoper",
+      "name": "Invoice Scoper",
+      "role": "Generates formatted invoice scope documents and line-item breakdowns from campaign descriptions for Churlish Media client engagements.",
+      "triggers": "\"invoice for [client]\" · \"scope this\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "invoice-scoper",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 5087,
+      "skipped": [],
+      "trimmed": [],
+      "why": "scope + line items as inline text; .docx packaging stays workspace"
+    },
+    {
+      "key": "iris-west",
+      "name": "Iris West",
+      "role": "Iris West — the fresh-fuel reporter for Brandon King's Churlish Media EVE fleet.",
+      "triggers": "\"run Iris\" · \"anything timely\"",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "iris-west",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 5658,
+      "skipped": [],
+      "trimmed": [],
+      "why": "7-day news sweep per client; needs web search, which workers have"
+    },
+    {
+      "key": "jimmy-olsen",
+      "name": "Jimmy Olsen",
+      "role": "Jimmy Olsen — the minutes desk for Brandon King's Churlish Media.",
+      "triggers": "\"run Jimmy\" · \"Jimmy this\" · \"file this\"",
+      "division": null,
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": true,
+      "source": "user",
+      "sourceDir": "jimmy-olsen",
+      "files": [
+        "SKILL.md",
+        "references/template.md"
+      ],
+      "bytes": 6608,
+      "skipped": [],
+      "trimmed": [],
+      "why": "messy notes → filed minutes; pure text, template is a text reference"
+    },
+    {
+      "key": "kid-flash",
+      "name": "Kid Flash",
+      "role": "Kid Flash — lead research engine for Brandon King's Churlish Media.",
+      "triggers": "\"run Kid Flash\" · list sourcing",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": true,
+      "source": "plugin",
+      "sourceDir": "kid-flash",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 2956,
+      "skipped": [],
+      "trimmed": [],
+      "why": "prospect research/qualification/tiering as a text list via web search",
+      "note": "Apollo + email verification are not on the brain — unverified rows must be flagged [NEEDS: verify]"
+    },
+    {
+      "key": "martian-manhunter",
+      "name": "Martian Manhunter",
+      "role": "Martian Manhunter — the client voice forge for Brandon King's Churlish Media.",
+      "triggers": "\"build a voice file\" · \"run Manhunter\" · voice drift",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "martian-manhunter",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 7281,
+      "skipped": [],
+      "trimmed": [],
+      "why": "forges a client voice file from pasted raw material; text out"
+    },
+    {
+      "key": "master-plan-formula",
+      "name": "Master Plan Formula",
+      "role": "Builds complete strategic master plans for any business by ingesting a brain-dump and structuring it via the Churlish strategic formula (strategic bet,…",
+      "triggers": "\"master plan for [business]\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 3,
+        "minutes": 12
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "churlish-master-plan-formula",
+      "files": [
+        "SKILL.md",
+        "references/brain-dump-parser.md",
+        "references/churlish-formula.md",
+        "references/frameworks.md",
+        "references/kpi-library.md",
+        "references/pricing-architectures.md",
+        "references/section-templates.md",
+        "templates/exec-summary-outline.md",
+        "templates/master-plan-outline.md"
+      ],
+      "bytes": 85909,
+      "skipped": [
+        "scripts/build_master_plan.py"
+      ],
+      "trimmed": [],
+      "why": "structures a brain-dump into the 10-section plan as markdown; the python triple-output (HTML/PDF/DOCX) packaging stays workspace",
+      "note": "markdown deliverable, no HTML/PDF/DOCX"
+    },
+    {
+      "key": "mister-miracle",
+      "name": "Mister Miracle",
+      "role": "Mister Miracle — the code review desk for Brandon King's Churlish Media fleet.",
+      "triggers": "\"run Miracle\" · \"Miracle pass\" · \"review this code\"",
+      "division": null,
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "user",
+      "sourceDir": "mister-miracle",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 6929,
+      "skipped": [],
+      "trimmed": [],
+      "why": "review-only code review of PASTED code; fixed checklist, text findings",
+      "note": "no repo access from the brain — paste the code in the task"
+    },
+    {
+      "key": "perry-white",
+      "name": "Perry White",
+      "role": "Perry White — Editor-in-Chief of the email desk for Brandon King's Churlish Media.",
+      "triggers": "\"Perry White\" · \"run Perry\" · \"take this to the desk\" · \"reply to this\"",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": true,
+      "source": "plugin",
+      "sourceDir": "perry-white",
+      "files": [
+        "SKILL.md",
+        "references/desk-standards.md",
+        "references/situation-playbooks.md"
+      ],
+      "bytes": 44052,
+      "skipped": [],
+      "trimmed": [],
+      "why": "writes one-off/high-stakes emails as drafts; the worker holds no send tools"
+    },
+    {
+      "key": "proposal-generator",
+      "name": "Proposal Generator",
+      "role": "Generates complete client proposals for Churlish Media using the Authority Engine methodology and tiered pricing structure.",
+      "triggers": "\"proposal for [client]\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "churlish-proposal-generator",
+      "files": [
+        "SKILL.md",
+        "references/industry-angles.md",
+        "references/pricing-engine.md",
+        "references/proposal-architecture.md"
+      ],
+      "bytes": 29230,
+      "skipped": [],
+      "trimmed": [],
+      "why": "proposal content (tiers, pricing, pain language) as markdown; the .docx build via the docx skill stays workspace"
+    },
+    {
+      "key": "red-robin",
+      "name": "Red Robin",
+      "role": "Red Robin — Brandon King's short-form content & ad creative engine for Churlish Media.",
+      "triggers": "\"run Red Robin\" · shorts · ad creative",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": true,
+      "source": "plugin",
+      "sourceDir": "red-robin",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 7410,
+      "skipped": [],
+      "trimmed": [],
+      "why": "transcript → short-form clips + ad creative as text; nothing is rendered"
+    },
+    {
+      "key": "rustic-lumber-store",
+      "name": "Rustic Lumber Store",
+      "role": "Use this skill for ANY task related to Rustic Lumber Store, Woodaddy, Zach Witkin, or any of the three business engines (custom furniture, raw lumber,…",
+      "triggers": "Anything RLS / Woodaddy / Zach",
+      "division": "clients",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "rustic-lumber-store",
+      "files": [
+        "SKILL.md",
+        "references/ad-scripts.md",
+        "references/brand-bible.md",
+        "references/youtube-system.md"
+      ],
+      "bytes": 27856,
+      "skipped": [],
+      "trimmed": [],
+      "why": "client file: RLS/Woodaddy copy, metadata, strategy; text references only"
+    },
+    {
+      "key": "starfire",
+      "name": "Starfire",
+      "role": "Starfire — Social Media Director for Brandon King's Churlish Media.",
+      "triggers": "\"run Starfire\" · \"post this\" · \"what's pending\" · social calendar/approvals",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": true,
+      "source": "plugin",
+      "sourceDir": "starfire",
+      "files": [
+        "SKILL.md",
+        "references/ai-image-prompting.md"
+      ],
+      "bytes": 29259,
+      "skipped": [],
+      "trimmed": [],
+      "why": "social post drafting, calendar, captions, image prompts as text",
+      "note": "Canva design + publishing stay workspace; drafts land in approvals"
+    },
+    {
+      "key": "strategy-doc-builder",
+      "name": "Strategy Doc Builder",
+      "role": "Generates comprehensive strategy documents, gameplans, playbooks, KPI trackers, and business infrastructure docs for Churlish Media clients.",
+      "triggers": "\"gameplan for\" · \"KPI tracker\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "strategy-doc-builder",
+      "files": [
+        "SKILL.md",
+        "references/doc-templates.md",
+        "references/kpi-frameworks.md"
+      ],
+      "bytes": 16282,
+      "skipped": [],
+      "trimmed": [],
+      "why": "strategy docs/gameplans/KPI trackers as markdown; .docx/.xlsx packaging stays workspace"
+    },
+    {
+      "key": "transcript-clip-finder",
+      "name": "Transcript Clip Finder",
+      "role": "Analyzes video/podcast transcripts to identify the strongest short-form clip opportunities for Churlish Media clients.",
+      "triggers": "Any non-HLP transcript + \"find clips\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "transcript-clip-finder",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 5866,
+      "skipped": [],
+      "trimmed": [],
+      "why": "transcript → clip opportunities; text only"
+    },
+    {
+      "key": "truenorth-clip-finder",
+      "name": "TrueNorth Clip Finder",
+      "role": "Finds short-form (≤90s) and LinkedIn mid-form (4–6 min) clips in TrueNorth Leadership Co.",
+      "triggers": "Any Kambi/TrueNorth transcript",
+      "division": "clients",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "truenorth-clip-finder",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 11263,
+      "skipped": [],
+      "trimmed": [],
+      "why": "TrueNorth transcript → clip sheet; text only"
+    },
+    {
+      "key": "watchtower",
+      "name": "WATCHTOWER",
+      "role": "WATCHTOWER — supervisor for Brandon King's EVE fleet at Churlish Media.",
+      "triggers": "\"run WATCHTOWER\" · evaluator mode on goal-runner builds",
+      "division": "command",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": true,
+      "source": "plugin",
+      "sourceDir": "watchtower",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 3359,
+      "skipped": [],
+      "trimmed": [],
+      "why": "grades a PASTED build/output against its fleet-health checklist",
+      "note": "cannot walk agent folders from the brain — paste what it should inspect"
+    },
+    {
+      "key": "youtube-council",
+      "name": "YouTube Council",
+      "role": "Run a video idea, title + thumbnail, hook, script, or channel-strategy decision through a 5-seat YouTube war room that critiques it independently,…",
+      "triggers": "\"youtube council this\" · \"would this get the click\"",
+      "division": "war-rooms",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "youtube-council",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 16754,
+      "skipped": [
+        "references/report-template.html"
+      ],
+      "trimmed": [],
+      "why": "5-seat war room + chairman verdict as markdown; the .html report template is skipped"
+    },
+    {
+      "key": "youtube-metadata",
+      "name": "YouTube Metadata",
+      "role": "Generates optimized YouTube titles, descriptions, tags, thumbnail concepts, and chapter markers for Churlish Media client channels and Brandon's own channel.",
+      "triggers": "\"title options\" · \"optimize for YouTube\"",
+      "division": "production",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "youtube-metadata",
+      "files": [
+        "SKILL.md",
+        "references/metadata-formulas.md"
+      ],
+      "bytes": 11714,
+      "skipped": [],
+      "trimmed": [],
+      "why": "titles/descriptions/tags/chapters from a description or transcript"
+    }
+  ],
+  "excluded": [
+    {
+      "key": "big-barda",
+      "reason": "orchestrates Claude Code seats and /fable; a workflow over the workspace, not a text job"
+    },
+    {
+      "key": "brand-guidelines",
+      "reason": "Anthropic brand styling for pptx/canvas artifacts (python-pptx); not a Churlish job"
+    },
+    {
+      "key": "canvas-design",
+      "reason": "renders .png/.pdf art with bundled .ttf fonts; binary output"
+    },
+    {
+      "key": "churlish-master-plan-style",
+      "reason": "HTML/CSS + python-docx build helpers producing HTML/PDF/DOCX; binary document generation"
+    },
+    {
+      "key": "consolidate-memory",
+      "reason": "edits memory files on disk"
+    },
+    {
+      "key": "cyborg",
+      "reason": "builds live Meta campaign objects through the Meta Ads MCP, which the brain does not hold"
+    },
+    {
+      "key": "docx",
+      "reason": "python scripts + OOXML schemas for .docx generation; binary document generation"
+    },
+    {
+      "key": "eve-super-brain",
+      "reason": "EVE's own operating doctrine — she IS this unit; dispatching herself is a loop, not a job"
+    },
+    {
+      "key": "explain-usage",
+      "reason": "reads session .jsonl transcripts from the local disk"
+    },
+    {
+      "key": "frontend-design",
+      "reason": "UI design guidance applied inside a codebase; needs the repo"
+    },
+    {
+      "key": "import-memory",
+      "reason": "writes to Claude's memory tools"
+    },
+    {
+      "key": "jsa",
+      "reason": "already a registry WORKER row (code) — not double-registered"
+    },
+    {
+      "key": "justice-league",
+      "reason": "already a registry WORKER row (code) — not double-registered"
+    },
+    {
+      "key": "mcp-builder",
+      "reason": "builds MCP servers (python/node scripts, evaluation harness); code, not text"
+    },
+    {
+      "key": "morning",
+      "reason": "playwright render of an HTML artifact with a bundled woff2 font; needs the local browser"
+    },
+    {
+      "key": "pdf",
+      "reason": "python scripts for PDF forms/merging/rendering; binary document handling"
+    },
+    {
+      "key": "pptx",
+      "reason": "python scripts + OOXML schemas for .pptx generation; binary document generation"
+    },
+    {
+      "key": "reel-vision",
+      "reason": "ffmpeg/whisper-cli/yt-dlp pipeline over local video files"
+    },
+    {
+      "key": "schedule",
+      "reason": "creates scheduled tasks through the host's scheduler tool"
+    },
+    {
+      "key": "second-brain",
+      "reason": "filesystem census (ls ~/.claude/skills) + OS roster sync writes; fleet_roster already answers the read side"
+    },
+    {
+      "key": "setup-cowork",
+      "reason": "guided plugin install/connector flow inside Cowork"
+    },
+    {
+      "key": "skill-creator",
+      "reason": "python eval/packaging scripts over skill directories on disk"
+    },
+    {
+      "key": "suicide-squad",
+      "reason": "already a registry WORKER row (code) — not double-registered"
+    },
+    {
+      "key": "ui-ux-pro-max",
+      "reason": "python search scripts over bundled CSV data (3.5 MB); needs the local toolchain"
+    },
+    {
+      "key": "xlsx",
+      "reason": "python scripts + OOXML schemas for .xlsx generation; binary document generation"
+    }
+  ]
+}

@@ -187,6 +187,16 @@ export interface FleetUnitRow {
   loc?: string;
   /** Newest job created_at for this unit INSIDE the 24 h window. KEY ABSENT when none. */
   lastRunAt?: string;
+  // ---- v0.2 (CONTRACT-v0.1 §v0.2.1) — optional here because a v0.1 brain
+  // omits all four; the desktop reads them defensively and invents none. ----
+  /** Runner kind. `null` ⇔ WORKSPACE_ONLY. Absent on a v0.1 brain. */
+  kind?: "worker" | "tool" | "skill" | null;
+  /** The brain's DEFAULT pin (THE CORE's default card set). Absent on a v0.1 brain. */
+  pinned?: boolean;
+  /** ≤ 80 chars of " · "-joined trigger phrases; "" when unknown. */
+  triggers?: string;
+  /** The UNIT's default tier — not a job's. ABSENT for WORKSPACE_ONLY units. */
+  tier?: "green" | "yellow" | "red" | string;
 }
 
 /** §2 — `/state.fleet`, bearer-gated. THE strip reads from here, never /health. */
@@ -195,6 +205,10 @@ export interface FleetBlock {
   registered: number;
   /** Units with badge RUNNABLE. */
   dispatchable: number;
+  /** v0.2 — units with pinned:true. Absent on a v0.1 brain. */
+  pinned?: number;
+  /** v0.2 — registry units by runner kind. Absent on a v0.1 brain. */
+  kinds?: { worker: number; tool: number; skill: number };
   /** "os" = read live from Churlish OS this window; "bundled" = cached copy. */
   source: "os" | "bundled" | string;
   /** When that roster view was built. */

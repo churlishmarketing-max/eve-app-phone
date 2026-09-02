@@ -19,7 +19,7 @@ import Deck from "./Deck";
 import { ConfirmLayer, WardrobePanel } from "./s3-contracts";
 import { NAV_BY_KEY, isTypingTarget } from "./NavStrip";
 import { bootSession, readPlateMode } from "./format";
-import type { DeckView, EveMode } from "./types";
+import type { CorePrefill, DeckView, EveMode } from "./types";
 
 // Law 2: no canned personality lines. The session greeting is a HIDDEN system
 // seed through the normal pipe — she writes the sentence, we only ask.
@@ -41,6 +41,9 @@ export default function App() {
   const [config, setConfig] = useState<ConfigView | null>(null);
   const [voiceName, setVoiceName] = useState<string | null>(null);
   const [resolvedIds, setResolvedIds] = useState<string[]>([]);
+  // v0.2 — what the FLEET tab's DISPATCH button put in THE CORE's command bar.
+  const [corePrefill, setCorePrefill] = useState<CorePrefill | null>(null);
+  const prefillSeq = useRef(0);
 
   // The counter cannot advance until main has told us whether a harness is
   // driving this launch, so the first paint shows the stored total (a read,
@@ -221,6 +224,20 @@ export default function App() {
 
   const openCloset = useCallback(() => setCloset(true), []);
 
+  // ---- FLEET → CORE: a row's DISPATCH button --------------------------------
+  // Jumps to THE CORE with "dispatch <key>: " in the command bar and the box
+  // focused. NOTHING is sent: he finishes the sentence, it goes to her as a
+  // turn on the existing chat path, and she routes it (D-DISPATCH §7.4).
+  const onDispatchUnit = useCallback(
+    (key: string) => {
+      prefillSeq.current += 1;
+      setCorePrefill({ text: `dispatch ${key}: `, seq: prefillSeq.current });
+      if (closetOpen) closeCloset();
+      setView("core");
+    },
+    [closetOpen, closeCloset],
+  );
+
   // ---- ESC: the exit chain -------------------------------------------------
   // Order, and why each rung is where it is:
   //   1. a RED confirm consumes it first. ConfirmCard focuses its own card on
@@ -299,6 +316,8 @@ export default function App() {
         onOpenWardrobe={openCloset}
         onCloseWardrobe={closeCloset}
         onView={setView}
+        corePrefill={corePrefill}
+        onDispatchUnit={onDispatchUnit}
       />
       <WardrobePanel
         open={closetOpen}

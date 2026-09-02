@@ -14,7 +14,15 @@ export type EveMode = "idle" | "listening" | "thinking" | "speaking" | "alert";
  *  "settings" does (Deck.tsx branches before the three-column grid). It is an
  *  ADDITION, not a replacement: the deck still carries the conversation, the
  *  confirm cards and the approval inbox. */
-export type DeckView = "deck" | "body" | "settings" | "core";
+export type DeckView = "deck" | "body" | "settings" | "core" | "fleet";
+
+/** v0.2 — a sentence the FLEET tab's DISPATCH button puts in THE CORE's
+ *  command bar ("dispatch <key>: "). `seq` makes every press a fresh object so
+ *  the same unit pressed twice still refocuses the box. */
+export interface CorePrefill {
+  text: string;
+  seq: number;
+}
 
 /** One line in the conversation. `role` mirrors the bubble classes .bub.eve/.you. */
 export interface DeckMsg {

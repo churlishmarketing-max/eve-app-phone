@@ -25,6 +25,7 @@ import type { EveState } from "@shared/contract";
 import {
   mockDispatchJobs,
   mockFleet,
+  mockFleetV2,
   mockJobConfirm,
   mockJobFailedItem,
   mockState,
@@ -61,6 +62,7 @@ function base(over: Partial<DeckProps> = {}): DeckProps {
     onOpenWardrobe: () => undefined,
     onCloseWardrobe: () => undefined,
     onView: () => undefined,
+    onDispatchUnit: () => undefined,
     ...over,
   };
 }
@@ -87,6 +89,12 @@ function dispatchState(): EveState {
     attentionItems: [...(base.attentionItems ?? []), mockJobFailedItem()],
     pendingConfirms: [mockJobConfirm()],
   };
+}
+
+// v0.2 — the dispatcher's state with the fleet block the brain serves since
+// his skills became units (mockFleetV2: the brain's own rows, 56 / 42 / 9).
+function fleetState(): EveState {
+  return { ...dispatchState(), fleet: mockFleetV2() };
 }
 
 const STREAM: DeckMsg[] = [
@@ -244,11 +252,30 @@ export const scenarios: Record<string, () => JSX.Element> = {
   // dashed card says why, and the FLEET readout is a dash. No zero anywhere.
   "core-fleet-nofleet": () => <Deck {...base({ view: "core" })} />,
 
-  // THE ROSTER, OPEN. The "+N ON ROSTER" card is a button; this is what it
-  // opens: every unit the brain served, division-grouped, every row badged —
-  // RUNNABLE as an accent plate, everything else a dashed outline. The most
-  // important pixel on the screen, photographed.
-  "core-roster": () => <Deck {...base({ view: "core", state: dispatchState(), coreRosterOpen: true })} />,
+  // ---- P1 v0.2: skills are units; the FLEET tab -----------------------------
+  // THE FLEET TAB (key 6). Every unit on the v0.2 fleet block (56 against the
+  // bundled roster: 42 RUNNABLE, 14 WORKSPACE ONLY, 9 pinned, kinds 4/1/37 —
+  // all computed from the array), division-grouped, one row each: dot, name +
+  // dispatch key, badge + kind · tier, job, triggers, state + last run, the
+  // PIN toggle, and DISPATCH for a RUNNABLE unit / NO RUNNER for the rest.
+  // Pins are the brain's default here (a throwaway profile holds no local
+  // overrides). The dispatch jobs light research / pennyworth / suicide-squad
+  // / jsa / justice-league exactly as core-jobs does.
+  "fleet-tab": () => <Deck {...base({ view: "fleet", state: fleetState() })} />,
+
+  // THE CORE WITH THE PINNED CARDS. The same v0.2 block: the strip draws the
+  // pinned units — nine on the wire, capped at eight, runnable first then by
+  // activity (research RUNNING, pennyworth NEEDS YOU, then the idle pins in
+  // the brain's order; jimmy-olsen, last of the nine, is the one not drawn) —
+  // and the "+N ON ROSTER" card is the door to the FLEET tab, its numeral the
+  // real remainder. Everything under the strip is core-jobs, unchanged.
+  "core-pinned": () => <Deck {...base({ view: "core", state: fleetState() })} />,
+
+  // THE CORE'S COMMAND BAR PREFILLED — what a FLEET row's DISPATCH leaves
+  // behind: "dispatch starfire: " in the box, focused, nothing sent.
+  "core-prefill": () => (
+    <Deck {...base({ view: "core", state: fleetState(), corePrefill: { text: "dispatch starfire: ", seq: 1 } })} />
+  ),
 
   // THE DECK'S OPS PANE WITH THE DISPATCHER'S STATE: the job_failed attention
   // item renders as an approval-inbox row (glyph "!", JOB FAILED · N1), and
