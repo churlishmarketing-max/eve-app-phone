@@ -27,6 +27,17 @@ import {
 // A manifest row cannot widen this; it is code.
 export const WORKER_TOOLS: readonly string[] = ["WebSearch", "WebFetch"];
 
+/**
+ * Permission mode for unattended workers. NOT "bypassPermissions": that needs
+ * --dangerously-skip-permissions, which refuses to run as root — which is what
+ * the Railway container is. "dontAsk" pre-approves via `allowedTools` and
+ * denies everything else.
+ */
+export const WORKER_PERMISSION_MODE =
+  (process.env.EVE_WORKER_PERMISSION_MODE as
+    | "default" | "acceptEdits" | "bypassPermissions" | "plan" | "dontAsk" | "auto"
+    | undefined) ?? "dontAsk";
+
 // THE DISPATCHER, v0.1 (D-DISPATCH §1, §2.4, §3, §6, §8.2).
 //
 // One job row the brain owns. A unit resolves through the registry
@@ -561,9 +572,21 @@ const runWorker: WorkerFn = async (c, jobId, unit, name, title, task, runner, cl
     ? "Relevant memory:\n" + recall.map((h) => `- [${h.kind}] ${h.content}`).join("\n")
     : "No stored memory on this topic — do not invent client facts; hold labeled space for anything unknown.";
 
-  // ⚑VERIFIED 2026-07-16 (SDK 0.3.211 docs): `tools` = availability,
-  // `allowedTools` = auto-approval; both are needed, plus bypassPermissions,
-  // for an unattended worker. persistSession:false skips transcript retention.
+  // VERIFIED 2026-07-16 (SDK 0.3.211 docs): `tools` = availability,
+  // `allowedTools` = auto-approval; both are needed for an unattended worker.
+  // persistSession:false skips transcript retention.
+  //
+  // FIXED 2026-09-02 — and this is why every worker had ALWAYS failed in
+  // production while passing locally. permissionMode was "bypassPermissions",
+  // which the SDK implements with --dangerously-skip-permissions, and that flag
+  // REFUSES to run as root. Railway's NIXPACKS container IS root, so the Claude
+  // Code process exited 1 every time ("worker crashed"), while the identical
+  // code on a Windows dev box worked. Not one deliverable in the jobs table had
+  // ever been produced by the deployed brain.
+  // "dontAsk" is correct here and strictly SAFER: never prompt, DENY anything
+  // not pre-approved. Our two tools are pre-approved via `allowedTools`, so
+  // nothing legitimate is lost and an unexpected tool is refused rather than
+  // waved through. Overridable with EVE_WORKER_PERMISSION_MODE.
   const ac = new AbortController();
   const timeout = setTimeout(() => ac.abort(), runner.cost.minutes * 60_000);
   let out = "";
@@ -584,7 +607,7 @@ const runWorker: WorkerFn = async (c, jobId, unit, name, title, task, runner, cl
         systemPrompt: runner.doctrine,
         tools: [...WORKER_TOOLS],
         allowedTools: [...WORKER_TOOLS],
-        permissionMode: "bypassPermissions",
+        permissionMode: WORKER_PERMISSION_MODE,
         persistSession: false,
         maxTurns: runner.cost.maxTurns,
         maxBudgetUsd: runner.cost.maxBudgetUsd,
