@@ -1,6 +1,7 @@
 import { db } from "./db.js";
 import { floorView, type FloorView } from "./floor.js";
 import { saveMemory } from "./memory.js";
+import { type DurableOrigin } from "./durable.js";
 import { localDay, addLocalDays, lastNDays, dowLabel, zonedToUtc, TZ } from "./day.js";
 
 // THE BODY — energy, sleep, the day's one line, and the habit ledger.
@@ -131,10 +132,36 @@ export function checkinNoteMemory(onDate: string, note: string): string {
 // DEDUPE: exact match on the composed string, which already embeds the local
 // day. He will blur that textarea a dozen times an evening and every blur
 // re-POSTs the same text; only the first may mint a memory row.
+// ---------------------------------------------------------------------------
+// THE ORIGIN IS A PARAMETER, AND THAT IS THE WHOLE POINT (audit 6, X1).
+//
+// THIS FUNCTION USED TO HARDCODE `{kind:"system", why:"…no conversation, no
+// model, no picture path"}`, and the sentence was FALSE for one of its two
+// callers. `log_checkin` is a GREEN conversational tool with no confirm card
+// and a free-text `note` field the MODEL fills in. So on a picture turn she
+// could call `log_checkin({note:"<a line read off the screenshot>"})` and the
+// row landed in `memory_entries` stamped `origin="system"` — which is precisely
+// the value the X2 read side treats as clean WITHOUT a taint join. It would
+// then have been recalled into every later conversation under "trust these over
+// guesses" and into every unattended worker brief.
+//
+// That is D6-10 reopened through a different GREEN tool, and it defeated BOTH
+// halves of this fix at once: the write gate (a system origin is never asked
+// about a conversation) and the read filter (a system origin is never joined).
+// The rot was the comment asserting "no model wrote it, no tool call produced
+// it" ONE FUNCTION AWAY from the tool call that produces it — the same shape
+// the judge named at tools.ts:64.
+//
+// So the caller says which it is, and neither caller may shrug:
+//   · POST /vitals            -> system. He typed it into his own textarea.
+//   · log_checkin (the tool)  -> conversation. The model composed the string,
+//                                and the taint is asked about that thread.
+// ---------------------------------------------------------------------------
 export async function rememberCheckinNote(
   note: string,
-  onDate = localDay(),
-): Promise<{ ok: boolean; deduped: boolean; error?: string }> {
+  origin: DurableOrigin,
+  onDate: string = localDay(),
+): Promise<{ ok: boolean; deduped: boolean; error?: string; withheldSay?: string }> {
   const c = db();
   if (!c) return { ok: false, deduped: false, error: "memory spine offline" };
   // Trimmed so a stray trailing space between blurs isn't a "different" note.
@@ -150,7 +177,13 @@ export async function rememberCheckinNote(
     .limit(1);
   if (error) return { ok: false, deduped: false, error: error.message };
   if (existing?.length) return { ok: true, deduped: true };
-  const m = await saveMemory("fact", content);
+  // WHICHEVER ORIGIN THE CALLER NAMED. A system origin is recallable without a
+  // taint join, so it is the one claim in this build that must never be made on
+  // someone else's behalf — see the block above this function.
+  const m = await saveMemory("fact", content, origin);
+  if (m.withheld) {
+    return { ok: false, deduped: false, error: m.withheld.say, withheldSay: m.withheld.say };
+  }
   return m.ok ? { ok: true, deduped: false } : { ok: false, deduped: false, error: m.error };
 }
 

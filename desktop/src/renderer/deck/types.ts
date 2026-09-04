@@ -31,6 +31,18 @@ export interface DeckMsg {
   text: string;
   /** Confirms that arrived on this turn — rendered inline under the bubble. */
   confirms?: PendingConfirm[];
+  /**
+   * THE TURN FINISHED (audit 4, W1). Set by the reducer on the `done` frame and
+   * on nothing else — not mid-stream, and not on an error.
+   *
+   * It exists so the deck can print THIS TURN RAISED NO CARD under a turn that
+   * raised none, which is the ground truth that replaced the brain's deleted
+   * card-claim keyword detector. "No card yet" and "no card" are different
+   * sentences and only the second is knowable, so a turn that is still running
+   * — or that died mid-stream — stays unmarked and the deck says nothing about
+   * it rather than guessing.
+   */
+  done?: boolean;
 }
 
 /** What useChat hands the deck. */

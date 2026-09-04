@@ -84,6 +84,233 @@ export interface FileMove {
   f?: string;
 }
 
+/**
+ * STRUCTURAL PROVENANCE OF THE TURN THAT MINTED THIS PLAN.
+ *
+ * Stamped by the brain (brain/src/connectors.ts desk_file_plan) from a fact the
+ * hard image validator established BEFORE the model generated a token, and it
+ * rides INSIDE the hashed payload — so it cannot be stripped in transit without
+ * the approve failing closed, and the model cannot set it, clear it, or argue
+ * with it.
+ *
+ * It exists because of a5: a forged Slack screenshot wearing King's name talked
+ * her into narrating "standing authorisation" and raising a real card whose
+ * intent line quoted the picture. The prompt is the first defence; this is the
+ * one that survives the prompt being talked around, because it puts the fact on
+ * the card he actually approves from.
+ *
+ * ABSENT on an older brain. Absent means UNKNOWN, and the card says nothing —
+ * it never says "no picture", because it does not know that.
+ *
+ * NAMES ONLY (2026-09-02): THE CURRENT BRAIN CANNOT MINT A CARD WITH A PICTURE
+ * IN IT. desk_file_plan is refused outright for the whole life of any
+ * conversation an image has been in, so every card it raises now carries
+ * `{sawImage:false, imageTurnsAgo:null}` — I LOOKED AND FOUND NONE.
+ *
+ * THE FIELDS BELOW STAY, AND THE CARD STILL RENDERS THEM. They are no longer a
+ * warning about a plan the brain allowed; they are a WITNESS that its gate ran.
+ * A card reaching this screen stamped `sawImage:true` or with a distance on it
+ * would mean that gate did not — which is a thing the card can say out loud,
+ * and a field deleted for being unreachable could not.
+ */
+export interface TurnProvenance {
+  /** True when the chat turn that produced this plan carried an image. */
+  sawImage: boolean;
+  /**
+   * WHAT THE BRAIN'S DURABLE RECORD ACTUALLY SAID, AND WHERE THE ANSWER CAME
+   * FROM (audit 5, B1).
+   *
+   * The two fields above it were a CONSTANT. Every card the current brain mints
+   * carries `{sawImage:false, imageTurnsAgo:null}` because the gate refuses
+   * before a payload can exist — which sounds like a witness and is worth
+   * nothing, because it reads identically on a genuinely clean turn and on a
+   * turn whose in-memory taint row had been evicted by a restart, a failed turn
+   * or a ledger overflow. Those are the only two cases a witness is for, and it
+   * could not tell them apart. Audit 5 drove exactly that: a real card, on a
+   * conversation that had carried a picture, stamped "I looked and found none".
+   *
+   * This is a real observation instead. `status` is what
+   * `conversations.saw_image` said this turn and `source` is how it was
+   * answered — `row` (read from the durable row), `memory` (the picture is
+   * still in her live session), `new` (no row AND no transcript: turn one of a
+   * conversation that has never existed), `orphan` / `no-row` / `offline` /
+   * `error` (it could not be answered at all).
+   *
+   * AUDIT 6, D6-B ADDED `new` AND `orphan`, AND THE SPLIT IS THE POINT. The
+   * brain used to run `ensureConversation` BEFORE this read, so a conversation
+   * whose row had been LOST was silently re-minted at sql/005's `not null
+   * default false` and reported here as `clean` / `row` — a witness swearing it
+   * had read a durable record about a row the reader had created a millisecond
+   * earlier. The order is now read-then-mint, and the two no-row cases are told
+   * apart by whether any of that conversation's transcript survives: `new`
+   * (nothing survives — genuinely turn one, and it files, which is what the
+   * fresh-thread button depends on) versus `orphan` (the record is gone and the
+   * transcript is not — UNKNOWN, and it refuses).
+   *
+   * A CARD CANNOT EXIST UNLESS THIS SAYS "clean". The gate refuses on "tainted"
+   * AND on "unknown", so anything else arriving here means the gate did not run
+   * — which is a sentence this card can say out loud, and a silent field could
+   * not.
+   *
+   * ABSENT on an older brain. Absent is not clean.
+   */
+  taint?: { status: "clean" | "tainted" | "unknown"; source: string };
+  /**
+   * HOW MANY TURNS BACK the most recent picture in this CONVERSATION was —
+   * 0 for this very turn, n for n turns ago, `null` when there has been no
+   * picture inside the brain's taint window (chat.ts IMAGE_TAINT_TURNS = 25).
+   *
+   * THE TURN IS THE WRONG UNIT (audit 2, b10/b10c). The launder puts the
+   * picture on turn N and the plan on turn N+1, where `sawImage` is honestly
+   * false — and a card stamped `{sawImage:false}` reads, per §v0.3.3, as
+   * "I CHECKED, THERE WAS NO PICTURE". That stamp was actively WRONG about
+   * where the plan came from. This field is what makes it right.
+   *
+   * ABSENT (`undefined`) on an older brain that never looked. `null` means
+   * this brain looked and found none in the window. Absent is not `null`, and
+   * neither of them is `false`. (§v0.4.2)
+   */
+  imageTurnsAgo?: number | null;
+  /** One short sentence about the picture, e.g. "a PNG he attached to this
+   *  message (412 KB)". Built from the brain's OWN measurements — the sniffed
+   *  mime and the decoded byte count — never from anything the picture or the
+   *  filename claimed. Absent when there was no picture ON THIS TURN — a
+   *  picture two turns back leaves `imageTurnsAgo:2` and no note, because the
+   *  brain describes only the bytes it validated this turn. */
+  imageNote?: string;
+  /**
+   * A picture is in this SDK SESSION's transcript. v0.5.
+   *
+   * AUDIT 3 FOUND THE WINDOW LAPSING WHILE THE PIXELS DID NOT. The brain used
+   * to expire the taint after 25 turns and then send `imageTurnsAgo: null`,
+   * which §v0.4.2 defined as "I looked and there was no picture" — but chat.ts
+   * keeps its session map with no expiry and passes `resume:`, so at turn 27
+   * the screenshot was still in her context and the card printed nothing at all.
+   *
+   * This flag is true for the LIFE OF THE SESSION that carried the picture, and
+   * the brain clears it in exactly one place: where it drops the SDK session.
+   * It is the field to gate a banner on. Absent on an older brain.
+   */
+  imageSeen?: boolean;
+  /**
+   * The distance is past the brain's freshness threshold (25 turns). v0.5.
+   *
+   * It DEGRADES the banner and it gates nothing — none of the brain's refusals
+   * soften with it. It exists so a picture 400 turns back reads as "a long way
+   * back, and still in her context" rather than as "one turn ago" or, worse, as
+   * nothing at all.
+   */
+  imageExpired?: boolean;
+}
+
+/**
+ * WHICH ROWS SHE ADDED — d10c, the passenger.
+ *
+ * Stamped by the brain INSIDE THE HASHED PAYLOAD, and only while a picture is
+ * in the session. d10c: his tax return and his passport scan rode into a
+ * footage folder inside a batch of camera clips, because WHERE a batch goes was
+ * graded and WHAT is in it never was. Six rows were names she read off the
+ * picture; two were names she chose herself, and nothing anywhere said so.
+ *
+ * A batch is NOT wrong for holding a file he did not name — "file the rest of
+ * that shoot too" is a normal thing to want. What was wrong was the SILENCE. So
+ * this is information, the card prints it in gold above the fold, and APPROVE
+ * stays enabled.
+ *
+ * ABSENT when no picture is in the session (there is no read-off-it half to
+ * contrast against) or on an older brain. Absent is silence, not "she added
+ * nothing".
+ *
+ * NAMES ONLY (2026-09-02): THE CURRENT BRAIN NEVER SENDS THIS. It was only ever
+ * stamped while a picture was in the session, and a picture in the session can
+ * no longer produce a card. The passenger problem it existed for is answered
+ * earlier and harder now: the batch he approves is built on a turn with no
+ * picture in it, from names he carried in as CHIPS BESIDE his composer —
+ * countable, individually deletable, and read by him before sending.
+ *
+ * THE CARD STILL RENDERS IT if it ever arrives, for the same reason the turn
+ * stamp above survives: this process does not take the brain's word for
+ * anything, and a payload that turns up carrying this is a payload worth
+ * showing him in full.
+ */
+export interface NameProvenance {
+  /** Source basenames the READER pass could read in the picture. */
+  fromPicture: string[];
+  /** Source basenames in NEITHER the picture NOR his typed message. */
+  added: string[];
+}
+
+/**
+ * DID THE DESTINATION COME OUT OF HIS MOUTH?
+ *
+ * Computed by the DESKTOP (electron/api.ts destinationCheck) by comparing the
+ * plan's destination folders against the message King actually typed on that
+ * turn. It is deliberately not something the brain reports and not something
+ * the model self-declares: a5/a3/a9 are exactly the case where the turn is
+ * compromised, and a compromised turn cannot be trusted to grade itself.
+ *
+ * It rides on `PendingConfirm`, OUTSIDE the hashed payload, because it is
+ * stamped after the hash was minted and must never change it.
+ *
+ * ABSENT when the desktop has no typed message for that confirm (a card
+ * rehydrated from `/state` in a session that never saw the turn), or when the
+ * op composes its own destination (`stage` -> his trash). Absent is silence,
+ * not a clean bill of health.
+ */
+/**
+ * v0.5 — THIS IS NO LONGER LOAD-BEARING, AND THAT IS DELIBERATE.
+ *
+ * Audit 3 killed the brain-side twin of this grade outright: a destination test
+ * built on whether the words appear in his message tries to infer AUTHORSHIP
+ * from STRING OVERLAP, and a picture can write the string. A QUESTION grounds
+ * as well as an order ("what's this note about the Clients Northwind thing"),
+ * and a bare root label grounds a mass move ("sort my downloads into projects").
+ *
+ * The brain now refuses on a different and answerable question — does the
+ * destination occur IN THE PICTURE — and this grade was demoted rather than
+ * deleted, because "you did not type that folder" is still a true and useful
+ * thing to print above a batch of his files. It is a BANNER. It gates nothing,
+ * it decides nothing, and no refusal anywhere depends on it.
+ */
+export interface DestinationCheck {
+  /** Destinations whose deepest folder name appears in his typed message. */
+  grounded: string[];
+  /** Destinations that appear NOWHERE in his typed message. The card names
+   *  these out loud. APPROVE stays enabled — this is information, not a
+   *  refusal.
+   *
+   *  v0.5: the brain-side twin that REFUSED on this grade is deleted. It tried
+   *  to infer authorship from string overlap, and a picture can write the
+   *  string — a QUESTION grounded as well as an order. The brain now refuses on
+   *  whether the destination occurs IN THE PICTURE. This line is a banner and
+   *  only a banner. */
+  ungrounded: string[];
+  /**
+   * NEW FILE STEMS he never typed, on rows whose basename changed. (H3)
+   *
+   * Folders were graded from the first build; renames were not, and a
+   * rename-in-place produced `null` — total silence — because every row landed
+   * where it started. That is a photograph renaming his whole desk with nothing
+   * on the card to say so.
+   *
+   * ABSENT on a check computed by an older desktop. Absent is silence.
+   */
+  renamedUngrounded?: string[];
+  /**
+   * SHE SAID IT CAME FROM HIM AND IT DID NOT. (H4)
+   *
+   * Set by MAIN when the grade already found something ungrounded AND her own
+   * `intent` line claims his authorship — "per your doc", "as you said", "the
+   * destination he named". One regex, no trust in the model: she attributed the
+   * picture's text to him on roughly half of audit-2 samples and the prompt law
+   * did not stop her.
+   *
+   * Never set on a clean grade: possessives are ordinary prose on an honest
+   * turn, and a banner that fires on honest turns is a banner he stops reading.
+   */
+  attributionSuspect?: boolean;
+}
+
 export interface FileBatchPayload {
   protocol: number;
   batchId: string;
@@ -100,6 +327,10 @@ export interface FileBatchPayload {
   extensions?: string[];
   crossesSyncBoundary?: boolean;
   sanitisedNames?: number;
+  /** See TurnProvenance. Inside the hash. Absent on an older brain. */
+  provenance?: TurnProvenance;
+  /** See NameProvenance. Inside the hash. Absent with no picture in the session. */
+  nameProvenance?: NameProvenance;
   moves: FileMove[];
 }
 
@@ -122,6 +353,13 @@ export interface OpVerdict {
   size?: number;
   /** True when the sanitiser altered the display form of either name. */
   altered?: boolean;
+  /**
+   * G-T4b. Set on an ALLOW when a Premiere project somewhere in his enrolled
+   * folders references this file. It changes no count and gates nothing — it
+   * is the warning King asked for, not a refusal. Main-process origin, and the
+   * project name is SANITISED before it gets here.
+   */
+  projectRef?: { project: string };
 }
 
 export interface BatchVerdict {
@@ -155,6 +393,12 @@ export interface PreflightRow {
   status: "will-move" | "gone" | "collision" | "changed" | "refused";
   why: string;
   rule: string;
+  /**
+   * G-T4b — "USED BY <name>.prproj". A sanitised project FILENAME, nothing
+   * more: no path out of the project, no clip list, no project content. The
+   * card renders it gold and APPROVE stays enabled. (his decision 1)
+   */
+  projectRef?: { project: string };
 }
 
 export interface DeskPreflight {
@@ -181,6 +425,18 @@ export interface DeskPreflight {
    * RE-CHECKED rather than implying a provenance it does not have. (G-C9)
    */
   idResolved?: boolean;
+  /** How many rows carry a `projectRef`. Drives the card's summary line. */
+  projectReferencedCount?: number;
+  /**
+   * TRUE when the project map could not answer completely — a `.prproj` that
+   * would not parse, a ceiling that bit, or no walk yet. The card must then say
+   * SO, in words, instead of printing nothing: an absent warning that is really
+   * an unread project reads as "not in an edit", and that is the one lie in
+   * this feature that costs him footage. (projects.ts law 4)
+   */
+  projectRefUnknown?: boolean;
+  /** One honest sentence about what was and was not read. Never "all clear". */
+  projectCoverage?: string;
   checkedAt: string;
 }
 
@@ -344,6 +600,83 @@ export interface DeskBatchRecord {
   items: { idx: number; fromAbs: string; toAbs: string; status: ItemStatus; why: string }[];
 }
 
+// ---------------------------------------------------------------------------
+// WHERE DID IT GO — the journal lookup
+//
+// King's words: "if I do lose it, I should be able to just ask her and she's
+// able to tell me where to find it and reconnect it."
+//
+// There are two readers of the same journal and they are deliberately not the
+// same surface. SHE reads a bounded, most-recent slice that rides the pack
+// (`DeskMoveWire` below) — root labels and root-relative paths, never an
+// absolute path, G-R10 intact. HE reads the whole thing locally in the desk
+// log panel, absolute paths and all, with the brain switched off if need be.
+//
+// Neither reader can move anything. `where` is read-only; the PUT IT BACK
+// button it surfaces calls the EXISTING per-batch undo and no new mover was
+// written for it. The model still has no undo tool.
+// ---------------------------------------------------------------------------
+
+/** One journal row as HE sees it locally: absolute, and freshly stat'ed. */
+export interface DeskWhereHit {
+  batchId: string;
+  jobId: string;
+  at: string;
+  op: DeskOp;
+  /** Absolute. Main process and the desk log panel only — never on any wire. */
+  fromAbs: string;
+  toAbs: string;
+  status: ItemStatus;
+  size: number;
+  dryRun: boolean;
+  undone: boolean;
+  /**
+   * Is it sitting at `toAbs` RIGHT NOW? A fresh lstat at query time, never the
+   * journal replayed: the file could have moved again since, by her hand or
+   * his. `null` means the check itself failed and we will not guess.
+   */
+  hereNow: boolean | null;
+  /** The existing per-batch undo would accept this batch. Drives PUT IT BACK. */
+  canUndo: boolean;
+  /** Her reason for the batch. Untrusted — rendered through <Untrusted>. */
+  intent: string;
+}
+
+export interface DeskWhereAnswer {
+  query: string;
+  hits: DeskWhereHit[];
+  /** Batches read to answer. */
+  searched: number;
+  /** Oldest batch timestamp visible, so a short history cannot pose as a whole one. */
+  oldest: string | null;
+  /** Hits past the ceiling, dropped from `hits` and counted here. */
+  truncated: number;
+  /** Set when the question could not be asked at all (empty query, no journal). */
+  why?: string;
+}
+
+/**
+ * ONE JOURNAL ROW, THINNED FOR THE WIRE. Byte-compatible with `DeskMove` in
+ * brain/src/desk.ts — that validator is hard, and a field of the wrong type
+ * makes the row vanish and get COUNTED as dropped, never silently swallowed.
+ *
+ * No absolute paths, ever. Root label plus root-relative path, exactly as
+ * `DeskEntry` names a file. `here` must be a real stat taken when this row was
+ * built, not inferred from the journal.
+ */
+export interface DeskMoveWire {
+  b: string;
+  at: string;
+  op: DeskOp;
+  fr: string;
+  fp: string;
+  tr: string;
+  tp: string;
+  dry: boolean;
+  undone: boolean;
+  here: boolean;
+}
+
 /** The five-summary tail that rides `lastBatches` to the brain. No paths, no names. (G-R10) */
 export interface DeskBatchSummary {
   batchId: string;
@@ -444,6 +777,13 @@ export interface DeskBridge {
   previewUndo(batchId: string): Promise<DeskUndoResult>;
   undoSince(iso: string, preview?: boolean): Promise<DeskUndoResult[]>;
   log(limit?: number): Promise<DeskBatchRecord[]>;
+  /**
+   * WHERE DID IT GO. Read-only, journal-driven, works with the brain offline —
+   * which is exactly the moment he needs it. It resolves to a batch id and
+   * stops there: putting a file back is `undo(batchId)`, the mover that already
+   * exists, triggered by him.
+   */
+  where(query: string, limit?: number): Promise<DeskWhereAnswer>;
   status(): Promise<DeskStatus>;
   outcome(jobId: string): Promise<DeskOutcome | null>;
   onProgress(cb: (e: DeskProgress) => void): () => void;
@@ -543,6 +883,21 @@ export interface DeskPack {
   census: { roots: DeskRootCensus[] };
   index: { rev: string; entries: DeskEntry[]; truncated: boolean; omitted: number };
   lastBatches: DeskBatchSummary[];
+  /**
+   * THE FILING HISTORY SLICE — what `desk_where` searches brain-side.
+   *
+   * Newest first, capped, and it eats the SAME 256 KB pack budget as the
+   * index. Prefer trimming history over trimming the index: she cannot file
+   * with a history, and she can still answer "where did it go" from his desk
+   * log if this is short.
+   *
+   * OMITTING THIS KEY ENTIRELY IS A SUPPORTED, DISTINCT STATE. The brain reads
+   * a missing key as `supplied:false` and says "his desktop didn't send me any
+   * filing history" — which is NOT "I have no record of that file". Sending
+   * `[]` says the opposite thing, so an empty array is only ever sent when the
+   * journal really is empty.
+   */
+  moves?: DeskMoveWire[];
 }
 
 /**

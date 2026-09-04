@@ -5,6 +5,7 @@ import path from "node:path";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { db } from "./db.js";
 import { searchMemory } from "./memory.js";
+import { withheldRecallLine } from "./durable.js";
 import { isQuietHours } from "./schedule.js";
 import { sendPush, getLatestToken, isPushReady } from "./push.js";
 import { requestConfirm, type PendingConfirm } from "./confirm.js";
@@ -567,10 +568,23 @@ const runWorker: WorkerFn = async (c, jobId, unit, name, title, task, runner, cl
   await patchJob(c, jobId, { status: "running" });
   emit?.(frameFor(jobId, "running", title, overlay.get(jobId)));
 
-  const recall = await searchMemory(client ? `${client} ${task}` : task, 5);
-  const memoryLines = recall.length
-    ? "Relevant memory:\n" + recall.map((h) => `- [${h.kind}] ${h.content}`).join("\n")
-    : "No stored memory on this topic — do not invent client facts; hold labeled space for anything unknown.";
+  // STEP 6 OF THE D6-10 CHAIN (audit 6, X2), AND THE WORST STEP OF IT: this
+  // brief goes to an UNATTENDED worker, running with pre-approved tools, outside
+  // any conversation, with no confirm card anywhere in the loop. Whatever
+  // searchMemory returns here is read by a model nobody is watching.
+  //
+  // searchMemory now withholds every row it cannot prove came out of a clean
+  // conversation. The withheld count is stated in the brief for the same reason
+  // it is stated in her briefing: a worker told "no stored memory on this topic"
+  // will confidently proceed, while a worker told the recall was TRIMMED will
+  // hold labelled space, which is what the next line already asks of it.
+  const { hits: recall, withheld } = await searchMemory(client ? `${client} ${task}` : task, 5);
+  const held = withheldRecallLine(withheld);
+  const memoryLines =
+    (recall.length
+      ? "Relevant memory:\n" + recall.map((h) => `- [${h.kind}] ${h.content}`).join("\n")
+      : "No stored memory on this topic — do not invent client facts; hold labeled space for anything unknown.") +
+    (held ? `\n${held}` : "");
 
   // VERIFIED 2026-07-16 (SDK 0.3.211 docs): `tools` = availability,
   // `allowedTools` = auto-approval; both are needed for an unattended worker.

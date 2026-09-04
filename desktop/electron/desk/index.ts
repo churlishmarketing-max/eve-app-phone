@@ -10,12 +10,14 @@
 // Owning stream: DESK/S1.
 
 import { createHash } from "node:crypto";
+import { lstatSync } from "node:fs";
 import path from "node:path";
 import * as attrs from "./attrs.js";
 import * as digest from "./digest.js";
 import * as execute from "./execute.js";
 import * as indexStore from "./index-store.js";
 import * as journal from "./journal.js";
+import * as projects from "./projects.js";
 import * as roster from "./roster.js";
 import * as undoMod from "./undo.js";
 import { checkBatch } from "./guard.js";
@@ -31,7 +33,11 @@ import type {
   DeskRootConfig,
   DeskRootProbe,
   DeskRootView,
+  DeskMoveWire,
+  DeskWhereAnswer,
+  DeskWhereHit,
   FileBatchPayload,
+  ItemStatus,
   PackRefusal,
   PreflightRow,
 } from "./types.js";
@@ -51,6 +57,7 @@ export * as attrs from "./attrs.js";
 export * as undo from "./undo.js";
 export * as indexStore from "./index-store.js";
 export * as digest from "./digest.js";
+export * as projects from "./projects.js";
 
 // ---------------------------------------------------------------------------
 // Module state — small, explicit, and OFF by default
@@ -147,12 +154,20 @@ export function init(opts: InitOptions): InitReport {
   // THE EYE. Configured always so a later arm() needs no second wiring, but it
   // only WALKS when filing is armed and there is at least one root that
   // survived its probes. A disarmed desk holds no index of his folders at all.
+  projects.configure({ rootsOf: () => roster.list(), neverList: state.neverList });
   indexStore.configure({
     userDataDir: opts.userDataDir,
     neverList: state.neverList,
     maxIndex: state.maxIndex,
     rootsOf: () => roster.list(),
     onSweep: (label, ok) => roster.noteSweep(label, ok),
+    // THE PROJECT-LINK INDEX RIDES THE EYE'S BEAT. Not a second watcher and not
+    // a second timer: the same 800 ms watch debounce and the same 10-minute
+    // reconcile that keep the file index fresh keep this fresh, so there is one
+    // answer to "when did you last look" and not two that can disagree.
+    onChange: () => {
+      projects.rebuild();
+    },
   });
   syncEye();
 
@@ -211,6 +226,8 @@ function syncEye(): void {
   const shouldWatch = state.enabled && roster.list().length > 0;
   if (!shouldWatch) {
     indexStore.clear();
+    // A disarmed desk holds no index of his folders AND no map of his edits.
+    projects.clear();
     return;
   }
   if (state.eyeOn) indexStore.start();
@@ -282,6 +299,11 @@ export function pack(): DeskPack | null {
     snap,
     trashOf: (r) => roster.trashUsageFor(r),
     lastBatches: journal.summaries(5),
+    // WHERE DID IT GO, on her side. Always supplied when a pack ships, even
+    // when it is empty — an empty array is "the journal is empty", a missing
+    // key is "this desktop sent no history at all", and she has a different
+    // sentence for each.
+    moves: moves(),
     maxIndex: state.maxIndex,
   });
   if (!built.pack) {
@@ -509,7 +531,13 @@ export function preflight(payload: FileBatchPayload): DeskPreflight {
 
   const rs = roster.list();
   const attrCache = execute.warmAttrs(resolved, rs);
-  const io = execute.realIo(false, attrCache);
+  // G-T4b — the project map, read at PREFLIGHT TIME rather than baked into a
+  // snapshot minted minutes ago. It is the debounce-refreshed cache the eye
+  // keeps, not a fresh parse of every project on every card: re-inflating
+  // hundreds of megabytes of XML while he waits on a confirm would be its own
+  // defect. This is the same freshness contract the file index itself has.
+  const pmap = projects.map();
+  const io = { ...execute.realIo(false, attrCache), projectRef: (abs: string) => projects.lookup(pmap, abs) };
   const verdict = checkBatch({ payload: resolved, roots: rs, deskId: state.deskId, io });
 
   const rows: PreflightRow[] = verdict.ops.map((v) => {
@@ -536,6 +564,7 @@ export function preflight(payload: FileBatchPayload): DeskPreflight {
       status,
       why: v.why,
       rule: v.rule,
+      ...(v.projectRef ? { projectRef: { project: v.projectRef.project } } : {}),
     };
   });
 
@@ -579,6 +608,14 @@ export function preflight(payload: FileBatchPayload): DeskPreflight {
     crossesSyncBoundary: crosses,
     ...(verdict.ok ? {} : { refusal: verdict.why, refusalRule: verdict.rule }),
     idResolved: res.resolved,
+    // G-T4b, all three of them together. The count drives the summary line; the
+    // UNKNOWN flag makes the card say what it does not know instead of printing
+    // nothing and letting nothing read as safety; the sentence names what was
+    // and was not read. A zero count with `projectRefUnknown:true` is a
+    // completely different card from a zero count without it, and it must be.
+    projectReferencedCount: rows.filter((r) => r.projectRef).length,
+    projectRefUnknown: projects.isUnknown(pmap),
+    projectCoverage: projects.coverage(pmap),
     checkedAt,
   };
 }
@@ -664,6 +701,175 @@ export function undoSince(iso: string, preview = false): undoMod.UndoResult[] {
 
 export function log(limit = 50): DeskBatchRecord[] {
   return journal.batches(limit);
+}
+
+// ---------------------------------------------------------------------------
+// WHERE DID IT GO — one journal, two readers
+//
+// King's words: "if I do lose it, I should be able to just ask her and she's
+// able to tell me where to find it and reconnect it."
+//
+// `moves()` below is HER reader: a bounded, most-recent slice with root labels
+// and root-relative paths, which is exactly how every other row in the pack
+// names a place. `whereIs()` is HIS reader: the whole local journal, absolute
+// paths, and it works with the brain switched off.
+//
+// NEITHER OF THEM MOVES ANYTHING. `whereIs` resolves to a batch id and stops.
+// Putting a file back is `undoBatch(batchId)` — the mover that already exists,
+// triggered by him, from his screen. No new mover was written for this feature
+// and the model still has no undo tool.
+// ---------------------------------------------------------------------------
+
+/** Rows that describe a file that actually went somewhere. A skip went nowhere. */
+const MOVED_STATES = new Set<ItemStatus>(["moved", "would-have-moved"]);
+
+/** Ceiling on the slice that rides the pack. Matches brain/src/desk.ts MAX_MOVES. */
+export const MAX_WIRE_MOVES = 300;
+
+interface Placed {
+  label: string;
+  rel: string;
+}
+
+/**
+ * An absolute path -> the root label and the root-relative path, or null when
+ * it is not under anything he enrolled. Null is the honest answer and the row
+ * is DROPPED: putting an absolute path on the wire because we could not place
+ * it would break G-R10 to avoid admitting a gap.
+ */
+function place(abs: string): Placed | null {
+  if (typeof abs !== "string" || !abs) return null;
+  for (const r of roster.list()) {
+    if (roster.contains(r.trashReal, abs)) {
+      const rel = path.relative(r.trashReal, abs);
+      if (rel && !rel.startsWith("..")) return { label: "trash", rel: rel.split(path.sep).join("/") };
+    }
+    if (roster.contains(r.real, abs)) {
+      const rel = path.relative(r.real, abs);
+      if (rel && !rel.startsWith("..")) return { label: r.label, rel: rel.split(path.sep).join("/") };
+    }
+  }
+  return null;
+}
+
+/** Is it sitting there right now? A real stat, never the journal replayed. */
+function stillThere(abs: string): boolean | null {
+  try {
+    lstatSync(abs);
+    return true;
+  } catch (err) {
+    // ENOENT is an answer: it is not there. Anything else — a permission
+    // failure, a disconnected drive — is NOT an answer, and saying "gone" for
+    // one of those would be a confident lie about his footage.
+    const code = (err as NodeJS.ErrnoException)?.code;
+    return code === "ENOENT" || code === "ENOTDIR" ? false : null;
+  }
+}
+
+/**
+ * THE SLICE THAT RIDES THE PACK. Newest first, capped, names-by-label only.
+ *
+ * `here` is a FRESH STAT taken right here, at pack-build time — not inferred
+ * from the journal. A file she filed and something else then moved again must
+ * come back as "not there any more", not as "still filed", and the only way to
+ * know that is to look.
+ */
+export function moves(limit = MAX_WIRE_MOVES): DeskMoveWire[] {
+  const out: DeskMoveWire[] = [];
+  for (const b of journal.batches(200)) {
+    for (const it of b.items) {
+      if (out.length >= limit) return out;
+      if (!MOVED_STATES.has(it.status)) continue;
+      const from = place(it.fromAbs);
+      const to = place(it.toAbs);
+      if (!from || !to) continue;
+      out.push({
+        b: b.batchId,
+        at: b.at,
+        op: b.op,
+        fr: from.label,
+        fp: sanitise(from.rel).display,
+        tr: to.label,
+        tp: sanitise(to.rel).display,
+        dry: b.dryRun,
+        undone: b.undone,
+        // A rehearsal never put a file there, so `here` for one is about the
+        // SOURCE still being where it always was — but that is a different
+        // claim wearing the same field name, and two claims in one field is
+        // how a wire shape starts lying. A dry row reports `here:false` and
+        // `dry:true`, and the brain's own copy says WOULD HAVE, never moved.
+        here: b.dryRun ? false : stillThere(it.toAbs) === true,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * HIS reader. Case-insensitive, extension optional (he will type "C9452"), and
+ * it matches the name at BOTH ends — the name it had and the name it has now,
+ * because a rename batch changes one and not the other.
+ *
+ * Three things it deliberately does NOT do:
+ *   · guess. No fuzzy match, no nearest neighbour, no "it's probably in".
+ *   · pick a winner. A file moved twice returns both rows, newest first, with
+ *     their timestamps, and he chooses.
+ *   · re-walk the disk. It is bounded to what the journal recorded. A file
+ *     something else moved afterwards is reported as NOT THERE with no record
+ *     of where it went, which is the truth.
+ */
+export function whereIs(query: string, limit = 40): DeskWhereAnswer {
+  const q = String(query ?? "").trim().toLowerCase();
+  const empty: DeskWhereAnswer = { query: String(query ?? ""), hits: [], searched: 0, oldest: null, truncated: 0 };
+  if (!q) return { ...empty, why: "say which file — a clip name is enough, with or without the extension" };
+  if (q.length > 260) return { ...empty, why: "that's longer than any filename I could have written down" };
+
+  const batches = journal.batches(500);
+  let oldest: string | null = null;
+  for (const b of batches) if (oldest === null || b.at < oldest) oldest = b.at;
+
+  const matches = (abs: string): boolean => {
+    const base = path.basename(String(abs ?? "")).toLowerCase();
+    if (!base) return false;
+    if (base === q) return true;
+    // "C9452" must find "C9452.MP4". A bare stem match is exact-on-the-stem,
+    // never a substring: "9452" does not find it, and neither does "C".
+    const stem = base.slice(0, base.length - path.extname(base).length);
+    if (stem === q) return true;
+    return base.includes(q) && q.length >= 3;
+  };
+
+  const hits: DeskWhereHit[] = [];
+  let truncated = 0;
+  for (const b of batches) {
+    for (const it of b.items) {
+      if (!MOVED_STATES.has(it.status)) continue;
+      if (!matches(it.fromAbs) && !matches(it.toAbs)) continue;
+      if (hits.length >= limit) {
+        truncated += 1;
+        continue;
+      }
+      hits.push({
+        batchId: b.batchId,
+        jobId: b.jobId,
+        at: b.at,
+        op: b.op,
+        fromAbs: it.fromAbs,
+        toAbs: it.toAbs,
+        status: it.status,
+        size: 0,
+        dryRun: b.dryRun,
+        undone: b.undone,
+        hereNow: b.dryRun ? null : stillThere(it.toAbs),
+        // Exactly the conditions DeskLogPanel's own UNDO button uses. A button
+        // that appears and then refuses is worse than no button.
+        canUndo: !b.dryRun && b.moved > 0 && !b.undone,
+        intent: b.intent,
+      });
+    }
+  }
+  hits.sort((a, b) => (a.at < b.at ? 1 : -1));
+  return { query: String(query ?? ""), hits, searched: batches.length, oldest, truncated };
 }
 
 /** Counts only, no paths and no names. This is the only thing that rides to the brain. (G-R10) */

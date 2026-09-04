@@ -1,6 +1,7 @@
 import { db } from "./db.js";
 import { boardCalls, osTool, ready as osReady, refreshBoardNow } from "./os.js";
 import { zonedToUtc } from "./day.js";
+import { guardDurableWrite, type DurableOrigin, type DurableVerdict } from "./durable.js";
 
 // THE SALES FLOOR — one number, computed one way.
 //
@@ -85,6 +86,8 @@ export interface LogResult {
   osOk: boolean;
   osCalls?: number;
   error?: string;
+  /** Set when the durable gate refused. `say` is her line. (audit 6, X1) */
+  withheld?: DurableVerdict;
 }
 
 // Record N real sales conversations. Writes BOTH ledgers so the Today tile and
@@ -95,15 +98,37 @@ export interface LogResult {
 // OVERWRITE the week's total instead of adding to it. We read the live board
 // first — deliberately NOT the 45s warm cache, which could be stale enough to
 // lose a call.
+//
+// THE SECOND WRITER OF `touches`, AND IT ASKS THE SAME DOOR (audit 6, X1).
+// `summary` is a string the MODEL composes, this tool is GREEN with no confirm
+// card, and pulse.ts reads `touches.summary` back into the prompt that drafts
+// the client update King sends. See memory.ts logTouch for the full reasoning —
+// this is the same store one function away, which is exactly the asymmetry the
+// judge named, so it is closed here rather than left for the next audit.
+//
+// BOTH LEDGERS ARE REFUSED TOGETHER. The OS board is his cockpit and a call
+// count there is read back to him as fact just as much as the brain row is;
+// splitting them would leave the number on one screen and not the other, which
+// is its own lie.
+// The ORIGIN IS REQUIRED and comes BEFORE the optional client, so a caller
+// cannot reach it by accident and cannot omit it at all. That ordering is the
+// same decision saveMemory made: the next writer of this store does not compile
+// until someone has decided which kind of write it is.
 export async function logConversations(
   n: number,
   summary: string,
+  origin: DurableOrigin,
   clientId: string | null = null,
 ): Promise<LogResult> {
   const count = Math.max(1, Math.min(50, Math.round(n)));
   const c = db();
   let brainOk = false;
   let brainErr = "";
+
+  const verdict = await guardDurableWrite(origin);
+  if (!verdict.ok) {
+    return { ok: false, brainOk: false, osOk: false, error: verdict.say, withheld: verdict };
+  }
 
   if (c) {
     const now = new Date().toISOString();

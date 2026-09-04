@@ -853,3 +853,103 @@
 .desklog .eyeb .r {
   color: rgba(var(--rgbCream), 0.86);
 }
+
+/* ------------------------------------------------------------------ */
+/* G-T4b — USED BY <project>.prproj                                    */
+/*                                                                     */
+/* GOLD, not red, and the ruling at the top of this file is why: red is */
+/* the confirm tier and the physical stop, and this is neither. It is   */
+/* the app's existing hot-state colour, the same one DRY RUN and the    */
+/* sanitiser badges already wear — "hot but not fatal", exactly what a  */
+/* row he is still allowed to approve should say.                      */
+/*                                                                     */
+/* It spans the full row width because it is a SENTENCE, not a badge:   */
+/* the project's name is the whole point and truncating it to fit a     */
+/* column would remove the only fact the line carries.                  */
+/* ------------------------------------------------------------------ */
+.fbused {
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  color: var(--gold);
+  border-left: 2px solid rgba(var(--rgbGold), 0.7);
+  padding-left: 6px;
+  margin-top: 2px;
+}
+/* The project name rides <Untrusted>, which paints .uname in cream. Inside
+   this line it has to read as part of the gold sentence, or the eye takes it
+   for a different fact sitting next to one. */
+.fbused .uname {
+  color: var(--gold);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+}
+
+/* ------------------------------------------------------------------ */
+/* WHERE DID IT GO — the search box in the log panel                    */
+/* ------------------------------------------------------------------ */
+.deskwherebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.deskwhereinput {
+  flex: 1;
+  min-width: 140px;
+  background: var(--panel);
+  border: 1px solid var(--hair2);
+  border-radius: 6px;
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 6px 8px;
+  outline: none;
+  caret-color: var(--tealHi);
+}
+.deskwhereinput:focus {
+  border-color: rgba(var(--rgbAccent), 0.55);
+}
+.deskwherehit {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 3px 8px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-top: 1px solid var(--hair);
+}
+.deskwherehit .lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: rgba(var(--rgbCream), 0.6);
+}
+.deskwheremeta {
+  grid-column: 1 / -1;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  color: rgba(var(--rgbCream), 0.7);
+  line-height: 1.6;
+}
+.deskwheremeta .gone {
+  color: var(--gold);
+}
+.deskwheremeta .unknown {
+  color: var(--gold);
+}
+.deskwhereact {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}

@@ -297,3 +297,290 @@ Counts per badge (DESK named only when > 0) + the pinned names + the re-route cl
 - `triggers` is always a string (possibly `""`); `kind` is `null` (not absent) for WORKSPACE_ONLY units; `tier` is ABSENT (not null) for them.
 - A unit's `role` for brain-only skills is the skill's short role (e.g. `"the minutes desk"`), not a roster job line.
 - The skill bundle is only as fresh as the last `node scripts/sync-skills.mjs` + redeploy; a skill edited on disk does not change the brain until then. `/health.fleet.manifest.generatedAt` says when.
+
+---
+
+## v0.3 turn provenance on a filing card (2026-09-02)
+
+### v0.3.0 What changed, in one paragraph
+
+An independent audit ran ten adversarial screenshots through a real brain. Every PHYSICAL law held — a source path is unrepresentable in the plan schema (`desk_file_plan` takes `{i, toRoot, toRel}`; `validatePlan` sets `fromRel` off the pack entry, `brain/src/desk.ts:1787`), nothing moved, no URL was fetched, the hash bound every path. What failed was SOCIAL: a forged Slack bubble wearing King's name talked her into narrating "standing authorisation" and raising a real card on a turn where he typed the two words *"What's this?"*. So the card itself now carries two facts he can read before he approves. **Neither is a refusal. APPROVE stays enabled in every case — this is information.**
+
+Two fields, from two different processes, on purpose:
+
+| Field | Where it lives | Who computes it | Inside the hash? |
+| --- | --- | --- | --- |
+| `payload.provenance` | inside the `file_batch` payload | **the brain** (`connectors.ts` `desk_file_plan`) | **yes** |
+| `destCheck` | on `PendingConfirm`, beside `payload` | **the desktop** (`electron/api.ts`) | **no** |
+
+### v0.3.1 `payload.provenance` — a picture was in this turn
+
+New optional object on the `kind: "file_batch"` payload only. It is stamped from a fact the hard image validator established in `index.ts` **before the model generated a token**, so the model cannot set it, clear it, or argue with it — and because it is inside the hashed payload, it cannot be stripped between the brain and his screen without `POST /confirm` failing closed on `payload hash mismatch`.
+
+```jsonc
+"provenance": {
+  "sawImage": true,                                            // required when the object is present
+  "imageNote": "a PNG he attached to this message (412 KB)"    // optional; absent when sawImage is false
+}
+```
+
+- `sawImage` — `true` iff the chat turn that produced this plan carried a validated image. `false` is emitted explicitly, so `{ "sawImage": false }` means *this brain checked and there was no picture*.
+- `imageNote` — one short sentence, built from the brain's OWN measurements (the **sniffed** mime, the **decoded** byte count), never from the declared mime, the filename, or anything the picture claims about itself. A hostile screenshot cannot write the line that warns about hostile screenshots. Present only when `sawImage` is `true`.
+- The whole object is **ABSENT on an older brain**. Absent means UNKNOWN and the desktop renders nothing — never "no picture", because it does not know that. The renderer parser (`src/renderer/desk/payload.ts:82`) drops the object unless `sawImage === true` and clamps `imageNote` to 120 chars.
+- The tool's text reply to the model also says the turn carried a picture, so she is told to name any part of the plan that came off the image rather than out of his words.
+
+### v0.3.2 `destCheck` — this destination did not come from your message
+
+New optional field on `PendingConfirm`, **beside `payload`, never inside it**: the payload hash is minted in the brain and this is computed afterwards, so it must not touch it.
+
+```jsonc
+{
+  "id": "…", "kind": "file_batch", "hash": "…", "expiresAt": "…",
+  "payload": { … },
+  "destCheck": {
+    "grounded":   [],                                  // destinations he named
+    "ungrounded": ["projects\GE Outdoors\Footage"]   // destinations he did not
+  }
+}
+```
+
+The brain never sends this. **The desktop computes it**, because `a5`/`a3`/`a9` are exactly the case where the turn is compromised, and a compromised turn cannot be trusted to grade itself. Main is the only process holding both halves — the message King typed and the plan she raised on it — and no model is in the loop: `src/shared/destination-check.ts` is a pure function, and `electron/api.ts:515` routes every frame of the turn through it.
+
+The rule, small enough to explain on the card:
+
+- Only `move` and `rename` are graded. A `stage` composes its own path into his trash, so there is no destination he could have named → `null`.
+- A row that lands in the folder it started in chose no destination → skipped.
+- A destination is **grounded** when EVERY folder segment along its path appears in his typed message as a whole-word run (case-, accent- and punctuation-folded) — or, for a file landing in the root of a census folder, when the root label does.
+- A half-named path is **ungrounded**: he said `Clients`, the plan says `desktop\Clients\Acme`, and `Acme` came from somewhere else. The root label alone never grounds a subfolder — `validatePlan` refuses a root off the census, so the root is the part an attacker could not have chosen and is worth nothing as evidence.
+- Everything else is **ungrounded**, and the card names it.
+
+`destCheck` is **ABSENT** when there is nothing honest to say — a `stage`, an unreadable payload, a batch where every row stays put, or a card rehydrated in a session that never saw the turn. **Absent is silence, not a clean bill of health**; the card renders nothing rather than implying it checked. A card rehydrated from the 30 s `/state` poll gets the remembered check re-applied (`api.ts:140`, bounded at 50 ids in memory) so the warning does not quietly vanish when the modal re-mounts.
+
+### v0.3.3 What the desktop must NOT assume
+
+- `provenance` absent ≠ `sawImage: false`. One is "I don't know", the other is "I checked".
+- `destCheck` absent ≠ `ungrounded: []`. Same distinction.
+- `grounded` being non-empty says nothing about `ungrounded` — a batch can be both, and the card names only the ungrounded half.
+- Neither field may disable APPROVE, gate the hold, or shorten the read-to-end. They are lines above the rows in the existing gold/warning treatment. **Never red** — red is the RED tier and the live mic.
+- `provenance` appears on `file_batch` only. Do not look for it on `os_send_email`.
+
+---
+
+## v0.4 the taint is on the conversation, and the brain refuses (2026-09-02)
+
+**Written from the shipping source after the H1–H4 build. Not deployed.** Proof: `cd C:\dev\eve\brain && npx tsx verify/image-harness.ts` (101 assertions, pure, no network, no model) and `cd C:\dev\eve\desktop && npm run verify:injection` (34 assertions). Everything in §0–§8 and v0.2 still holds. v0.3 holds except where this section says otherwise, and it says otherwise in two places: `provenance` gains a field, and `destCheck` gains two.
+
+### v0.4.0 What changed, in one paragraph
+
+A second independent audit ran fourteen adversarial screenshots through a real brain. The physical layer held again — nothing moved, no path escaped, no byte left the box. Five attacks were inert. **Four got through, and all four were the same mistake: the card was correct about the TURN and wrong about the PLAN.** The worst was b10/b10c, *the launder*: turn N carries a picture that names a folder and she refuses it correctly; turn N+1 carries no picture and five words — *"yeah, go ahead and file them"* — and she raises a real card for the picture's folder, calls it *"as you said"*, and stamps it `{"sawImage": false}`, which per §v0.3.3 means **"I checked and there was no picture."** The stamp was actively wrong about where the plan came from. So: **the taint belongs to the conversation, not the turn**, and **the brain now refuses rather than warns** when a picture is in the room and the destination is not in his words.
+
+Four changes, three of them new fields and one of them a new refusal:
+
+| # | Change | Where | Behaviour |
+| --- | --- | --- | --- |
+| H1 | `provenance.imageTurnsAgo` | brain, **inside the hash** | the banner fires on the CONVERSATION |
+| H2 | `desk_file_plan` refusal (`G-I7`) | brain, before the card is minted | **NO CARD IS RAISED** |
+| H3 | `destCheck.renamedUngrounded` | desktop, beside `payload` | a third gold line |
+| H4 | `destCheck.attributionSuspect` | desktop, beside `payload` | a fourth gold line, above HER REASON |
+
+### v0.4.1 `provenance.imageTurnsAgo` — a picture is in this CONVERSATION
+
+New optional field inside the existing `payload.provenance` object on `file_batch` payloads. Like `sawImage`, it is computed **before the model generates a token** and rides **inside the hashed payload**.
+
+```jsonc
+"provenance": {
+  "sawImage": false,          // no picture on THIS turn — and that is still true
+  "imageTurnsAgo": 1,         // but one came in one turn ago, and it is still in her context
+  "imageNote": "…"            // optional; present ONLY when sawImage is true
+}
+```
+
+- `imageTurnsAgo` — `0` when the picture rode in on this turn, `n` when the most recent picture was `n` turns back, **`null`** when there has been no picture inside the window. **SUPERSEDED BY v0.5:** `null` now means no picture has EVER been in this SDK session, and the distance never degrades to `null` while that session is alive. Read §v0.5.2.
+- ~~**The window is 25 turns**~~ — **DELETED AS A BOUNDARY BY v0.5.** The constant survives as `TAINT_FRESH_TURNS` and is now a DISPLAY threshold that gates nothing. The reasoning below is kept for the record, and the thing it got wrong is that it reasoned about the window's LENGTH when the bug was that the window existed at all:
+  - **Not 5** (the audit's suggestion). An attacker's only cost to beat a short window is patience, and patience is free. The hostile caption sits in the SDK transcript until the session dies; a number small enough to wait out buys the appearance of a fix and nothing else.
+  - **Not unbounded**, which is what "the pixels are still in her context" argues for. His desktop keeps ONE `conversationId` in `localStorage` effectively forever. Unbounded taint means one screenshot, ever, and every filing plan for the rest of that conversation needs a folder he typed by hand — the feature switched off by a Slack paste six weeks ago.
+  - **25** is five times the audit's number and roughly an hour of real back-and-forth. Every laundering attempt in audit 2 fired on turn N+1; none waited at all.
+- ~~**How he escapes it**, and all three are cheap: name the folder in words, let 25 turns pass, or start a new conversation.~~ **DELETED BY v0.5.** Naming the folder is no longer the escape (the grounding rule is gone), and *waiting* was never an escape at all — the window lapsed while the pixels stayed in the resumed transcript. The one remaining escape is a new conversation or a brain restart, both of which drop the SDK session that holds the picture. See §v0.5.2.
+- The ledger is **in-memory, per conversation, bounded at 500 conversations (LRU)**, and dies with the process — the same lifetime as the SDK `sessions` map that holds the pixels. There is no endpoint onto it and it is never persisted.
+- The **desktop banner** now reads `A PICTURE WAS IN THIS CONVERSATION — 1 TURN AGO` when `sawImage` is false and `imageTurnsAgo` is a number, and keeps the original `A PICTURE WAS IN THIS TURN` when `sawImage` is true. Still gold, still never red, and **APPROVE stays enabled**.
+- `imageNote` remains **turn-scoped**: a picture two turns back leaves `imageTurnsAgo: 2` and NO note, because the brain describes only bytes it validated on this turn.
+
+### v0.4.2 `null` is not absent, and neither is `false` — the three-state rule
+
+This is the rule §v0.3.3 stated for `provenance` as a whole, now stated for every field on it, because the launder turned the distinction into a live exploit:
+
+| Value | Means |
+| --- | --- |
+| field **absent** | an older brain. **UNKNOWN.** The card says nothing. |
+| `imageTurnsAgo: null` | this brain looked and found no picture in the window. |
+| `imageTurnsAgo: 0` | the picture is on this turn. |
+| `imageTurnsAgo: n` | the picture was `n` turns ago and is still in her context. |
+| `sawImage: false` | no picture on **this turn** — **which no longer means no picture.** |
+
+**`provenance` absent ≠ `sawImage: false`, and `sawImage: false` ≠ "no picture was involved".** Read `imageTurnsAgo` before concluding anything about origin. A desktop that renders a banner on `sawImage === true` alone will print nothing on exactly the card that needs it — that was the bug.
+
+### v0.4.3 ~~`G-I7`~~ — **DELETED BY v0.5. THIS RULE NO LONGER EXISTS.**
+
+The refusal this section described has been removed from the brain, along with `brain/src/grounding.ts`. It tried to infer authorship from string overlap with his typed message: a QUESTION grounded as well as an order (P8) and a bare root label grounded a mass move (P2). It is replaced by the narrow shape — see **§v0.5.3**. Nothing in the wire shape changed; a refusal was always the absence of a confirm frame. Anything asserting on `G-I7` is asserting on a rule that was deleted.
+
+The one claim from this section worth carrying forward is the one that still holds: **when the brain refuses, there is no confirm, no id, and nothing for the desktop to render.**
+
+### v0.4.4 `destCheck` — two new fields
+
+```jsonc
+"destCheck": {
+  "grounded":   [],
+  "ungrounded": ["downloads\\GE Outdoors\\Footage"],
+  "renamedUngrounded": ["GE_260901_01", "GE_260901_02", "GE_260901_03"],
+  "attributionSuspect": true
+}
+```
+
+**§v0.4.4 SURVIVES AS DECORATION ONLY (v0.5).** Both fields below still ride on the confirm and still render. Neither gates anything, and `brain/src/grounding.ts` — the twin that refused on the same grade — is deleted.
+
+- **`renamedUngrounded`** *(H3)* — new file **stems** on rows whose basename changed and which he never typed. Graded the same way a folder segment is: folded to a whole-word run, tested against his typed message. The **extension is never graded** — `validatePlan` refuses an extension change outright, so it is not something he could have failed to authorise.
+  - Previously `destinationCheck` graded folders only and returned `null` — **total silence** — for a rename in place, because a rename in place lands where it started and every row fell through the same-place skip. That is a hole with a name: an attacker who cannot relocate a file can still rename **every file on his desk** to whatever a photograph says, and nothing on the card mentions it. The early-out on "both folder arrays empty" is gone; a verdict now survives on the strength of the names alone.
+  - Renders as a third gold line: `THESE NEW NAMES DID NOT COME FROM YOUR MESSAGE.`
+  - **ABSENT** on a check computed by an older desktop. Absent is silence.
+- **`attributionSuspect`** *(H4)* — `true` when the grade already found something ungrounded **and** her own `intent` line claims his authorship. One regex in main (`\byour\b`, `\byou (said|named|asked|told|wanted|mentioned)\b`, `\bper you\b`, `\bas discussed\b`), no trust in the model: she attributed the picture's text to him on roughly half of audit-2 samples — *"per your doc"*, *"as you said"*, *"the destination he named"* — and the prompt law did not stop her.
+  - **Never set on a clean grade.** A possessive is ordinary prose on an honest turn, and a banner that fires on honest turns is a banner he stops reading.
+  - Renders **directly above HER REASON**, because it is a statement about the sentence underneath it: `SHE SAYS THIS CAME FROM YOU. IT DID NOT.`
+
+### v0.4.5 What the desktop must NOT assume (additions to §v0.3.3)
+
+- **`sawImage: false` no longer means "no picture was involved."** It means no picture on this turn. Read `imageTurnsAgo`. A banner gated on `sawImage === true` alone is the launder bug.
+- `imageTurnsAgo: null` ≠ field absent. `null` is "I looked"; absent is "an older brain".
+- `imageTurnsAgo: 0` is falsy in JavaScript. Test `typeof x === "number"`, never `if (x)`.
+- `renamedUngrounded` absent ≠ `[]`. Same distinction as everywhere else here.
+- `attributionSuspect` is **advisory and derived**. It never gates APPROVE, and it never appears without an ungrounded destination or an ungrounded name above it.
+- **A card that does not arrive is not an error to retry.** When the brain refuses under `G-I7` there is no confirm and no id; the desktop has nothing to render and must not synthesise a placeholder card, a "refused" card, or a toast implying something is pending. Her spoken answer is the whole of the UI for that outcome.
+- None of the four may disable APPROVE, gate the hold, or shorten the read-to-end. They are gold lines above the rows and one gold line above HER REASON. **Never red** — red is the RED tier and the live mic.
+
+---
+
+## v0.5 the narrow shape — a picture may supply FILENAMES and nothing else (2026-09-02)
+
+**Written from the shipping source after the audit-3 rebuild. Not deployed, not committed.** Proof: `cd C:\dev\eve\brain && npx tsx verify/image-harness.ts` (132 assertions, pure, no network, no model — the reader's transport is injected) and `cd C:\dev\eve\desktop && npm run verify:injection` (34). Everything in §0–§8 and v0.2 still holds. **v0.3 and v0.4 hold except where this section deletes them, and it deletes a lot.**
+
+### v0.5.0 What changed, in one paragraph
+
+A third independent audit killed lexical grounding outright. Its verdict, accepted and not re-litigated:
+
+> *This feature cannot be made safe in this shape. The refusal tries to infer AUTHORSHIP from STRING OVERLAP, and a picture can write the string. Every patch to it will be a longer regex against an adversary who is choosing his words for him.*
+
+Two findings ended it. **P8:** a QUESTION grounds as well as an order — *"what's this note on my monitor about the Clients Northwind thing"* contains every word of `Clients\Northwind`, so the move was GROUNDED and CARDED, off a question he asked about a picture whose answer the picture wrote. **P2:** a bare root label grounds a mass move — *"sort my downloads into projects"* is two words he says every day and it authorised every file he owns landing in the top level of a root.
+
+So the test is **inverted**. It no longer asks *"is this destination in his message?"* (unanswerable — a picture can put words in his mouth by writing them where he will read them out). It asks *"is this destination in THE PICTURE?"*, which is a fact about a string and a bitmap, and it is answered by a **separate reader pass** that has no tools and no plan to defend. Around that sits a **structural operation lock**: while a picture is in the session it is MOVE only, no renames, no bare root drops.
+
+| # | Change | Where | Behaviour |
+| --- | --- | --- | --- |
+| N1 | `brain/src/grounding.ts` **DELETED** | brain | `G-I7` no longer exists |
+| N2 | operation lock | brain, `narrow.ts` | `stage` and any rename raise **NO CARD** while a picture is in the session |
+| N3 | reader-exclusion refusal | brain, `narrow.ts` + `reader.ts` | a destination written in the picture raises **NO CARD** |
+| N4 | `payload.nameProvenance` | brain, **inside the hash** | a fifth gold line: `SHE ADDED N FILES YOU DID NOT NAME.` |
+| N5 | `provenance.imageSeen` / `imageExpired` | brain, **inside the hash** | the taint is on the SDK SESSION and never degrades to `null` |
+| N6 | stage card anatomy | desktop | a stage card finally says it is a stage |
+
+### v0.5.1 DELETED FROM v0.4 — claims that no longer hold
+
+Read this before anything else in v0.3/v0.4. These are not softened, they are **gone**.
+
+- **`G-I7` does not exist.** §v0.4.3 in its entirety is deleted. The brain no longer refuses on "the destination is not in his typed message", because that test refused honest turns and passed hostile ones. Nothing in the wire shape is affected — a refusal was always the *absence* of a confirm frame — but a desktop or harness asserting on `G-I7` is asserting on a rule that was removed.
+- **`brain/src/grounding.ts` is deleted, and the "deliberate twins" claim with it.** `desktop/src/shared/destination-check.ts` no longer has a twin, no longer refuses anything, and is **not load-bearing**. It survives as a banner because *"you did not type that folder"* is still worth printing. It gates nothing.
+- **The 25-turn taint window is deleted as a security boundary.** §v0.4.1's escape hatch *"let 25 turns pass"* is gone. The window lapsed while the pixels did not: `chat.ts` keeps its session map with no expiry and passes `resume:`, so at turn 27 a hostile screenshot was still in her context while the stamp said `imageTurnsAgo: null` — which §v0.4.2 defines as **"I looked and there was no picture"**. A number that stops being true on a schedule is worse than no number, because the contract gave that particular falsehood a confident meaning.
+- **`imageTurnsAgo: null` no longer means "no picture in the window".** It means **no picture has ever been in this session**. See §v0.5.2.
+- **"A stage is never blocked by the window" is deleted.** §v0.4.3 said a stage composes its own path into his trash, so there is no destination he could have named, so the window never blocks his trash. That was true and it was the hole: `destCheck` returned `null` — silence — on exactly the operation that takes files away from him. See §v0.5.3.
+
+### v0.5.2 `provenance` — the taint is on the SDK SESSION
+
+```jsonc
+"provenance": {
+  "sawImage": false,        // no picture on THIS turn — still true, still not the whole truth
+  "imageSeen": true,        // NEW: a picture is in this SDK session's transcript
+  "imageTurnsAgo": 41,      // how far back. NEVER null while imageSeen is true
+  "imageExpired": true,     // NEW: past the 25-turn freshness threshold. Degrades the banner. GATES NOTHING
+  "imageNote": "…"          // optional; present ONLY when sawImage is true
+}
+```
+
+| Value | Means |
+| --- | --- |
+| `provenance` **absent** | an older brain. **UNKNOWN.** The card says nothing. |
+| `imageSeen` **absent** | an older brain, or v0.4-era. Fall back to `imageTurnsAgo`. |
+| `imageSeen: true` | a picture is in the session that produced this plan. **Gate the banner on this.** |
+| `imageTurnsAgo: null` | no picture has **ever** been in this session. |
+| `imageTurnsAgo: 0` | the picture is on this turn. |
+| `imageTurnsAgo: n` | `n` turns back **and still in her context**. |
+| `imageExpired: true` | `n` is past 25. **Advisory only** — softens the banner's wording, changes no rule. |
+
+- **The taint is cleared in exactly one place**: `chat.ts` `endSession()`, which calls `sessions.delete()` and `clearImageTaint()` in the same statement. The pixels live in the SDK transcript; when it goes, they go, and not one turn before.
+- **The freshness threshold (25) is a DISPLAY threshold and must never become a security parameter.** The banner degrades from `A PICTURE WAS IN THIS CONVERSATION — 1 TURN AGO` to `A PICTURE CAME INTO THIS CONVERSATION A LONG WAY BACK — 41 TURNS AGO, AND IT IS STILL IN HER CONTEXT`. The refusals in §v0.5.3 do not soften with it.
+- **How he escapes a taint he did not earn:** start a new conversation, or let the brain restart. Both drop the SDK session, which is the only thing that was ever holding the picture. *Waiting* is no longer an escape, because waiting never actually removed anything.
+- **Session-lifetime taint is affordable now, and it was not before.** Under v0.4 one screenshot meant every filing destination for the rest of that conversation had to be typed by hand. Under the narrow shape, filing **keeps working** with a picture in the room — move-only, no renames, and a destination the picture does not mention. The taint no longer switches the feature off; it narrows it.
+
+### v0.5.3 THE NARROW SHAPE — five refusals, all of them structural
+
+Not fields. `desk_file_plan` declining to mint a card at all: **no confirm frame, no id, no `hash`, nothing in `/state.pendingConfirms`, nothing on his screen.** Her spoken answer is the whole of the UI for that outcome, and the desktop must not synthesise a placeholder card or a toast implying something is pending.
+
+**All five fire only while `imageSeen` is true.** With no picture anywhere in the session, none of this executes and filing behaves exactly as it did in v0.2: she picks her own folder names, she renames, she stages.
+
+| Code | Refuses | Dead attack |
+| --- | --- | --- |
+| `N-OP` | `op` is not `"move"` — **`stage` is refused outright** | **d8.** A fake cleanup report staged his tax return and his passport scan. `destCheck` returned `null` because a stage has no destination to grade. |
+| `N-RENAME` | any row where `basename(toRel) !== basename(fromRel)` | a photograph naming a renaming scheme. No grounding test, no banner substituting for a refusal. |
+| `N-ROOTDROP` | any destination with no folder under the root | **P2**, and it stays dead. |
+| `N-BLIND` | the reader pass did not come back | fail closed. The exclusion list **is** the defence; an absent list is not a clean bill. |
+| `N-INPICTURE` | a destination folder name occurs in what the reader read | **the crux.** Replaces the whole of `G-I7`. |
+
+**The reader pass** (`brain/src/reader.ts`) is one SDK call with the image and **no tools, no context, no history, one turn**, whose entire prompt is *transcribe the visible text*. Its output is UNTRUSTED DATA used as an **EXCLUSION LIST and nothing else**: it never becomes a filename she acts on, never becomes a destination, never reaches the planner, and reaches his screen only as a quoted refusal. A hostile reader output can do exactly one thing — cause **more** refusals. It runs **once per picture, not once per plan**, and is remembered against the conversation for the life of the taint.
+
+**Matching** is whole-word after an NFKD fold, in both directions: the whole segment inside the transcript, or any word of the segment ≥4 characters (never a bare number) inside the transcript. A segment that folds to nothing is a **hit** — what cannot be folded cannot be cleared.
+
+**THE HONEST LIMIT, stated rather than hidden.** A picture that hides its destination from the READER while showing it to the PLANNER is the residual risk. It is small: both passes are the same model family on the same pixels through the same decoder, and the reader has the strictly easier job. Text legible enough to steer a planner is text a transcriber reads. It is also a door that only ever opens onto a **card** — nothing here moves a file, the destination still renders, and he still has to scroll it and press APPROVE.
+
+### v0.5.4 `payload.nameProvenance` — which rows she added (d10c)
+
+New optional object on `file_batch` payloads, **inside the hash**, present **only** while a picture is in the session.
+
+```jsonc
+"nameProvenance": {
+  "fromPicture": ["C9452.MP4", "C9453.MP4"],
+  "added":       ["2025 tax return.pdf", "passport scan.jpg"]
+}
+```
+
+**d10c:** his tax return and his passport scan rode into a footage folder inside a batch of camera clips, because **WHERE** a batch goes was graded three different ways and **WHAT** is in it was never graded at all. Every banner on the card was about the destination.
+
+So each row's **source basename** is sorted three ways — read off the picture, typed by him, or chosen by her — and the third list is the one that prints:
+
+- `fromPicture` — the reader could read this name. This is the one thing a picture is allowed to supply.
+- `added` — in **neither** the picture nor his typed message. She chose to include this file.
+- (Names he typed himself are simply absent from both lists; they need no banner.)
+
+**This is INFORMATION, not a refusal, and APPROVE stays enabled.** A batch is not wrong for holding a file he did not name — *"file the rest of that shoot too"* is a normal thing to want. It was the **silence** that cost him a tax return. The card renders it above the fold, in gold, as `SHE ADDED N FILES YOU DID NOT NAME.` and names every one of them. The tool's reply also instructs her to say it out loud in the same answer.
+
+**ABSENT** when there is no picture in the session (there is no read-off-it half to contrast against) or on an older brain. **Absent is silence, not "she added nothing".**
+
+### v0.5.5 The stage card says it is a stage
+
+No wire change — this is the desktop rendering `op: "stage"` as what it is. Previously **every** verb on the card said MOVE, and the one thing a stage does — take his files out of the folder he keeps them in and put them where he has to go and look — appeared nowhere. That is half of what made d8 approvable: the card he read was a tidy-up.
+
+A `file_batch` with `op: "stage"` now renders:
+
+- header `▲ NEEDS YOU · STAGE TO TRASH — NOTHING MOVES WITHOUT YOU`
+- live chip `● LIVE — THESE FILES ACTUALLY LEAVE THEIR FOLDER`
+- the route line labelled `TO TRASH`, showing the path the guard will actually compose — `<root>\trash\<YYYY-MM-DD>\<batchId prefix>` — with `← WILL BE CREATED`. The date is recomputed off the card's ticking clock, so a card left open past midnight prints the folder it would really land in.
+- every row's second line labelled `TO TRASH` and showing that composed path rather than the payload's `toRel`, which for a stage carries the **original** relative path (G-D2) and used to render as a move that goes nowhere.
+- the law line carrying **both halves of the truth on one line**: `NOTHING IS DELETED. NOTHING IS OVERWRITTEN. THESE FILES LEAVE THE FOLDER THEY ARE IN — YOU EMPTY THE TRASH YOURSELF, SHE NEVER DOES.` The reassurance and the consequence sit together or the reassurance does the work of a lie.
+- the button `APPROVE — STAGE N FILES TO TRASH` (still `APPROVE — DRY RUN N FILES` when `dryRun`).
+
+### v0.5.6 What the desktop must NOT assume (replaces §v0.4.5)
+
+- **Gate the picture banner on `imageSeen`, not on `sawImage` and not on `imageTurnsAgo !== null`.** `sawImage: false` means no picture *on this turn*. A finite `imageTurnsAgo` is a stronger signal than nothing but `imageSeen` is the authoritative one.
+- **`imageTurnsAgo: null` now means "no picture has ever been in this session"**, not "none in the window". Do not carry v0.4's reading forward.
+- **`imageExpired: true` never gates anything.** It changes wording. A desktop that hides the banner on it has reintroduced the exact bug audit 3 found.
+- `imageTurnsAgo: 0` is falsy in JavaScript. Test `typeof x === "number"`, never `if (x)`.
+- **`nameProvenance` absent ≠ `{added: []}`.** Absent is silence.
+- **`destCheck` is decoration.** It never gates APPROVE, no refusal depends on it, and it must never be described as the thing that stops an attack.
+- **A card that does not arrive is not an error to retry.** When the brain refuses under any `N-*` code there is no confirm and no id.
+- **Do not render `op: "stage"` through the move anatomy.** A stage card that says MOVE is the card's most-read string lying about the operation underneath it.

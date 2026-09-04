@@ -9,6 +9,14 @@
 // alongside this), so "what did you note about X?" works off her own spine
 // without ever reading Discord. Discord is the surface HE browses; memory is
 // the surface SHE recalls from. One write, two homes.
+//
+// WITH ONE EXCEPTION, AND IT IS BOTH HOMES OR NEITHER (audit 6, X1). On a
+// conversation a picture has been in, the durable gate refuses the memory half —
+// and connectors.ts then does NOT post here either, deliberately, in that order
+// (it asks the gate first and only posts if the answer was yes). A note in this
+// channel is a permanent record he browses and reads as HERS, so a transcription
+// of a screenshot filed here under her name is the same lie with a slower fuse.
+// Nothing is written anywhere, and she is handed the line to say out loud.
 
 const LIMIT = 2000; // Discord's hard per-message character cap — exceeding it 400s
 const CHUNK = 1900; // headroom for the "(2/3)" part marker we prepend

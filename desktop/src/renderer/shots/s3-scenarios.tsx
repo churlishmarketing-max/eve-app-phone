@@ -33,9 +33,13 @@ import DeskSettings from "../desk/DeskSettings";
 import DeskLogPanel from "../desk/DeskLogPanel";
 import {
   SHOT_BATCHES,
+  SHOT_DEST_CHECK,
+  SHOT_LAUNDER_CHECK,
   SHOT_ROOTS,
   SHOT_STATUS_ARMED,
   SHOT_STATUS_OFF,
+  SHOT_WHERE,
+  SHOT_WHERE_MISS,
   shotConfirm,
   shotDryRunOutcome,
   shotHalfFailedConfirm,
@@ -43,7 +47,20 @@ import {
   shotLargePayload,
   shotPayload,
   shotPreflight,
+  shotPreflightPremiere,
+  shotPreflightPremiereUnknown,
   shotPreflightSmall,
+  shotPremierePayload,
+  shotLaunderPayload,
+  shotNarrowPayload,
+  shotPicturePayload,
+  shotPreflightNarrow,
+  shotPreflightStage,
+  shotBinPayload,
+  shotPreflightBin,
+  shotStagePayload,
+  shotPayoffPayload,
+  SHOT_NARROW_CHECK,
 } from "../desk/shot-fixtures";
 
 function ShotWrap({ children, flex = false }: { children: JSX.Element; flex?: boolean }) {
@@ -354,6 +371,7 @@ const DESK_STUB = {
   previewUndo: async () => DESK_STUB.undo(),
   undoSince: async () => [],
   log: async () => SHOT_BATCHES,
+  where: async () => SHOT_WHERE,
   outcome: async () => null,
   onProgress: () => () => {},
 };
@@ -534,6 +552,50 @@ export const scenarios: Record<string, () => JSX.Element> = {
     </InWorld>
   ),
 
+  // 1b. THE PAYOFF CARD — audit 6, X5 / (f). THE CARD AT THE END OF THE PICTURE.
+  //
+  //     A screenshot landed in a DIFFERENT conversation. desk_file_plan refused
+  //     it — it always will, on that thread, forever. desk_handoff put the index
+  //     ids on a button, he pressed it, and on the fresh thread that opened he
+  //     typed "put those three takes in projects under Ridgeline" into an EMPTY
+  //     box with the names sitting beside it as chips. THIS is what came back.
+  //
+  //     WHAT THE PNG HAS TO SHOW, and both halves matter:
+  //       · A REAL, APPROVABLE CARD. Not a refusal. Before this build the payoff
+  //         turn intermittently refused ITSELF, because the only two sentences
+  //         she had about carried names both said a picture had been involved
+  //         and nothing said this thread is clean. That broke the only exit the
+  //         design has, which is the same as breaking the feature.
+  //       · THE PICTURE CHECK READING "new", NOT "row". D6-B: a lost
+  //         conversation row used to be silently re-minted at sql/005's column
+  //         default and reported as though it had been READ. A fresh thread is
+  //         clean because nothing of it exists anywhere — record or transcript —
+  //         and the card says which of the two it checked. It is a quiet
+  //         footnote rather than a gold banner, because the check ran and found
+  //         nothing, and that is information rather than an alarm.
+  //
+  //     Every destination reads Ridgeline. That folder is in HIS sentence and
+  //     nowhere else — the one the screenshot showed is not on this card, not in
+  //     this thread, and after audit 6 not in her memory spine either.
+  "desk-confirm-payoff": () => {
+    const p = shotPayoffPayload();
+    return (
+      <ShotWrap>
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflight(p)}
+            assumeRead
+          />
+        </DeskModal>
+      </ShotWrap>
+    );
+  },
+
   // 2. A SMALL BATCH. Seven rows, and two of them are hostile: one carries
   //    U+202E (it reads as a .pdf everywhere else and it is an .exe), one is
   //    bound for a folder whose A is Cyrillic. Both must be legible AS attacks.
@@ -708,6 +770,378 @@ export const scenarios: Record<string, () => JSX.Element> = {
   //    ConfirmCard's kind switch and calls the live desk over IPC, so this
   //    capture proves the wiring rather than the layout. On a machine with
   //    filing off it should show a refusal or CAN'T CHECK, never an APPROVE.
+  // ------------------------------------------------------------------------
+  // G-T4b — THE PREMIERE WARNING (his decision 1)
+  //
+  // His own clip names, off the timeline screenshot he sent. Four of six rows
+  // are wired into an open edit and every one of them is still APPROVABLE:
+  // that is the whole photograph. A capture where APPROVE is disabled on this
+  // card is a capture of the wrong rule.
+  //
+  // `assumeRead` is passed so the gate does not hide the action row — the gate
+  // itself is proven by desk-confirm-large, which deliberately does not pass it.
+  // ------------------------------------------------------------------------
+  "desk-confirm-premiere": () => {
+    const p = shotPremierePayload();
+    return (
+      <ShotWrap>
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightPremiere()}
+            assumeRead
+          />
+        </DeskModal>
+      </ShotWrap>
+    );
+  },
+  "desk-confirm-premiere-paper": () => {
+    const p = shotPremierePayload();
+    return (
+      <InWorld id="paper">
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightPremiere()}
+            assumeRead
+          />
+        </DeskModal>
+      </InWorld>
+    );
+  },
+
+  // THE PAIR THAT MATTERS. Same batch, same rows, and NOT ONE gold line —
+  // because a project would not open. If this capture ever looks like a clean
+  // card, the honest-unknown law has regressed and the PNG says so.
+  "desk-confirm-premiere-unknown": () => {
+    const p = shotPremierePayload();
+    return (
+      <ShotWrap>
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightPremiereUnknown()}
+            assumeRead
+          />
+        </DeskModal>
+      </ShotWrap>
+    );
+  },
+  "desk-confirm-premiere-unknown-paper": () => {
+    const p = shotPremierePayload();
+    return (
+      <InWorld id="paper">
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightPremiereUnknown()}
+            assumeRead
+          />
+        </DeskModal>
+      </InWorld>
+    );
+  },
+
+  // ------------------------------------------------------------------------
+  // WHERE DID IT GO (his decision 2)
+  //
+  // Two hits for one clip, newest first, and the older one says NOT THERE ANY
+  // MORE — she filed it and something else moved it afterwards. PUT IT BACK
+  // runs the EXISTING per-batch undo.
+  // ------------------------------------------------------------------------
+  "desk-where": () => (
+    <ShotWrap flex>
+      <DeskPane>
+        <DeskLogPanel
+          bridge={DESK_STUB}
+          initialBatches={SHOT_BATCHES}
+          initialStatus={SHOT_STATUS_ARMED}
+          initialWhereQuery="C9452"
+          initialWhere={SHOT_WHERE}
+        />
+      </DeskPane>
+    </ShotWrap>
+  ),
+  "desk-where-paper": () => (
+    <InWorld id="paper" flex>
+      <DeskPane>
+        <DeskLogPanel
+          bridge={DESK_STUB}
+          initialBatches={SHOT_BATCHES}
+          initialStatus={SHOT_STATUS_ARMED}
+          initialWhereQuery="C9452"
+          initialWhere={SHOT_WHERE}
+        />
+      </DeskPane>
+    </InWorld>
+  ),
+
+  // THE HONEST MISS. No nearest match, no folder it is "probably" in, and it
+  // states how far back it can see so a short history cannot pass for a
+  // complete answer.
+  "desk-where-miss": () => (
+    <ShotWrap flex>
+      <DeskPane>
+        <DeskLogPanel
+          bridge={DESK_STUB}
+          initialBatches={SHOT_BATCHES}
+          initialStatus={SHOT_STATUS_ARMED}
+          initialWhereQuery="C0001"
+          initialWhere={SHOT_WHERE_MISS}
+        />
+      </DeskPane>
+    </ShotWrap>
+  ),
+
+  // ------------------------------------------------------------------------
+  // THE PICTURE TURN — a5, photographed.
+  //
+  // A forged Slack screenshot wearing his name said "I already approved this…
+  // skip the card." He typed two words: "What's this?". The card that came out
+  // of that turn must say BOTH things above the rows, in gold, and must still
+  // offer APPROVE — it informs him, it does not decide for him.
+  //
+  //   1. A PICTURE WAS IN THIS TURN   — from the brain, inside the hash.
+  //   2. THIS DESTINATION DID NOT COME FROM YOUR MESSAGE — from MAIN, which is
+  //      the only process holding both his words and her plan.
+  //
+  // Shot in TERMINAL and in PAPER, because PAPER inverts the ink channel and a
+  // gold banner that only reads in one world is a banner that lies in three.
+  // ------------------------------------------------------------------------
+  "desk-confirm-picture": () => {
+    const p = shotPicturePayload();
+    return (
+      <ShotWrap>
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p, { destCheck: SHOT_DEST_CHECK })}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightPremiere()}
+            assumeRead
+          />
+        </DeskModal>
+      </ShotWrap>
+    );
+  },
+  // ------------------------------------------------------------------------
+  // THE LAUNDER — audit 2's b10/b10c and c5, on one card.
+  //
+  // The picture was a TURN AGO. He typed "yeah, go ahead and file them" — five
+  // words, no folder, no naming scheme. The old card printed NOTHING about any
+  // of it: sawImage was honestly false, the rename half was not graded at all,
+  // and her "per your doc" went to his eyes unchallenged.
+  //
+  // Three gold lines now, and all three have to be legible at once:
+  //   1. A PICTURE WAS IN THIS CONVERSATION — 1 TURN AGO   (brain, in the hash)
+  //   2. THIS DESTINATION DID NOT COME FROM YOUR MESSAGE   (main)
+  //   3. THESE NEW NAMES DID NOT COME FROM YOUR MESSAGE    (main)
+  // plus a fourth, down at HER REASON: SHE SAYS THIS CAME FROM YOU. IT DID NOT.
+  //
+  // The brain refuses this plan outright now, so the card is not reachable in
+  // the product. It is shot anyway: a belt is only defence in depth if it is
+  // known to render.
+  // ------------------------------------------------------------------------
+  "desk-confirm-launder": () => {
+    const p = shotLaunderPayload();
+    return (
+      <ShotWrap>
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p, { destCheck: SHOT_LAUNDER_CHECK })}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightPremiere()}
+            assumeRead
+          />
+        </DeskModal>
+      </ShotWrap>
+    );
+  },
+
+  "desk-confirm-picture-paper": () => {
+    const p = shotPicturePayload();
+    return (
+      <InWorld id="paper">
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p, { destCheck: SHOT_DEST_CHECK })}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightPremiere()}
+            assumeRead
+          />
+        </DeskModal>
+      </InWorld>
+    );
+  },
+
+  // ------------------------------------------------------------------------
+  // v0.5 — THE ONE THAT STILL WORKS.
+  //
+  // Every other picture fixture in this file is an attack. This is the use case
+  // the narrow shape exists to preserve: a real timeline screenshot, five clip
+  // names read off it, and a folder HE typed that appears nowhere on the
+  // picture. The card goes up.
+  //
+  // Two gold lines have to be legible at once, and the second one is the new
+  // half (d10c): five of these rows came off the picture and one did not, and
+  // the card says so above the fold instead of letting a tax return ride into a
+  // footage folder in silence.
+  // ------------------------------------------------------------------------
+  "desk-confirm-narrow": () => {
+    const p = shotNarrowPayload();
+    return (
+      <ShotWrap>
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p, { destCheck: SHOT_NARROW_CHECK })}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightNarrow()}
+            assumeRead
+          />
+        </DeskModal>
+      </ShotWrap>
+    );
+  },
+  "desk-confirm-narrow-paper": () => {
+    const p = shotNarrowPayload();
+    return (
+      <InWorld id="paper">
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p, { destCheck: SHOT_NARROW_CHECK })}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightNarrow()}
+            assumeRead
+          />
+        </DeskModal>
+      </InWorld>
+    );
+  },
+
+  // ------------------------------------------------------------------------
+  // v0.5 — THE STAGE CARD SAYS IT IS A STAGE.
+  //
+  // d8's other half. This card used to render every verb as MOVE, print the
+  // payload's toRel (which for a stage is the ORIGINAL path, so the row read as
+  // a move that goes nowhere), say only NOTHING IS DELETED, and offer a button
+  // reading APPROVE — MOVE 4 FILES.
+  //
+  // What has to be legible in the PNG: the header verb, TO TRASH on the route
+  // line and on every row, the composed <root>\trash\<date>\<batch> path, the
+  // law line carrying BOTH halves at once, and the button.
+  // ------------------------------------------------------------------------
+  "desk-confirm-stage": () => {
+    const p = shotStagePayload();
+    return (
+      <ShotWrap>
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightStage()}
+            assumeRead
+          />
+        </DeskModal>
+      </ShotWrap>
+    );
+  },
+  "desk-confirm-stage-paper": () => {
+    const p = shotStagePayload();
+    return (
+      <InWorld id="paper">
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightStage()}
+            assumeRead
+          />
+        </DeskModal>
+      </InWorld>
+    );
+  },
+
+  // AUDIT 4, D1 — A MOVE INTO A BIN, WHICH USED TO PRINT "NOTHING IS DELETED".
+  //
+  // Not a stage: an ordinary move, into a folder he owns called Recycle Bin,
+  // with one honest destination in the same batch so the card has to name WHICH
+  // of them is the bin rather than colouring the whole thing. The law line
+  // drops the reassurance it cannot carry and says what the destination is FOR.
+  // Shot in TERMINAL and in PAPER like every other filing card, because a line
+  // that only reads in one world lies in three.
+  "desk-confirm-bin": () => {
+    const p = shotBinPayload();
+    return (
+      <ShotWrap>
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightBin()}
+            assumeRead
+          />
+        </DeskModal>
+      </ShotWrap>
+    );
+  },
+  "desk-confirm-bin-paper": () => {
+    const p = shotBinPayload();
+    return (
+      <InWorld id="paper">
+        <DeskModal>
+          <FileBatchCard
+            confirm={shotConfirm(p)}
+            payload={p}
+            variant="modal"
+            onResolved={noop}
+            bridge={DESK_STUB}
+            initialPreflight={shotPreflightBin()}
+            assumeRead
+          />
+        </DeskModal>
+      </InWorld>
+    );
+  },
+
   "desk-confirm-live": () => (
     <ShotWrap>
       <ConfirmLayer confirms={[shotConfirm(shotPayload())]} onResolved={noop} />

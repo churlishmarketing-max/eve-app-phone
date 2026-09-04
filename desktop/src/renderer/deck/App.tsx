@@ -309,8 +309,28 @@ export default function App() {
         quietHours={config?.quietHours ?? false}
         view={view}
         closetOpen={closetOpen}
+        // W1 — THE NUMBER, not a claim about it. This is the SAME `confirms`
+        // union ConfirmLayer renders below, so the counter beside the
+        // conversation and the cards on his screen cannot disagree: one list,
+        // one length, printed whether it is three or zero.
+        waitingCards={confirms.length}
         vitals={vitals}
-        onSend={(t) => void sendMessage(t)}
+        // THE HANDOFF — what she matched through desk_scan and handed over,
+        // already resolved by MAIN against this machine's own index. The talk
+        // column turns it into ONE button that opens a fresh conversation with
+        // those filenames as CHIPS BESIDE AN EMPTY COMPOSER, for him to direct.
+        handoff={chat.handoff}
+        picture={chat.picture}
+        onFreshThread={chat.startFreshThread}
+        onDismissHandoff={chat.dismissHandoff}
+        onSend={(t, image, names) =>
+          void sendMessage(t, {
+            ...(image ? { image } : {}),
+            // THE CARRIED NAMES RIDE THEIR OWN FIELD, never `message` (audit 5,
+            // B2). See @shared/handoff and brain/src/carried.ts.
+            ...(names && names.length > 0 ? { names } : {}),
+          })
+        }
         onConfirmResolved={onConfirmResolved}
         onToggleSilent={onToggleSilent}
         onOpenWardrobe={openCloset}

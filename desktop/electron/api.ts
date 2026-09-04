@@ -27,6 +27,7 @@ import type {
   ChatFrame,
   ChatState,
   ConfirmResolution,
+  DestinationCheck,
   EveState,
   Health,
   PendingConfirm,
@@ -37,7 +38,43 @@ import type {
   Wardrobe,
   WriteResult,
 } from "../src/shared/contract.js";
+// The comparison itself is a PURE function in shared/, so the injection harness
+// can hammer it directly without booting Electron, config or secrets.
+import { attributionSuspect, destinationCheck } from "../src/shared/destination-check.js";
+import { filterHandoffNames } from "../src/shared/handoff.js";
 import * as fx from "../src/shared/fixtures.js";
+
+// ---------------------------------------------------------------------------
+// THE HANDOFF'S ONE DEPENDENCY, INJECTED (main.ts wires it to desk/index-store).
+//
+// The brain's `handoff` frame carries `{rev, ids}` — INTEGERS AND NOTHING ELSE.
+// Turning those into filenames is the whole security property, so it is done
+// HERE, on this machine, against this machine's own index, and never by reading
+// a string the brain sent. A caption cannot write an integer that means a
+// folder, and there is no string on that frame for one to hide in.
+//
+// It is injected rather than imported so this file stays a plain HTTP client
+// with no desk dependency, and so the injection harness can drive the whole
+// path with a fake index and no Electron.
+//
+// THE DEFAULT IS NULL, AND NULL MEANS NOTHING TRAVELS. A build that forgot to
+// wire this hands him an empty list, which is visible; the alternative failure —
+// passing the brain's own strings through — is the one that is not.
+// ---------------------------------------------------------------------------
+
+export interface DeskIndexAccess {
+  /** The sanitised filename for this id IN THIS REVISION, or null. */
+  nameFor(rev: string, i: number): string | null;
+  /** Does the LIVE index still hold a file with this display name? */
+  holdsName(name: string): boolean;
+}
+
+let deskIndex: DeskIndexAccess | null = null;
+
+/** Wire (or, with null, unwire) the index the handoff resolves against. */
+export function setDeskIndex(access: DeskIndexAccess | null): void {
+  deskIndex = access;
+}
 
 // JSON calls get 10s. The SSE stream gets none — a long agent turn is normal.
 const JSON_TIMEOUT_MS = 10_000;
@@ -102,6 +139,54 @@ async function callJson<T>(path: string, opts: JsonOpts = {}): Promise<{ data: T
 // Reads
 // ---------------------------------------------------------------------------
 
+
+/**
+ * The check, remembered by confirm id, so the same card carries the same line
+ * whether it is rendered from the live SSE frame or rehydrated from the 30 s
+ * `/state` poll. Bounded and in-memory: this is a UI annotation, not a record.
+ */
+const DEST_CHECK_CAP = 50;
+const destChecks = new Map<string, DestinationCheck>();
+
+function rememberDestCheck(id: string, check: DestinationCheck): void {
+  destChecks.delete(id);
+  destChecks.set(id, check);
+  while (destChecks.size > DEST_CHECK_CAP) {
+    const oldest = destChecks.keys().next().value;
+    if (oldest === undefined) break;
+    destChecks.delete(oldest);
+  }
+}
+
+/** Stamp a confirm frame with the check for the message that produced it. */
+function stampConfirm(frame: ChatFrame, typedMessage: string): ChatFrame {
+  if (frame.type !== "confirm_request") return frame;
+  const c = frame.confirm;
+  if (!c || c.kind !== "file_batch" || typeof c.id !== "string") return frame;
+  const check = destinationCheck(typedMessage, c.payload);
+  if (!check) return frame;
+  // H4 — SHE SAYS THIS CAME FROM HIM. Only ever asked once the grade has
+  // already caught something he did not name: a possessive in her reason is
+  // ordinary prose on an honest turn, and it only becomes evidence when it is
+  // wrapped around a destination or a name he demonstrably never chose. Main is
+  // the only process holding both halves, and no model is in this loop.
+  const dirty = check.ungrounded.length > 0 || (check.renamedUngrounded?.length ?? 0) > 0;
+  const intent = (c.payload as { intent?: unknown } | null | undefined)?.intent;
+  const graded: DestinationCheck =
+    dirty && attributionSuspect(intent) ? { ...check, attributionSuspect: true } : check;
+  rememberDestCheck(c.id, graded);
+  return { type: "confirm_request", confirm: { ...c, destCheck: graded } };
+}
+
+/** Re-apply a remembered check to confirms that came back on `/state`. */
+function applyDestChecks(confirms: PendingConfirm[] | undefined): PendingConfirm[] | undefined {
+  if (!confirms || destChecks.size === 0) return confirms;
+  return confirms.map((c) => {
+    const check = destChecks.get(c.id);
+    return check && !c.destCheck ? { ...c, destCheck: check } : c;
+  });
+}
+
 export async function getHealth(): Promise<Health> {
   if (isMock()) return fx.mockHealth();
   // /health is unauthenticated (index.ts:68) — no token needed to prove reach.
@@ -114,7 +199,10 @@ export async function getState(): Promise<EveState> {
   if (isMock()) return fx.mockState();
   const r = await callJson<EveState>("/state");
   if ("error" in r) return { online: false };
-  return r.data;
+  // A card rehydrated from the poll must carry the SAME provenance line the
+  // live frame carried — otherwise the warning quietly disappears the moment
+  // the modal re-mounts from /state.
+  return { ...r.data, pendingConfirms: applyDestChecks(r.data.pendingConfirms) };
 }
 
 export async function getVitals(days = 7): Promise<Vitals> {
@@ -405,9 +493,93 @@ export function parseFrame(raw: string): ChatFrame | null {
       // job this turn dispatched. Passed through whole; the renderer drops any
       // frame without a string id rather than guessing (useChat.ts).
       return { type: "job", job: p as unknown as Extract<ChatFrame, { type: "job" }>["job"] };
+    case "handoff":
+      // THE ONE FRAME THAT IS RESOLVED RATHER THAN PASSED THROUGH.
+      //
+      // Every other case above takes what the brain said and shapes it. This
+      // one CANNOT, because the whole point of the handoff is that no string
+      // from the brain — and therefore no string from a picture — reaches his
+      // composer. The wire carries integers; `resolveHandoff` below turns them
+      // into names using this machine's own index, and only names this machine
+      // still holds survive.
+      //
+      // Torn or empty frames become null and are dropped, exactly like a job
+      // frame with no id: a handoff with nothing in it is not an empty button,
+      // it is no button.
+      return resolveHandoffFrame(p);
+    case "picture":
+      // WHETHER FILING IS REFUSED IN THIS CONVERSATION, AND WHY.
+      //
+      // The brain emits this once per turn, before the model runs, off the
+      // DURABLE bit on the conversation row (brain/src/taint.ts). Audit 5: the
+      // fresh-thread exit used to appear only when she remembered to call
+      // desk_handoff — and on a natural picture turn she asked a question
+      // instead, and with filing off the refusal pointed him at a button that
+      // cannot exist. The deck renders the exit off this frame now, so the way
+      // out never depends on the model.
+      //
+      // Read as strictly as everything else here: believe nothing, narrow hard.
+      // Every field is a constant chosen by brain/src/picture.ts or a status
+      // read off his own store, but this side does not get to assume that.
+      return readPictureFrame(p);
     default:
       return null;
   }
+}
+
+/** `{blocked, code, where, witness}` -> a frame, or null if it is not one. */
+function readPictureFrame(p: Record<string, unknown>): ChatFrame | null {
+  const code = p.code;
+  const known = code === "P-TURN" || code === "P-SESSION" || code === "P-UNKNOWN" || code === "";
+  if (!known) return null;
+  const w = (p.witness ?? {}) as Record<string, unknown>;
+  const st = w.status;
+  const status: "clean" | "tainted" | "unknown" =
+    st === "clean" || st === "tainted" || st === "unknown" ? st : "unknown";
+  return {
+    type: "picture",
+    picture: {
+      blocked: p.blocked === true,
+      code,
+      // Clamped: it prints on the panel, and it arrived over a wire.
+      where: typeof p.where === "string" ? p.where.slice(0, 400) : "",
+      witness: { status, source: typeof w.source === "string" ? w.source.slice(0, 40) : "" },
+    },
+  };
+}
+
+/**
+ * `{rev, ids}` -> `{names, dropped}`, ENTIRELY FROM THIS MACHINE'S INDEX.
+ *
+ * Two lookups, on purpose, and they are not the same lookup twice:
+ *   · `nameFor(rev, i)` is the id -> name resolution, through the revision the
+ *     brain was actually looking at. This is the same door a filing plan comes
+ *     home through (index-store.resolve, G-P1), so an id she was never shown
+ *     resolves to nothing.
+ *   · `holdsName(name)` asks the LIVE index whether that file is still there.
+ *     A revision can be old; his disk is now. A name that has since gone is a
+ *     name he would type into a message about a file that no longer exists.
+ *
+ * Everything that fails either one is DROPPED AND COUNTED. The count goes on
+ * his screen, because a list that silently shortened itself is worse than a
+ * short list.
+ */
+function resolveHandoffFrame(p: Record<string, unknown>): ChatFrame | null {
+  const rev = typeof p.rev === "string" ? p.rev : "";
+  const rawIds = Array.isArray(p.ids) ? p.ids : [];
+  const ids: number[] = [];
+  for (const n of rawIds) {
+    if (typeof n !== "number" || !Number.isFinite(n) || n < 0) continue;
+    ids.push(Math.floor(n));
+  }
+  if (ids.length === 0 || !rev) return null;
+  // No index wired (a harness, a mock run, a build that forgot): NOTHING
+  // travels. Fail closed and loudly — he sees the dropped count, not silence.
+  const access = deskIndex;
+  const resolved: (string | null)[] = access ? ids.map((i) => access.nameFor(rev, i)) : ids.map(() => null);
+  const offer = filterHandoffNames(resolved, (name) => (access ? access.holdsName(name) : false));
+  if (offer.names.length === 0) return null;
+  return { type: "handoff", handoff: offer };
 }
 
 export interface ChatArgs {
@@ -416,6 +588,20 @@ export interface ChatArgs {
   /** Purely informational for now — the brain has one /chat. S4 uses it to
    *  decide whether the reply is spoken (the editor rule, handoff §6). */
   viaVoice?: boolean;
+  /**
+   * NAMES HE CARRIED INTO THIS THREAD OFF THE HANDOFF (audit 5, B2).
+   *
+   * A STRUCTURED FIELD BESIDE `message`, never inside it. It used to be seeded
+   * into his composer as text, which made it part of `message` — the one string
+   * the brain appends to the turn as HIS OWN WORDS, outside every envelope. A
+   * filename is attacker-chosen data and belongs in `<untrusted_filenames>`,
+   * which is where the brain renders these.
+   *
+   * Every entry here was already resolved twice against THIS machine's index
+   * (`resolveHandoffFrame` above) and filtered by `cleanHandoffName`. The brain
+   * validates them again at its own door.
+   */
+  names?: string[];
   /**
    * FILING HANDS — the desk briefing (FILE-MARSHAL-SPEC hop 2).
    *
@@ -438,6 +624,17 @@ export interface ChatArgs {
    * `brain/src/desk.ts` on the other. api.ts does not get a vote.
    */
   desk?: unknown;
+  /**
+   * ONE PICTURE, THIS TURN. Raw base64 and a mime the BYTES agreed with, both
+   * already checked in main. Absent — not null — when there is none, exactly
+   * like `desk`: the brain reads a missing field as "no picture" and a turn
+   * without one is byte-for-byte the turn it has always been.
+   *
+   * It is not stored anywhere. No temp file, no cache, and Supabase gets the
+   * sentence "[he attached a PNG screenshot — the picture itself is not
+   * stored]", never the bytes.
+   */
+  image?: { mime: string; data: string };
 }
 
 /**
@@ -451,6 +648,12 @@ export function startChat(args: ChatArgs, emit: (frame: ChatFrame) => void): str
   const controller = new AbortController();
   inflight.set(chatId, controller);
 
+  // EVERY frame out of this turn goes through here, so a file_batch confirm
+  // cannot reach a card without being graded against the words he actually
+  // typed. Main is the only place that holds both, and it is the only place
+  // that is not downstream of the picture. (a3 / a5 / a9)
+  const out = (frame: ChatFrame): void => emit(stampConfirm(frame, args.message));
+
   const finish = (): void => {
     inflight.delete(chatId);
   };
@@ -461,7 +664,7 @@ export function startChat(args: ChatArgs, emit: (frame: ChatFrame) => void): str
     for (const step of fx.mockChatFrames(args.message, convId)) {
       timers.push(setTimeout(() => {
         if (controller.signal.aborted) return;
-        emit(step.frame);
+        out(step.frame);
         if (step.frame.type === "done") finish();
       }, step.delayMs));
     }
@@ -486,6 +689,15 @@ export function startChat(args: ChatArgs, emit: (frame: ChatFrame) => void): str
           // withheld. `deskFromBody` returns null for a missing field and for
           // an odd one alike, and the feature is simply not there that turn.
           ...(args.desk ? { desk: args.desk } : {}),
+          // Same discipline for the picture. `/chat` is the only route whose
+          // body ceiling was raised for this (8 MB brain-side); every other
+          // route still holds the 100 KB default.
+          ...(args.image ? { image: args.image } : {}),
+          // AND THE CARRIED NAMES, AS THEIR OWN FIELD. Absent when he carried
+          // nothing, so an ordinary turn puts a byte-identical body on the wire.
+          // They are NOT concatenated into `message` and never will be: that
+          // string is the trusted half of the turn, and a filename is not his.
+          ...(args.names && args.names.length > 0 ? { names: args.names } : {}),
         }),
         signal: controller.signal,
       });
@@ -523,7 +735,7 @@ export function startChat(args: ChatArgs, emit: (frame: ChatFrame) => void): str
       buf = frames.pop() ?? "";
       for (const f of frames) {
         const parsed = parseFrame(f);
-        if (parsed) emit(parsed);
+        if (parsed) out(parsed);
       }
     }
     finish();

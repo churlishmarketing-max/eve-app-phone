@@ -16,7 +16,7 @@
 // frame and stream into it exactly like a local turn.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatFrame, PendingConfirm } from "@shared/contract";
+import type { ChatFrame, ChatImage, HandoffOffer, PictureFrame, PendingConfirm } from "@shared/contract";
 import type { ChatView, DeckMsg, EveMode, SeenJobFrame } from "../deck/types";
 
 /** Job frames kept per window. The feed caps lower; this is the reducer's ceiling. */
@@ -33,7 +33,43 @@ interface Turn {
 export interface ChatApi extends ChatView {
   /** Confirms that arrived on an SSE frame this session (deduped by id). */
   frameConfirms: PendingConfirm[];
-  sendMessage: (text: string, opts?: { hidden?: boolean }) => Promise<void>;
+  /**
+   * THE HANDOFF she offered on the last turn that offered one, or null.
+   *
+   * Main has already resolved it against this machine's index, so these are
+   * filenames this disk holds — not strings the brain sent and not words read
+   * out of a picture. The deck turns it into ONE button: start a fresh thread
+   * with these names as CHIPS BESIDE AN EMPTY BOX — the box holds his
+   * keystrokes and nothing else.
+   */
+  handoff: HandoffOffer | null;
+  /**
+   * WHETHER FILING IS REFUSED IN THIS CONVERSATION, AND WHY — the brain's
+   * `picture` frame, emitted once per turn before the model runs, off the
+   * DURABLE bit on the conversation row.
+   *
+   * THE EXIT HANGS OFF THIS AND NOT OFF `handoff` (audit 5, F4). The button used
+   * to appear only when she remembered to call desk_handoff; on a natural
+   * picture turn she read the picture and asked a question instead, and with
+   * filing switched OFF her refusal pointed him at a button that cannot exist.
+   * A frame the brain emits unconditionally does not depend on her.
+   *
+   * Null until the first frame of a conversation arrives.
+   */
+  picture: PictureFrame | null;
+  /**
+   * START A FRESH THREAD. Drops the conversation id (so the brain mints a new
+   * one, with a new ledger row and a new SDK session, and no picture in it),
+   * clears the transcript, and clears the offer.
+   *
+   * IT SENDS NOTHING. The names go into the composer as a DRAFT for him to edit
+   * — TalkColumn owns that half — because the instruction on that turn has to
+   * be his, and a message that sends itself is not his.
+   */
+  startFreshThread: () => void;
+  /** Put the offer away without taking it. */
+  dismissHandoff: () => void;
+  sendMessage: (text: string, opts?: { hidden?: boolean; image?: ChatImage; names?: string[] }) => Promise<void>;
   /** S4 emits a user-turn event just before a voice turn: show his line. */
   appendYou: (text: string) => void;
   /** Drop a confirm from the local list once it has been resolved. */
@@ -50,6 +86,8 @@ export function useChat(): ChatApi {
   const [jobFrames, setJobFrames] = useState<SeenJobFrame[]>([]);
   const [liveCount, setLiveCount] = useState(0);
   const [streamingId, setStreamingId] = useState<string | null>(null);
+  const [handoff, setHandoff] = useState<HandoffOffer | null>(null);
+  const [picture, setPicture] = useState<PictureFrame | null>(null);
 
   const busy = useRef(false);
   const turns = useRef(new Map<string, Turn>());
@@ -115,6 +153,25 @@ export function useChat(): ChatApi {
           );
           break;
         }
+        case "picture":
+          // ONE FRAME PER TURN, and the newest is the truth. Nothing brain-side
+          // ever writes the taint back to false, so within one conversation id
+          // this goes clean -> blocked and stays there; a new conversation is
+          // the only way out (below). It can also go to a BLOCKED that means "I
+          // could not tell" rather than "there is a picture" — audit 6, D6-B: a
+          // lost conversation row reads unknown and refuses. The frame carries
+          // its own reason; this hook does not need to know which.
+          setPicture(frame.picture);
+          break;
+        case "handoff":
+          // Main resolved this against the live index before it got here, and
+          // dropped everything it could not confirm. An offer with no names
+          // never becomes a frame at all (api.ts), so anything that arrives
+          // here has something in it. The newest offer replaces the previous
+          // one: two buttons for two different lists is a choice he did not ask
+          // for, and the one he just watched her make is the one he means.
+          setHandoff(frame.handoff);
+          break;
         case "job": {
           // DISPATCH v0.1 — one line per frame, never merged here: the CORE's
           // feed wants every transition, and its rail upserts by id itself.
@@ -136,6 +193,13 @@ export function useChat(): ChatApi {
           setMode("idle");
           setToolNote(null);
           setStreamingId((cur) => (cur === eveId ? null : cur));
+          // W1 — THE TURN IS OVER, so what it raised is now a fact rather than
+          // a work in progress. TalkColumn prints THIS TURN RAISED NO CARD
+          // under a finished turn whose `confirms` list is empty; until this
+          // flag is set it says nothing, because "no card yet" is not "no
+          // card". Every confirm_request for this turn has already landed above
+          // — the brain emits them during the stream, never after `done`.
+          setMessages((ms) => ms.map((m) => (m.id === eveId ? { ...m, done: true } : m)));
           busy.current = false;
           endTurn(rec);
           break;
@@ -159,7 +223,7 @@ export function useChat(): ChatApi {
   }, [endTurn]);
 
   // ---- send ---------------------------------------------------------------
-  const sendMessage = useCallback(async (text: string, opts?: { hidden?: boolean }) => {
+  const sendMessage = useCallback(async (text: string, opts?: { hidden?: boolean; image?: ChatImage; names?: string[] }) => {
     if (busy.current || !text.trim()) return;
     busy.current = true;
     setErrNote(null);
@@ -180,6 +244,16 @@ export function useChat(): ChatApi {
         message: text,
         viaVoice: false,
         conversationId: convId.current,
+        // ONE turn. The bag is not held anywhere in this hook, so a resumed
+        // conversation cannot re-attach it and the next turn is a turn without
+        // a picture, exactly as it was before this feature existed.
+        ...(opts?.image ? { image: opts.image } : {}),
+        // THE CARRIED NAMES, AS THEIR OWN FIELD (audit 5, B2). They are NOT in
+        // `message` and they never will be: `message` is the one string the
+        // brain treats as King's own words, and a filename is written by
+        // whoever made the file. Main re-checks each one against the live index
+        // and the brain renders them inside <untrusted_filenames>.
+        ...(opts?.names && opts.names.length > 0 ? { names: opts.names } : {}),
       });
       const raced = turns.current.get(chatId);
       if (raced) {
@@ -200,6 +274,39 @@ export function useChat(): ChatApi {
       setMessages((ms) => ms.filter((m) => m.id !== eveId));
     }
   }, []);
+
+  // ---- the fresh thread ----------------------------------------------------
+  // THE PICTURE IS IN THE OLD CONVERSATION AND IT STAYS THERE. Dropping the id
+  // is what makes this real rather than cosmetic: with no `conversationId` on
+  // the next /chat body the brain mints a new one, which is a new image-ledger
+  // row and a new SDK session with an empty transcript — so the turn he is
+  // about to send genuinely has no picture in it, and desk_file_plan works.
+  //
+  // The transcript is cleared too, because leaving the old turns on screen
+  // under a new conversation would show him a thread that no longer exists.
+  // Confirms are NOT cleared: a card waiting for him is still waiting for him,
+  // and the header counter must not drop by one because he opened a thread.
+  const startFreshThread = useCallback(() => {
+    convId.current = undefined;
+    try {
+      localStorage.removeItem(CONV_KEY);
+    } catch {
+      /* private mode: the ref above is what the next turn actually reads */
+    }
+    turns.current.clear();
+    setMessages([]);
+    setStreamingId(null);
+    setErrNote(null);
+    setToolNote(null);
+    setHandoff(null);
+    // THE PICTURE STATE BELONGS TO THE CONVERSATION HE JUST LEFT. Clearing it
+    // is not optimism — the new conversation has no id yet, so nothing is known
+    // about it until its first `picture` frame lands. Leaving the old verdict up
+    // would tell him the new thread is tainted before it has had a turn.
+    setPicture(null);
+  }, []);
+
+  const dismissHandoff = useCallback(() => setHandoff(null), []);
 
   const appendYou = useCallback((text: string) => {
     setMessages((ms) => [...ms, { id: newId(), role: "you", text }]);
@@ -227,6 +334,10 @@ export function useChat(): ChatApi {
     busy: liveCount > 0,
     jobFrames,
     frameConfirms,
+    handoff,
+    picture,
+    startFreshThread,
+    dismissHandoff,
     sendMessage,
     appendYou,
     pruneConfirm,

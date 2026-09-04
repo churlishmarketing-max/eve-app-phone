@@ -8,6 +8,7 @@
 // Owning stream: S1.
 
 import { app, dialog, globalShortcut, ipcMain, BrowserWindow, shell } from "electron";
+import { filterHandoffNames } from "../src/shared/handoff.js";
 import { mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -273,6 +274,49 @@ function senderWindow(e: Electron.IpcMainInvokeEvent): BrowserWindow | null {
   return BrowserWindow.fromWebContents(e.sender);
 }
 
+
+/**
+ * ONE PICTURE, OR NOTHING. Main's own last look before anything leaves.
+ *
+ * Deliberately narrow and deliberately silent about it: a shape that fails here
+ * is a shape the renderer should never have produced, and the renderer already
+ * has the sentence for every case a person can cause. What this catches is a
+ * bug or a tampered bridge call, and the right answer to that is to send the
+ * turn WITHOUT the picture rather than to fail his message.
+ */
+const CHAT_IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/webp"]);
+/** 5 MB decoded, expressed as its base64 length — checked before any decode. */
+const MAX_CHAT_IMAGE_B64 = 6_990_516;
+
+function sanitiseChatImage(raw: unknown): { mime: string; data: string } | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const o = raw as { mime?: unknown; data?: unknown };
+  if (typeof o.mime !== "string" || !CHAT_IMAGE_MIMES.has(o.mime)) return null;
+  if (typeof o.data !== "string" || o.data.length === 0) return null;
+  if (o.data.length > MAX_CHAT_IMAGE_B64) return null;
+  // Raw base64 only. A `data:` URI and any whitespace are refused by the brain
+  // and there is no reason to spend 5 MB of wire finding that out.
+  if (o.data.startsWith("data:") || /[^A-Za-z0-9+/=]/.test(o.data)) return null;
+  return { mime: o.mime, data: o.data };
+}
+
+
+/**
+ * DOES THIS MACHINE STILL HOLD A FILE WITH THIS DISPLAY NAME?
+ *
+ * ONE function, TWO callers — the handoff resolution on the way in (api.ts
+ * setDeskIndex) and the carried names on the way back out (chatStart). Two
+ * copies of this question would eventually be two different answers, and the
+ * whole point of both call sites is that they agree.
+ *
+ * It asks the LIVE snapshot, never a revision: a revision can be old, and his
+ * disk is now.
+ */
+function deskHoldsName(name: string): boolean {
+  const snap = desk.indexStore.snapshot();
+  return !!snap && snap.entries.some((e) => e.dispName === name);
+}
+
 function registerIpc(): void {
   ipcMain.handle(IPC.ping, () => ({
     ok: true as const,
@@ -317,7 +361,19 @@ function registerIpc(): void {
   ipcMain.handle(IPC.stateRefresh, () => pollOnce());
   ipcMain.handle(IPC.health, () => api.getHealth());
 
-  ipcMain.handle(IPC.chatStart, (_e, args: { message: string; viaVoice?: boolean; conversationId?: string }) => {
+  type ChatStartArgs = {
+    message: string;
+    viaVoice?: boolean;
+    conversationId?: string;
+    /** One picture, this turn. Re-checked by sanitiseChatImage before it moves. */
+    image?: { mime?: unknown; data?: unknown };
+    /**
+     * NAMES HE CARRIED INTO THIS THREAD OFF THE HANDOFF (audit 5, B2).
+     * Re-checked below against this machine's LIVE index before they move.
+     */
+    names?: unknown;
+  };
+  ipcMain.handle(IPC.chatStart, (_e, args: ChatStartArgs) => {
     // FILING HANDS — the desk briefing, built THIS instant and attached to
     // THIS turn only (hop 2). `pack()` returns null whenever filing is off, no
     // root survived enrollment, or the Windows attribute sweep failed, and
@@ -335,12 +391,47 @@ function registerIpc(): void {
     const deskRefusal = deskPack ? null : desk.packRefusalObject();
     if (!deskPack && desk.packRefusal()) console.log(`[desk] pack withheld — ${desk.packRefusal()}`);
     else if (deskPack && desk.packNote()) console.log(`[desk] pack note — ${desk.packNote()}`);
+    // A PICTURE, RE-CHECKED HERE.
+    //
+    // The renderer already sniffed the magic bytes at attach time (see
+    // src/renderer/deck/image.ts) — that is where the honesty lives, because
+    // that is where he can see the answer before he presses send. This second
+    // pass is not a duplicate of it; it is main refusing to put a shape on the
+    // wire that it cannot vouch for at all. A `data:` prefix, whitespace, a
+    // mime outside the three, or an absurd length never leave this machine.
+    //
+    // WHAT MAIN DOES NOT DO: read the picture. There is no OCR step anywhere in
+    // this design. Text inside the image is written by whoever made the image
+    // and is UNTRUSTED — the brain wraps the pixels in the same
+    // `<untrusted_…>` envelope a filename rides in, and this process never
+    // looks. It measures and forwards.
+    const image = sanitiseChatImage(args?.image);
+    // THE CARRIED NAMES, RE-ASKED OF THE LIVE INDEX HERE (audit 5, B2).
+    //
+    // The renderer holds these as chips between the handoff and the send, and
+    // the renderer is downstream of a `handoff` frame that came out of a
+    // conversation a picture was in. So they get the SAME question a second
+    // time, at the same door and off the same index that answered it the first
+    // time: does this machine still hold a file with this name?
+    //
+    // Anything that fails is DROPPED — never repaired, never guessed at, and
+    // never passed through because it was "already checked". A name that has
+    // left his disk between the button and the send is a name he would be
+    // sending a message about a file that is not there.
+    //
+    // And they go on the wire as their OWN FIELD. They are never concatenated
+    // into `message`: that string is the trusted half of the turn and a
+    // filename is not his. The brain renders them inside <untrusted_filenames>.
+    const carried = filterHandoffNames(Array.isArray(args?.names) ? args.names : [], deskHoldsName);
+    if (carried.dropped > 0) console.log(`[desk] carried names — ${carried.dropped} dropped at send`);
     const chatId = api.startChat(
       {
         message: args?.message ?? "",
         conversationId: args?.conversationId ?? null,
         viaVoice: args?.viaVoice,
         ...(deskPack ? { desk: deskPack } : deskRefusal ? { desk: deskRefusal } : {}),
+        ...(image ? { image } : {}),
+        ...(carried.names.length > 0 ? { names: carried.names } : {}),
       },
       (frame: ChatFrame) => {
         // Frames go to EVERY live window, not just the one that started the
@@ -495,6 +586,13 @@ function registerDeskIpc(): void {
     neverList: readConfig().deskNeverList ?? [],
   }));
   ipcMain.handle(IPC.deskLog, (_e, limit?: number) => desk.log(typeof limit === "number" ? limit : 50));
+  // WHERE DID IT GO — read-only, journal-driven, and it works with the brain
+  // offline, which is exactly the state he is in when he notices a file is
+  // missing. It returns rows and a batch id and nothing else; putting a file
+  // back still goes through IPC.deskUndo below, the mover that already exists.
+  ipcMain.handle(IPC.deskWhere, (_e, a: { query?: unknown; limit?: unknown }) =>
+    desk.whereIs(typeof a?.query === "string" ? a.query : "", typeof a?.limit === "number" ? a.limit : 40),
+  );
   ipcMain.handle(IPC.deskOutcome, (_e, jobId: string) => desk.outcome(String(jobId)));
   ipcMain.handle(IPC.deskCancel, (_e, jobId: string) => desk.cancel(String(jobId)));
   ipcMain.handle(IPC.deskUndo, (_e, batchId: string) => desk.undoBatch(String(batchId)));
@@ -649,6 +747,27 @@ app.whenReady().then(() => {
       `${deskReport.roots.length} · reconciled ${deskReport.reconciled.batches} interrupted batch(es), ` +
       `${deskReport.reconciled.ambiguous} ambiguous · journal ${deskReport.journalPath}`,
   );
+
+  // THE HANDOFF'S INDEX. api.ts turns the brain's `{rev, ids}` frame into
+  // filenames HERE, on this machine, and it can only do that with this. Wired
+  // right after desk.init so the store is live; left unwired, api.ts fails
+  // closed and nothing travels — which is visible to him, unlike the other
+  // failure, which would be trusting a string the brain sent.
+  //
+  // Two questions, both answered by the eye and neither by her: WHAT WAS ID n
+  // IN THAT REVISION (the same door a filing plan comes home through, G-P1),
+  // and IS THAT FILE STILL THERE NOW. The names handed back are the SANITISED
+  // display names — the strings that already rode the wire in the census —
+  // never the real ones, which never leave this process.
+  api.setDeskIndex({
+    nameFor: (rev, i) => {
+      const hit = desk.indexStore.resolve(rev, i);
+      if (!hit) return null;
+      const cut = hit.wireRel.lastIndexOf("/");
+      return cut < 0 ? hit.wireRel : hit.wireRel.slice(cut + 1);
+    },
+    holdsName: deskHoldsName,
+  });
 
   registerIpc();
   const deck = createDeck();

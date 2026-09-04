@@ -16,7 +16,7 @@
 // touch the network — which is precisely the condition he needs them in.
 // (G-R4). The model has no undo tool; she cannot undo, only he can. (§4.3)
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { DeskBatchRecord, DeskStatus, DeskUndoResult, ItemStatus } from "@shared/contract";
+import type { DeskBatchRecord, DeskStatus, DeskUndoResult, DeskWhereAnswer, ItemStatus } from "@shared/contract";
 import Untrusted from "./untrusted";
 import { fmtBytes, fmtDayHM, hashPrefix } from "./payload";
 import KillSwitch from "./KillSwitch";
@@ -24,6 +24,7 @@ import "./desk.css";
 
 export interface DeskLogBridge {
   log(limit?: number): Promise<DeskBatchRecord[]>;
+  where(query: string, limit?: number): Promise<DeskWhereAnswer>;
   status(): Promise<DeskStatus>;
   undo(batchId: string): Promise<DeskUndoResult>;
   previewUndo(batchId: string): Promise<DeskUndoResult>;
@@ -39,6 +40,9 @@ export interface DeskLogPanelProps {
   initialStatus?: DeskStatus;
   initialExpanded?: string;
   initialSincePreview?: DeskUndoResult[];
+  /** Shot seams for WHERE DID IT GO. */
+  initialWhereQuery?: string;
+  initialWhere?: DeskWhereAnswer;
 }
 
 function liveBridge(): DeskLogBridge {
@@ -75,6 +79,8 @@ export default function DeskLogPanel({
   initialStatus,
   initialExpanded,
   initialSincePreview,
+  initialWhereQuery,
+  initialWhere,
 }: DeskLogPanelProps) {
   const io = bridge ?? liveBridge();
   const seeded = initialBatches !== undefined || initialStatus !== undefined;
@@ -88,6 +94,12 @@ export default function DeskLogPanel({
   const [sincePreview, setSincePreview] = useState<DeskUndoResult[] | null>(initialSincePreview ?? null);
   const [sinceBusy, setSinceBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // WHERE DID IT GO. Its own small state, deliberately separate from the batch
+  // list: he arrives here knowing a NAME, not a time, and making him find the
+  // batch first is the "buried" failure REC-1 is about, one layer down.
+  const [whereQ, setWhereQ] = useState(initialWhereQuery ?? "");
+  const [where, setWhere] = useState<DeskWhereAnswer | null>(initialWhere ?? null);
+  const [whereBusy, setWhereBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -134,6 +146,20 @@ export default function DeskLogPanel({
     },
     [io],
   );
+
+  // WHERE DID IT GO (his decision 2). Read-only: this asks the journal a
+  // question and nothing else. PUT IT BACK below calls `undoOne`, the undo that
+  // already existed — no second mover was written for this, and the model still
+  // has no undo tool of any kind.
+  const askWhere = useCallback(async () => {
+    setWhereBusy(true);
+    try {
+      setWhere(await io.where(whereQ));
+    } catch (err) {
+      setError(`THE JOURNAL DID NOT ANSWER — ${(err instanceof Error ? err.message : "unknown").toUpperCase()}`);
+    }
+    setWhereBusy(false);
+  }, [io, whereQ]);
 
   // TIME-RANGED UNDO (G-R8). Preview FIRST, always: the commit button does not
   // exist until he has seen a dry-run list of what would come back.
@@ -187,6 +213,159 @@ export default function DeskLogPanel({
         onChanged={() => void load()}
         compact
       />
+
+      {/* ------------- WHERE DID IT GO (his decision 2) -------------------
+          His words: "if I do lose it, I should be able to just ask her and
+          she's able to tell me where to find it and reconnect it." She answers
+          from a bounded slice that rides the pack; THIS answers from the whole
+          journal, on this machine, with the brain switched off — which is
+          exactly the state he is in when he notices a file is missing. */}
+      <div className="desklogbar deskwherebar">
+        <span className="fbhint" style={{ flex: "none" }}>
+          WHERE DID IT GO
+        </span>
+        <input
+          className="deskwhereinput"
+          type="text"
+          placeholder="a clip name — C9452, with or without .MP4"
+          value={whereQ}
+          spellCheck={false}
+          onChange={(e) => {
+            setWhereQ(e.target.value);
+            setWhere(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void askWhere();
+            }
+          }}
+        />
+        <button type="button" className="chipv6" disabled={whereBusy} onClick={() => void askWhere()}>
+          FIND IT
+        </button>
+      </div>
+
+      {where && (
+        <div className="deskbatch">
+          {where.why ? (
+            <div className="fbhint">{where.why.toUpperCase()}</div>
+          ) : where.hits.length === 0 ? (
+            /* AN HONEST MISS. No nearest match, no folder it is "probably" in,
+               and it states how far back it can see — a short history must
+               never pass for a complete answer. */
+            <div className="fbhint">
+              NO RECORD OF THAT NAME IN THE FILING LOG.
+              <br />
+              {where.searched === 0
+                ? "There is no filing history on this machine at all yet."
+                : `Searched ${where.searched} ${where.searched === 1 ? "batch" : "batches"}${
+                    where.oldest ? `, back to ${fmtDayHM(where.oldest)}` : ""
+                  }. It may be older than that, or it may never have been filed by her at all.`}
+            </div>
+          ) : (
+            <>
+              <div className="deskcounts">
+                {where.hits.length} {where.hits.length === 1 ? "MOVE" : "MOVES"} MATCHED
+                {where.truncated > 0 ? ` · ${where.truncated} MORE NOT SHOWN — TYPE THE FULL NAME` : ""}
+                {where.hits.length > 1 ? " · NEWEST FIRST — SHE DOES NOT PICK ONE FOR YOU" : ""}
+              </div>
+              {where.hits.map((h, i) => {
+                const res = undoResults[h.batchId];
+                return (
+                  <div className="deskwherehit" key={`${h.batchId}-${h.fromAbs}-${i}`}>
+                    <span className="lbl">WAS</span>
+                    <span>
+                      <Untrusted value={h.fromAbs} disclose />
+                    </span>
+                    <span className="lbl">NOW</span>
+                    <span>
+                      <Untrusted value={h.toAbs} disclose />
+                    </span>
+                    <div className="deskwheremeta">
+                      {fmtDayHM(h.at)} · {h.op.toUpperCase()} · batch {hashPrefix(h.batchId.slice(0, 8))}
+                      {h.dryRun ? (
+                        <>
+                          {" · "}
+                          <span className="gone">DRY RUN — IT WOULD HAVE GONE THERE. IT NEVER MOVED.</span>
+                        </>
+                      ) : h.undone ? (
+                        <>
+                          {" · "}
+                          <span className="gone">ALREADY PUT BACK — IT IS AT THE OLD PATH AGAIN.</span>
+                        </>
+                      ) : h.hereNow === true ? (
+                        " · still there as of right now"
+                      ) : h.hereNow === false ? (
+                        <>
+                          {" · "}
+                          <span className="gone">
+                            NOT THERE ANY MORE — SOMETHING MOVED IT AGAIN AFTER SHE DID, AND THE LOG HAS NO RECORD
+                            OF WHAT.
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          {" · "}
+                          <span className="unknown">
+                            I COULD NOT CHECK WHETHER IT IS STILL THERE — THE DRIVE DID NOT ANSWER.
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="deskwhereact">
+                      {h.canUndo ? (
+                        <>
+                          <button
+                            type="button"
+                            className="chipv6"
+                            disabled={undoing === h.batchId}
+                            onClick={() => void previewOne(h.batchId)}
+                          >
+                            PREVIEW THE UNDO
+                          </button>
+                          {/* THE EXISTING PER-BATCH UNDO. Same call the batch
+                              list makes, same one-shot-per-item behaviour, no
+                              new mover anywhere in this feature. */}
+                          <button
+                            type="button"
+                            className="cbtn ok"
+                            disabled={undoing === h.batchId}
+                            onClick={() => void undoOne(h.batchId)}
+                          >
+                            PUT IT BACK
+                          </button>
+                          <span className="fbhint">puts the whole batch back, not just this file</span>
+                        </>
+                      ) : (
+                        <span className="fbhint">
+                          {h.dryRun
+                            ? "Nothing moved, so there is nothing to put back."
+                            : h.undone
+                              ? "Already put back."
+                              : "That batch cannot be undone."}
+                        </span>
+                      )}
+                    </div>
+                    {res && (
+                      <div className="deskwheremeta">
+                        {res.refusal ? (
+                          <span className="bad">UNDO REFUSED — {res.refusal}</span>
+                        ) : (
+                          <>
+                            {res.dryRun ? "WOULD PUT BACK" : "PUT BACK"} {res.restored} · REFUSED {res.refused} ·
+                            FAILED {res.failed}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
 
       {/* ---------------- time-ranged undo (REC-1 / G-R8) ---------------- */}
       <div className="desklogbar">

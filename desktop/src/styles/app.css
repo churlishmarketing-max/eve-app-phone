@@ -230,6 +230,39 @@ button.chipv6:disabled:hover {
   letter-spacing: 0.16em;
   color: var(--tealHi);
 }
+/* THE CARD COUNTER (audit 4, W1) — how many confirm cards are waiting for him,
+   in the talk column's header, ALWAYS on screen, including at zero.
+
+   Two states and nothing else. At zero it is the header's own dim cream: this
+   is information, not an alarm, and it sits beside the title precisely so it
+   reads as furniture rather than as an event. Above zero it is --redInk,
+   because a pending confirm IS the RED tier — the one thing red is allowed to
+   mean here besides a live mic. Never green: green is the autonomy dot alone.
+   Tokens only; no literal colour is written here. */
+.cardcount {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.24em;
+  color: rgba(var(--rgbCream), 0.42);
+  white-space: nowrap;
+}
+.cardcount.live {
+  color: var(--redInk);
+}
+/* WHAT ONE FINISHED TURN RAISED (W1). Sits under that turn's own bubble, so a
+   claim and the fact are one line apart. Quiet by default — it prints on every
+   finished turn and must not shout on all of them — and --redInk when the turn
+   really did raise a card, matching the counter above it. */
+.turncard {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  color: rgba(var(--rgbCream), 0.38);
+  padding: 1px 2px 0;
+}
+.turncard.live {
+  color: var(--redInk);
+}
 .dropzone {
   position: absolute;
   inset: 8px;

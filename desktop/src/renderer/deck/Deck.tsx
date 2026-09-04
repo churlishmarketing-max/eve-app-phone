@@ -9,7 +9,7 @@
 // column 1fr. The cant is driven by explicit .cant-left / .cant-right classes,
 // never by :first-of-type — column order is not a design decision.
 
-import type { EveState, Vitals } from "@shared/contract";
+import type { ChatImage, ChatImageAttachment, EveState, HandoffOffer, PictureFrame, Vitals } from "@shared/contract";
 import Tbar from "./Tbar";
 import RailColumn from "./RailColumn";
 import TalkColumn from "./TalkColumn";
@@ -40,6 +40,18 @@ export interface DeckProps {
       separate boolean), but the nav has to be able to light it and close it,
       so it is threaded down here alongside `view`. */
   closetOpen: boolean;
+  /**
+   * HOW MANY CARDS ARE WAITING FOR HIM RIGHT NOW (audit 4, W1).
+   *
+   * App owns the number: the union of /state.pendingConfirms and the confirm
+   * frames that arrived this session, minus the ones he has resolved. It is
+   * threaded through rather than recomputed here, because the union and the
+   * resolved list live in one place and a second arithmetic would be a second
+   * answer. TalkColumn prints it beside the conversation ALWAYS, zero included
+   * — a counter that hides at zero says nothing on exactly the turn a card that
+   * does not exist would be announced.
+   */
+  waitingCards: number;
   vitals: Vitals | null;
   /** DISPATCH v0.1 — a shot fixture opens THE CORE on this job's detail.
    *  App never sets it; the live screen opens detail by click. */
@@ -49,7 +61,34 @@ export interface DeckProps {
   corePrefill?: CorePrefill | null;
   /** v0.2 — a FLEET row's DISPATCH: App jumps to THE CORE, prefilled. */
   onDispatchUnit: (key: string) => void;
-  onSend: (text: string) => void;
+  onSend: (text: string, image?: ChatImage, names?: string[]) => void;
+  /**
+   * THE HANDOFF the last turn offered, already resolved by MAIN against this
+   * machine's index. The talk column turns it into one button: a fresh thread
+   * with these filenames as CHIPS BESIDE AN EMPTY COMPOSER. Null when there is
+   * nothing on offer.
+   */
+  handoff?: HandoffOffer | null;
+  /**
+   * WHETHER FILING IS REFUSED IN THIS CONVERSATION — the brain's `picture`
+   * frame. The talk column renders the fresh-thread exit off THIS rather than
+   * off `handoff`, so the way out of a tainted thread never depends on her
+   * having called a tool (audit 5, F4).
+   */
+  picture?: PictureFrame | null;
+  /** Drop the conversation id and the transcript. NOTHING is sent. */
+  onFreshThread?: () => void;
+  onDismissHandoff?: () => void;
+  /** Shot seam only — photographs the attached-picture chip without a clipboard. */
+  talkAttachment?: ChatImageAttachment | null;
+  /** Shot seams only — photograph the handoff panel and the seeded composer. */
+  talkHandoff?: HandoffOffer | null;
+  talkDraft?: string;
+  talkFresh?: boolean;
+  /** Shot seam only — photographs the CARRIED-NAME chips above the composer. */
+  talkCarried?: string[];
+  /** Shot seam only — photographs the picture-refusal exit without a live turn. */
+  talkPicture?: PictureFrame | null;
   onConfirmResolved: (id: string) => void;
   onToggleSilent: () => void;
   onOpenWardrobe: () => void;
@@ -143,8 +182,19 @@ export default function Deck(p: DeckProps) {
             errNote={p.chat.errNote}
             online={p.state.online}
             busy={p.chat.busy}
+            waitingCards={p.waitingCards}
+            handoff={p.handoff ?? null}
+            picture={p.picture ?? null}
             onSend={p.onSend}
             onConfirmResolved={p.onConfirmResolved}
+            onFreshThread={p.onFreshThread}
+            onDismissHandoff={p.onDismissHandoff}
+            initialAttachment={p.talkAttachment ?? null}
+            initialHandoff={p.talkHandoff ?? null}
+            {...(p.talkDraft !== undefined ? { initialDraft: p.talkDraft } : {})}
+            {...(p.talkFresh !== undefined ? { initialFresh: p.talkFresh } : {})}
+            {...(p.talkCarried !== undefined ? { initialCarried: p.talkCarried } : {})}
+            {...(p.talkPicture !== undefined ? { initialPicture: p.talkPicture } : {})}
           />
           <div className="vr" />
           <DataColumn

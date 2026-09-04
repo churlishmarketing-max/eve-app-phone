@@ -24,7 +24,7 @@
 
 import { MAX_ABS_LEN } from "./guard.js";
 import type { IndexEntry, IndexSnapshot, RootStats } from "./index-store.js";
-import type { DeskBatchSummary, DeskEntry, DeskPack, DeskRoot, DeskRootCensus } from "./types.js";
+import type { DeskBatchSummary, DeskEntry, DeskMoveWire, DeskPack, DeskRoot, DeskRootCensus } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Wire budget
@@ -38,6 +38,8 @@ export const MAX_BATCH = 50; // G-C5
 export const MAX_SCAN_ROWS = 60; // G-I5
 export const MAX_SCAN_CALLS = 4; // G-I5
 export const MAX_INDEX = 1_200; // G-I5
+/** Journal rows on the wire. Matches brain/src/desk.ts MAX_MOVES exactly. */
+export const MAX_MOVES = 300;
 
 export interface TrashUsage {
   files: number;
@@ -113,6 +115,18 @@ export interface PackInput {
   snap: IndexSnapshot;
   trashOf: (root: DeskRoot) => TrashUsage;
   lastBatches: DeskBatchSummary[];
+  /**
+   * THE FILING HISTORY SLICE. Newest first, already capped and already
+   * placed-by-label by index.ts's `moves()`.
+   *
+   * UNDEFINED AND [] ARE DIFFERENT ANSWERS AND MUST STAY DIFFERENT. Undefined
+   * omits the `moves` key entirely, and the brain reads a missing key as "his
+   * desktop didn't send me any filing history" — which is NOT "I have no record
+   * of that file". `[]` says the journal really is empty. Collapsing the two is
+   * how she would end up telling him she never moved a file she moved on
+   * Tuesday, so nothing in this function is allowed to turn one into the other.
+   */
+  moves?: DeskMoveWire[];
   maxIndex: number;
   now?: number;
 }
@@ -173,6 +187,7 @@ export function buildPack(input: PackInput): PackResult {
       omitted: snap.omitted + droppedByCeiling,
     },
     lastBatches: input.lastBatches.slice(0, 5),
+    ...(input.moves ? { moves: input.moves.slice(0, MAX_MOVES) } : {}),
   };
 
   const unreadableNote = unreadable.length
@@ -183,6 +198,23 @@ export function buildPack(input: PackInput): PackResult {
   let bytes = Buffer.byteLength(JSON.stringify(pack), "utf8");
   if (bytes <= PACK_BUDGET_BYTES) {
     return unreadableNote ? { pack, bytes, note: unreadableNote } : { pack, bytes };
+  }
+
+  // OVER BUDGET, AND HISTORY GIVES WAY FIRST. She cannot file with a history
+  // and she can still answer "where did it go" from his desk log, which holds
+  // the whole thing locally — so the index is the last thing to go, not the
+  // first. The key is TRIMMED, never removed: an empty array still says "I was
+  // given a history and it was this short", and removing the key would say the
+  // desktop sent none at all. Those are different sentences on her side.
+  if (pack.moves && pack.moves.length > 0) {
+    for (const keep of [120, 40, 0]) {
+      pack.moves = pack.moves.slice(0, keep);
+      bytes = Buffer.byteLength(JSON.stringify(pack), "utf8");
+      if (bytes <= PACK_BUDGET_BYTES) {
+        const note = `${unreadableNote ? `${unreadableNote} ` : ""}the pack was over the ${Math.round(PACK_BUDGET_BYTES / 1024)} KB wire budget, so she has ${keep === 0 ? "none" : `only the last ${keep}`} of your filing history this turn — the whole log is still on this machine, in FILING — LOG & UNDO`;
+        return { pack, bytes, note };
+      }
+    }
   }
 
   // INJ-5 / G-I9 — over budget the index is DROPPED, never silently truncated
@@ -204,21 +236,52 @@ export function buildPack(input: PackInput): PackResult {
 }
 
 // ---------------------------------------------------------------------------
-// The audit that matters: no filename outside index.entries
+// The audit that matters: no filename outside the two envelope-wrapped slots
 // ---------------------------------------------------------------------------
 
 /**
  * Structural proof, runnable in the harness and cheap enough to keep.
- * Serialises the pack with `index.entries` removed and reports whether any of
- * the given names survives anywhere in what is left. If this ever returns a
- * hit, the census has grown a filename and INJ-1 is back.
+ * Serialises the pack with the name-carrying slots removed and reports whether
+ * any of the given names survives anywhere in what is left. If this ever
+ * returns a hit, the CENSUS has grown a filename and INJ-1 is back.
+ *
+ * THERE ARE NOW TWO SLOTS STRIPPED, NOT ONE, AND THE SECOND IS A REAL WIDENING
+ * OF THIS AUDIT — so it is stated here rather than discovered later.
+ *
+ *   index.entries  a SANITISED filename, reaching the model only through a
+ *                  `desk_scan` result inside `<untrusted_filenames>`, on a turn
+ *                  where she asked. (G-I4 / G-V4)
+ *   moves          a SANITISED root-relative path, reaching the model only
+ *                  through a `desk_where` result inside `<untrusted_journal>`.
+ *                  Same discipline, same envelope law, different tool.
+ *
+ * What has NOT changed is the thing this audit exists for: the CENSUS — the
+ * block that lands in `<context_pack>`, the high-trust region the brain
+ * introduces as his private briefing — still carries counts, bytes and the
+ * labels HE typed, and not one filename. Getting those two regions backwards is
+ * the CRITICAL injection finding the whole design exists to prevent, and this
+ * function is still the structural proof that it has not happened.
+ *
+ * `namesInCensusOnly` below is the narrower audit for anyone who wants it: it
+ * strips NOTHING but asserts against the census alone.
  */
 export function namesOutsideIndex(pack: DeskPack, names: string[]): string[] {
   const stripped: DeskPack = {
     ...pack,
     index: { ...pack.index, entries: [] },
+    ...(pack.moves ? { moves: [] } : {}),
   };
   const wire = JSON.stringify(stripped);
   const hay = wire.toLowerCase();
+  return names.filter((n) => n.length > 2 && hay.includes(n.toLowerCase()));
+}
+
+/**
+ * The tightest form of the same law, against the one block that must never
+ * carry a name under any circumstance. Nothing is stripped and nothing is
+ * excused: if a name is in here, it is in `<context_pack>`.
+ */
+export function namesInCensus(pack: DeskPack, names: string[]): string[] {
+  const hay = JSON.stringify(pack.census).toLowerCase();
   return names.filter((n) => n.length > 2 && hay.includes(n.toLowerCase()));
 }

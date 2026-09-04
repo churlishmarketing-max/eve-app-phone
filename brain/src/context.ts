@@ -1,5 +1,6 @@
 import { db } from "./db.js";
-import { searchMemory } from "./memory.js";
+import { searchMemory, withholdTaintedSources } from "./memory.js";
+import { withheldRecallLine } from "./durable.js";
 import * as google from "./google.js";
 import { getWearing } from "./wardrobe.js";
 import { boardSnapshot } from "./os.js";
@@ -133,15 +134,21 @@ async function openLoops(): Promise<string[]> {
   if (!c) return [];
   const { data: promises } = await c
     .from("memory_entries")
-    .select("content, created_at")
+    // `id` is new here because this reader has to apply the SAME provenance
+    // rule searchMemory does (audit 6, X2). Two readers of one table filtering
+    // differently is how this class of bug survives a fix, and this one runs on
+    // EVERY turn of EVERY conversation.
+    .select("id, content, created_at")
     .eq("kind", "promise")
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(4);
   if (!promises?.length) return [];
+  const { kept } = await withholdTaintedSources(promises as { id: string; content: string; created_at: string }[]);
+  if (!kept.length) return [];
   return [
     "Open promises (unresolved):",
-    ...promises.map((p) => `  - (${p.created_at.slice(0, 10)}) ${p.content}`),
+    ...kept.map((p) => `  - (${p.created_at.slice(0, 10)}) ${p.content}`),
   ];
 }
 
@@ -181,13 +188,32 @@ export async function buildContextPack(
   // It is here for one reason: without it she has to EXPLAIN an absence she was
   // told nothing about, and explaining an absence is where she started guessing.
   deskRefusal: DeskRefusal | null = null,
+  // WHY THE RECENT TURNS ARE MISSING, when they are (audit 5, F2).
+  //
+  // `includeHistory` used to be `!resumeSession` and nothing else. It is now
+  // ALSO gated on the durable picture taint, because the one turn that replayed
+  // this conversation's transcript was the one turn the picture gate had
+  // stopped firing on — and her own reply describing the screenshot is inside
+  // that ten-message window.
+  //
+  // A thread that silently forgets itself is a thread he will think is broken,
+  // so when the replay is suppressed she is told the true reason in one line.
+  // Null on every ordinary turn, which is byte-identical to before.
+  historySuppressed: string | null = null,
 ): Promise<string> {
-  const [snapshot, loops, recall, turns, fleet] = await Promise.all([
+  const [snapshot, loops, recalled, turns, fleet] = await Promise.all([
     todaySnapshot(),
     openLoops(),
     // Deeper recall (King's "full memory" ask) — surface more of her permanent
     // long-term memory each turn. Entries are one short sentence each, so the
     // token cost is small even on Haiku.
+    // STEP 5 OF THE D6-10 CHAIN (audit 6, X2). This runs in EVERY conversation
+    // and its results are printed under "trust these over guesses" — which is
+    // how a folder name that existed only as glyphs in a screenshot, in a
+    // DIFFERENT thread three turns earlier, reached a real confirm card here.
+    // searchMemory now withholds every row it cannot prove came out of a clean
+    // conversation, and hands back the count so the absence is stated rather
+    // than mistaken for an empty memory.
     searchMemory(incomingMessage, 10),
     includeHistory ? recentTurns(conversationId) : Promise.resolve([]),
     // The ambient fleet line (D-DISPATCH §2.3): names + badges only, ~55
@@ -217,10 +243,27 @@ export async function buildContextPack(
     ...(fleet ? [fleet] : []),
     ...loops,
     ...turns,
+    ...(historySuppressed
+      ? [
+          `Earlier turns of this conversation are NOT in this briefing, on purpose: ${historySuppressed}. ` +
+            `Do not reconstruct them, do not guess at what was said, and do not treat anything you cannot ` +
+            `see here as something he told you. If continuity matters to what he just asked, say plainly ` +
+            `that this thread has a picture in it and that a fresh thread is the way forward.`,
+        ]
+      : []),
   ];
-  if (recall.length) {
+  if (recalled.hits.length) {
     lines.push("Recalled memory (top matches to this message — trust these over guesses):");
-    for (const r of recall) lines.push(`  - [${r.kind} · ${r.created_at.slice(0, 10)}] ${r.content}`);
+    for (const r of recalled.hits) lines.push(`  - [${r.kind} · ${r.created_at.slice(0, 10)}] ${r.content}`);
+  }
+  // WITHHELD IS NOT NOTHING (audit 6, X2). If she is silently handed a shorter
+  // list she will say "I don't have anything on that" about a note she is in
+  // fact holding back, which is the same lie as a silently dropped write facing
+  // the other way. "" on every ordinary turn, so the pack is byte-identical to
+  // the pack it was before any of this existed.
+  {
+    const held = withheldRecallLine(recalled.withheld);
+    if (held) lines.push(held);
   }
   lines.push(
     "Honesty clause (physics, not policy — Bible v3 §5): if something isn't in this pack or a tool",

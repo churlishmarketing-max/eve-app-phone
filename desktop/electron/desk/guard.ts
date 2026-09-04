@@ -66,6 +66,13 @@ export interface GuardIo {
   /** Names in a directory. Used only to spot a live project tree. (G-T4) */
   siblings(dir: string): string[];
   /**
+   * G-T4b — "is this file referenced by a project somewhere else?" OPTIONAL,
+   * and absence is not innocence: an `io` without it produces no annotation,
+   * and the card then prints the map's own UNKNOWN sentence rather than an
+   * all-clear it was never told. See electron/desk/projects.ts.
+   */
+  projectRef?(abs: string): { project: string } | null;
+  /**
    * G-V1 — his never-list, verbatim from config. REQUIRED, not optional: an
    * `io` that forgot to carry it would be a guard with the never-list silently
    * off, which is the exact failure this field exists to close. Empty array is
@@ -98,8 +105,33 @@ const OFFICE_LOCK = /^~\$.*\.(doc|docx|xls|xlsx|ppt|pptx)$/i;
 
 /** Live project markers. Moving one of these out from under a tool breaks it. (G-T4) */
 const PROJECT_SEGMENTS = new Set([".git", "node_modules", ".vscode", "venv", ".venv"]);
-const PROJECT_SIBLING_EXT = /\.(prproj|aep|psd|sln|csproj|xcodeproj)$/i;
+export const PROJECT_SIBLING_EXT = /\.(prproj|aep|psd|sln|csproj|xcodeproj)$/i;
 const PROJECT_SIBLING_NAME = /^(package\.json|cargo\.toml|go\.mod)$/i;
+
+/**
+ * G-T4b — THE DEEP HALF OF G-T4, AND THE ONLY RULE IN THIS TABLE THAT REFUSES
+ * NOTHING.
+ *
+ * G-T4 above catches a file whose own FOLDER is a project's working directory.
+ * It cannot catch the case King actually screenshotted: a Premiere project in
+ * one folder referencing C9452.MP4 sitting in another. Nothing is next to that
+ * clip, so G-T4 is silent — correctly, because the two situations deserve two
+ * different answers.
+ *
+ * His decision on this one, in his words: "I'll know where she moves it because
+ * I'll have it planned ahead of time." So this rule WARNS and stops. The
+ * disposition stays `allow`, `allowCount` and `bytesAllowed` are untouched,
+ * execute.ts never sees a fourth disposition, and APPROVE stays enabled. What
+ * changes is that the row carries a project name the card prints in gold.
+ *
+ * It is a separate id from G-T4 on purpose: two ids, two dispositions, two sets
+ * of harness assertions, and no way for a future edit to one to quietly move
+ * the other.
+ *
+ * The lookup itself is injected (`GuardIo.projectRef`) like every other syscall
+ * in this file, so the whole rule is drivable offline from a stub.
+ */
+export const PROJECT_REF_RULE = "G-T4b";
 
 /** Names that are never indexed and never moved. (G-T7) */
 const SYSTEM_NAMES = /^(desktop\.ini|thumbs\.db|\.ds_store|ntuser\.dat.*|iconcache\.db)$/i;
@@ -597,11 +629,24 @@ export function checkOne(
   destDirs.add(path.dirname(toAbs));
   const nameCheck = sanitise(name);
   const toCheck = sanitise(path.basename(toAbs));
+  // G-T4b — the annotation, and it is the LAST thing that happens to an allow.
+  // Deliberately: it can only decorate a row that every binding rule above has
+  // already passed, so a lookup that throws, lies or is simply absent cannot
+  // change what moves. A warning is not a gate.
+  let projectRef: { project: string } | null = null;
+  try {
+    projectRef = io.projectRef?.(fromAbs) ?? null;
+  } catch {
+    projectRef = null;
+  }
   return op(idx, "allow", "", "", {
     fromAbs,
     toAbs,
     size: st.size,
     altered: nameCheck.altered || toCheck.altered,
+    ...(projectRef && typeof projectRef.project === "string" && projectRef.project
+      ? { projectRef: { project: projectRef.project } }
+      : {}),
   });
 }
 

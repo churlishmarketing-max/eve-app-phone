@@ -16,7 +16,7 @@
 //      recomputes every one of them from `moves` and shows its own numbers.
 //      Where the payload disagrees with the arithmetic, that disagreement is
 //      itself shown. (CARD-3, INJ-4)
-import type { FileBatchPayload, FileMove } from "@shared/contract";
+import type { FileBatchPayload, FileMove, NameProvenance, TurnProvenance } from "@shared/contract";
 import { rawExtension, safeText, skeleton } from "./untrusted";
 
 /**
@@ -71,6 +71,82 @@ function readMove(v: unknown): FileMove | null {
  * REFUSAL, not a fallback: the caller must lock the card, never degrade to the
  * generic body.
  */
+/**
+ * The turn stamp, read the same way every other field on this card is read:
+ * believe nothing, narrow hard. The note is clamped because it prints on the
+ * card, and a payload is the one thing on this screen that arrived over a wire.
+ */
+function readProvenance(raw: unknown): TurnProvenance | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  // A PICTURE IN THE CONVERSATION, not merely in the turn (v0.4 §v0.4.1). The
+  // launder's whole trick is that `sawImage` is honestly FALSE on the turn that
+  // raises the plan — so a reader that only believes `sawImage === true` draws
+  // no banner on exactly the card that needs one.
+  //
+  // Read as strictly as everything else here: a finite non-negative integer, or
+  // nothing. Anything else — a string, NaN, -1, or an older brain that never
+  // sent the field at all — is UNKNOWN, and unknown is not zero.
+  const agoRaw = o.imageTurnsAgo;
+  const ago =
+    typeof agoRaw === "number" && Number.isFinite(agoRaw) && agoRaw >= 0 ? Math.floor(agoRaw) : null;
+  const sawImage = o.sawImage === true;
+  // v0.5 — THE SESSION FLAG IS THE ONE THAT MATTERS. Audit 3: the brain's old
+  // 25-turn window lapsed while the pixels stayed in the resumed transcript, so
+  // a reader that only believes `sawImage` or a finite `imageTurnsAgo` draws no
+  // banner on a card whose picture is still steering her. `imageSeen` is true
+  // for the life of the session that carried it.
+  const seen = o.imageSeen === true;
+  // AUDIT 5, B1 — THE WITNESS, read as strictly as everything else on this card.
+  // An unrecognised status is `unknown`, never `clean`: a card whose gate cannot
+  // be shown to have run must not be able to claim it did.
+  const t = o.taint && typeof o.taint === "object" ? (o.taint as Record<string, unknown>) : null;
+  const ts = t?.status;
+  const taint =
+    t === null
+      ? undefined
+      : {
+          status: (ts === "clean" || ts === "tainted" || ts === "unknown" ? ts : "unknown") as
+            | "clean"
+            | "tainted"
+            | "unknown",
+          source: typeof t.source === "string" ? t.source.slice(0, 40) : "",
+        };
+  // THE EARLY RETURN USED TO SWALLOW EVERY CLEAN CARD. It bailed whenever there
+  // was no picture, which is every card the current brain can mint — so the
+  // stamp existed in the payload and reached his screen as nothing at all. With
+  // a real read to show, a clean card now has something true to say.
+  if (!sawImage && !seen && ago === null && taint === undefined) return undefined;
+  const note = typeof o.imageNote === "string" ? o.imageNote.slice(0, 120) : "";
+  return {
+    sawImage,
+    ...(taint ? { taint } : {}),
+    ...(seen ? { imageSeen: true } : {}),
+    ...(o.imageExpired === true ? { imageExpired: true } : {}),
+    ...(ago === null ? {} : { imageTurnsAgo: ago }),
+    ...(note ? { imageNote: note } : {}),
+  };
+}
+
+/**
+ * WHICH ROWS SHE ADDED (d10c). Read the same way: believe nothing, narrow hard.
+ * Names are clamped and the list is capped, because every one of them prints on
+ * the card and every one of them arrived over a wire. An absent or unreadable
+ * field is SILENCE — it never reads as "she added nothing".
+ */
+function readNameProvenance(raw: unknown): NameProvenance | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  const list = (v: unknown): string[] =>
+    Array.isArray(v)
+      ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "").slice(0, MAX_BATCH_ROWS).map((x) => x.slice(0, 120))
+      : [];
+  const fromPicture = list(o.fromPicture);
+  const added = list(o.added);
+  if (fromPicture.length === 0 && added.length === 0) return undefined;
+  return { fromPicture, added };
+}
+
 export function readFileBatchPayload(raw: unknown): FileBatchPayload | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
@@ -106,6 +182,12 @@ export function readFileBatchPayload(raw: unknown): FileBatchPayload | null {
     extensions: Array.isArray(o.extensions) ? o.extensions.filter((x): x is string => typeof x === "string") : undefined,
     crossesSyncBoundary: o.crossesSyncBoundary === true,
     sanitisedNames: num(o.sanitisedNames) || undefined,
+    // STRUCTURAL PROVENANCE (a5/a6). Read STRICTLY: only a literal `true`
+    // raises the banner, and only a string survives as the note. Anything else
+    // — absent, garbled, an older brain — is UNKNOWN, and the card stays quiet
+    // rather than printing "no picture", which it does not know.
+    provenance: readProvenance(o.provenance),
+    nameProvenance: readNameProvenance(o.nameProvenance),
     moves,
   };
 }
@@ -172,12 +254,23 @@ export function deriveFacts(p: FileBatchPayload): BatchFacts {
   let bytes = 0;
   let altered = 0;
 
+  // A STAGE HAS NO DESTINATION IN THE PAYLOAD, AND READING toRel AS ONE IS A
+  // LIE THE CARD USED TO TELL TWICE. G-D2: a stage never chooses where it goes
+  // — the desktop guard composes <root-trash>/YYYY-MM-DD/<batchId>/<original
+  // relative path> — so the brain carries the ORIGINAL relative path in toRel to
+  // keep the rows identifiable. Grading that as a destination counted his SOURCE
+  // subfolders as destinations ("2 DESTINATIONS" for one trash folder) and then
+  // fired THIS PLAN'S OWN SUMMARY DOES NOT MATCH ITS ROWS at him for the
+  // disagreement the card had just invented. One trash batch folder per source
+  // root is what actually gets created, so that is what is counted.
+  const isStage = p.op === "stage";
   for (const m of p.moves) {
     bytes += m.size;
     roots.add(m.fromRoot);
-    const d = dirOf(m.toRel);
-    const key = foldPath(`${m.toRoot}\\${d}`);
-    if (!dests.has(key)) dests.set(key, d ? `${m.toRoot}\\${d}` : m.toRoot);
+    const d = isStage ? "trash" : dirOf(m.toRel);
+    const base = isStage ? m.fromRoot : m.toRoot;
+    const key = foldPath(`${base}\\${d}`);
+    if (!dests.has(key)) dests.set(key, d ? `${base}\\${d}` : base);
     const e = rawExtension(m.toRel) || rawExtension(m.fromRel);
     if (e) exts.add(e);
     // MEASURED, not believed. `m.f` is the plan's own claim about whether the

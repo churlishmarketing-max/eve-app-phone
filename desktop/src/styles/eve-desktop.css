@@ -272,3 +272,54 @@ a{color:var(--tealHi);text-decoration:none} a:hover{color:var(--ice)}
 .fbr.bl{bottom:8px;left:8px;border-right:none;border-top:none;border-radius:0 0 0 12px}
 .fbr.br{bottom:8px;right:8px;border-left:none;border-top:none;border-radius:0 0 12px 0}
 .sesch{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.3em;color:var(--gold)}
+
+/* A PICTURE ON A TURN (S2) — the chip above the input.
+   Tokens only. The thumbnail is HIS image and gets a hairline plate rather
+   than a coloured one: nothing about a picture he attached is a state, so
+   nothing here may borrow a state colour. */
+.imgchipwrap{flex:none;display:flex;align-items:center;gap:10px;margin:0 16px 8px;padding:7px 9px;border:1px solid var(--hair2);border-radius:8px;background:var(--panel)}
+.imgchipthumb{width:38px;height:38px;flex:none;object-fit:cover;border-radius:5px;border:1px solid var(--hair2);background:rgba(var(--rgbCream),.04)}
+.imgchipmeta{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.imgchipname{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:isolate-override;direction:ltr}
+.imgchipsize{font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:rgba(var(--rgbCream),.6)}
+.imgchipx{flex:none;width:22px;height:22px;border-radius:5px;border:1px solid var(--hair2);background:transparent;color:rgba(var(--rgbCream),.7);font-family:var(--mono);font-size:11px;line-height:1;cursor:pointer}
+.imgchipx:hover{border-color:rgba(var(--rgbAccent),.5);color:var(--tealHi)}
+
+/* THE HANDOFF PANEL (S2) — the fresh-thread offer, directly above the composer.
+   Tokens only, and deliberately NOT red and NOT green: nothing is waiting on
+   him here and nothing is running, so it borrows neither state colour. It is a
+   plate with a hairline, the same furniture the picture chip uses, because it
+   is the same kind of thing — something sitting above the box, waiting for him
+   to decide.
+   The names are 10px mono and isolated LTR for the same reason the picture
+   chip's filename is: they are third-party strings, and a bidi override in one
+   must not rearrange the line. */
+.hoffwrap{flex:none;display:flex;flex-direction:column;gap:7px;margin:0 16px 8px;padding:9px 10px;border:1px solid var(--hair2);border-radius:8px;background:var(--panel)}
+.hoffhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hofftitle{font-family:var(--mono);font-size:8.5px;letter-spacing:.24em;color:rgba(var(--rgbCream),.62)}
+.hofflist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;max-height:118px;overflow-y:auto}
+.hoffname{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:isolate-override;direction:ltr}
+.hoffdropped{font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:rgba(var(--rgbCream),.55)}
+.hoffgo{align-self:stretch;padding:8px 10px;border:1px solid rgba(var(--rgbAccent),.5);border-radius:6px;background:rgba(var(--rgbAccent),.08);color:var(--tealHi);font-family:var(--mono);font-size:9px;letter-spacing:.2em;cursor:pointer}
+.hoffgo:hover{background:rgba(var(--rgbAccent),.16);border-color:rgba(var(--rgbAccent),.75)}
+.hoffwhy{font-family:var(--body);font-size:11px;line-height:1.45;color:rgba(var(--rgbCream),.62)}
+/* WHERE THE LIST CAME FROM (audit 5, f7), and — on the no-names exit — her one
+   true sentence about where the picture is. Brighter than .hoffwhy because he
+   has to read it BEFORE he presses the button, not after. Body face, because it
+   is a sentence rather than a label. */
+.hoffsource{font-family:var(--body);font-size:11px;line-height:1.45;color:rgba(var(--rgbCream),.82)}
+/* THE CARRIED NAMES, AS CHIPS (audit 5, B2). They sit above the composer and
+   outside it, because the composer is his message and these are data. Same
+   panel ink and the same LTR isolation as .hoffname — third-party strings, and
+   a bidi override in one must not rearrange the row. Wraps rather than
+   scrolling: he is meant to see how many he is carrying. */
+.carrywrap{flex:none;display:flex;flex-direction:column;gap:5px;margin:0 16px 8px;padding:8px 10px;border:1px dashed var(--hair2);border-radius:8px;background:var(--panel)}
+.carryhead{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:rgba(var(--rgbCream),.55)}
+.carrylist{display:flex;flex-wrap:wrap;gap:5px;max-height:96px;overflow-y:auto}
+.carrychip{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:3px 4px 3px 7px;border:1px solid var(--hair2);border-radius:5px;background:rgba(var(--rgbCream),.05)}
+.carryname{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--cream);max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:isolate-override;direction:ltr}
+.carryx{padding:0 3px;border:0;background:none;color:rgba(var(--rgbCream),.5);font-family:var(--mono);font-size:9px;line-height:1;cursor:pointer}
+.carryx:hover{color:var(--cream)}
+/* WHY THE BOX IS FULL, while it is full. Same ink as the panel's own title so
+   it reads as the panel's last sentence rather than as an alert. */
+.hofffresh{flex:none;margin:0 16px 6px;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;color:rgba(var(--rgbCream),.62)}

@@ -121,6 +121,11 @@ const eve: EveBridge = {
     previewUndo: (batchId: string) => ipcRenderer.invoke(IPC.deskUndoPreview, batchId),
     undoSince: (iso: string, preview?: boolean) => ipcRenderer.invoke(IPC.deskUndoSince, { iso, preview }),
     log: (limit?: number) => ipcRenderer.invoke(IPC.deskLog, limit),
+    // WHERE DID IT GO. A NAME, never a path — the same shape as `undo`, which
+    // takes a batch id, and `openExternal`, which takes a key. This channel
+    // cannot express a file operation either: it reads the journal and returns
+    // rows, and the PUT IT BACK button it feeds calls `undo` above.
+    where: (query: string, limit?: number) => ipcRenderer.invoke(IPC.deskWhere, { query, limit }),
     status: () => ipcRenderer.invoke(IPC.deskStatus),
     outcome: (jobId: string) => ipcRenderer.invoke(IPC.deskOutcome, jobId),
     onProgress: (cb) => on<DeskProgress>(IPC.deskProgress, cb),

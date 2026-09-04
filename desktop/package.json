@@ -13,7 +13,8 @@
     "verify:desk": "tsc -p verify/tsconfig.desk-harness.json && node verify/desk-harness.mjs",
     "verify:eye": "tsc -p verify/tsconfig.desk-harness.json && node verify/desk-eye-harness.mjs",
     "verify:injection": "tsc -p verify/tsconfig.desk-harness.json && node verify/desk-injection-harness.mjs",
-    "verify:e2e": "node verify/desk-e2e-harness.mjs"
+    "verify:e2e": "node verify/desk-e2e-harness.mjs",
+    "verify:links": "tsc -p verify/tsconfig.desk-harness.json && tsc -p verify/tsconfig.image-harness.json && node verify/desk-links-harness.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
