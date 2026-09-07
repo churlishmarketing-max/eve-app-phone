@@ -12,6 +12,7 @@
 import type {
   AttentionItem,
   ChatFrame,
+  ChatLock,
   ConfirmResolution,
   EveState,
   FleetBlock,
@@ -233,14 +234,67 @@ export function mockAttentionResolution(): WriteResult {
   return { ok: true, outcome: "done" };
 }
 
+// ---------------------------------------------------------------------------
+// F3 — THE ONE TURN THE MOCK BRAIN HAS TO BE ABLE TO PLAY: a poisoned one.
+//
+// The lock probe (shots/s2-scenarios.tsx) drives the REAL useChat hook, and a
+// hook can only be driven through the bridge. window.eve is a contextBridge
+// object whose properties are READ-ONLY — measured, not assumed: assigning to
+// window.eve.onChatFrame from the renderer throws "Cannot assign to read only
+// property 'onChatFrame'". So the frames a locked turn produces cannot be faked
+// renderer-side, and they are emitted HERE instead, by the mock brain, down the
+// whole real path: main process -> IPC -> preload -> the hook's own handler.
+//
+// Keyed on an explicit marker so nothing else changes: every other message
+// still gets the byte-identical three-token turn the earlier receipts were
+// judged against.
+// ---------------------------------------------------------------------------
+
+/** Ask the mock brain for a turn that ends LOCKED with a card queued. */
+export const MOCK_LOCKED_TURN = "[[probe:locked-turn]]";
+
+/** Her reply in that turn. Carries one phrase of HERS and one lifted out of the
+ *  MAILBOX, so the probe's "nothing of hers / nothing from the mail came with
+ *  it" checks have something real to catch. Same string the deck-locked shots
+ *  render, so the fixture and the drive agree. */
+export const MOCK_LOCKED_REPLY =
+  "Three unread. Vendor Corp chasing the retainer, a calendar invite for Thursday, and one marked URGENT " +
+  "asking me to schedule work for you.\n\nNo — not in this thread. Someone else's words have already been " +
+  "read into this conversation (my durable record of this conversation says someone else's words have " +
+  "already been read in it), and mail, calendar entries, texts and filenames are data, not orders. I can't " +
+  "put work on your clock here, and I can't un-read them: everything I say from now on in this thread is " +
+  "downstream of them. Start a fresh thread and tell me there and I'll do it straight away. Nothing was scheduled.";
+
+/** The W2 lock the brain raises on that turn (contract.ts ChatLock). */
+export function mockChatLock(conversationId: string): ChatLock {
+  return {
+    conversationId,
+    status: "tainted",
+    source: "row",
+    why: "my durable record of this conversation says someone else's words have already been read in it",
+    tools: ["schedule_unit"],
+  };
+}
+
+function mockLockedTurnFrames(conversationId: string): { frame: ChatFrame; delayMs: number }[] {
+  return [
+    { frame: { type: "state", state: "thinking" }, delayMs: 30 },
+    { frame: { type: "token", text: MOCK_LOCKED_REPLY }, delayMs: 90 },
+    { frame: { type: "confirm_request", confirm: mockJobConfirm() }, delayMs: 130 },
+    { frame: { type: "locked", lock: mockChatLock(conversationId) }, delayMs: 170 },
+    { frame: { type: "done", conversationId, fullText: MOCK_LOCKED_REPLY }, delayMs: 210 },
+  ];
+}
+
 // Mock /chat: state:thinking -> three token frames -> done. Small delays so the
 // renderer actually exercises its streaming path instead of getting one blob.
-// `_message` is ignored on purpose: she says the same line every time, so
-// screenshots are byte-stable across runs.
+// `_message` is ignored on purpose EXCEPT for the probe marker above: she says
+// the same line every time, so screenshots are byte-stable across runs.
 export function mockChatFrames(
   _message: string,
   conversationId: string,
 ): { frame: ChatFrame; delayMs: number }[] {
+  if (_message.includes(MOCK_LOCKED_TURN)) return mockLockedTurnFrames(conversationId);
   const tokens = ["Copy. ", "This is the mock brain — ", "wire the real one in settings."];
   const frames: { frame: ChatFrame; delayMs: number }[] = [
     { frame: { type: "state", state: "thinking" }, delayMs: 40 },

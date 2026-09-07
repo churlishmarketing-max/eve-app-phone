@@ -46,6 +46,7 @@ import { dirname, join } from "node:path";
 
 import { buildConnectorServer } from "../src/connectors.js";
 import { buildMemoryServer } from "../src/tools.js";
+import { newTurnLatch, type DurableTaint } from "../src/authority.js";
 import { pictureVerdict } from "../src/picture.js";
 import { carriedFromBody, renderCarriedNames } from "../src/carried.js";
 import { resolveHandoff, renderHandoff } from "../src/handoff.js";
@@ -463,6 +464,24 @@ function toolOf(server: { instance: unknown }, name: string) {
   return (a: Record<string, unknown>) => e.handler(a, {});
 }
 
+// THE OTHER CONVERSATION QUESTION, ANSWERED CLEAN — added when the picture work
+// merged with cos/clock-reader-brief. Every writer these two helpers drive now
+// asks conversationLock() FIRST: has this thread ever read somebody else's
+// words (conversations.read_untrusted, sql/007)? A server built with no latch
+// gets NO_DURABLE, whose answer is "nothing asked my durable store", and it
+// fails closed — correctly, and it does so on the branch too (driven at
+// 39bb15f). That is not what THIS harness is measuring: it measures the PICTURE
+// gates, and in production chat.ts always consults that store. So these
+// fixtures say what production says on an ordinary thread — clean — and the
+// picture assertions below are left to do their own work. The mail-taint gate
+// has its own harnesses (authority, clock).
+function cleanConversation(): DurableTaint {
+  return {
+    read: { status: "clean", source: "row", why: "" },
+    record: async () => ({ ok: true, why: "" }),
+  };
+}
+
 interface RunOut {
   card: PendingConfirm | null;
   say: string;
@@ -485,13 +504,16 @@ async function hands(
     "desktop",
     { emitHandoff: (h: { rev: string; ids: number[] }) => { frame = h; }, conversationId } as never,
     turn,
+    {},
+    false,
+    newTurnLatch(false, cleanConversation()),
   );
   const r = await toolOf(server, tool)(args);
   return { card: card as PendingConfirm | null, say: r.content[0]?.text ?? "", isError: r.isError === true, handoff: frame };
 }
 
 async function memoryTool(tool: string, args: Record<string, unknown>, conversationId: string, pack: DeskPack | null = PACK) {
-  const server = buildMemoryServer(() => conversationId, pack);
+  const server = buildMemoryServer(() => conversationId, pack, newTurnLatch(false, cleanConversation()));
   const r = await toolOf(server, tool)(args);
   return { say: r.content[0]?.text ?? "", isError: r.isError === true };
 }
@@ -617,7 +639,7 @@ async function main() {
 
     // THE CONTEXT PACK — the thing built for EVERY conversation, under a header
     // that tells her to trust it over her own guesses.
-    const pack = await buildContextPack("desktop", "where does King file raw footage", CLEAN, false, null, null, null);
+    const pack = await buildContextPack("desktop", "where does King file raw footage", CLEAN, false, null, null);
     ok("g2.5", !pack.includes(PICTURE_FOLDER) && pack.includes("WITHHELD"),
       `SO IT NEVER REACHES THE BRIEFING. The pack for a clean conversation carries the withheld NOTE and not the picture's folder — this block is printed under "trust these over guesses", which is the header that made D6-10 land`);
 
@@ -923,7 +945,7 @@ async function main() {
 
     // --- AND THE CHAIN, END TO END ----------------------------------------
     const recall = await searchMemory(PICTURE_FOLDER, 10);
-    const packText = await buildContextPack("desktop", "where do the takes go", P2, false, null, null, null);
+    const packText = await buildContextPack("desktop", "where do the takes go", P2, false, null, null);
     ok("g6.10", recall.hits.length === 0 && !packText.includes("Draft") && store.memory.length === 0,
       `THE D6-10 CHAIN IS DEAD: a folder that exists only as glyphs in a screenshot reaches NO durable row, NO recall, NO briefing and NO card in a later, clean conversation. There is nothing left in the store for it to be recalled out of`);
   }
@@ -962,7 +984,7 @@ async function main() {
     const back = await searchMemory("Ridgeline edit ships", 10);
     ok("g7.6", back.hits.length === 1 && back.withheld === 0,
       `and it is recalled straight back, with a withheld count of 0`);
-    const pack = await buildContextPack("desktop", "when does the Ridgeline edit ship", CONV, false, null, null, null);
+    const pack = await buildContextPack("desktop", "when does the Ridgeline edit ship", CONV, false, null, null);
     ok("g7.7", pack.includes("ships on the 14th") && !pack.includes("WITHHELD"),
       `so an ordinary briefing is byte-identical to the briefing it was before any of this existed: the memory is in it and the withheld NOTE is not`);
     ok("g7.8", withheldRecallLine(0) === "" && withheldRecallLine(-1) === "",

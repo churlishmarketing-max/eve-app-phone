@@ -15,7 +15,11 @@ import RailColumn from "./RailColumn";
 import TalkColumn from "./TalkColumn";
 import DataColumn from "./DataColumn";
 import { SettingsPane } from "./s3-contracts";
+import BriefScreen from "../brief/BriefScreen";
 import CoreScreen from "../core/CoreScreen";
+// F4 — the SAME union App.tsx and the CORE build, not a second one written
+// here: the cards on this thread's frames plus the ones the poll reports.
+import { pendingConfirmsOf } from "../core/jobs";
 import FleetScreen from "../core/FleetScreen";
 import type { NavDest } from "./NavStrip";
 import type { ChatView, CorePrefill, DeckView, EveMode, WardrobeView } from "./types";
@@ -90,6 +94,13 @@ export interface DeckProps {
   /** Shot seam only — photographs the picture-refusal exit without a live turn. */
   talkPicture?: PictureFrame | null;
   onConfirmResolved: (id: string) => void;
+  /**
+   * W2 — start a FRESH conversation and hand back the last thing HE typed,
+   * verbatim, for the composer. Optional so every fixture and shot that
+   * predates the lock still mounts; absent means the button seeds nothing and
+   * he types it again, which is the correct fallback and never a composed line.
+   */
+  onResetThread?: () => string;
   onToggleSilent: () => void;
   onOpenWardrobe: () => void;
   onCloseWardrobe: () => void;
@@ -124,7 +135,16 @@ export default function Deck(p: DeckProps) {
         onGo={go}
       />
 
-      {p.view === "core" ? (
+      {p.view === "brief" ? (
+        // THE BRIEF — the four sections the 07:00 push points at. Mounts like
+        // settings does: a full-frame pane under the title bar, so .scan, .vig
+        // and the nav strip are inherited unchanged. .panewrap rather than
+        // .corewrap because a full morning is longer than 720px and this is a
+        // reading surface — it is SUPPOSED to scroll.
+        <div className="panewrap">
+          <BriefScreen state={p.state} fetchedAt={p.fetchedAt} />
+        </div>
+      ) : p.view === "core" ? (
         // THE CORE mounts exactly the way settings does — a full-frame pane
         // under the title bar, outside the three-column grid — so .scan, .vig
         // and the nav strip are all inherited unchanged. .corewrap rather than
@@ -195,6 +215,9 @@ export default function Deck(p: DeckProps) {
             {...(p.talkFresh !== undefined ? { initialFresh: p.talkFresh } : {})}
             {...(p.talkCarried !== undefined ? { initialCarried: p.talkCarried } : {})}
             {...(p.talkPicture !== undefined ? { initialPicture: p.talkPicture } : {})}
+            lock={p.chat.lock ?? null}
+            onReset={p.onResetThread}
+            pendingCount={pendingConfirmsOf(p.state, p.chat).length}
           />
           <div className="vr" />
           <DataColumn

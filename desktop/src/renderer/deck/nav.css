@@ -214,3 +214,37 @@
     padding: 0 2px;
   }
 }
+
+/* ---- SEVEN segments at the 1120px minimum -------------------------------
+   BRIEF (key 7) joined the strip after FLEET. This block is the third shave in
+   this file and it was NOT optional: measured through the shipped CSS at
+   1120x720, seven segments at the six-segment sizing above came to 381px
+   against the ~330px of title-bar dead space this file has been tracking since
+   CORE. Nothing overflowed the window — flex simply took the space out of the
+   neighbours — so the damage did not show up as a scrollbar. It showed up as
+   the SESSION BADGE AND THE VERSION STRING WRAPPING TO TWO LINES, which is the
+   failure mode a "no horizontal scroll" assertion cannot see. Compare
+   verify/z-baseline-6seg-1120.png (six segments, both strings on one line)
+   with the first pass of verify/c-brief-probe-1120.png.
+
+   So: 5px→3px a side, one more pixel of gap, one more off each keycap, and
+   tracking .1em→.08em. ~49px back, which puts seven segments at ~330px — the
+   same budget six were living inside. Geometry only. No destination is dropped,
+   no keycap is hidden, and nothing here is a colour.
+
+   THE BUDGET IS NOW GENUINELY SPENT. There is no fourth shave: the padding is
+   at 3px and the tracking is at the point where Space Mono caps stop reading as
+   a group. An EIGHTH destination has to take somebody's slot, drop the keycaps,
+   or live somewhere other than the title bar. BriefNavProbe measures all of
+   this every run — it asserts the badge stays on one line, so the next person
+   to add a segment finds out from a red line rather than from a screenshot. */
+@media (max-width: 1279px) {
+  .navseg {
+    padding: 0 3px;
+    gap: 3px;
+    letter-spacing: 0.08em;
+  }
+  .navseg .navkey {
+    padding: 0 1px;
+  }
+}

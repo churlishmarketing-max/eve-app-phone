@@ -2,7 +2,7 @@ import { db, isDbReady } from "./db.js";
 import { floorView } from "./floor.js";
 import { listPending } from "./confirm.js";
 import { getConnectorStatus } from "./connectors.js";
-import { getLatestBrief } from "./brief.js";
+import { getLatestBrief, getLatestBriefDeck } from "./brief.js";
 import { streakFrom } from "./vitals.js";
 import { localDay, addLocalDays } from "./day.js";
 import { recentJobsQuery, shapeJob, JOBS_WINDOW_MS, JOBS_LIMIT } from "./dispatch.js";
@@ -13,8 +13,14 @@ import { buildFleetBlock } from "./registry.js";
 
 export async function buildState(): Promise<Record<string, unknown>> {
   const c = db();
+  // THE BRIEF (C3). The four-section deck rides on /state beside the 25-word
+  // push text, so the BRIEF pane needs no route and no plumbing of its own.
+  // It is served on the degraded return too: the last brief he was given is
+  // still true, and a blank pane during an outage reads as "she has nothing",
+  // which is the one thing an outage does not mean.
+  const brief = await getLatestBriefDeck();
   // Pending RED confirms + connector tiles work even with the spine offline.
-  if (!c) return { online: false, pendingConfirms: listPending(), connectors: getConnectorStatus() };
+  if (!c) return { online: false, brief, pendingConfirms: listPending(), connectors: getConnectorStatus() };
 
   const [three, floor, attention, clients, jobs, routines, routineDays] = await Promise.all([
     c.from("tasks").select("id, title, detail, priority, due_at").not("priority", "is", null).is("done_at", null).order("priority"),
@@ -35,7 +41,7 @@ export async function buildState(): Promise<Record<string, unknown>> {
 
   // A Supabase outage must not render as a confident all-clear (review C19).
   if (three.error || attention.error || clients.error) {
-    return { online: false, pendingConfirms: listPending(), connectors: getConnectorStatus() };
+    return { online: false, brief, pendingConfirms: listPending(), connectors: getConnectorStatus() };
   }
 
   // The routines the app renders carry the COMPUTED streak, not the stored int.
@@ -76,6 +82,7 @@ export async function buildState(): Promise<Record<string, unknown>> {
   return {
     online: true,
     latestBrief: getLatestBrief(),
+    brief,
     todaysThree: three.data ?? [],
     floor,
     attentionItems: attention.data ?? [],

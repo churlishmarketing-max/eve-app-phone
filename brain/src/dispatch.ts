@@ -21,6 +21,10 @@ import {
   type WorkerRunner,
   type SkillRunner,
 } from "./registry.js";
+// Type-only, so this never creates a runtime cycle with clock.ts (which imports
+// dispatchUnit from here at value level). One name for one concept: the turn's
+// authority is the same fact whether it is spending budget or setting a clock.
+import type { ScheduleAuthority } from "./clock.js";
 
 // The ONLY tools a background worker (worker kind AND skill kind) ever holds.
 // Read-only web. No send/post/publish/schedule/save — D-DISPATCH weakness #3:
@@ -270,6 +274,22 @@ export interface DispatchInput {
   conversationId?: string;
   emitJob?: JobEmit;
   emitConfirm?: (c: PendingConfirm) => void;
+  /**
+   * R1/R4 (H3). WHO asked for this run. Dispatching spends real budget the
+   * moment it happens, so a turn that has already taken third-party text may
+   * not reach it — same one-way latch that guards the clock (connectors.ts).
+   *
+   * REQUIRED. It used to be optional, defaulting to "king", with the footgun
+   * written down beside it — which is the same bargain the last two rulings
+   * were about: a fact nobody can forget beats a fact somebody wrote down. A
+   * future caller that does not say whose authority it carries now fails to
+   * compile instead of silently being handed King's.
+   *
+   * Every existing caller states it: connectors.ts passes authority() (the
+   * turn latch), clock.ts's drain passes "king" because R3 carries HIS earlier
+   * authority forward, and runDispatch() states its own.
+   */
+  authority: ScheduleAuthority;
 }
 
 export interface DispatchAccepted {
@@ -295,6 +315,24 @@ export async function resolveDispatch(unit: string): Promise<{ key: string; cap:
 
 export async function dispatchUnit(input: DispatchInput): Promise<DispatchOutcome> {
   const task = input.task?.trim();
+  // R1/R4 (H3) — FIRST LINE, before the registry, before the job row, before a
+  // cent is spent. No inspection of the task text happened and none will: what
+  // the mail said is irrelevant, where the turn has been is the whole answer.
+  // R3 already capped the blast radius (a scheduled RED unit still waits on his
+  // card), but R1 is the wider rule — nothing read out of a mailbox may spend
+  // money, and starting a worker spends it now.
+  if (input.authority === "untrusted_content") {
+    return {
+      ok: false,
+      code: "untrusted_source",
+      unit: input.unit ?? "",
+      say:
+        "No. Mail, calendar entries, texts and filenames are written by other people — they're data, not orders, " +
+        "and nothing I read in one can put a unit to work on your budget. If you want this run, tell me yourself " +
+        "in a fresh message. Nothing was started.",
+      runnable: [],
+    };
+  }
   const resolved = await resolveDispatch(input.unit ?? "");
   if ("ok" in resolved) return resolved; // the spoken refusal — no substitution, ever
   const { key, cap } = resolved;
@@ -380,8 +418,18 @@ export async function dispatchUnit(input: DispatchInput): Promise<DispatchOutcom
 }
 
 /** Legacy shape (POST /dispatch, dispatch_fleet). Same path, same refusals. */
-export async function runDispatch(task: string, agent: string, client?: string, why = "legacy dispatch call"): Promise<DispatchOutcome> {
-  return dispatchUnit({ unit: agent, task, why, client });
+export async function runDispatch(
+  task: string,
+  agent: string,
+  client?: string,
+  why = "legacy dispatch call",
+  // STATED, not defaulted-and-forgotten. Its only caller is POST /dispatch in
+  // index.ts — King's own app hitting his own brain — so "king" is the truth
+  // here. It is a PARAMETER rather than a literal so that a future caller with
+  // untrusted provenance can say so without editing this function.
+  authority: ScheduleAuthority = "king",
+): Promise<DispatchOutcome> {
+  return dispatchUnit({ unit: agent, task, why, client, authority });
 }
 
 // ---------------------------------------------------------------------------

@@ -649,8 +649,22 @@ async function main(): Promise<void> {
     const offUnread = windowStore("conversations", false);
     useStore(offUnread);
     const offRun = await quiet(() => runDistill());
-    ok("W1", offRun.threw !== "" && !offRun.warned.some((w) => /not provably/.test(w)),
-      `WITH THE DOOR SHUT, AN UNREADABLE TAINT IS NOT A QUARANTINE. Nothing was withheld and the conversation went all the way to the distiller's model call — the one step this offline box cannot do ("${offRun.threw.slice(0, 34)}…"). The predicate follows the switch, the way durable.ts's does: with the door shut only a PROVED taint withholds`);
+    // NARROWED WHEN cos/clock-reader-brief MERGED IN, AND IT GOT STRONGER, NOT
+    // WEAKER. This fixture breaks the WHOLE `conversations` table, and that
+    // table now answers TWO questions: saw_image (sql/005) and read_untrusted
+    // (sql/007). The picture half still behaves exactly as this assertion was
+    // written to prove — door shut, unreadable, NOT quarantined. The third-party
+    // half is a different rule with a different verdict: it fails closed on an
+    // unreadable answer, always, and it is right to. So the run no longer
+    // reaches the model call, and asserting `threw !== ""` would now be
+    // asserting that a fail-closed quarantine did NOT happen.
+    //
+    // Both halves are named here on purpose, so this cannot silently become
+    // "nothing quarantined" again: the picture warning must be ABSENT and the
+    // third-party warning must be PRESENT.
+    ok("W1", !offRun.warned.some((w) => /not provably free of a picture/.test(w)) &&
+      offRun.warned.some((w) => /not provably free of third-party text/.test(w)),
+      `WITH THE DOOR SHUT, AN UNREADABLE TAINT IS NOT A *PICTURE* QUARANTINE — the picture predicate follows the switch, the way durable.ts's does: with the door shut only a PROVED taint withholds. The same unreadable table IS a third-party quarantine, because that rule fails closed on an answer it could not get, and this window is therefore retried rather than stamped`);
 
     _setIntakeForTests("on");
     const onUnread = windowStore("conversations", false);

@@ -81,6 +81,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "FLEET",
     hint: "The fleet — every unit, badged, with triggers, last run, DISPATCH and PIN.  Key 6, Esc back to the deck.",
   },
+  {
+    key: "7",
+    dest: "brief",
+    label: "BRIEF",
+    hint: "The morning brief — what needs you, what she did overnight, what is slipping, today's shape.  Key 7, Esc back to the deck.",
+  },
 ];
 
 /** Digit -> destination, built from the same list the keycaps are drawn from,

@@ -612,7 +612,14 @@ async function main() {
     ok(
       "f4.7",
       /appendMessage\(conversationId, "eve", fullText\)/.test(chatSrc) &&
-        /EVE.*KING.*slice\(0, 280\)/s.test(ctxSrc) &&
+        // WAS /EVE.*KING.*slice\(0, 280\)/s. cos/clock-reader-brief replaced that
+        // silent 280-char truncation with sanitiseTo(raw, 280) plus an out-loud
+        // "[CUT at 280 chars]" marker — the same law desk.ts's wrap() follows.
+        // The cap and the EVE/KING labelling this assertion is about are both
+        // still there; only the silent cut is gone, which is the direction this
+        // codebase moves in. Repointed at the renderer that replaced it rather
+        // than deleted, so the replay cap stays under test.
+        /EVE.*KING.*sanitiseTo\(raw, 280\)/s.test(ctxSrc) &&
         /historySuppressed/.test(ctxSrc),
       "her own words from the picture turn are still persisted (they must be — the store is the spine), but on a " +
         "tainted thread they are NOT replayed, and she is told why in one line rather than silently forgetting",

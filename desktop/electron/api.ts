@@ -522,6 +522,24 @@ export function parseFrame(raw: string): ChatFrame | null {
       // Every field is a constant chosen by brain/src/picture.ts or a status
       // read off his own store, but this side does not get to assume that.
       return readPictureFrame(p);
+    case "locked": {
+      // W2 — REBUILT FIELD BY FIELD, never passed through whole. If a future
+      // brain ever put prose on this frame (a `text`, a `seed`, a summary), it
+      // would stop here: nothing but these five values crosses into the
+      // renderer, and none of them can reach the composer.
+      const tools = Array.isArray(p.tools) ? p.tools.filter((t): t is string => typeof t === "string") : [];
+      const status = p.status === "tainted" ? "tainted" : "unknown";
+      return {
+        type: "locked",
+        lock: {
+          conversationId: typeof p.conversationId === "string" ? p.conversationId : "",
+          status,
+          source: typeof p.source === "string" ? p.source : "",
+          why: typeof p.why === "string" ? p.why : "",
+          tools,
+        },
+      };
+    }
     default:
       return null;
   }

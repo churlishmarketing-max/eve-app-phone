@@ -96,6 +96,67 @@ export interface BriefRef {
   at: string;
 }
 
+// ---------------------------------------------------------------------------
+// THE BRIEF — brain/src/briefing.ts's BriefDeck, on the wire.
+//
+// `BriefRef` above is the 25-WORD PUSH TEXT and stays exactly what it was.
+// This is the four-section brief the push points at: what needs you today,
+// what she did overnight, what is slipping, today's shape.
+//
+// It is DATA, not prose, for one reason: every row carries `source` — the table
+// and row id it was read from — so a figure on his screen can be traced back to
+// a record, and a section with no records renders its own `empty` sentence
+// instead of reaching for something to say. That is counters.ts's law ("a zero
+// is a measurement, a dash is the truth when nothing was measured") arriving
+// pre-computed from the brain.
+//
+// `origin` is the R1 carrier: "untrusted" means the text came out of mail or a
+// calendar invite. The pane MUST render it as quoted third-party text and must
+// never give it an action. `recommend` is a frozen constant the brain looked up
+// by evidence kind — it never contains bytes an email wrote.
+// ---------------------------------------------------------------------------
+
+export type BriefOrigin = "ledger" | "untrusted";
+export type BriefSectionKey = "needs_you" | "overnight" | "slipping" | "shape";
+/** The same four tones counters.ts uses, so one colour law governs both ends. */
+export type BriefTone = "red" | "hot" | "acc" | "dim";
+
+export interface BriefItem {
+  id: string;
+  text: string;
+  /** What she would do. A frozen constant, so he is picking, not thinking. */
+  recommend: string;
+  /** The exact record behind this line: "jobs.id=…", "pendingConfirms.id=…". */
+  source: string;
+  origin: BriefOrigin;
+  tone: BriefTone;
+  rank: number;
+}
+
+export interface BriefSection {
+  key: BriefSectionKey;
+  title: string;
+  items: BriefItem[];
+  /** What this section says when it is genuinely, measuredly empty. */
+  empty: string;
+  /** Sources this pass could not read. A blind section never shows an all-clear. */
+  blind: string[];
+}
+
+export interface BriefDeck {
+  at: string;
+  day: string;
+  /** The overnight window in his words, e.g. "9:00 PM → 7:00 AM". */
+  window: string;
+  state: "ok" | "degraded";
+  /** Exactly four, always in his order. */
+  sections: BriefSection[];
+  /** True ONLY when all four are empty AND nothing was blind. */
+  allClear: boolean;
+  coverage: string[];
+  untrustedCount: number;
+}
+
 export interface TaskRow {
   id: string;
   title: string;
@@ -277,6 +338,10 @@ export interface FloorView {
 export interface EveState {
   online: boolean;
   latestBrief?: BriefRef | null;
+  /** THE BRIEF. Served on the degraded return too (brain/src/state.ts), because
+      the last brief he was given is still true and a blank pane during an
+      outage reads as "she has nothing" — the one thing an outage never means. */
+  brief?: BriefDeck | null;
   todaysThree?: TaskRow[];
   floor?: FloorView;
   attentionItems?: AttentionItem[];
@@ -536,7 +601,20 @@ export type ChatFrame =
   // whether or not she handed any names over. Every field is a constant from
   // brain/src/picture.ts or a status read off his own conversation row — there
   // is no model text on it and no picture text on it.
-  | { type: "picture"; picture: PictureFrame };
+  | { type: "picture"; picture: PictureFrame }
+  // W2 — THE CONVERSATION IS LOCKED. The brain emits this ONCE per turn when an
+  // authority-taking tool refused because THIS THREAD has read third-party text
+  // (mail, calendar, texts, filenames). It is raised by the refusal itself, in
+  // brain code — never by the model deciding to mention a way out — and the
+  // DESKTOP owns the affordance it produces.
+  //
+  // IT CARRIES NO TEXT FOR THE COMPOSER, AND THAT IS THE WHOLE SAFETY OF THE
+  // RESET. The button seeds his box from THIS PROCESS'S OWN RECORD of what he
+  // typed; nothing she composed and nothing from the mailbox travels on this
+  // frame. Audit 5 / B2 (desktop/src/shared/handoff.ts in the shipped build)
+  // is the precedent: the moment attacker-adjacent prose can reach `message`,
+  // it is in the one string the brain treats as King's own words.
+  | { type: "locked"; lock: ChatLock };
 
 /**
  * WHY FILING IS REFUSED IN THIS CONVERSATION, if it is.
@@ -558,6 +636,19 @@ export interface PictureFrame {
   code: "P-TURN" | "P-SESSION" | "P-UNKNOWN" | "";
   where: string;
   witness: { status: "clean" | "tainted" | "unknown"; source: string };
+}
+
+/** The witness the brain read, and which tools refused on it. No prose of hers. */
+export interface ChatLock {
+  conversationId: string;
+  /** "tainted" — it really did read one. "unknown" — the store could not say. */
+  status: "tainted" | "unknown";
+  /** row | memory | offline | error | orphan | no-row | not-consulted */
+  source: string;
+  /** Her one observed sentence about WHY. Rendered verbatim; never composed here. */
+  why: string;
+  /** The tools that refused this turn, e.g. ["schedule_unit"]. */
+  tools: string[];
 }
 
 // Every frame is tagged with the chatId returned by chat.start, so two live

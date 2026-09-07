@@ -372,7 +372,9 @@ export function resolveUnitKey(input: string, roster: readonly FleetUnit[]): str
 
 export interface DispatchRefusal {
   ok: false;
-  code: "unit_unknown" | "unit_not_runnable" | "missing_input" | "spine_offline" | "run_failed";
+  // "untrusted_source" (R1/H3): this turn had already taken third-party text
+  // when the dispatch was attempted. Nothing was started and nothing was spent.
+  code: "unit_unknown" | "unit_not_runnable" | "missing_input" | "spine_offline" | "run_failed" | "untrusted_source";
   unit: string;
   name?: string;
   badge?: Badge;
