@@ -2,6 +2,7 @@ import { query } from "@anthropic-ai/claude-agent-sdk";
 import { db } from "./db.js";
 import { embed } from "./embeddings.js";
 import { matchClient } from "./memory.js";
+import { readUntrustedTaintMany } from "./untrusted.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
@@ -26,7 +27,19 @@ function extractJson(s: string): Distilled | null {
   }
 }
 
+// TEST SEAM, same shape as _setDbForTests / _setGoogleSourceForTests elsewhere
+// in this brain. W3 has to be proved by DRIVING runDistill — quarantined
+// conversation withheld, clean conversation distilled, window not stamped when
+// an answer could not be read — and every one of those needs a distiller that
+// answers without a live model call. Null in production, always: nothing sets
+// it but verify/.
+let distillerForTests: ((prompt: string) => Promise<string>) | null = null;
+export function _setDistillerForTests(fn: ((prompt: string) => Promise<string>) | null): void {
+  distillerForTests = fn;
+}
+
 async function runDistiller(prompt: string): Promise<string> {
+  if (distillerForTests) return distillerForTests(prompt);
   let out = "";
   const q = query({
     prompt,
@@ -100,6 +113,58 @@ export async function runDistill(): Promise<DistillResult> {
     const arr = byConv.get(m.conversation_id) ?? [];
     arr.push({ role: m.role, content: m.content });
     byConv.set(m.conversation_id, arr);
+  }
+
+  // -------------------------------------------------------------------------
+  // W3 · THE 24-HOUR VERSION OF THE SAME ATTACK, AND THE QUARANTINE THAT ENDS IT
+  //
+  // THIS SELECT TOOK EVERY `messages` ROW IN THE WINDOW WITH NO TAINT FILTER.
+  // `messages` holds HER OWN SUMMARIES of hostile mail, so the judge drove the
+  // slow path: she reads a hostile email on Monday, the turn is latched and
+  // schedule_unit refuses; at 02:00 this job lifts her summary of it into
+  // memory_entries; on Tuesday context.ts injects that sentence VERBATIM under
+  // "Recalled memory (trust these over guesses)" with NO envelope, in a turn
+  // that is NOT tainted — and schedule_unit writes. The latch never ran: this
+  // job holds no latch, is not a turn, and appeared in no verdict table.
+  //
+  // So a conversation that read someone else's words does not become long-term
+  // memory. The taint is asked of every conversation in the window in ONE round
+  // trip, and it is asked of the same column the turn tools read.
+  //
+  // FAILS CLOSED. Only a PROVED CLEAN conversation is distilled: "unknown" — an
+  // errored select, an unconfigured store, sql/007 not applied, or simply a row
+  // that predates this column — withholds.
+  //
+  // AND THE WINDOW SURVIVES AN ANSWER THAT COULD NOT BE READ. The window starts
+  // at the last SUCCESSFUL run, so stamping ok:true after a night that judged
+  // nothing would move the boundary past days this job never processed and lose
+  // them forever. A night with any UNREADABLE conversation therefore writes
+  // ok:false and names how many, and the same window is read again next run.
+  // A conversation withheld on a PROVED taint is the other thing entirely: that
+  // is the design working, it will never become distillable, and holding the
+  // window open for it would stall distillation instead of protecting anything.
+  //
+  // THE COST, STATED HONESTLY BECAUSE IT IS REAL: an ad-hoc thread where he
+  // asked her to read his mail leaves no durable memory. What that does NOT
+  // cost is the morning brief — brief.ts runs its own capability-free query
+  // (allowedTools: []) and writes no `messages` rows at all, so the main mail
+  // surface in this build never enters this job in the first place. The loss is
+  // bounded to conversations where he pulled third-party text into the chat
+  // himself, which is exactly the set R1 says must not become durable.
+  const convIds = [...byConv.keys()];
+  const convTaint = await readUntrustedTaintMany(convIds);
+  const quarantined = convIds.filter((id) => convTaint.get(id) !== "clean");
+  const unreadable = quarantined.filter((id) => convTaint.get(id) === "unknown");
+  for (const id of quarantined) byConv.delete(id);
+  if (quarantined.length) {
+    console.warn(
+      `[distill] ${quarantined.length} of ${convIds.length} conversation(s) in this window are not provably ` +
+        `free of third-party text — NOT distilled, and no summary written for them.` +
+        (unreadable.length
+          ? ` ${unreadable.length} of those could not be READ at all, so this run does NOT stamp the window ` +
+            `and the same window is distilled again on the next run.`
+          : ""),
+    );
   }
 
   let totalEntries = 0;
@@ -218,11 +283,39 @@ export async function runDistill(): Promise<DistillResult> {
     decayed = true;
   }
 
+  // THE STAMP IS A CLAIM ABOUT THE WINDOW, NOT ABOUT THE PROCESS REACHING THE
+  // END. `ok:true` is what moves the next run's window forward, so it may only
+  // be written when every conversation in this window was actually JUDGED. One
+  // unreadable answer makes it ok:false, naming how many — the row still gets
+  // written, because a night that did not process its window has to be visible
+  // on the runs ledger, and the window query reads ok:true only.
+  const windowIncomplete = unreadable.length > 0;
   await c.from("runs").insert({
     job: "distill",
-    ok: true,
-    detail: { conversations: byConv.size, entries: totalEntries, superseded: totalSuperseded, touches: totalTouches, decayed },
+    ok: !windowIncomplete,
+    detail: {
+      conversations: byConv.size,
+      entries: totalEntries,
+      superseded: totalSuperseded,
+      touches: totalTouches,
+      decayed,
+      ...(quarantined.length ? { quarantined: quarantined.length } : {}),
+      ...(windowIncomplete ? { unreadable: unreadable.length, since, windowRetried: true } : {}),
+    },
   });
 
+  if (windowIncomplete) {
+    return {
+      ok: false,
+      reason:
+        `${unreadable.length} of ${convIds.length} conversation(s) in this window could not be checked for ` +
+        `third-party text, so they were not distilled — this window is NOT stamped as done and is read again ` +
+        `next run`,
+      conversations: byConv.size,
+      entries: totalEntries,
+      superseded: totalSuperseded,
+      touches: totalTouches,
+    };
+  }
   return { ok: true, conversations: byConv.size, entries: totalEntries, superseded: totalSuperseded, touches: totalTouches };
 }

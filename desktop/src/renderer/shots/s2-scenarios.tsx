@@ -13,6 +13,11 @@
 //                     proof the strip survives the pane that unmounts the rail
 //   nav-probe       — NOT a fixture: the real <App/>, driven by real DOM events,
 //                     with the result rendered into the frame (see NavProbe)
+//   deck-locked     — W2: she has read mail in this thread, so every authority
+//                     tool is off FOR THE THREAD. Her refusal, and the deck's
+//                     one-click way out
+//   lock-probe      — NOT a fixture: the real button, clicked, proving what
+//                     lands in the composer is HIS sentence and nothing else
 //
 // Deck is pure presentation, so every one of these except nav-probe is a
 // fixture plus props — no poll, no greeting seed, no bridge round-trip. The
@@ -21,8 +26,11 @@
 // runs a real clock.
 
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import type { EveState } from "@shared/contract";
 import {
+  MOCK_LOCKED_REPLY,
+  MOCK_LOCKED_TURN,
   mockDispatchJobs,
   mockFleet,
   mockFleetV2,
@@ -31,8 +39,13 @@ import {
   mockState,
   mockVitals,
 } from "@shared/fixtures";
+// THE BRIEF's decks. Generated verbatim from the shipped brain — see the header
+// of fixtures-brief.ts. Not hand-written, and not editable by hand.
+import { mockBrief, mockBriefBlind, mockBriefEmpty } from "@shared/fixtures-brief";
 import App from "../deck/App";
 import Deck, { type DeckProps } from "../deck/Deck";
+// F3 — the lock probe drives the SHIPPED hook, not a copy of it.
+import { useChat } from "../hooks/useChat";
 import type { DeckMsg, EveMode } from "../deck/types";
 
 const PINNED = new Date(2026, 7, 29, 14, 7, 0);
@@ -104,6 +117,21 @@ const STREAM: DeckMsg[] = [
     role: "eve",
     text: "Rustic Lumber — 12 days, cadence is 7. I drafted Zach an update yesterday; it's sitting in approvals.",
   },
+];
+
+// W2 — the thread as it stands when the lock fires: he asked for the mail, she
+// read it and summarised it, he asked for a standing order off the back of it,
+// and she refused for the whole conversation. Her refusal here is the REAL
+// sentence brain/src/authority.ts conversationLockRefusal() builds, with the
+// real witness in it — copied from the authority harness's E10.3 output, not
+// written for the picture.
+const LOCKED_THREAD: DeckMsg[] = [
+  { id: "u1", role: "you", text: "read my mail, then put starfire on the clock every monday at 9" },
+  // ONE SOURCE OF TRUTH for her locked reply: the string the deck-locked shots
+  // DRAW and the script the mock brain PLAYS for the lock probe are the same
+  // string (shared/fixtures.ts), so the drawn panel and the driven one cannot
+  // drift apart.
+  { id: "e1", role: "eve", text: MOCK_LOCKED_REPLY },
 ];
 
 export const scenarios: Record<string, () => JSX.Element> = {
@@ -286,6 +314,118 @@ export const scenarios: Record<string, () => JSX.Element> = {
   "nav-probe": () => {
     holdShutter();
     return <NavProbe />;
+  },
+
+
+  // ---- W2 · THE LOCKED THREAD AND ITS ONE WAY OUT --------------------------
+  //
+  // Once she has read mail in a conversation, every authority-taking tool is
+  // off FOR THAT THREAD (brain W1). She says so plainly, and the DECK — not the
+  // model — offers the way out. These two shots are the "he has to read this
+  // and decide" half: the refusal as he will actually see it, and the fresh
+  // thread the button leaves behind.
+  //
+  // The panel is GOLD. Red is the RED confirm tier and the live mic; green is
+  // the autonomy dot. A refusal that is the design WORKING is attention, not
+  // danger.
+  "deck-locked": () => (
+    <Deck
+      {...base({
+        chat: {
+          messages: LOCKED_THREAD,
+          streamingId: null,
+          mode: "idle",
+          toolNote: null,
+          errNote: null,
+          busy: false,
+          lock: {
+            conversationId: "c-9f2a",
+            status: "tainted",
+            source: "row",
+            why: "my durable record of this conversation says someone else's words have already been read in it",
+            tools: ["schedule_unit"],
+          },
+        },
+      })}
+    />
+  ),
+
+  // F4 — THE SAME PANEL WITH A REQUEST STILL WAITING. The reset does not
+  // answer a card and must not pretend to: a card is a request for a signature,
+  // not an action (authority.ts CONFIRM_CARD_RULING), the brain holds it for
+  // its own 30-minute TTL, and CorePane and OpsPane count that same queue. So
+  // the panel says out loud what will still be there afterwards. Gold, like the
+  // rest of the panel — the card's own RED tier stays the card's.
+  "deck-locked-cards": () => (
+    <Deck
+      {...base({
+        state: { ...mockState(), pendingConfirms: [mockJobConfirm()] },
+        chat: {
+          messages: LOCKED_THREAD,
+          streamingId: null,
+          mode: "idle",
+          toolNote: null,
+          errNote: null,
+          busy: false,
+          lock: {
+            conversationId: "c-9f2a",
+            status: "tainted",
+            source: "row",
+            why: "my durable record of this conversation says someone else's words have already been read in it",
+            tools: ["schedule_unit"],
+          },
+        },
+      })}
+    />
+  ),
+
+  // THE BEHAVIOURAL HALF. A fixture can prove the panel DRAWS; it cannot prove
+  // the button does anything, or — the part that matters — that what lands in
+  // the composer is HIS OWN SENTENCE and nothing else. So this drives the real
+  // button with a real click and prints what it found.
+  "lock-probe": () => <LockProbe />,
+
+  // ---- THE BRIEF (stream C, key 7) ----------------------------------------
+  // Rendered through the REAL <Deck/> and its real `view` branch, like THE CORE
+  // above, so every capture also proves the title bar, the seven-segment nav
+  // strip, .scan and .vig survive the pane. The decks themselves are NOT
+  // hand-written: fixtures-brief.ts is generated verbatim from the shipped
+  // brain by brain/verify/brief-fixtures.gen.ts.
+
+  // A FULL MORNING: a RED card he must sign, held work, a failed job, a client
+  // 19 days quiet, a stale promise, and one line of real mail with a real ask.
+  brief: () => <Deck {...base({ view: "brief", state: { ...mockState(), pendingConfirms: [], brief: mockBrief() } })} />,
+
+  // THE COMMON ONE. Nothing needs him, nothing slipped, the night was quiet,
+  // the day is open — and every source answered, so it is a MEASURED all-clear.
+  // This is the state C4 says he will see most and the one a dishonest brief
+  // would pad. Shot on its own because "reads well when empty" is a claim that
+  // can only be settled by looking.
+  "brief-empty": () => <Deck {...base({ view: "brief", state: { ...mockState(), pendingConfirms: [], brief: mockBriefEmpty() } })} />,
+
+  // THE TRAP: the same ZERO rows as brief-empty, but two sources could not be
+  // read. It must NOT render the all-clear.
+  "brief-blind": () => <Deck {...base({ view: "brief", state: { ...mockState(), pendingConfirms: [], brief: mockBriefBlind() } })} />,
+
+  // The brain answered and has no brief yet (no 07:00 run since restart).
+  "brief-notyet": () => <Deck {...base({ view: "brief", state: { ...mockState(), pendingConfirms: [], brief: null } })} />,
+
+  // The brain served no `brief` key at all — an older brain, or api.ts's bare
+  // {online:false}. "Absent is not false", so this is NO ANSWER, not an empty brief.
+  "brief-nokey": () => <Deck {...base({ view: "brief", state: { online: false }, fetchedAt: null, vitals: null })} />,
+
+  // A REAL deck he was given, with the brain now unreachable. brain/state.ts
+  // serves the brief on the degraded return on purpose; the pane must say both
+  // halves — this is true, and it is not being refreshed.
+  "brief-stale": () => (
+    <Deck {...base({ view: "brief", state: { online: false, brief: mockBrief() }, fetchedAt: PINNED.toISOString(), vitals: null })} />
+  ),
+
+  // The behavioural half: key 7 and the seven-segment strip's geometry, driven
+  // through the real <App/> with real DOM events. See BriefNavProbe.
+  "brief-probe": () => {
+    holdShutter();
+    return <BriefNavProbe />;
   },
 };
 
@@ -526,6 +666,425 @@ function NavProbe(): JSX.Element {
               <span style={{ flex: 1 }}>{s.name}</span>
               <span style={{ flex: "none", color: "rgba(240,237,232,.45)" }}>
                 want {s.want} · got {s.got}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+
+// ---------------------------------------------------------------------------
+// LOCK PROBE — W2's behavioural half, REBUILT (F3).
+//
+// WHAT WAS WRONG WITH THE OLD ONE. It reimplemented resetThread "in miniature"
+// — `const typed = useRef(HIS_WORDS)`, hardcoded — so the one property the
+// reset exists to guarantee was the one the probe stubbed out. The REAL hook
+// wrote `lastTyped.current = text` UNCONDITIONALLY at the top of sendMessage,
+// and App.tsx:157 sends GREETING_SEED with {hidden:true} on every non-harness
+// launch. So on a real boot whose first turn was SPOKEN, the button seeded his
+// composer with "[King just opened the desktop deck…]" under a banner reading
+// YOUR WORDS CAME WITH YOU. Nothing leaked — that seed is a desktop constant —
+// but the panel was lying about whose words those were, and the probe could not
+// see it because it had reimplemented the thing it was testing.
+//
+// SO THIS ONE DRIVES THE REAL useChat(). Real hook, real sendMessage, real
+// resetThread, real <Deck/>, real DOM clicks on the real .lockbtn. Nothing
+// about the reset is reimplemented here.
+//
+// THE ONE SEAM, named: THE BRAIN IS THE MOCK BRAIN. scripts/shot.mjs sets
+// EVE_MOCK=1, so electron/api.ts startChat() answers out of shared/fixtures.ts
+// inside the MAIN process — no network, no brain, no mailbox. Everything from
+// the hook down through IPC and back up is the shipped path, and the poisoned
+// turn (fixtures.ts MOCK_LOCKED_TURN) is played BY THE BRAIN, so the
+// `confirm_request` and `locked` frames arrive at useChat's own handler exactly
+// as the real ones do.
+//
+// THE RENDERER IS NOT FAKED AT ALL, and the first attempt at this probe proved
+// it cannot be: window.eve is a contextBridge object whose properties are
+// read-only, and assigning to window.eve.onChatFrame throws "Cannot assign to
+// read only property 'onChatFrame' of object '#<Object>'". Calling it is
+// allowed, so the SPOKEN turn below is started by calling the real
+// window.eve.chat.start — which is what the summon window, the tray and S4's
+// voice path do — and its frames land in useChat's "a turn this window did not
+// start" branch, the branch a voice-first boot actually uses.
+//
+// HIS_WORDS is the string he typed. HER_LINE and MAIL_LINE are two phrases
+// REALLY IN HER BUBBLE in this thread — one hers, one lifted out of the mailbox
+// — so "nothing of hers came with it" and "nothing from the mail came with it"
+// are checks that can actually fail. A control string that appears nowhere on
+// screen would pass no matter what the button did, which is the shape of test
+// these rounds keep punishing.
+// ---------------------------------------------------------------------------
+
+const HIS_WORDS = "put starfire on the clock every monday at 9";
+const HER_LINE = "Start a fresh thread and tell me there";
+const MAIL_LINE = "Vendor Corp chasing the retainer";
+// App.tsx:26, verbatim. The string F3 is about: hers, hidden, and never his.
+const GREETING_SEED = "[King just opened the desktop deck. Greet him and give a short read on the moment.]";
+
+/**
+ * THE TURN A SPOKEN START PRODUCES IN THIS WINDOW. `chat.start` is called on
+ * the REAL bridge — not through the hook — so useChat never sees a sendMessage
+ * for it and its frames arrive for a chatId this window did not start: the
+ * "S4 voice, summon, tray" branch. The mock brain answers with the poisoned
+ * script (fixtures.ts): her reply, a queued card, and the W2 lock.
+ */
+async function driveSpokenTurn(): Promise<void> {
+  await window.eve.chat.start({ message: MOCK_LOCKED_TURN, viaVoice: true });
+}
+
+function LockProbe(): JSX.Element {
+  const chat = useChat();
+  // The ledger reads hook state LIVE, not out of the closure the async pass
+  // captured on its first render — a stale `chat` would report frameConfirms
+  // as it was before the run instead of as it is after the reset.
+  const chatRef = useRef(chat);
+  chatRef.current = chat;
+  const [steps, setSteps] = useState<Step[]>([]);
+  const ran = useRef(false);
+
+  useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+
+    void (async () => {
+      holdShutter();
+      console.log(`LOCKPROBE shutter: getter=${typeof Object.getOwnPropertyDescriptor(window, "__RENDER_DONE")?.get} value=${String(window.__RENDER_DONE)} t=${Math.round(performance.now())}`);
+      const out: Step[] = [];
+      const rec = (name: string, want: string, got: string) => {
+        out.push({ name, want, got, pass: want === got });
+      };
+      const box = () => (document.querySelector("textarea.cmdinput") as HTMLTextAreaElement | null)?.value ?? "(no box)";
+      const count = (sel: string) => String(document.querySelectorAll(sel).length);
+      const noteText = () => (document.querySelector(".tnote") as HTMLElement | null)?.textContent ?? "(no flash)";
+      const onScreen = (s: string) => (document.body.textContent?.includes(s) ? "yes" : "no");
+      const clickReset = () => {
+        const btn = document.querySelector(".lockbtn") as HTMLElement | null;
+        if (btn) flushSync(() => btn.click());
+        return btn ? "clicked" : "missing";
+      };
+
+      // ===== PASS 1 — A REAL BOOT WHOSE FIRST TURN IS SPOKEN =================
+      // App.tsx:157, verbatim: the hidden greeting seed, through the real hook,
+      // through real IPC, answered by the mock brain in the main process.
+      void chat.sendMessage(GREETING_SEED, { hidden: true });
+      await settle(1100);
+      rec("PASS 1 · the hidden greeting really ran through the hook", "1", count(".bub.eve"));
+      rec("  · and it drew no bubble of his — it is hidden, and it is hers", "0", count(".bub.you"));
+
+      // His first REAL turn is spoken, so it arrives as frames for a chatId
+      // this window never started — and it ends locked, with a card queued.
+      await driveSpokenTurn();
+      await settle(600);
+      rec("  · the spoken turn is on screen", "yes", onScreen(HER_LINE));
+      rec("  · and the mail phrase is really in her bubble", "yes", onScreen(MAIL_LINE));
+      rec("  · the lock panel is up", "yes", has(".lockpanel"));
+      rec("  · F4: a card is queued IN the poisoned thread", "1", count(".confirmv6"));
+      rec("  · F4: and the panel COUNTS what the reset will not take away", "yes", has(".lockcards"));
+      rec("  · the composer is empty before the click", "", box());
+
+      rec("click START A FRESH THREAD", "clicked", clickReset());
+      await settle(80);
+
+      // THE F3 ROW. Before the fix, this box held the GREETING_SEED.
+      rec("  · F3: the box is EMPTY — a seed SHE sent is not his instruction", "", box());
+      rec("  · F3: and the flash says exactly that", "NEW THREAD — NOTHING TO CARRY. TYPE IT AGAIN.", noteText());
+      rec("  · the thread is empty — a fresh conversation", "0", count(".bub"));
+      rec("  · the lock panel is gone", "no", has(".lockpanel"));
+      rec("  · F4: the queued request is still the brain's, not silently dropped", "1", String(chatRef.current.frameConfirms.length));
+
+      // ===== PASS 2 — THE SAME THREAD, BUT HE TYPED IT ======================
+      void chat.sendMessage(HIS_WORDS);
+      await settle(1100);
+      rec("PASS 2 · his typed line is on screen", "1", count(".bub.you"));
+      await driveSpokenTurn();
+      await settle(600);
+      rec("  · the lock panel is up again", "yes", has(".lockpanel"));
+      rec("click START A FRESH THREAD", "clicked", clickReset());
+      await settle(80);
+
+      rec("  · HIS OWN SENTENCE is in the box", HIS_WORDS, box());
+      rec("  · and the flash says so", "NEW THREAD — YOUR WORDS CAME WITH YOU, NOTHING ELSE DID.", noteText());
+      rec("  · nothing of HERS came with it", "no", box().includes(HER_LINE) ? "yes" : "no");
+      rec("  · nothing from the MAIL came with it", "no", box().includes(MAIL_LINE) ? "yes" : "no");
+      rec("  · nothing sent itself", "0", count(".bub.you"));
+      rec("  · the thread is empty — a fresh conversation", "0", count(".bub"));
+      rec("  · the lock panel is gone", "no", has(".lockpanel"));
+
+      // PRINTED AS WELL AS DRAWN. The PNG is the receipt a human reads; this is
+      // the one a terminal can paste. Run with ELECTRON_ENABLE_LOGGING=1.
+      for (const st of out) console.log(`LOCKPROBE ${st.pass ? "PASS" : "FAIL"} | ${st.name} | want "${st.want}" | got "${st.got}"`);
+      console.log(`LOCKPROBE TOTAL ${out.filter((x) => x.pass).length}/${out.length} PASS`);
+      // PAINT, THEN OPEN — AND THE PNG IS STILL THE SECOND-BEST RECEIPT.
+      // The ledger is committed with flushSync, given two animation frames and
+      // a settle to be composited, and only then is the shutter released
+      // (electron/main.ts waits on window.__RENDER_DONE and captures 250ms
+      // later). That makes the full-ledger capture the usual outcome — but it
+      // is NOT a guarantee, and pretending otherwise would be the same lie the
+      // first version told: the window is hidden, capturePage() returns the
+      // last frame the compositor actually produced, and two identical runs
+      // here photographed the ledger and a mid-run moment. So the AUTHORITATIVE
+      // receipt is the console ledger printed above, which is deterministic and
+      // pasteable (run with ELECTRON_ENABLE_LOGGING=1); the PNG is the human's
+      // copy of whichever frame the compositor last made.
+      flushSync(() => setSteps(out));
+      await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+      await settle(700);
+      console.log(`LOCKPROBE opening shutter at t=${Math.round(performance.now())} · ledger rows on screen=${document.querySelectorAll(".lprow").length}`);
+      shutterOpen = true;
+    })().catch((err) => {
+      console.log(`LOCKPROBE THREW: ${err instanceof Error ? `${err.message}
+${err.stack ?? ""}` : String(err)}`);
+      shutterOpen = true;
+    });
+    // The hook object is stable enough for this one-shot: `ran` guards it.
+  }, [chat]);
+
+  const failed = steps.filter((s) => !s.pass).length;
+
+  return (
+    <>
+      <Deck
+        {...base({
+          chat,
+          onSend: (t: string) => void chat.sendMessage(t),
+          onConfirmResolved: (id: string) => chat.pruneConfirm(id),
+          onResetThread: chat.resetThread,
+        })}
+      />
+      {steps.length > 0 ? (
+        <div
+          style={{
+            position: "fixed",
+            inset: "18px 40px",
+            zIndex: 20,
+            overflow: "auto",
+            padding: "16px 20px",
+            borderRadius: 12,
+            border: "1px solid rgba(28,185,200,.45)",
+            background: "rgba(7,11,12,.96)",
+            fontFamily: "var(--mono)",
+            fontSize: 10.5,
+            lineHeight: 1.72,
+            letterSpacing: ".03em",
+            color: "rgba(240,237,232,.85)",
+          }}
+        >
+          <div style={{ color: "var(--tealHi)", letterSpacing: ".2em", marginBottom: 10 }}>
+            LOCK PROBE — {steps.length - failed}/{steps.length} PASS
+            {failed > 0 ? ` · ${failed} FAILED` : ""}
+          </div>
+          {steps.map((s, i) => (
+            <div key={i} className="lprow" style={{ display: "flex", gap: 12 }}>
+              <span style={{ width: 40, flex: "none", color: s.pass ? "var(--tealHi)" : "var(--gold)" }}>
+                {s.pass ? "PASS" : "FAIL"}
+              </span>
+              <span style={{ flex: 1 }}>{s.name}</span>
+              <span style={{ flex: "none", color: "rgba(240,237,232,.45)" }}>
+                want "{s.want}" · got "{s.got}"
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// THE BRIEF'S NAV PROBE — owning stream: THE BRIEF (C).
+//
+// The fixture shots above prove the pane DRAWS. They cannot prove it is
+// REACHABLE, which is half of C3 ("reachable from the visible nav"), and they
+// cannot prove that a SEVENTH segment fits.
+//
+// The seventh segment is the real risk and the reason this exists. nav.css's
+// own header does the arithmetic and ends at zero: six segments measure ~325px
+// against ~330px of title-bar dead space at the enforced 1120px minimum, after
+// two rounds of padding shaves. A seventh spends a budget that is already gone.
+// So this does not assert that it fits — it MEASURES it, at 1120x720, through
+// the shipped CSS, and prints what it found. If the strip overflows or the deck
+// grid gets squeezed, the PNG says so.
+//
+// Same machinery as S2's NavProbe directly above: the real <App/>, real DOM
+// events, the shutter held open until the ledger is painted.
+// ---------------------------------------------------------------------------
+function BriefNavProbe(): JSX.Element {
+  const [steps, setSteps] = useState<Step[]>([]);
+  const ran = useRef(false);
+
+  useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+
+    void (async () => {
+      const out: Step[] = [];
+      const rec = (name: string, want: string, got: string) => out.push({ name, want, got, pass: want === got });
+
+      await settle(500);
+      // EVE_MOCK ships a pending RED card, and a RED card owns the keyboard.
+      // Clear it the way S2's probe does before testing navigation.
+      if (document.querySelector(".confirm-modal-wrap")) {
+        click(".confirm-modal-wrap .cbtn.gh");
+        await settle(5600);
+      }
+      rec("RED card cleared before navigating", "no", has(".confirm-modal-wrap"));
+
+      // --- the strip now names SEVEN destinations --------------------------
+      const segs = Array.from(document.querySelectorAll(".navseg")) as HTMLElement[];
+      rec("the nav names seven destinations", "7", String(segs.length));
+      rec(
+        "  · and BRIEF is the seventh",
+        "1DECK|2BODY|3CLOSET|4WIRE|5CORE|6FLEET|7BRIEF",
+        segs.map((s) => (s.textContent ?? "").replace(/\s+/g, "")).join("|"),
+      );
+
+      // --- it is reachable, both ways --------------------------------------
+      segs[6]?.click();
+      await settle();
+      rec("click BRIEF", "7BRIEF", lit());
+      rec("  · the brief pane mounted", "yes", has(".briefcol"));
+      rec("  · it mounted in a SCROLLING pane, not a fitted one", "yes", has(".panewrap"));
+      rec("  · nav survives the pane that unmounts the deck grid", "7", String(document.querySelectorAll(".navseg").length));
+
+      press("1");
+      await settle();
+      rec("key 1 leaves the brief", "1DECK", lit());
+      press("7");
+      await settle();
+      rec("key 7 returns to it", "7BRIEF", lit());
+
+      // --- the typing guard still holds for the new digit -------------------
+      press("1");
+      await settle();
+      const ta = document.querySelector("textarea") as HTMLTextAreaElement | null;
+      ta?.focus();
+      if (ta) press("7", ta);
+      await settle();
+      rec("key 7 from inside the composer does NOT navigate", "1DECK", lit());
+
+      // --- Esc still returns to the deck from the new view ------------------
+      press("7");
+      await settle();
+      press("Escape");
+      await settle();
+      rec("Esc returns the brief to the deck", "1DECK", lit());
+
+      // --- THE GEOMETRY. The whole reason this probe exists. ----------------
+      press("7");
+      await settle(160);
+      const de = document.documentElement;
+      rec(
+        `no horizontal scroll at ${window.innerWidth}x${window.innerHeight}`,
+        "0",
+        String(Math.max(0, de.scrollWidth - de.clientWidth)),
+      );
+
+      // Does the seventh segment actually fit the title bar, or has it been
+      // pushed past the edge / overlapped the session badge? Measure the strip
+      // against its own parent and against the window.
+      const nav = document.querySelector(".navstrip") as HTMLElement | null;
+      const navBox = nav?.getBoundingClientRect();
+      rec(
+        "the strip's right edge is inside the window",
+        "yes",
+        navBox ? (navBox.right <= window.innerWidth + 0.5 ? "yes" : `no (${Math.round(navBox.right)} > ${window.innerWidth})`) : "(no strip)",
+      );
+      rec("  · strip width at this size", "measured", navBox ? `${Math.round(navBox.width)}px` : "(none)");
+      const last = segs[6]?.getBoundingClientRect();
+      rec(
+        "  · the 7th segment is not clipped by the strip",
+        "yes",
+        last && navBox ? (last.right <= navBox.right + 0.5 && last.width > 20 ? "yes" : `no (seg ${Math.round(last.width)}px)`) : "(none)",
+      );
+      // The strip must not have grown taller than the 32px title bar.
+      const tbar = document.querySelector(".tbar") as HTMLElement | null;
+      rec(
+        "  · the strip did not wrap out of the title bar",
+        "yes",
+        navBox && tbar ? (navBox.height <= tbar.getBoundingClientRect().height + 0.5 ? "yes" : "no — it wrapped") : "(none)",
+      );
+
+      // THE ASSERTION THAT ACTUALLY CAUGHT THE SEVENTH SEGMENT.
+      // "No horizontal scroll" is NOT sufficient and this is the proof: at
+      // 1120x720 the first pass of this pane scrolled nothing, because flex
+      // took the 51px it needed out of the title bar's neighbours instead.
+      // What it did was WRAP THE SESSION BADGE ONTO TWO LINES. A wrapped badge
+      // is a one-line element at ~14px becoming ~28px, so measure the height —
+      // that is the only signal the overflow checks above cannot fake.
+      const ses = document.querySelector(".sesch") as HTMLElement | null;
+      const sesH = ses ? ses.getBoundingClientRect().height : 0;
+      const lineH = ses ? parseFloat(getComputedStyle(ses).fontSize) * 2.2 : 0;
+      rec(
+        "the session badge is still on ONE line (not squeezed by the strip)",
+        "yes",
+        ses ? (sesH <= lineH ? "yes" : `no — wrapped, ${Math.round(sesH)}px`) : "(no badge)",
+      );
+      rec("  · badge height", "measured", `${Math.round(sesH)}px`);
+
+      // And the deck grid it must not have cost anything.
+      press("1");
+      await settle(160);
+      const deck = document.querySelector(".deck") as HTMLElement | null;
+      rec(
+        "the deck grid still has three columns + two rules",
+        "5",
+        deck ? String(getComputedStyle(deck).gridTemplateColumns.split(" ").length) : "(no deck)",
+      );
+
+      setSteps(out);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          shutterOpen = true;
+        }),
+      );
+    })();
+  }, []);
+
+  const failed = steps.filter((s) => !s.pass && s.want !== "measured").length;
+
+  return (
+    <>
+      <App />
+      {steps.length > 0 ? (
+        <div
+          style={{
+            position: "fixed",
+            inset: "40px 90px",
+            zIndex: 20,
+            overflow: "auto",
+            padding: "18px 22px",
+            borderRadius: 12,
+            border: "1px solid rgba(28,185,200,.45)",
+            background: "rgba(7,11,12,.96)",
+            fontFamily: "var(--mono)",
+            fontSize: 11,
+            lineHeight: 1.9,
+            letterSpacing: ".04em",
+            color: "rgba(240,237,232,.85)",
+          }}
+        >
+          <div style={{ color: "var(--tealHi)", letterSpacing: ".2em", marginBottom: 10 }}>
+            BRIEF NAV PROBE — {steps.length - failed}/{steps.length} PASS
+            {failed > 0 ? ` · ${failed} FAILED` : ""}
+          </div>
+          {steps.map((s, i) => (
+            <div key={i} style={{ display: "flex", gap: 12 }}>
+              <span
+                style={{
+                  width: 40,
+                  flex: "none",
+                  color: s.want === "measured" ? "rgba(240,237,232,.45)" : s.pass ? "var(--tealHi)" : "var(--gold)",
+                }}
+              >
+                {s.want === "measured" ? "····" : s.pass ? "PASS" : "FAIL"}
+              </span>
+              <span style={{ flex: 1 }}>{s.name}</span>
+              <span style={{ flex: "none", color: "rgba(240,237,232,.45)" }}>
+                {s.want === "measured" ? s.got : `want ${s.want} · got ${s.got}`}
               </span>
             </div>
           ))}

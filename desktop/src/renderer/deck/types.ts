@@ -4,7 +4,7 @@
 // that the contract does not already carry is defined here (the OWNERSHIP.md
 // rule: "If a type is missing, define it in your own files").
 
-import type { JobFrame, PendingConfirm } from "@shared/contract";
+import type { ChatLock, JobFrame, PendingConfirm } from "@shared/contract";
 
 /** Her five presence states (handoff §5). Matches voice/events.ts's mode union. */
 export type EveMode = "idle" | "listening" | "thinking" | "speaking" | "alert";
@@ -14,7 +14,7 @@ export type EveMode = "idle" | "listening" | "thinking" | "speaking" | "alert";
  *  "settings" does (Deck.tsx branches before the three-column grid). It is an
  *  ADDITION, not a replacement: the deck still carries the conversation, the
  *  confirm cards and the approval inbox. */
-export type DeckView = "deck" | "body" | "settings" | "core" | "fleet";
+export type DeckView = "deck" | "body" | "settings" | "core" | "fleet" | "brief";
 
 /** v0.2 — a sentence the FLEET tab's DISPATCH button puts in THE CORE's
  *  command bar ("dispatch <key>: "). `seq` makes every press a fresh object so
@@ -49,6 +49,12 @@ export interface ChatView {
    * dispatcher still typechecks; absent reads as "none seen".
    */
   jobFrames?: SeenJobFrame[];
+  /**
+   * W2 — the brain refused an authority tool because THIS THREAD has read
+   * third-party text, and said so on a `locked` frame. Optional so every
+   * fixture that predates it still typechecks; absent reads as "not locked".
+   */
+  lock?: ChatLock | null;
 }
 
 /** A `job` SSE frame plus the local clock at arrival. */

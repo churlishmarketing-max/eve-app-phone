@@ -9,6 +9,26 @@ import { buildVitals } from "./vitals.js";
 // the 07:00 brief and the 20:00 push.
 import { checkinLogged, missedRunBefore, type VitalsForNudge } from "./proactive.js";
 import { addLocalDays } from "./day.js";
+// THE BRIEF PROPER (C1–C6). The 25-word push below is UNCHANGED and stays the
+// nudge — he is away from the desk constantly. This is the four-section brief
+// it points at: built from records in briefing.ts, served on /state, rendered
+// by the deck's BRIEF pane.
+import {
+  buildBriefDeck,
+  briefPromptBlock,
+  offlineBriefDeck,
+  overnightStart,
+  type BriefDeck,
+  type BriefInput,
+  type BriefSectionKey,
+} from "./briefing.js";
+import { db } from "./db.js";
+import { listPending } from "./confirm.js";
+import { floorView } from "./floor.js";
+import { recentJobsQuery, shapeJob } from "./dispatch.js";
+import { triageMail, readTodayShape } from "./mail.js";
+import * as google from "./google.js";
+import type { MailSource } from "./google.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
@@ -56,12 +76,132 @@ export function briefBodyClause(v: VitalsForNudge): string {
   );
 }
 
+// ---------------------------------------------------------------------------
+// COLLECTING THE BRIEF'S EVIDENCE (C2).
+//
+// Every read is INDIVIDUALLY guarded. A failing source must never take the
+// brief down and must never disappear silently: it contributes nothing and
+// files a `blind` line naming itself, which the pane renders in place of an
+// all-clear it did not earn. This is the one function in the brief that talks
+// to the outside world; briefing.ts stays pure so the harness can drive it
+// from fixtures with no database, no network and no mailbox.
+//
+// `source` is a parameter so verify/brief-harness.ts injects a FAKE Gmail /
+// Calendar client. King's real mailbox is not a test fixture.
+// ---------------------------------------------------------------------------
+export async function collectBriefInput(now = new Date(), source: MailSource | null = null): Promise<BriefInput> {
+  const blind: { section: BriefSectionKey; say: string }[] = [];
+  const note = (section: BriefSectionKey, say: string) => blind.push({ section, say });
+
+  const c = db();
+  const input: BriefInput = {
+    now,
+    online: !!c,
+    confirms: [],
+    attention: [],
+    tasks: [],
+    jobs: [],
+    runs: [],
+    clients: [],
+    promises: [],
+    mail: null,
+    shape: null,
+    floor: null,
+    blind,
+  };
+
+  // In-memory, always available — the RED cards survive a spine outage.
+  input.confirms = listPending().map((p) => ({ id: p.id, kind: p.kind, summary: p.summary, createdAt: p.createdAt }));
+
+  const from = overnightStart(now).toISOString();
+
+  if (c) {
+    const [attention, tasks, jobs, runs, clients, promises] = await Promise.all([
+      c.from("attention_items").select("id, kind, message, nudge_level, ref, created_at").is("resolved_at", null).order("created_at", { ascending: false }).limit(20),
+      c.from("tasks").select("id, title, detail, priority, due_at").not("priority", "is", null).is("done_at", null).order("priority"),
+      recentJobsQuery(c, now.getTime()),
+      c.from("runs").select("id, job, ok, at").gte("at", from).order("at", { ascending: false }).limit(50),
+      c.from("clients").select("id, name, cadence_days, last_touch_at, status").eq("status", "active"),
+      c.from("memory_entries").select("content, created_at").eq("kind", "promise").eq("status", "active").order("created_at", { ascending: false }).limit(8),
+    ]);
+
+    if (attention.error) note("needs_you", `Her attention queue would not read: ${attention.error.message}`);
+    else input.attention = (attention.data ?? []) as BriefInput["attention"];
+
+    if (tasks.error) note("needs_you", `The task list would not read: ${tasks.error.message}`);
+    else input.tasks = (tasks.data ?? []) as BriefInput["tasks"];
+
+    if (jobs.error) note("overnight", `Her own job log would not read: ${jobs.error.message}. Nothing below claims she ran anything.`);
+    else input.jobs = (jobs.data ?? []).map((r) => shapeJob(r as unknown as Record<string, unknown>)) as unknown as BriefInput["jobs"];
+
+    if (runs.error) note("overnight", `The runs log would not read: ${runs.error.message}. Nothing below claims a scheduled job fired.`);
+    else input.runs = (runs.data ?? []) as unknown as BriefInput["runs"];
+
+    if (clients.error) note("slipping", `The client list would not read: ${clients.error.message}`);
+    else
+      input.clients = (clients.data ?? []).map((cl) => ({
+        id: String(cl.id),
+        name: String(cl.name),
+        cadence_days: Number(cl.cadence_days),
+        // Same arithmetic state.ts runs, so the pane and the brief can never
+        // disagree about how quiet a client is.
+        days_quiet: cl.last_touch_at ? Math.floor((now.getTime() - new Date(cl.last_touch_at as string).getTime()) / 86_400_000) : null,
+      }));
+
+    if (promises.error) note("slipping", `Her promise ledger would not read: ${promises.error.message}`);
+    else input.promises = (promises.data ?? []) as unknown as BriefInput["promises"];
+
+    try {
+      const f = await floorView();
+      input.floor = { count: f.count, goal: f.goal };
+    } catch (e) {
+      note("shape", `The sales-floor count would not read: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  } else {
+    note("needs_you", "Her spine did not answer — nothing in this section was measured.");
+    note("overnight", "Her spine did not answer, so her own log is unreadable. She is not claiming a quiet night.");
+    note("slipping", "Her spine did not answer — no client, promise or job was checked.");
+    note("shape", "Her spine did not answer — no task or floor figure was read.");
+  }
+
+  // Mail and calendar. triageMail / readTodayShape never throw: a failure comes
+  // back as a state and a true sentence, which is exactly what `blind` wants.
+  const src = source ?? (google.gmailReady() || google.calendarReady() ? google.googleSource() : null);
+  if (src) {
+    const [{ digest }, shape] = await Promise.all([triageMail(src, { now }), readTodayShape(src, { now })]);
+    input.mail = digest;
+    input.shape = shape;
+    if (digest.state === "error" || digest.state === "not-wired") note("needs_you", digest.detail);
+  } else {
+    note("needs_you", "Gmail is not connected. She has NOT seen his inbox — no mail is reported below.");
+    note("shape", "Google Calendar is not connected. She has NOT seen his day — no events are reported below.");
+  }
+
+  return input;
+}
+
+/** The whole brief, from records. Never throws — an outage is a degraded deck. */
+export async function buildBrief(now = new Date(), source: MailSource | null = null): Promise<BriefDeck> {
+  try {
+    return buildBriefDeck(await collectBriefInput(now, source));
+  } catch (e) {
+    console.error("[brief] deck build failed", e);
+    return offlineBriefDeck(now);
+  }
+}
+
 // Generate the morning brief IN CHARACTER via the same persona layers. The
 // ≤25-word cap is instructed here and enforced defensively below (01 §6, 04 §1).
-export async function generateBrief(bodyClause = ""): Promise<string> {
+//
+// `briefBlock` is briefPromptBlock(deck) — the same four sections the pane
+// renders, so the push and the deck can never tell him different things. It is
+// pre-enveloped: every mail-derived line inside it already sits in
+// <untrusted_brief_content> with a constant note (R1/C6).
+export async function generateBrief(bodyClause = "", briefBlock = ""): Promise<string> {
   const pack = await buildContextPack("push", "morning brief: today's three, calendar, the avoided thing, floor status");
   const directive =
     `${pack}\n\n` +
+    (briefBlock ? `${briefBlock}\n\n` : "") +
     "[System task: write King's 7:00 AM morning brief as a single push notification. " +
     "HARD LIMIT 25 words. Substance first, exactly one clause of flavour. Use the LIVE " +
     "ledger in the context pack — Today's Three, floor status, open attention items. Lead " +
@@ -108,14 +248,75 @@ export function getLatestBrief(): { text: string; at: string } | null {
   return latestBrief;
 }
 
+// ---------------------------------------------------------------------------
+// THE DECK'S COPY OF THE BRIEF.
+//
+// latestBrief above is process memory only, which means a Railway redeploy at
+// 08:00 erases the 07:00 brief and the pane goes blank. The four-section deck
+// gets a durable home instead: app_state, the established place for brain-side
+// scalars (rotation.ts, proactive.ts's ladder). Memory is the fast path;
+// app_state is what survives the restart.
+//
+// The stored deck is a SNAPSHOT of the morning on purpose. "What she did
+// overnight" recomputed at 3pm would answer a different question, and a brief
+// that quietly rewrites itself during the day is not a brief.
+// ---------------------------------------------------------------------------
+const DECK_KEY = "brief.deck";
+let latestDeck: BriefDeck | null = null;
+let deckHydrated = false;
+
+export function getLatestDeckSync(): BriefDeck | null {
+  return latestDeck;
+}
+
+async function persistDeck(deck: BriefDeck): Promise<void> {
+  latestDeck = deck;
+  deckHydrated = true;
+  const c = db();
+  if (!c) return;
+  try {
+    await c.from("app_state").upsert({ key: DECK_KEY, value: deck, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  } catch (e) {
+    // A brief that cannot be filed is still a brief. Say so, keep the memory copy.
+    console.error("[brief] could not persist the deck", e);
+  }
+}
+
+/**
+ * What /state serves. Memory first; ONE lazy read of app_state after a restart,
+ * so the 30-second poll does not add a query per tick. Returns null when no
+ * brief has been built yet — which the pane renders as "no brief yet", never
+ * as an empty brief.
+ */
+export async function getLatestBriefDeck(): Promise<BriefDeck | null> {
+  if (latestDeck) return latestDeck;
+  if (deckHydrated) return null;
+  deckHydrated = true;
+  const c = db();
+  if (!c) return null;
+  try {
+    const { data } = await c.from("app_state").select("value").eq("key", DECK_KEY).maybeSingle();
+    latestDeck = (data?.value as BriefDeck | undefined) ?? null;
+  } catch {
+    latestDeck = null;
+  }
+  return latestDeck;
+}
+
 // force=true bypasses the quiet-hours guard (for manual testing via POST /job).
 export async function runMorningBrief(force = false): Promise<BriefResult> {
-  if (!force && isQuietHours(new Date())) return { ok: false, reason: "quiet-hours" };
+  const now = new Date();
+  if (!force && isQuietHours(now)) return { ok: false, reason: "quiet-hours" };
+
+  // THE BRIEF PROPER, first: the push is a pointer at it, so it is built from
+  // the same records rather than from a second pass over the world.
+  const deck = await buildBrief(now);
+  await persistDeck(deck);
 
   // One push, one clause. The body read is folded INTO the brief — it never
   // becomes a second notification (04 §1: quiet mornings stay one ping).
   const vitals = await buildVitals();
-  const raw = await generateBrief(briefBodyClause(vitals));
+  const raw = await generateBrief(briefBodyClause(vitals), briefPromptBlock(deck));
   const body = clampWords(raw, 25);
   if (raw) latestBrief = { text: raw, at: new Date().toISOString() };
   const token = await getLatestToken();

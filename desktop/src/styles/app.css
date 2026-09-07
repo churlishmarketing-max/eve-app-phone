@@ -345,3 +345,67 @@ button.chipv6:disabled:hover {
     transform: none !important;
   }
 }
+
+/* ---- W2 · THE LOCKED THREAD + THE ONE-CLICK RESET ------------------------
+   GOLD, and gold only. The design law reserves red (#C41E3A) for the RED
+   confirm tier and the live mic, and green (#3EA26E) for the autonomy dot; a
+   refusal that is working exactly as designed is ATTENTION, not danger, and
+   attention is gold. Every colour here is a token — no literals. */
+.lockpanel {
+  flex: none;
+  margin: 0 16px 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(201, 165, 74, 0.55);
+  border-left: 3px solid var(--gold);
+  background: rgba(201, 165, 74, 0.07);
+}
+.lockhd {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.26em;
+  color: var(--gold);
+  margin-bottom: 7px;
+}
+.lockwhy {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ice);
+}
+.lockmeta {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: rgba(240, 237, 232, 0.5);
+  margin-top: 8px;
+}
+button.lockbtn {
+  appearance: none;
+  margin-top: 11px;
+  padding: 9px 16px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  background: rgba(201, 165, 74, 0.12);
+  border: 1px solid var(--gold);
+  cursor: pointer;
+}
+button.lockbtn:hover {
+  background: rgba(201, 165, 74, 0.22);
+}
+.locknote {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(240, 237, 232, 0.62);
+}
+/* F4 — what the reset does NOT take away. Gold, because it is attention: the
+   confirm card's own RED tier is the card's and only the card's. */
+.lockcards {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(201, 165, 74, 0.28);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--gold);
+}

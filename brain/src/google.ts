@@ -179,3 +179,109 @@ export async function createEvent(
   });
   return `Event created: "${title}" — ${r.data.htmlLink ?? r.data.id}`;
 }
+
+// ---------------------------------------------------------------------------
+// STRUCTURED READS — the seam the reader (mail.ts) is built on.
+//
+// Everything above returns a PRE-FORMATTED STRING with the formatting baked in,
+// which is useless to a triage pass: it cannot rank what it cannot address as
+// fields. These return DATA instead, and they are deliberately the only new
+// Google surface — `MailSource` is an interface so verify/reader-harness.ts can
+// drive the shipped rendering and triage code with a fake client and never
+// touch King's real mailbox. There is no module-level state here and no way to
+// swap the real source globally; a caller passes the source it wants.
+// ---------------------------------------------------------------------------
+
+/** One message, as the provider hands it over. EVERY string field here is attacker-controlled. */
+export interface RawMessage {
+  id: string;
+  /** Raw `From` header — a display name the SENDER chose, plus their address. Untrusted. */
+  from: string;
+  subject: string;
+  /** RFC date header as sent. Untrusted and frequently a lie; parse defensively. */
+  date: string;
+  /** Gmail's preview of the BODY. This is the most dangerous field on the object. */
+  snippet: string;
+}
+
+/** One event. `summary`, `location`, `description` and attendee names are written by whoever sent the invite. */
+export interface RawEvent {
+  id: string;
+  summary: string;
+  location: string;
+  description: string;
+  /** ISO datetime, or a bare YYYY-MM-DD for an all-day event. */
+  start: string;
+  end: string;
+  allDay: boolean;
+  attendees: string[];
+}
+
+/**
+ * The read surface the reader depends on. The real implementation is
+ * `googleSource()`; the harness supplies a fake with the same shape.
+ */
+export interface MailSource {
+  unread(max: number): Promise<RawMessage[]>;
+  events(days: number): Promise<RawEvent[]>;
+}
+
+// Test seam (verify/clock-harness.ts): swap in a fake read surface so the
+// CONTEXT PACK's untrusted half can be proven end-to-end without a network and
+// without ever touching King's real mailbox. Never called by the server.
+let sourceForTests: MailSource | null = null;
+export function _setGoogleSourceForTests(s: MailSource | null): void {
+  sourceForTests = s;
+}
+
+export function googleSource(): MailSource {
+  if (sourceForTests) return sourceForTests;
+  return {
+    async unread(max: number): Promise<RawMessage[]> {
+      const gmail = g.gmail({ version: "v1", auth: auth() });
+      const list = await gmail.users.messages.list({ userId: "me", q: "is:unread in:inbox", maxResults: max });
+      const ids = list.data.messages ?? [];
+      return Promise.all(
+        ids.map(async ({ id }) => {
+          const m = await gmail.users.messages.get({
+            userId: "me",
+            id: id!,
+            format: "metadata",
+            metadataHeaders: ["From", "Subject", "Date"],
+          });
+          const h = m.data.payload?.headers ?? undefined;
+          return {
+            id: id ?? "",
+            from: header(h, "From"),
+            subject: header(h, "Subject"),
+            date: header(h, "Date"),
+            snippet: m.data.snippet ?? "",
+          };
+        }),
+      );
+    },
+    async events(days: number): Promise<RawEvent[]> {
+      const cal = g.calendar({ version: "v3", auth: auth() });
+      const now = new Date();
+      const end = new Date(now.getTime() + days * 24 * 3600_000);
+      const r = await cal.events.list({
+        calendarId: "primary",
+        timeMin: now.toISOString(),
+        timeMax: end.toISOString(),
+        singleEvents: true,
+        orderBy: "startTime",
+        maxResults: 25,
+      });
+      return (r.data.items ?? []).map((e) => ({
+        id: e.id ?? "",
+        summary: e.summary ?? "",
+        location: e.location ?? "",
+        description: e.description ?? "",
+        start: e.start?.dateTime || e.start?.date || "",
+        end: e.end?.dateTime || e.end?.date || "",
+        allDay: !e.start?.dateTime,
+        attendees: (e.attendees ?? []).map((a) => a.displayName || a.email || "").filter(Boolean),
+      }));
+    },
+  };
+}

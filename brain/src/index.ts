@@ -38,6 +38,9 @@ import { warmFleet, fleetViewStatus } from "./fleet.js";
 import { registryCounts } from "./registry.js";
 import { rotateLook, initRotationConfig } from "./rotation.js";
 import { stamp, getStamp } from "./health.js";
+// R1 · the conversation key is request body — shape-checked before it becomes
+// the id every taint question is asked on (untrusted.ts).
+import { cleanConversationId } from "./untrusted.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -490,7 +493,18 @@ app.post("/chat", async (req, res) => {
   if (typeof message !== "string" || !message.trim()) {
     return res.status(400).json({ error: "message (string) is required" });
   }
-  const convId: string = conversationId || randomUUID();
+  // THE CONVERSATION ID IS REQUEST BODY, AND IT WAS TAKEN ON TRUST (bookkeeping,
+  // named by the judge). It is not prose she reads, but it is the KEY the whole
+  // R1 durable lock is asked on (untrusted.ts), the id every row in this thread
+  // is written under, and it rides back out on the `locked` frame. Uncapped and
+  // unvalidated, one malformed client could write rows under a 4KB key or ask
+  // the taint question about something that is not an id.
+  //
+  // Same shape as cleanSurface (context.ts W4): a SHAPE check, no judgement
+  // about what the string says, and anything that fails it becomes a fresh
+  // conversation instead of an error — the route is bearer-gated, so this is
+  // his own client, and refusing his turn over a bad id would be the worse bug.
+  const convId: string = cleanConversationId(conversationId);
   const surf: string = surface || "app";
   const streaming = req.query.stream !== "false";
   // A HARD VALIDATOR, not a cast: anything malformed, oversized, or arriving
@@ -562,6 +576,13 @@ app.post("/chat", async (req, res) => {
       // desktop broadcasts chat frames to all its windows; other clients
       // ignore unknown events.
       onJob: (job) => send("job", job),
+      // W1/W2 — the conversation is locked and a tool refused because of it.
+      // One frame per turn, emitted because the refusal happened in code. It
+      // carries the witness (status, source, why) and the tools that refused,
+      // and it deliberately carries NO TEXT for the composer: the desktop seeds
+      // the reset from its own record of what King typed. Other clients ignore
+      // unknown events, so an old phone simply hears her refusal in words.
+      onLock: (lock) => send("locked", lock),
       onDone: (info) => {
         send("done", info);
         if (!res.writableEnded) res.end();

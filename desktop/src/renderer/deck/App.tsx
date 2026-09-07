@@ -312,6 +312,10 @@ export default function App() {
         vitals={vitals}
         onSend={(t) => void sendMessage(t)}
         onConfirmResolved={onConfirmResolved}
+        // W2 — the reset the lock panel offers. The seed it returns is THIS
+        // renderer's own record of his last keystrokes; nothing crosses from
+        // the brain into the composer.
+        onResetThread={chat.resetThread}
         onToggleSilent={onToggleSilent}
         onOpenWardrobe={openCloset}
         onCloseWardrobe={closeCloset}

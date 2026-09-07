@@ -1,0 +1,262 @@
+/* THE BRIEF — owning stream: THE BRIEF (C).
+   Imported by BriefPane.tsx, so it lands after styles/app.css in the bundle.
+
+   COLOUR LAW, restated because a reading surface is where it gets broken by
+   accident: not one hex literal in this file. Every colour is var(--x) or
+   rgba(var(--rgbX), a), which is what makes the pane render correctly in all
+   four themes. --red is used in exactly ONE place (.brow.red's structural rail,
+   plus its cap in --redInk) and that place is a pending RED confirm card.
+   --green does not appear at all: green is the autonomy dot and nothing else,
+   so the ALL CLEAR block is TEAL — teal is done.
+
+   TYPE. Mono dosing follows the house convention: 10px/.18em for the section
+   eyebrows (.divrow supplies those), 9px/.16em for right-hand meta, 8.5px/.1em
+   for the source receipts. The row text itself is BODY type at 14px, not mono,
+   because this is the one surface he reads in sentences. */
+
+/* ---- the column ----------------------------------------------------------
+   A brief is prose. Measure is the whole design problem: the deck's data column
+   is 613px and full-bleed text at 1440 would run ~1300px, which nobody reads.
+   52rem (832px) centred is the measure: a row's fact line lands around 75
+   characters of Barlow at 14px, and the recommendation under it is indented, so
+   the eye returns to a predictable left edge. Wider was tried first at 62rem and
+   the recommendation lines drifted too far from their facts. */
+.briefwrap {
+  padding: 18px 22px 26px;
+}
+.briefcol {
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+.bwindow {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: rgba(var(--rgbCream), 0.38);
+  text-transform: uppercase;
+}
+
+/* ---- the two "there is no brief" states ---------------------------------- */
+.bnone {
+  margin-top: 14px;
+}
+.bnone-foot {
+  margin-top: 14px;
+}
+
+/* ---- a real deck that is no longer being refreshed, and a degraded build ---
+   GOLD, because it is an attention state: what is on screen is true, and it is
+   not current. It is not red — nothing failed — and not dim, because he must
+   not read a stale brief as this morning's. */
+.bstale {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px solid rgba(var(--rgbGold), 0.32);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  background: rgba(var(--rgbGold), 0.05);
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(var(--rgbCream), 0.72);
+}
+
+/* ---- THE ALL-CLEAR ------------------------------------------------------
+   The common morning. It has to read as the GOOD outcome, so it gets the only
+   piece of display type on the pane and a teal wash — the same "done" teal the
+   rest of the app uses. It is deliberately not a green tick and deliberately
+   not a shrug. */
+.ballclear {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(var(--rgbAccent), 0.34);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(var(--rgbAccent), 0.1), rgba(var(--rgbAccent), 0.03));
+  box-shadow: inset 0 0 30px rgba(var(--rgbAccent), 0.06);
+}
+.bac-l {
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--ice);
+  text-shadow: 0 0 18px rgba(var(--rgbAccent), 0.4);
+}
+.bac-t {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(var(--rgbCream), 0.66);
+}
+
+/* ---- the R1 banner -------------------------------------------------------
+   Said on the surface, not only in the code: how many lines below came out of
+   somebody else's mail. Dim on purpose — it is a standing condition, not an
+   alarm. */
+.buntrusted {
+  margin-top: 14px;
+  padding-left: 10px;
+  border-left: 1px solid var(--hair2);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  color: rgba(var(--rgbCream), 0.34);
+  text-transform: uppercase;
+}
+
+/* ---- sections ------------------------------------------------------------ */
+.bsec {
+  margin-top: 4px;
+}
+
+/* A source that would not read. This outranks the rows: it is the one thing on
+   the pane that changes what everything else MEANS. Gold, and it wears the
+   left rail so it reads as a row, not as a caption. */
+.bblind {
+  margin: 6px 0;
+  padding: 8px 11px;
+  border: 1px solid rgba(var(--rgbGold), 0.28);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  background: rgba(var(--rgbGold), 0.04);
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(var(--rgbCream), 0.7);
+}
+
+/* The empty sentence. It is the brain's own words and it is a FACT, so it is
+   set as body copy at full section weight — not greyed out, not italicised,
+   not apologised for. An empty section that looks broken is the bug C4 exists
+   to prevent. */
+.bempty {
+  padding: 7px 2px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dim);
+}
+.bempty.muted {
+  color: rgba(var(--rgbCream), 0.42);
+}
+
+/* ---- a row --------------------------------------------------------------
+   Left rail carries the tone. Default (acc) is a hairline; the tones light it.
+   There is no button, no checkbox and no menu on a row, from any origin —
+   the brief reports, it does not act. */
+.brow {
+  position: relative;
+  margin: 7px 0;
+  padding: 9px 12px;
+  border: 1px solid var(--hair);
+  border-left: 3px solid rgba(var(--rgbCream), 0.14);
+  border-radius: 8px;
+  background: var(--panel2);
+}
+.brow.hot {
+  border-left-color: var(--gold);
+  border-color: rgba(var(--rgbGold), 0.22);
+}
+/* THE ONLY RED ON THIS SCREEN. briefView.paneTone() lets a row reach here only
+   when its own `source` proves it is a pending RED confirm card. STRUCTURE
+   wears the law hex; the small cap below wears --redInk for legibility. */
+.brow.red {
+  border-left-color: var(--red);
+  border-color: rgba(var(--rgbRed), 0.3);
+  background: linear-gradient(90deg, rgba(var(--rgbRed), 0.07), var(--panel2) 60%);
+}
+.brow.off {
+  border-left-color: rgba(var(--rgbCream), 0.1);
+  background: var(--panel);
+}
+
+.brow-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btext {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--cream);
+}
+.brow.off .btext {
+  color: rgba(var(--rgbCream), 0.62);
+}
+.brow.red .btext {
+  color: var(--redInk);
+}
+
+/* Untrusted text is QUOTED. The quotes are drawn by CSS so they can never be
+   part of the string, can never be escaped into it, and can never be spoofed by
+   a sender who writes their own. */
+.btext.quoted {
+  color: rgba(var(--rgbCream), 0.78);
+  font-style: italic;
+}
+.btext.quoted::before {
+  content: "\201C";
+}
+.btext.quoted::after {
+  content: "\201D";
+}
+
+/* MAIL / INVITE. The cap that says this line is somebody else's words. */
+.bsrc-cap {
+  flex: none;
+  padding: 1px 5px;
+  border: 1px solid rgba(var(--rgbCream), 0.16);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.16em;
+  color: rgba(var(--rgbCream), 0.42);
+}
+
+/* HER RECOMMENDATION — the reason he is picking instead of thinking. Ice, so
+   it reads as her voice against the cream of the fact above it. */
+.brec {
+  margin-top: 5px;
+  padding-left: 11px;
+  border-left: 1px solid rgba(var(--rgbAccent), 0.3);
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(var(--rgbIce), 0.72);
+}
+
+/* THE RECEIPT. The table and row id this line was read from. Tiny, dim, and
+   always there — a figure without a source is the thing this pane refuses. */
+.bsrc {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: rgba(var(--rgbCream), 0.24);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.brow.red .bsrc-cap {
+  color: var(--redInk);
+  border-color: rgba(var(--rgbRed), 0.4);
+}
+
+/* ---- coverage + foot ----------------------------------------------------- */
+.bcov-head {
+  margin-top: 22px;
+}
+.bcov {
+  margin: 5px 0;
+  padding-left: 11px;
+  border-left: 1px solid var(--hair);
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(var(--rgbCream), 0.38);
+}
+.bfoot {
+  margin-top: 22px;
+}

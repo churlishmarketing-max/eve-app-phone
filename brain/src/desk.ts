@@ -221,8 +221,18 @@ export function middleEllipsise(s: string, max: number): string {
   return `${cps.slice(0, head).join("")}…${cps.slice(cps.length - tail).join("")}`;
 }
 
-/** NFC → strip C0/C1 → bidi → zero-width → tag chars → collapse WS → escape → ellipsise. */
-export function sanitise(name: string): SanitisedName {
+/**
+ * NFC → strip C0/C1 → bidi → zero-width → tag chars → collapse WS → escape → ellipsise.
+ *
+ * The length ceiling is a PARAMETER because mail.ts renders the same hostile
+ * text at a different width: a subject line and a one-line gist need more room
+ * than a filename's 96 and would be shredded by it, but they must ride the
+ * IDENTICAL character pipeline — same strips, same escape set — or the mail
+ * envelope becomes a second, unaudited sanitiser that drifts from this one.
+ * `sanitise()` is this function at MAX_DISPLAY and stays byte-identical to what
+ * it has always been; every filename path is unchanged.
+ */
+export function sanitiseTo(name: string, max: number): SanitisedName {
   const original = String(name ?? "");
   let s = original.normalize("NFC");
   s = s.replace(C0_C1, "");
@@ -231,9 +241,13 @@ export function sanitise(name: string): SanitisedName {
   s = s.replace(TAG_CHARS, "");
   s = s.replace(WS_RUN, " ").trim();
   s = s.replace(/["<>\\·]/g, (c) => ESCAPES[c] ?? c);
-  s = middleEllipsise(s, MAX_DISPLAY);
+  s = middleEllipsise(s, max);
   if (s === "") s = "(unnamed)";
   return { display: s, altered: s !== original };
+}
+
+export function sanitise(name: string): SanitisedName {
+  return sanitiseTo(name, MAX_DISPLAY);
 }
 
 // ---------------------------------------------------------------------------

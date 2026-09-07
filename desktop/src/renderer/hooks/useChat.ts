@@ -16,7 +16,7 @@
 // frame and stream into it exactly like a local turn.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatFrame, PendingConfirm } from "@shared/contract";
+import type { ChatFrame, ChatLock, PendingConfirm } from "@shared/contract";
 import type { ChatView, DeckMsg, EveMode, SeenJobFrame } from "../deck/types";
 
 /** Job frames kept per window. The feed caps lower; this is the reducer's ceiling. */
@@ -33,6 +33,23 @@ interface Turn {
 export interface ChatApi extends ChatView {
   /** Confirms that arrived on an SSE frame this session (deduped by id). */
   frameConfirms: PendingConfirm[];
+  /**
+   * W2 — THE THREAD IS LOCKED. Set from the brain's `locked` frame, which fires
+   * because an authority tool refused in code. Null until one does.
+   */
+  lock: ChatLock | null;
+  /**
+   * START A FRESH THREAD, and hand back THE LAST THING HE TYPED, verbatim, for
+   * the composer.
+   *
+   * THE STRING COMES FROM THIS PROCESS, NOT FROM THE BRAIN. It is the exact
+   * argument his last sendMessage was called with — it has never been near the
+   * model, the mailbox or her prose — which is the entire reason it is safe to
+   * put in the box he sends as his own words. If there is nothing recorded
+   * (a voice turn, a restart), it returns "" and he types it again; a blank box
+   * is the correct fallback, and a composed sentence never is.
+   */
+  resetThread: () => string;
   sendMessage: (text: string, opts?: { hidden?: boolean }) => Promise<void>;
   /** S4 emits a user-turn event just before a voice turn: show his line. */
   appendYou: (text: string) => void;
@@ -50,6 +67,12 @@ export function useChat(): ChatApi {
   const [jobFrames, setJobFrames] = useState<SeenJobFrame[]>([]);
   const [liveCount, setLiveCount] = useState(0);
   const [streamingId, setStreamingId] = useState<string | null>(null);
+  const [lock, setLock] = useState<ChatLock | null>(null);
+  // HIS OWN WORDS, HELD IN A REF ON PURPOSE: it must not re-render anything and
+  // it must not be derived from a message bubble (bubbles can be seeded by S4's
+  // voice path and by frames from other windows). It is only ever written from
+  // the `text` argument of sendMessage below.
+  const lastTyped = useRef("");
 
   const busy = useRef(false);
   const turns = useRef(new Map<string, Turn>());
@@ -115,6 +138,11 @@ export function useChat(): ChatApi {
           );
           break;
         }
+        case "locked":
+          // W2 — THE DESKTOP OWNS THE AFFORDANCE. The button below exists
+          // because this frame arrived, not because she offered one.
+          setLock(frame.lock);
+          break;
         case "job": {
           // DISPATCH v0.1 — one line per frame, never merged here: the CORE's
           // feed wants every transition, and its rail upserts by id itself.
@@ -165,6 +193,15 @@ export function useChat(): ChatApi {
     setErrNote(null);
     setToolNote(null);
 
+    // F3 · A HIDDEN SEND IS NOT HIS WORDS, AND THIS LINE USED TO SAY IT WAS.
+    // It was unconditional, and App.tsx seeds a hidden GREETING_SEED turn on
+    // every non-harness launch — so on a real boot where his first turn is
+    // voice, the reset button put "[King just opened the desktop deck...]" in
+    // his composer under a banner reading YOUR WORDS CAME WITH YOU. Nothing
+    // leaked (the seed is a desktop constant), but the panel lied about whose
+    // words those were, which is the one thing this ref exists to be right
+    // about. Hidden/system sends are OURS: they never become his.
+    if (!opts?.hidden) lastTyped.current = text;
     const eveId = newId();
     setMessages((ms) => [
       ...ms,
@@ -212,6 +249,42 @@ export function useChat(): ChatApi {
     );
   }, []);
 
+  const resetThread = useCallback(() => {
+    // A NEW CONVERSATION IS THE WHOLE MECHANISM. The brain's lock is keyed on
+    // the conversationId, so dropping the id IS the reset: the next turn mints
+    // a fresh row, reads clean/"new", and takes authority normally. Nothing
+    // else is cleared and nothing is asked of the brain.
+    convId.current = undefined;
+    try {
+      localStorage.removeItem(CONV_KEY);
+    } catch {
+      /* private mode — the id is already gone from this process */
+    }
+    setLock(null);
+    setMessages([]);
+    setErrNote(null);
+    // F4 · THE CARD IS NOT THE THREAD'S TO DROP, AND THE PANEL NOW SAYS SO.
+    // `frameConfirms` is deliberately NOT cleared here, and that is a decision
+    // with two pieces of evidence behind it rather than an oversight:
+    //   1. CLEARING IT WOULD BE COSMETIC AND BRIEF. The same card is registered
+    //      in the brain's pending map (confirm.ts, 30-minute TTL) and comes
+    //      back down the very next /state poll inside state.pendingConfirms —
+    //      App.tsx unions the two. A card that vanishes on click and returns a
+    //      second later is a worse lie than one that stays.
+    //   2. SUPPRESSING IT WOULD DESYNC THE DECK FROM ITSELF. CorePane, OpsPane
+    //      and the CORE's red counter all count that same brain-side queue. A
+    //      thread-local drop would leave the deck showing no card and the CORE
+    //      showing one red.
+    // A card is a REQUEST FOR A SIGNATURE, not an action (authority.ts
+    // CONFIRM_CARD_RULING): untrusted text may cause one to be DRAWN and can
+    // never cause one to be SENT, and the card shows the real payload he is
+    // signing. So the queue outliving the thread is correct, and the half that
+    // was wrong was the panel, which implied everything here was closed. The
+    // lock panel now COUNTS what is still waiting and says it will still be
+    // waiting afterwards (TalkColumn's .lockcards line).
+    return lastTyped.current;
+  }, []);
+
   const abortAll = useCallback(() => {
     for (const [chatId, rec] of turns.current) {
       if (rec.live) void window.eve.chat.abort(chatId);
@@ -227,6 +300,8 @@ export function useChat(): ChatApi {
     busy: liveCount > 0,
     jobFrames,
     frameConfirms,
+    lock,
+    resetThread,
     sendMessage,
     appendYou,
     pruneConfirm,

@@ -188,7 +188,7 @@ async function main() {
     const fk = fakeDb(false);
     _setDbForTests(fk.client);
     _test.setSchema({ migrated: false, probedAt: "t", reason: "test" });
-    const d = await dispatchUnit({ unit: "cyborg", task: "build the GE Outdoors campaign", why: "test", emitJob: emit });
+    const d = await dispatchUnit({ unit: "cyborg", task: "build the GE Outdoors campaign", why: "test", emitJob: emit, authority: "king" });
     ok("U6", !d.ok && fk.tables.jobs.length === 0 && frames.length === 0, `dispatch_unit(cyborg) inserts NO job row and emits NO frame (rows=${fk.tables.jobs.length})`);
   }
 
@@ -243,7 +243,7 @@ async function main() {
       seen.push({ unit, kind: runner.kind, doctrineHead: runner.doctrine.slice(0, 40), maxTurns: runner.cost.maxTurns });
       await failJob(jobId, unit, "GE post", "stubbed worker", emit, fk.client);
     });
-    const acc = await dispatchUnit({ unit: "Starfire", task: "we need a social media post for GE Outdoors", why: "social post → Starfire owns organic social", emitJob: emit, conversationId: "conv-3" });
+    const acc = await dispatchUnit({ unit: "Starfire", task: "we need a social media post for GE Outdoors", why: "social post → Starfire owns organic social", emitJob: emit, conversationId: "conv-3", authority: "king" });
     await new Promise((res) => setTimeout(res, 10));
     _test.setWorker(null);
     const row = fk.tables.jobs[0];
@@ -257,7 +257,7 @@ async function main() {
     _setDbForTests(fk2.client);
     _test.setSchema({ migrated: false, probedAt: "t", reason: "test" });
     frames.length = 0;
-    const dx = await dispatchUnit({ unit: "docx", task: "make the proposal a Word doc", why: "test", emitJob: emit });
+    const dx = await dispatchUnit({ unit: "docx", task: "make the proposal a Word doc", why: "test", emitJob: emit, authority: "king" });
     ok("K5", !dx.ok && dx.code === "unit_not_runnable" && dx.badge === "WORKSPACE_ONLY" && /python scripts/.test(dx.say) && fk2.tables.jobs.length === 0 && frames.length === 0, `dispatch_unit("docx") → ${!dx.ok ? dx.code + " / " + dx.badge : "RAN (wrong)"}; no row, no frame`);
     ok("K5a", !dx.ok && dx.runnable.length <= MAX_ALTERNATIVES && dx.runnable.some((x) => /proposal|invoice|strategy|master-plan/.test(x.key)), `…alternatives by relevance: ${!dx.ok ? dx.runnable.map((x) => x.key).join(", ") : ""}`);
     for (const key of ["pptx", "xlsx", "pdf", "reel-vision", "big-barda", "eve-super-brain"]) {
@@ -307,13 +307,13 @@ async function main() {
     _setDbForTests(fk.client);
     _test.setSchema({ migrated: false, probedAt: "t", reason: "test" });
     frames.length = 0;
-    const noClient = await dispatchUnit({ unit: "pennyworth", task: "email Acacia about moving the shoot to the 12th", why: "client email desk" });
+    const noClient = await dispatchUnit({ unit: "pennyworth", task: "email Acacia about moving the shoot to the 12th", why: "client email desk", authority: "king" });
     ok("P1", !noClient.ok && noClient.code === "missing_input" && fk.tables.jobs.length === 0, `pennyworth without client → ${!noClient.ok ? noClient.code : "ran"}; no row, no guess`);
     // With a client but the OS line unwired: the job opens, the draft step
     // fails honestly, and the failure is LOUD. This is the whole pennyworth
     // path minus the network — accepted, row, frames, attention item.
     const confirms: unknown[] = [];
-    const r = await dispatchUnit({ unit: "pennyworth", task: "email Acacia about moving the shoot to the 12th", why: "client email desk", client: "Acacia Wellness", emitJob: emit, emitConfirm: (c) => confirms.push(c), conversationId: "conv-1" });
+    const r = await dispatchUnit({ unit: "pennyworth", task: "email Acacia about moving the shoot to the 12th", why: "client email desk", client: "Acacia Wellness", emitJob: emit, emitConfirm: (c) => confirms.push(c), conversationId: "conv-1", authority: "king" });
     const row = fk.tables.jobs[0];
     ok("P2", !!row && row.agent === "pennyworth" && row.status === "failed", `pennyworth ACCEPTED: row agent=${row?.agent} status=${row?.status} (OS unwired → honest failure)`);
     ok("P3", !r.ok && r.code === "run_failed" && /OS line isn't wired/.test(r.say), `returns run_failed with the real cause: "${!r.ok ? r.say.slice(0, 80) : ""}…"`);
@@ -337,7 +337,7 @@ async function main() {
       seen.push(`${unit}:${name}:${runner.cost.maxTurns}:${runner.doctrine.slice(0, 20)}`);
       await failJob(jobId, unit, "Sweep", "stubbed worker", emit, fk.client);
     });
-    const r = await dispatchUnit({ unit: "research", task: "Sweep the Omaha lumber market", why: "needs live web", emitJob: emit, conversationId: "conv-2" });
+    const r = await dispatchUnit({ unit: "research", task: "Sweep the Omaha lumber market", why: "needs live web", emitJob: emit, conversationId: "conv-2", authority: "king" });
     await new Promise((res) => setTimeout(res, 10));
     _test.setWorker(null);
     const row = fk.tables.jobs[0];
