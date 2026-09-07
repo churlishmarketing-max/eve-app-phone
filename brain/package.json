@@ -2,7 +2,7 @@
   "name": "eve-brain",
   "version": "0.1.0",
   "private": true,
-  "description": "EVE — Executive Voice Engine brain service (Churlish Media)",
+  "description": "EVE \u2014 Executive Voice Engine brain service (Churlish Media)",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -17,15 +17,12 @@
     "tsx": "^4.19.0",
     "@deepgram/sdk": "^5.6.0",
     "@elevenlabs/elevenlabs-js": "^2.58.0",
-    "@notionhq/client": "^5.23.2",
-    "@slack/web-api": "^8.0.0",
     "@supabase/supabase-js": "^2.110.6",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "firebase-admin": "^14.1.0",
     "googleapis": "^173.0.0",
     "node-cron": "^4.6.0",
-    "stripe": "^22.3.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
