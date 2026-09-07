@@ -29,7 +29,7 @@
 // AND THE ONE RULE UNDER ALL OF IT: offline is a DASH, never a zero. A zero is
 // a measurement. A dash is the truth when nothing was measured.
 
-import type { EveState, Health } from "@shared/contract";
+import type { EveState, Health } from "../contract";
 import { jobCounts, type JobsView } from "./jobs";
 
 export type Tone = "acc" | "hot" | "red" | "off";

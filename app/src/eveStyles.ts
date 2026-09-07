@@ -16,6 +16,24 @@ export const CSS = `
   --teal:#007A87; --tealHi:#1CB9C8; --ice:#9BEFF7;
   --cream:#F0EDE8; --dim:rgba(240,237,232,.62); --faint:rgba(240,237,232,.4);
   --gold:#C9A54A; --red:#C41E3A; --green:#3EA26E;
+  /* --redInk · TEXT-LEGIBILITY VARIANT OF THE LAW RED. Adopted from the
+     desktop, whose reasoning is law here (eve-desktop.css:44-62): STRUCTURE
+     always wears the law hex — the 3px confirm rail, the card border, the tier
+     dot, the mic ring and its glyph, .orb.red — and only SMALL TYPE may wear
+     the variant. It is still the same colour: #FF6B85 is hsl(349,100%,71%),
+     the law red's own hue and saturation with lightness lifted until it clears
+     4.5:1 on the ground it is printed on. Nothing new was invented.
+
+     MEASURED, NOT EYEBALLED — composited through the .09 alpha AND the card's
+     180deg gradient, not read off a computed colour:
+       .confirmv6 .hd  #C41E3A on the card plate   3.26:1  ->  #FF6B85  6.98:1
+                       (3.38 on bare --bg if you ignore the gradient, 7.24 after)
+       .trip6 .hd      #C41E3A on the same plate   3.27:1  ->  #FF6B85  6.99:1
+       .cmeta .gone    #C41E3A, 8.5px, mid-card    3.34:1  ->  #FF6B85  7.14:1
+       RED legend .k   #C41E3A on --panel          3.19:1  ->  #FF6B85  6.82:1
+     AA needs 4.5:1 for type this size. The desktop shipped a confirm card at
+     1.02:1 once and an audit caught it; this is the same failure, measured. */
+  --redInk:#FF6B85;
 }
 *{ box-sizing:border-box; -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent; }
 ::-webkit-scrollbar{ width:0; height:0; display:none; }
@@ -88,6 +106,14 @@ export const CSS = `
 .divrow .l{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.22em; color:rgba(28,185,200,.85); }
 .divrow .rule{ flex:1; height:1px; background:var(--hair); }
 .divrow .r{ font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.16em; color:rgba(240,237,232,.35); }
+/* THE UNMEASURED MARKER. .r is a quiet value slot at .35 — MEASURED 2.85:1 on
+   --bg — which is fine for "3 WAITING" (a number he can also read from the
+   rows below it) and NOT fine for the dash, which is the only thing on screen
+   saying "this was never measured". An L3 signal he cannot read is the same
+   failure as a checkmark he did not earn. --dim is .62, the value already in
+   this file and the one .cmeta uses for the same class of provenance text:
+   2.85:1 -> 6.77:1. Base .r is untouched. */
+.divrow .r.unmeasured{ color:var(--dim); }
 .footnote{ margin-top:26px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:9px;
   letter-spacing:.1em; color:rgba(240,237,232,.28); }
 .hit44{ min-width:44px; min-height:44px; }
@@ -205,14 +231,38 @@ export const CSS = `
 /* RED confirm card, in-conversation (02 §6) */
 .confirmv6{ width:100%; background:linear-gradient(180deg, rgba(196,30,58,.09), rgba(12,20,23,0));
   border:1px solid rgba(196,30,58,.3); border-left:3px solid var(--red); border-radius:10px; padding:12px 14px; }
-.confirmv6 .hd{ font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.18em; color:var(--red); }
+/* 9px TYPE, so --redInk and not the law hex. The 3px rail and the 1px border
+   above still carry #C41E3A, so the card READS as red exactly as before —
+   only the one line naming the tier moved, and it moved along its own
+   lightness axis. 3.26:1 -> 6.98:1 on this plate (composited through the .09
+   alpha and the gradient). This is the header of the one card whose whole job
+   is to be read before something irreversible happens. */
+.confirmv6 .hd{ font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.18em; color:var(--redInk); }
 .confirmv6 .sum{ margin-top:7px; font-weight:600; font-size:13.5px; color:var(--cream); }
 .confirmv6 .field{ margin-top:6px; font-size:12px; line-height:1.45; color:rgba(240,237,232,.6); word-break:break-word; }
-.confirmv6 .field b{ font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.12em; color:rgba(240,237,232,.4); display:block; }
-.confirmv6 .row{ margin-top:10px; display:flex; gap:8px; }
+/* The key label was rgba(240,237,232,.4) — MEASURED 3.44:1 against this plate
+   at 8.5px. It names the field he is being asked to approve, so it goes to .55
+   (5.48:1). The payload text above it measures 6.31:1 and is left alone. The
+   desktop shipped a confirm card whose payload text measured 1.02:1 and an
+   audit caught it; a card he cannot read is a card he cannot judge. */
+.confirmv6 .field b{ font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.12em; color:rgba(240,237,232,.55); display:block; }
+.confirmv6 .row{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+/* The card's own provenance: the hash it is bound to, when it dies, and the
+   job that raised it. 9px, so it wears .62 rather than the .4 the field key
+   used to. EXPIRED is the one word on this line allowed to be red. */
+.cmeta{ margin-top:9px; display:flex; flex-wrap:wrap; gap:4px 12px; font-size:8.5px; letter-spacing:.1em;
+  color:rgba(240,237,232,.62); }
+/* EXPIRED is 8.5px TYPE on the same red plate — 3.34:1 on the law hex, so it
+   takes the ink variant like the header above it (7.14:1). It is still the one
+   word on this line allowed to be red. */
+.cmeta .gone{ color:var(--redInk); }
 .cbtn{ cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.12em; border-radius:5px; padding:8px 11px; }
 .cbtn.ok{ color:var(--ice); background:rgba(28,185,200,.16); border:1px solid rgba(28,185,200,.45); }
 .cbtn.gh{ color:rgba(240,237,232,.55); background:none; border:1px solid rgba(240,237,232,.16); }
+/* SEND IT with no unit picked looked exactly like SEND IT ready to fire —
+   .chipv6 had a :disabled rule and .cbtn never did. Caught in the 420px
+   screenshot, not in the code. */
+.cbtn:disabled{ opacity:.4; cursor:default; }
 .cnote6{ margin-top:9px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.12em; color:rgba(240,237,232,.55); }
 .cnote6.ok{ color:var(--tealHi); }
 /* The desk lock. Stands exactly where APPROVE would stand on a card this phone
@@ -294,7 +344,10 @@ export const CSS = `
 .pulsay{ flex:1; font-size:12px; line-height:1.4; color:rgba(240,237,232,.55); }
 .trip6{ margin-top:24px; background:linear-gradient(180deg, rgba(196,30,58,.09), rgba(12,20,23,0));
   border:1px solid rgba(196,30,58,.3); border-left:3px solid var(--red); border-radius:10px; padding:13px 14px; }
-.trip6 .hd{ display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.2em; color:var(--red); }
+/* The other tier header on the identical red plate, and the identical fault:
+   9px type on the law hex measured 3.27:1. Same move, same reason — the rail
+   and border on .trip6 above keep #C41E3A. 3.27:1 -> 6.99:1. */
+.trip6 .hd{ display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.2em; color:var(--redInk); }
 .trip6 .tt{ margin-top:8px; font-weight:600; font-size:14px; color:var(--cream); }
 .trip6 .tm{ margin-top:4px; font-family:'IBM Plex Mono',monospace; font-size:9.5px; line-height:1.6; letter-spacing:.04em; color:rgba(240,237,232,.5); }
 .secnote6{ font-size:13px; line-height:1.5; color:rgba(240,237,232,.5); }
@@ -404,7 +457,10 @@ export const CSS = `
 .acclock .s{ margin-left:auto; font-size:8.5px; letter-spacing:.06em; color:rgba(240,237,232,.35); }
 
 /* ---------- nav ---------- */
-.nav6{ position:relative; z-index:2; flex:none; display:grid; grid-template-columns:repeat(5,1fr);
+/* SIX tabs now — FLEET joined. At his 420px viewport that is 70px a column;
+   the label drops to 7.5px and loses a little tracking so TODAY and FLEET
+   still fit on one line inside their cell. */
+.nav6{ position:relative; z-index:2; flex:none; display:grid; grid-template-columns:repeat(6,1fr);
   background:rgba(7,11,12,.94); border-top:1px solid var(--hair);
   padding:8px 6px calc(14px + env(safe-area-inset-bottom)); }
 .navi{ cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; padding-top:8px;
@@ -412,7 +468,7 @@ export const CSS = `
 .navi .tick{ position:absolute; top:0; width:18px; height:2px; border-radius:1px; background:var(--tealHi);
   box-shadow:0 0 8px rgba(28,185,200,.8); opacity:0; }
 .navi.on .tick{ opacity:1; }
-.navi .lb{ font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.2em; color:rgba(240,237,232,.42); }
+.navi .lb{ font-family:'IBM Plex Mono',monospace; font-size:7.5px; letter-spacing:.1em; color:rgba(240,237,232,.42); }
 .navi.on .lb{ color:var(--tealHi); }
 
 /* ---------- boot (unchanged shell) ---------- */
@@ -436,4 +492,99 @@ export const CSS = `
 .wave{ width:4px; height:18px; border-radius:2px; background:#F0EDE8; animation:evewave .9s ease-in-out infinite; }
 .alert .ring-out{ border-color:rgba(196,30,58,.28); }
 .alert .ring-in{ border-color:rgba(196,30,58,.4); border-top-color:transparent; border-bottom-color:transparent; }
+
+/* ============================================================
+   THE DISPATCHER (P1-P4, 2026-09-06). Every colour below comes
+   from a token or from a value already in this file. FAILED and
+   "needs you" wear --gold, never --red: red is the RED confirm
+   tier and the live mic, and a failed job is neither. --green is
+   still the WIRE autonomy dot and nothing else.
+   ============================================================ */
+
+/* the brief: whatever /state served, whole, with her own breaks */
+.briefv7{ white-space:pre-wrap; }
+.briefv7 b{ color:var(--cream); }
+.briefv7 code{ font-family:'IBM Plex Mono',monospace; font-size:.9em; color:var(--ice); }
+.briefstamp{ margin-top:8px; font-size:8.5px; letter-spacing:.16em; color:rgba(240,237,232,.4); }
+
+/* P7: one sentence naming the failure, under the status bar */
+.linkbar{ flex:none; padding:6px 18px 0; font-size:9px; letter-spacing:.08em; color:var(--gold); }
+
+/* the dispatch four */
+.four6{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
+.f6{ background:var(--panel); border:1px solid var(--hair); border-radius:8px; padding:9px 6px; text-align:center; }
+.f6 .fv{ display:block; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:26px; line-height:1; color:var(--cream); }
+.f6 .fk{ display:block; margin-top:4px; font-size:7.5px; letter-spacing:.1em; color:rgba(240,237,232,.5); }
+.f6.acc .fv{ color:var(--ice); }
+.f6.hot{ border-color:rgba(201,165,74,.35); }
+.f6.hot .fv{ color:var(--gold); }
+.f6.red{ border-color:rgba(196,30,58,.4); }
+.f6.red .fv{ color:var(--red); }
+.f6.off .fv{ color:rgba(240,237,232,.32); }
+
+/* a job row, and the detail it opens onto */
+.jobwrap{ display:flex; flex-direction:column; }
+.jobrow6.jhead{ width:100%; cursor:pointer; text-align:left; font:inherit; color:inherit; }
+.jobwrap.open .jobrow6{ border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom-color:transparent; }
+.jage{ flex:none; font-size:8.5px; letter-spacing:.06em; color:rgba(240,237,232,.42); }
+.jdet{ background:var(--panel2); border:1px solid var(--hair); border-top:none;
+  border-radius:0 0 10px 10px; padding:12px 14px; display:flex; flex-direction:column; gap:6px; }
+.jkv{ display:flex; gap:10px; font-size:9.5px; letter-spacing:.06em; color:rgba(240,237,232,.72); word-break:break-word; }
+.jkv b{ flex:none; width:74px; font-weight:400; letter-spacing:.12em; color:rgba(240,237,232,.45); }
+.jres{ margin-top:2px; white-space:pre-wrap; word-break:break-word; font-size:10px; line-height:1.5;
+  color:rgba(240,237,232,.68); background:rgba(7,11,12,.6); border:1px solid var(--hair);
+  border-radius:6px; padding:9px 10px; max-height:260px; overflow:auto; }
+
+/* what she brought back, off the attention item */
+.wide6{ width:100%; margin-top:8px; text-align:center; }
+.deliv6{ margin-top:8px; white-space:pre-wrap; word-break:break-word; font-size:12px; line-height:1.55;
+  color:rgba(240,237,232,.78); background:var(--panel2); border:1px solid var(--hair);
+  border-radius:8px; padding:12px 13px; max-height:340px; overflow:auto; }
+
+/* ---------- the fleet ---------- */
+.fmeta{ display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:10px; font-size:8.5px;
+  letter-spacing:.12em; color:rgba(240,237,232,.5); }
+.dispunit{ font-size:9px; letter-spacing:.16em; color:rgba(28,185,200,.85); }
+.dispbox{ width:100%; margin-top:10px; min-height:76px; resize:none; }
+.dsay{ margin-top:11px; border-left:2px solid var(--hair2); padding-left:11px; }
+.dsay.ok{ border-left-color:var(--tealHi); }
+.dsay.no{ border-left-color:var(--gold); }
+.dsay .k{ font-size:8.5px; letter-spacing:.14em; color:rgba(240,237,232,.55); }
+.dsay.ok .k{ color:var(--tealHi); }
+.dsay.no .k{ color:var(--gold); }
+.dsay .s{ margin:5px 0 8px; font-size:12.5px; line-height:1.5; color:var(--cream); }
+.altrow{ display:flex; flex-wrap:wrap; gap:7px; margin-top:7px; }
+
+.ugrid{ display:flex; flex-direction:column; gap:8px; }
+.ucard{ background:var(--panel); border:1px solid var(--hair); border-radius:10px; padding:12px 13px; }
+.ucard.future{ border:1px dashed rgba(240,237,232,.14); background:transparent; }
+.ucard.picked{ border-color:rgba(28,185,200,.5); background:rgba(28,185,200,.05); }
+.utop{ display:flex; align-items:center; gap:10px; }
+.ucode{ flex:none; width:28px; height:28px; border-radius:6px; background:rgba(28,185,200,.08);
+  border:1px solid rgba(28,185,200,.22); color:var(--tealHi); font-size:9.5px; letter-spacing:.06em;
+  display:flex; align-items:center; justify-content:center; }
+.uname{ flex:1; min-width:0; font-weight:600; font-size:13.5px; color:var(--cream); }
+.udot{ flex:none; font-size:10px; color:rgba(240,237,232,.3); }
+.udot.live{ color:var(--tealHi); animation:evebreathe 2.2s ease-in-out infinite; }
+.udot.ready{ color:var(--teal); }
+.udot.idle{ color:rgba(240,237,232,.4); }
+.urole{ display:block; width:100%; margin-top:7px; cursor:pointer; text-align:left; font:inherit;
+  background:none; border:none; padding:0; font-size:12px; line-height:1.5; color:rgba(240,237,232,.66);
+  overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.urole.open{ -webkit-line-clamp:unset; display:block; }
+.umeta{ display:flex; flex-wrap:wrap; gap:5px 10px; margin-top:9px; font-size:8px;
+  letter-spacing:.1em; color:rgba(240,237,232,.5); }
+.ubadge{ border-radius:4px; padding:3px 6px; border:1px solid rgba(240,237,232,.16); }
+.ubadge.run{ color:var(--tealHi); border-color:rgba(28,185,200,.35); background:rgba(28,185,200,.08); }
+.ubadge.no{ color:rgba(240,237,232,.45); }
+.ustat{ align-self:center; }
+.ustat.run{ color:var(--tealHi); }
+.ustat.gold{ color:var(--gold); }
+.tred{ color:var(--red); }
+.utrig{ margin-top:8px; font-size:8.5px; letter-spacing:.06em; line-height:1.6; color:rgba(240,237,232,.45); }
+.usend{ width:100%; margin-top:10px; text-align:center; }
+.ucard .clocked{ margin:10px 0 0; font-family:'IBM Plex Mono',monospace; font-size:8.5px;
+  letter-spacing:.12em; text-transform:uppercase; line-height:1.4; text-align:center;
+  border-radius:5px; padding:8px 11px; color:rgba(240,237,232,.62);
+  border:1px dashed rgba(240,237,232,.3); }
 `;

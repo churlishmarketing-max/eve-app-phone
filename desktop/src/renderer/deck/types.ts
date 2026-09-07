@@ -4,7 +4,8 @@
 // that the contract does not already carry is defined here (the OWNERSHIP.md
 // rule: "If a type is missing, define it in your own files").
 
-import type { JobFrame, PendingConfirm } from "@shared/contract";
+import type { PendingConfirm } from "@shared/contract";
+import type { SeenJobFrame } from "@shared/core/jobs";
 
 /** Her five presence states (handoff §5). Matches voice/events.ts's mode union. */
 export type EveMode = "idle" | "listening" | "thinking" | "speaking" | "alert";
@@ -63,14 +64,10 @@ export interface ChatView {
   jobFrames?: SeenJobFrame[];
 }
 
-/** A `job` SSE frame plus the local clock at arrival. */
-export interface SeenJobFrame {
-  frame: JobFrame;
-  /** ISO, local clock, stamped in the reducer. */
-  at: string;
-  /** Monotonic per window — the feed keys on it. */
-  seq: number;
-}
+/** A `job` SSE frame plus the local clock at arrival. Declared in the shared
+ *  core (the job truth moved there in S1) and re-exported here so every deck
+ *  importer of "./types" is unchanged. */
+export type { SeenJobFrame };
 
 /** What useWardrobe hands the rail. */
 export interface WardrobeView {

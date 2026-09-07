@@ -1,46 +1,169 @@
 import { BRAIN_URL, BRAIN_TOKEN } from "./config";
 
+// ---- THE WIRE TYPES COME FROM THE SHARED CONTRACT (S1, 2026-09-06) ----
+//
+// This file used to declare its own EveState/PendingConfirm/job row. That copy
+// predated the dispatcher: its `jobs[]` was `{id, agent?, title, status}` with
+// no unit, no tier, no result and no confirm linkage, so the phone could not
+// have rendered a dispatched job even if it had been handed one. The types now
+// come from desktop/src/shared/contract.ts — the same file the desktop reads —
+// and are re-exported here so every existing importer of "./eveApi" is
+// unchanged. The BODY (/vitals) types below stay local: the contract's copy of
+// them is measurably looser than this screen needs.
+import type {
+  ConnectorStatus,
+  EveState,
+  FleetBlock,
+  FleetUnitRow,
+  JobFrame,
+  JobRow,
+  PendingConfirm,
+  VoiceList,
+} from "@shared/contract";
+
+export type { ConnectorStatus, EveState, FleetBlock, FleetUnitRow, JobFrame, JobRow, PendingConfirm, VoiceList };
+
 // ---- live state for Today/Ops (Phase 2–3; 05 §4) ----
 
-export interface PendingConfirm {
-  id: string;
-  kind: string;
-  summary: string;
-  payload: Record<string, unknown>;
-  hash: string;
-  createdAt: string;
-  expiresAt: string;
+/**
+ * WHAT THE POLL ACTUALLY LEARNED. Three facts, not one:
+ *   state      — the body, or the offline shell
+ *   fetchedAt  — when it landed (the jobs merge needs it: a `job` frame older
+ *                than the poll is history the poll already knows about)
+ *   error      — WHY it is a shell, in words. `{online:false}` alone cannot
+ *                tell a dead brain from a refused token from a 500 on /state,
+ *                and those are three different things for him to do about.
+ */
+export interface StateRead {
+  state: EveState;
+  fetchedAt: string;
+  error: string | null;
 }
 
-export interface ConnectorStatus {
-  key: string;
-  name: string;
-  connected: boolean;
-  detail: string;
+function linkFailure(status: number): string {
+  if (status === 401) return "unauthorized — her brain refused this token";
+  if (status === 404) return "her brain has no /state route — it is older than this app";
+  if (status >= 500) return `her brain answered ${status} on /state — the route failed, not the link`;
+  return `her brain answered ${status} on /state`;
 }
 
-export interface EveState {
-  online: boolean;
-  latestBrief?: { text: string; at: string } | null;
-  todaysThree?: { id: string; title: string; detail?: string; priority: number; due_at?: string }[];
-  floor?: { count: number; goal: number };
-  attentionItems?: { id: string; kind: string; message: string; nudge_level: number; ref?: any; created_at: string }[];
-  clients?: { id: string; name: string; cadence_days: number; days_quiet: number | null }[];
-  jobs?: { id: string; agent?: string; title: string; status: string }[];
-  routines?: { id: string; name: string; streak: number; last_done_on?: string }[];
-  pendingConfirms?: PendingConfirm[];
-  connectors?: ConnectorStatus[];
-}
-
-export async function fetchState(): Promise<EveState> {
+export async function fetchState(): Promise<StateRead> {
+  const fetchedAt = new Date().toISOString();
   try {
     const res = await fetch(`${BRAIN_URL}/state`, {
       headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
     });
-    if (!res.ok) return { online: false };
-    return (await res.json()) as EveState;
+    if (!res.ok) return { state: { online: false }, fetchedAt, error: linkFailure(res.status) };
+    const state = (await res.json()) as EveState;
+    // THE THIRD FAILURE, and the one that reads most like the first. A brain
+    // whose Supabase is gone ANSWERS — 200, with the degraded three-key return
+    // {online:false, pendingConfirms, connectors}. Saying "unreachable" there
+    // would be false: she is reachable and her memory is not. Measured against
+    // the real brain on a scratch .env, 2026-09-06.
+    return {
+      state,
+      fetchedAt,
+      error: state.online
+        ? null
+        : "her brain answered, but its memory spine is down — nothing below was measured",
+    };
+  } catch (err) {
+    return {
+      state: { online: false },
+      fetchedAt,
+      error: `no answer from her brain — ${err instanceof Error ? err.message : "network error"}`,
+    };
+  }
+}
+
+// ---- THE DISPATCHER (CONTRACT-v0.1 §4) — send a unit from his pocket ----
+//
+// POST /dispatch answers 200 with an acceptance or **422 with a full refusal
+// body**. A client that treats non-2xx as an error string throws away `say`
+// and `runnable` — the two fields the refusal exists to deliver — so this
+// reads the body on both paths and only invents a shape when the socket itself
+// failed. There is no default unit and no substitution: an unknown unit is a
+// spoken refusal naming alternatives, and it is HER sentence that is shown.
+
+export interface DispatchAccepted {
+  ok: true;
+  jobId: string;
+  unit: string;
+  name: string;
+  status: string;
+  tier?: "green" | "red";
+  confirmId?: string;
+  say: string;
+}
+
+export interface DispatchRefusal {
+  ok: false;
+  code: "unit_unknown" | "unit_not_runnable" | "missing_input" | "spine_offline" | "run_failed" | "no_answer";
+  unit: string;
+  name?: string;
+  badge?: string;
+  say: string;
+  runnable: { key: string; name: string; does: string }[];
+}
+
+export type DispatchOutcome = DispatchAccepted | DispatchRefusal;
+
+export async function dispatchUnit(input: {
+  task: string;
+  unit: string;
+  why?: string;
+  client?: string;
+}): Promise<DispatchOutcome> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/dispatch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      body: JSON.stringify({
+        task: input.task,
+        unit: input.unit,
+        ...(input.why ? { why: input.why } : {}),
+        ...(input.client ? { client: input.client } : {}),
+      }),
+    });
+    const body = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    if (body && typeof body.ok === "boolean") return body as unknown as DispatchOutcome;
+    // 400 (empty task / no unit) and 500 answer {error}, not the refusal shape.
+    return {
+      ok: false,
+      code: "run_failed",
+      unit: input.unit,
+      say:
+        typeof body?.error === "string"
+          ? body.error
+          : res.status === 401
+            ? "unauthorized — her brain refused this token."
+            : `her brain answered ${res.status} on /dispatch.`,
+      runnable: [],
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      code: "no_answer",
+      unit: input.unit,
+      say: `no answer from her brain — ${err instanceof Error ? err.message : "network error"}`,
+      runnable: [],
+    };
+  }
+}
+
+// The full card by id. /state WITHHOLDS payload.moves on file_batch cards
+// (replacing it with a literal sentence), so this is the only way to read one
+// whole — and the phone still must never claim to know a move list it was
+// handed a placeholder for.
+export async function fetchConfirm(id: string): Promise<PendingConfirm | null> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/confirm/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as PendingConfirm;
   } catch {
-    return { online: false };
+    return null;
   }
 }
 
@@ -53,6 +176,12 @@ export interface StreamHandlers {
   onToken?: (text: string) => void;
   onTool?: (name: string) => void;
   onConfirm?: (confirm: PendingConfirm) => void; // RED-tier confirm cards (02 §6)
+  // `event: job` — the dispatcher's fast path (CONTRACT-v0.1 §3). Best effort:
+  // a transition the brain makes after the stream closes reaches this client
+  // through the next /state poll, never through a frame. The frame arrives
+  // BARE at the top level, not wrapped — the desktop's {type:"job", job}
+  // envelope is its own IPC shape and is not what comes off this socket.
+  onJob?: (job: JobFrame) => void;
   onDone?: (info: { conversationId: string; fullText: string }) => void;
   onError?: (message: string) => void;
 }
@@ -344,14 +473,36 @@ export function wardrobeImgUrl(look: WardrobeLook): string {
   return /^https?:\/\//i.test(look.url) ? look.url : `${BRAIN_URL}${look.url}`;
 }
 
+// WHICH VOICE SHE IS ACTUALLY IN. The array is ElevenLabs' own order, not a
+// ranking — voices[0] is a guess — so the name is resolved from
+// `configuredVoiceId` or not printed at all. An ABSENT configuredVoiceId means
+// the brain in front of us predates the field: it cannot say which voice is
+// live and it will IGNORE a voiceId on /voice/speak. That absence is the
+// capability flag, and this screen says so in words instead of naming a voice
+// it did not measure. (The phone shipped the literal "VOICE: LARA".)
+export async function fetchVoices(): Promise<VoiceList> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/voice/voices`, {
+      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+    });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    return (await res.json()) as VoiceList;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network error" };
+  }
+}
+
 // Returns an object URL for the spoken reply, or null when voice-out isn't
 // wired (503) — callers degrade to text silently.
-export async function speakText(text: string): Promise<string | null> {
+// `voiceId` overrides the brain's configured voice for THIS utterance only;
+// the brain rejects anything that is not exactly 20 alphanumerics with a 400,
+// so it is only ever sent when the brain itself named it.
+export async function speakText(text: string, voiceId?: string): Promise<string | null> {
   try {
     const res = await fetch(`${BRAIN_URL}/voice/speak`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(voiceId ? { text, voiceId } : { text }),
     });
     if (!res.ok) return null;
     const blob = await res.blob();
@@ -439,6 +590,9 @@ function dispatchFrame(frame: string, h: StreamHandlers): void {
       break;
     case "confirm_request":
       h.onConfirm?.(payload);
+      break;
+    case "job":
+      if (payload && typeof payload.id === "string") h.onJob?.(payload as JobFrame);
       break;
     case "done":
       h.onDone?.(payload);

@@ -13,7 +13,15 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+
+    /* THE SHARED CORE (S1) — the type-side twin of vite.config.ts's
+       resolve.alias. Same directory the desktop renderer calls @shared, so the
+       job/counter/fleet logic and the contract types have exactly one home. */
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../desktop/src/shared/*"]
+    }
   },
   "include": ["src", "vite-env.d.ts"]
 }

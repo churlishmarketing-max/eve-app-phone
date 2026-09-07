@@ -16,6 +16,12 @@ npm-debug.log*
 # Build artifacts
 apk/*.apk
 app/dist/
+# ⚠ The Android platform is NOT generated — it is hand-customised (manifest
+# permissions, six native plugin classes, google-services.json) and lives ONLY at
+# C:\dev\eve\app\android, untracked. A clone/worktree gets nothing here. NEVER run
+# `npx cap add android` to repopulate it — that overwrites it with a blank template
+# and silently strips the mic, SMS and push. COPY the directory out of production
+# instead. `npx cap sync android` is safe. See RUNBOOK_push_and_apk.md Part B.
 app/android/
 
 # Runtime data (device push tokens — mildly sensitive; deliverables regenerate
@@ -44,3 +50,8 @@ brain/data/*
 !brain/data/fleet-roster.json
 brain/*.log
 brain/prompts/*.bak
+
+# Built APKs carry VITE_BRAIN_TOKEN baked into the JS bundle in plaintext.
+# Anyone holding the file holds the brain token. Never commit one.
+apk/
+*.apk

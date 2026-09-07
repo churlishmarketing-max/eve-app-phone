@@ -6,7 +6,7 @@
 // the two screens can never hold two different answers.
 
 import { useCallback, useEffect, useState } from "react";
-import { readPins, togglePin, writePins, type PinOverrides } from "./pins";
+import { readPins, togglePin, writePins, type PinOverrides } from "@shared/core/pins";
 
 let current: PinOverrides | null = null;
 const subs = new Set<(o: PinOverrides) => void>();

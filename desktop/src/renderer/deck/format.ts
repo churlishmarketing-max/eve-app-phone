@@ -4,6 +4,14 @@
 // (app/src/EveApp.tsx:689-697) so the desktop title bar reads exactly like the
 // phone's status bar: "14:07 · SAT 29 AUG · WK 35".
 
+// pad2 / clockStr / agentCode MOVED to src/shared/core/format.ts in S1 so the
+// shared job + fleet logic can call them without importing anything under
+// src/renderer. They are re-exported here unchanged, so every "../format"
+// importer on the deck keeps working and there is still one copy of each.
+import { agentCode, clockStr, pad2 } from "@shared/core/format";
+
+export { agentCode, clockStr, pad2 };
+
 export const APP_VERSION = "0.8.0";
 
 /** localStorage key shared with S4's summon/flyout — a literal, by contract. */
@@ -17,16 +25,8 @@ const SESSION_RESET = "eve.desktop.session.reset-v1";
 /** His local portrait/core override, same precedence as the phone's plateMode. */
 export const PLATE_KEY = "eve.plateMode";
 
-export function pad2(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
 export function pad3(n: number): string {
   return String(n).padStart(3, "0");
-}
-
-export function clockStr(d: Date): string {
-  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
 /** "SAT 29 AUG" — en-GB short names, uppercased (phone :691). */
@@ -78,20 +78,6 @@ export function readPlateMode(): "core" | "portrait" | null {
   } catch {
     return null;
   }
-}
-
-/** Agent → 2-letter job code (handoff §4 Artboard A, verified map). */
-const AGENT_CODES: Record<string, string> = {
-  eve: "EV",
-  research: "RS",
-  jsa: "JS",
-  "justice-league": "JL",
-  "suicide-squad": "SQ",
-};
-
-export function agentCode(agent?: string | null): string {
-  if (!agent) return "EV";
-  return AGENT_CODES[agent] ?? agent.slice(0, 2).toUpperCase();
 }
 
 /** Attention kind → row glyph (handoff §4, verified map). */

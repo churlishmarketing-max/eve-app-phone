@@ -35,14 +35,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { EveState, Health, JobRow, PendingConfirm } from "@shared/contract";
 import type { ChatView, CorePrefill, EveMode } from "../deck/types";
-import type { PinOverrides } from "./pins";
+import type { PinOverrides } from "@shared/core/pins";
 import { APP_VERSION, agentCode, pad3 } from "../deck/format";
 import { SHELL_COPY } from "../deck/panes/shell";
 import FleetStrip from "./FleetStrip";
 import JobDetail from "./JobDetail";
 import LivingCore from "./LivingCore";
-import { DASH, railCounters, telemetryCells, type Tone } from "./counters";
-import { statusTone, statusWord, unitOf, type JobsView } from "./jobs";
+import { DASH, railCounters, telemetryCells, type Tone } from "@shared/core/counters";
+import { statusTone, statusWord, unitOf, type JobsView } from "@shared/core/jobs";
 import type { CoreLogEntry } from "./useCoreLog";
 import "../../styles/core.css";
 

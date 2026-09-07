@@ -21,10 +21,10 @@
 
 import type { EveState } from "@shared/contract";
 import { clockStr } from "../deck/format";
-import { fleetView, kindsLine, sourceWord, type FleetUnit, type FleetView } from "./fleet";
+import { fleetView, kindsLine, sourceWord, type FleetUnit, type FleetView } from "@shared/core/fleet";
 import { FleetNoAnswer, dotClass } from "./FleetStrip";
-import type { JobsView } from "./jobs";
-import type { PinOverrides } from "./pins";
+import type { JobsView } from "@shared/core/jobs";
+import type { PinOverrides } from "@shared/core/pins";
 import "../../styles/core.css";
 import "../../styles/fleet.css";
 

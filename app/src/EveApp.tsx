@@ -20,11 +20,42 @@ import {
   tickRoutine,
   untickRoutine,
   createRoutine,
+  dispatchUnit,
+  fetchConfirm,
+  fetchVoices,
+  type DispatchOutcome,
   type EveState,
+  type JobRow,
   type PendingConfirm,
   type Vitals,
   type VitalsHabit,
+  type VoiceList,
 } from "./eveApi";
+// THE SHARED CORE (S1). What a status MEANS, what counts as in flight, what a
+// unit is called, how old a job is and when a figure must be a dash are all
+// decided ONCE, in desktop/src/shared/core, and the desktop reads the same
+// file. There is no second implementation on this surface — a phone that
+// disagreed with the desk about whether a job was running would be a second
+// brain (L1).
+import {
+  confirmFor,
+  costLabel,
+  elapsed,
+  humanise,
+  isInFlight,
+  jobCounts,
+  jobsView,
+  pendingConfirmsOf,
+  resultKind,
+  statusTone,
+  statusWord,
+  unitOf,
+  type SeenJobFrame,
+} from "@shared/core/jobs";
+import { agentCode } from "@shared/core/format";
+import { fleetView, kindsLine, sourceWord, type FleetUnit } from "@shared/core/fleet";
+import { DASH, dispatchRows } from "@shared/core/counters";
+import { APP_VERSION } from "./version";
 import { initPush } from "./push";
 import {
   smsSupported,
@@ -50,7 +81,7 @@ import { requestAudioFocus, abandonAudioFocus } from "./native/audioFocus";
    ============================================================ */
 
 type EveMode = "idle" | "listening" | "thinking" | "speaking" | "alert";
-type Tab = "today" | "eve" | "ops" | "wire" | "body";
+type Tab = "today" | "eve" | "fleet" | "ops" | "wire" | "body";
 type Look = { id: string; name: string; img?: string; status: string };
 type Msg = { id: string; role: "eve" | "user"; text: string };
 
@@ -70,7 +101,10 @@ const ORB_BG = "radial-gradient(circle at 34% 30%, #C9F7FB 0%, #1CB9C8 30%, #007
 const ORB_BG_RED = "radial-gradient(circle at 34% 30%, #F7C9D2 0%, #E0526E 30%, #C41E3A 58%, #2C060D 100%)";
 const ORB_GLOW = "0 0 36px rgba(28,185,200,.5), 0 0 90px rgba(0,122,135,.35), inset 0 0 20px rgba(201,247,251,.35)";
 const ORB_GLOW_RED = "0 0 36px rgba(196,30,58,.5), 0 0 90px rgba(196,30,58,.3), inset 0 0 20px rgba(247,201,210,.35)";
-const APP_VERSION = "0.7.0";
+// Version is NOT declared here any more — see src/version.ts. It comes from
+// package.json through a build-time define, which is the same field the
+// Android versionName is to read, so the screen and the package cannot
+// disagree about which build he is holding.
 
 const CORE_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.85), #1CB9C8 40%, #063A42 80%)";
 const ALERT_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.9), #C41E3A 42%, #4A0E1A 78%)";
@@ -115,6 +149,36 @@ function mdLite(s: string): string {
   h = h.replace(/\*([^*\s][^*\n]*)\*/g, "<i>$1</i>");
   h = h.replace(/^#{1,4}\s+(.+)$/gm, "<b>$1</b>");
   return h;
+}
+
+// The link failure reads as its own sentence, so it gets a capital and a stop.
+// Interpolating it mid-clause produced "shell — her brain answered, but its
+// memory spine is down — nothing below was measured." Two dashes, one thought.
+function asSentence(s: string | null, fallback: string): string {
+  const t = (s ?? fallback).trim();
+  return `${t.charAt(0).toUpperCase()}${t.slice(1)}.`;
+}
+
+// "THU 06:12" off an ISO stamp, or a dash. Only ever formats a real instant.
+function stampOf(iso: string | null | undefined): string {
+  const t = iso ? Date.parse(iso) : NaN;
+  if (!Number.isFinite(t)) return DASH;
+  const d = new Date(t);
+  return `${d.toLocaleDateString("en-GB", { weekday: "short" }).toUpperCase()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+// A payload value, printed so a human can judge it. String(v) turned every
+// nested object on a confirm card into the literal "[object Object]" — the
+// exact opposite of "a card he cannot read is a card he cannot judge".
+function payloadText(v: unknown): string {
+  if (v === null) return "null";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  try {
+    return JSON.stringify(v, null, 1);
+  } catch {
+    return String(v);
+  }
 }
 
 /* ---- the entity: rings, core, ripples, thinking arc, speaking bars ----
@@ -174,9 +238,43 @@ export default function EveApp() {
   const [looks, setLooks] = useState<Look[]>([]);
   const [now, setNow] = useState(() => new Date());
   const [live, setLive] = useState<EveState>({ online: false });
+  // When the poll landed (the jobs merge needs it) and WHY it is a shell when
+  // it is one. `{online:false}` alone cannot tell a dead brain from a refused
+  // token from a 500 — P7.
+  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  // `job` SSE frames seen this window, stamped on arrival. jobsView() merges
+  // them with the poll; the poll is the truth and a frame is the fast path.
+  const [jobFrames, setJobFrames] = useState<SeenJobFrame[]>([]);
+  const frameSeq = useRef(0);
+  const [openJob, setOpenJob] = useState<string | null>(null);
+  const [openUnit, setOpenUnit] = useState<string | null>(null);
+  // An attention item's `ref.content` is where a worker's deliverable actually
+  // arrives — "she comes back with the result" is this, not the job row.
+  const [openRef, setOpenRef] = useState<string | null>(null);
+  const deskRef = useRef<HTMLDivElement | null>(null);
+  // THE DISPATCH DESK (P3) — his sentence, one named unit, her answer verbatim.
+  const [dispUnit, setDispUnit] = useState<string | null>(null);
+  const [dispTask, setDispTask] = useState("");
+  const [dispBusy, setDispBusy] = useState(false);
+  const [dispOut, setDispOut] = useState<DispatchOutcome | null>(null);
+  // GET /voice/voices, once the connector says ElevenLabs is up. Null = not
+  // asked; ok:false = asked and she could not say. Never a guessed name.
+  const [voices, setVoices] = useState<VoiceList | null>(null);
+  const voiceIdRef = useRef<string | undefined>(undefined);
   // RED-tier confirm cards (02 §6) + their resolution notes.
   const [confirms, setConfirms] = useState<PendingConfirm[]>([]);
   const [confirmNote, setConfirmNote] = useState<Record<string, string>>({});
+  // A card fetched WHOLE by id — the only way to read one whose payload /state
+  // withheld. Keyed by confirm id; absent means "not asked".
+  const [fullCard, setFullCard] = useState<Record<string, PendingConfirm>>({});
+  // A card he has just decided, HELD on screen long enough to read what
+  // happened to it. Resolving deletes the entry brain-side, so the very next
+  // poll drops it from pendingConfirms — and the card, its note and its
+  // outcome ("SENT", "CANCELLED", "FAILED — payload hash mismatch") all
+  // vanished in the same beat. Observed in the browser, 2026-09-06. The
+  // existing 5s note timer clears this too.
+  const [heldCards, setHeldCards] = useState<PendingConfirm[]>([]);
   const [recording, setRecording] = useState(false);
   const [opsBusy, setOpsBusy] = useState<string | null>(null);
   const [jobBusy, setJobBusy] = useState(false);
@@ -295,6 +393,18 @@ export default function EveApp() {
     else setNotifSense(false); // revoked in settings — show it honestly
   }, [wireSmsListener, wireNotificationListener]);
 
+  // ---- the one ambient channel ----
+  // /state is a poll and it is the ONLY thing that moves when no chat turn is
+  // open. Hoisted out of the boot effect because three other places need to
+  // re-read after a write, and because the fast beat below reuses it.
+  const refreshState = useCallback(async () => {
+    const r = await fetchState();
+    setLive(r.state);
+    setFetchedAt(r.fetchedAt);
+    setLinkError(r.error);
+    ttsAvailable.current = !!r.state.connectors?.find((c) => c.key === "elevenlabs")?.connected;
+  }, []);
+
   useEffect(() => {
     const clock = setInterval(() => setNow(new Date()), 30_000);
     const t = timers.current;
@@ -346,9 +456,7 @@ export default function EveApp() {
     // Live ledger for Today/Ops — refresh every 60s (wardrobe piggybacks
     // until it lands once).
     const loadState = () =>
-      fetchState().then((s) => {
-        setLive(s);
-        ttsAvailable.current = !!s.connectors?.find((c) => c.key === "elevenlabs")?.connected;
+      refreshState().then(() => {
         void loadWardrobe(); // cheap JSON; keeps her self-chosen look in sync
         void refreshSenses(); // cheap native checks; never prompts
       });
@@ -363,6 +471,27 @@ export default function EveApp() {
       senseHandles.current.forEach((h) => void h.remove());
     };
   }, []);
+
+  // ---- WHICH VOICE SHE IS ACTUALLY IN (P6) ----
+  // Asked once, the first time the connector says ElevenLabs is up. The name
+  // is resolved from configuredVoiceId or not printed: voices[0] is the API's
+  // own order, not a ranking, and this screen used to print the literal
+  // "VOICE: LARA" whether or not that was true.
+  const ttsOn = !!live.connectors?.find((c) => c.key === "elevenlabs")?.connected;
+  useEffect(() => {
+    if (!ttsOn || voices) return;
+    let cancelled = false;
+    void fetchVoices().then((v) => {
+      if (cancelled) return;
+      setVoices(v);
+      // Only ever sent back to /voice/speak when SHE named it. An older brain
+      // omits the field, ignores a voiceId, and gets none from here.
+      voiceIdRef.current = v.ok && v.configuredVoiceId ? v.configuredVoiceId : undefined;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ttsOn, voices]);
 
   // Keep the newest line in view. Instant, never smooth: at streaming rates a
   // smooth scroll never lands before the next token restarts it, so the view
@@ -460,6 +589,10 @@ export default function EveApp() {
         setMessages((ms) => ms.map((m) => (m.id === eveId ? { ...m, text: m.text + tk } : m))),
       onTool: (name) => setToolNote(name),
       onConfirm: (c) => setConfirms((cs) => (cs.some((x) => x.id === c.id) ? cs : [...cs, c])),
+      // A unit went out mid-turn. Stamp the local clock on arrival and let
+      // jobsView() decide whether it may move a row: the poll is the truth.
+      onJob: (j) =>
+        setJobFrames((fs) => [...fs, { frame: j, at: new Date().toISOString(), seq: ++frameSeq.current }]),
       onDone: ({ conversationId, fullText }) => {
         convId.current = conversationId;
         localStorage.setItem(CONV_KEY, conversationId);
@@ -472,7 +605,7 @@ export default function EveApp() {
         // stays held across her reply and is released the moment she finishes —
         // or right now if there's no spoken answer to play.
         if (lastInputWasVoice.current && ttsAvailable.current && fullText.trim()) {
-          void speakText(fullText).then((url) => {
+          void speakText(fullText, voiceIdRef.current).then((url) => {
             if (!url) {
               releaseVoiceFocus(); // TTS failed — don't leave his music paused
               return;
@@ -526,6 +659,7 @@ export default function EveApp() {
     // approval that cannot be got back once it is spent.
     if (approve && isDeskOnly(c)) return;
     setConfirmNote((n) => ({ ...n, [c.id]: "…" }));
+    setHeldCards((hs) => (hs.some((x) => x.id === c.id) ? hs : [...hs, c]));
     const r = await resolveConfirm(c.id, c.hash, approve);
     let note: string;
     if (r.ok && r.clientAction?.type === "send_sms") {
@@ -549,12 +683,13 @@ export default function EveApp() {
     setConfirmNote((n) => ({ ...n, [c.id]: note }));
     later(() => {
       setConfirms((cs) => cs.filter((x) => x.id !== c.id));
+      setHeldCards((hs) => hs.filter((x) => x.id !== c.id));
       setConfirmNote((n) => {
         const { [c.id]: _gone, ...rest } = n;
         return rest;
       });
     }, 5000);
-    fetchState().then(setLive);
+    void refreshState();
   };
 
   // ---- her senses: the lazy permission asks (Wire screen buttons) ----
@@ -574,7 +709,7 @@ export default function EveApp() {
     setOpsBusy(id);
     await actOnAttention(id, action);
     setOpsBusy(null);
-    fetchState().then(setLive);
+    void refreshState();
   };
 
   // ---- § RUN HER DAY: fires her REAL morning brief, not a scripted preview ----
@@ -589,8 +724,40 @@ export default function EveApp() {
         : `NO BRIEF — ${(r.reason ?? r.error ?? "the brain declined").toUpperCase()}`,
     );
     setJobBusy(false);
-    fetchState().then(setLive);
+    void refreshState();
     later(() => setJobNote(null), 9000);
+  };
+
+  // ---- P3 · SEND A UNIT FROM HIS POCKET ----
+  // The whole point of this build. His sentence goes to the brain verbatim
+  // with ONE named unit; the brain resolves, refuses or accepts. There is no
+  // default worker here and no silent substitution — a refusal is HER sentence
+  // plus HER list of alternatives, printed as given (422 carries a full body,
+  // and a client that read only the status code would throw both away).
+  const sendUnit = async (unit: string, task: string) => {
+    if (dispBusy || !task.trim()) return;
+    setDispBusy(true);
+    setDispOut(null);
+    const r = await dispatchUnit({ task: task.trim(), unit, why: "sent from the phone" });
+    setDispOut(r);
+    setDispBusy(false);
+    if (r.ok) {
+      setDispTask("");
+      setOpenJob(r.jobId); // open the row the moment it exists
+      // The job row is on /state, not on this reply — read it now rather than
+      // waiting up to 60s to find out whether the thing he sent is moving.
+      void refreshState();
+    }
+  };
+
+  // Read a card WHOLE. /state withholds payload.moves on file_batch cards,
+  // replacing it with a sentence; this is the only door to the real one, and
+  // the screen still never claims to know a move list it was handed a
+  // placeholder for.
+  const openFullCard = async (id: string) => {
+    const c = await fetchConfirm(id);
+    if (c) setFullCard((m) => ({ ...m, [id]: c }));
+    else setConfirmNote((n) => ({ ...n, [id]: "FAILED — her brain would not serve this card" }));
   };
 
   // ---- BODY writes. The brain stamps the date; the app never sends one. ----
@@ -729,16 +896,222 @@ export default function EveApp() {
     "Brandon.";
 
   // ---- ops slicing ----
-  const pendings = live.online ? live.pendingConfirms ?? [] : [];
+  // L3 · ABSENT IS NOT ZERO, AND AN EMPTY LIST IS NOT A CLEAR ONE.
+  // Both of these lists collapse to [] for two completely different reasons:
+  // the brain answered and had nothing (measured, clear) or the brain never
+  // answered at all — offline, or a degraded /state that omitted the key
+  // (unmeasured). APPROVAL INBOX is the surface that tells him whether
+  // anything needs him, so rendering "CLEAR ✓" off an unmeasured [] is the
+  // app asserting a fact it does not have. Same shape as jobsView's `absent`
+  // (shared/core/jobs.ts:130,160), computed the same way, rendered as DASH.
+  const attentionAbsent = !live.online || live.attentionItems === undefined;
+  const clientsAbsent = !live.online || live.clients === undefined;
   const attention = live.online ? live.attentionItems ?? [] : [];
   const tripwires = attention.filter((a) => a.kind === "tripwire");
   const inbox = attention.filter((a) => a.kind !== "tripwire");
   const quietCount = (live.clients ?? []).filter(
     (c) => c.days_quiet !== null && c.days_quiet > c.cadence_days,
   ).length;
-  const jobCode = (agent: string) =>
-    ({ eve: "EV", research: "RS", jsa: "JS", "justice-league": "JL", "suicide-squad": "SQ" })[agent] ??
-    agent.slice(0, 2).toUpperCase();
+
+  // ---- THE DISPATCHER, ALL OF IT FROM THE SHARED CORE ----
+  // jobsView merges the 60s poll with the `job` frames this window saw; the
+  // poll is the truth and a frame older than it is history. Nothing below
+  // decides what a status means — statusWord/statusTone/isInFlight do, in the
+  // same file the desktop reads. The phone's old two-letter table and its
+  // three hard-coded status words are gone: 42 dispatchable units cannot be
+  // spelled by a five-name literal.
+  const nowMs = now.getTime();
+  const jobs = jobsView(live, fetchedAt, jobFrames);
+  const counts = jobCounts(jobs.rows);
+  const four = dispatchRows(jobs);
+  const fleet = fleetView(live, jobs);
+  const inFlight = jobs.rows.filter((j) => isInFlight(j.status));
+  // Absent is not zero (L3). Offline strips it; a degraded /state omits it.
+  const floor = live.online ? live.floor : undefined;
+  // Every pending card this window knows of — the poll's list AND any raised
+  // on the stream — deduped by id. Two independent lists on two screens was
+  // how the same single-use card came to be approvable twice.
+  // heldCards ride in the same union so a card he just decided survives the
+  // poll that legitimately drops it — same dedupe, no second list.
+  const cards = pendingConfirmsOf(live, { messages: [{ confirms }, { confirms: heldCards }] });
+  const cardExpired = (c: PendingConfirm) => {
+    const t = Date.parse(c.expiresAt);
+    return Number.isFinite(t) && t <= nowMs;
+  };
+
+  // THE FAST BEAT. 60s is a long time to watch something you just sent, and
+  // /state is the only ambient channel there is. Same call, more often, and
+  // ONLY while her brain says something is still in flight — no local decision
+  // about what a job is or when it is done (L1).
+  const flying = inFlight.length > 0;
+  useEffect(() => {
+    if (!flying) return;
+    const t = setInterval(() => void refreshState(), 8_000);
+    return () => clearInterval(t);
+  }, [flying, refreshState]);
+
+  // ---- P4 · THE CONFIRM CARD, AT THE CURRENT CONTRACT ----
+  // HASH-BOUND: the hash is on the card and is echoed back byte-for-byte —
+  // nothing here re-derives it, because canonical() is a recursive sorted-key
+  // serialiser and a client that got one byte wrong would fail closed forever.
+  // SINGLE USE: the brain deletes the entry on approve AND on deny, so the
+  // card is drawn from ONE deduped list (pendingConfirmsOf) — two lists on two
+  // screens was how the same one tap could be spent twice.
+  // EXPIRING: 30 min default. An expired card is refused by the brain, so
+  // APPROVE is withdrawn rather than left to burn his tap on nothing.
+  // LINKED: `jobId` is present only on a card a job raised — it is shown, and
+  // the job detail mounts the same card inline.
+  // READABLE: every payload value is printed as text a human can judge.
+  // String(v) turned every nested object into the literal "[object Object]".
+  const confirmCard = (c: PendingConfirm) => {
+    const shown = fullCard[c.id] ?? c;
+    const whole = !!fullCard[c.id];
+    const gone = cardExpired(c);
+    const note = confirmNote[c.id];
+    const entries = Object.entries(shown.payload ?? {});
+    // /state replaces payload.moves on a file_batch card with a sentence. That
+    // sentence is the truth of what this screen was handed, and it is printed
+    // as such — the phone never presents a placeholder as a plan.
+    const withheld = entries.some(([, v]) => typeof v === "string" && v.startsWith("withheld —"));
+    return (
+      <div className="confirmv6" key={c.id}>
+        <div className="hd mono">▲ RED TIER · {c.kind.replace(/_/g, " ").toUpperCase()} — NOTHING SENDS WITHOUT YOU</div>
+        <div className="sum">{shown.summary}</div>
+        {entries.map(([k, v]) => (
+          <div className="field" key={k}>
+            <b>{k.toUpperCase()}</b>
+            {payloadText(v).slice(0, 600)}
+          </div>
+        ))}
+        <div className="cmeta mono">
+          <span>HASH {c.hash.slice(0, 12)}…</span>
+          <span className={gone ? "gone" : undefined}>
+            {gone ? "EXPIRED" : `EXPIRES ${stampOf(c.expiresAt)}`}
+          </span>
+          {c.jobId ? <span>JOB {c.jobId.slice(0, 8)}</span> : null}
+          {whole ? <span>READ WHOLE BY ID</span> : null}
+        </div>
+        {withheld && !whole && (
+          <button className="cbtn gh hit44" onClick={() => void openFullCard(c.id)}>
+            READ IT WHOLE — FETCH BY ID
+          </button>
+        )}
+        {note ? (
+          <div className={`cnote6${note.startsWith("SENT") ? " ok" : ""}`}>{note}</div>
+        ) : gone ? (
+          <div className="row">
+            <p className="clocked">EXPIRED — SINGLE-USE AND TIMED OUT. ASK HER TO RAISE IT AGAIN.</p>
+            <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
+          </div>
+        ) : (
+          <div className="row">
+            {isDeskOnly(c) ? (
+              <p className="clocked">{DESK_ONLY_LINE}</p>
+            ) : (
+              <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE — SEND IT</button>
+            )}
+            <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ---- P2 · WHAT IS RUNNING ----
+  // Every word and every colour on this row comes from the shared core. The
+  // row opens onto the fields the dispatcher actually serves — why she routed
+  // it there, the tier, the host, the measured cost (null renders a dash, not
+  // "$0.00"), and the result union read without being trusted.
+  const jobRowEl = (j: JobRow) => {
+    const u = unitOf(j);
+    const open = openJob === j.id;
+    const tone = statusTone(j.status);
+    const card = confirmFor(j, cards);
+    const cost = costLabel(j.cost_usd);
+    return (
+      <div className={`jobwrap${open ? " open" : ""}`} key={j.id}>
+        <button
+          className="jobrow6 jhead"
+          onClick={() => setOpenJob(open ? null : j.id)}
+          aria-expanded={open}
+        >
+          <span className="jcode mono">{u ? agentCode(u) : DASH}</span>
+          <span className="jmain">
+            <span className="jname">{u ? humanise(u) : "UNNAMED UNIT"}</span>
+            <span className="jtask mono">{j.title}</span>
+          </span>
+          <span className="jage mono">{elapsed(j.created_at, j.finished_at ?? null, nowMs)}</span>
+          <span className={`jtag mono ${tone === "run" ? "run" : tone === "gold" ? "appr" : "que"}`}>
+            {statusWord(j.status)}
+          </span>
+        </button>
+        {open && (
+          <div className="jdet">
+            <div className="jkv mono"><b>WHY</b>{j.why ?? DASH}</div>
+            <div className="jkv mono"><b>TIER</b>{j.tier ? j.tier.toUpperCase() : DASH}</div>
+            <div className="jkv mono"><b>HOST</b>{j.host ?? DASH}</div>
+            <div className="jkv mono"><b>COST</b>{cost ?? DASH}</div>
+            <div className="jkv mono"><b>OPENED</b>{stampOf(j.created_at)}</div>
+            <div className="jkv mono"><b>FINISHED</b>{j.finished_at ? stampOf(j.finished_at) : DASH}</div>
+            <div className="jkv mono"><b>RESULT</b>{resultKind(j.result)?.toUpperCase() ?? DASH}</div>
+            {j.result ? <div className="jres mono">{payloadText(j.result).slice(0, 900)}</div> : null}
+            {card ? confirmCard(card) : null}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ---- P1 · ONE UNIT, AS THE BRAIN SPELLED IT ----
+  // No local roster. A SOLID card is a promise that dispatch_unit(key) runs
+  // something, so only badge RUNNABLE gets the send button; DESK and
+  // WORKSPACE_ONLY wear the dashed no-execution dress and say why.
+  const unitCard = (u: FleetUnit) => {
+    const open = openUnit === u.id;
+    return (
+      <div className={`ucard${u.future ? " future" : ""}${dispUnit === u.id ? " picked" : ""}`} key={u.id}>
+        <div className="utop">
+          <span className="ucode mono">{u.code}</span>
+          <span className="uname">{u.name}</span>
+          <span className={`udot ${u.dot}`} aria-hidden>
+            {u.dot === "none" ? "◌" : u.dot === "idle" ? "○" : "●"}
+          </span>
+        </div>
+        <button
+          className={`urole${open ? " open" : ""}`}
+          onClick={() => setOpenUnit(open ? null : u.id)}
+          aria-expanded={open}
+        >
+          {u.role}
+        </button>
+        <div className="umeta mono">
+          <span className={`ubadge ${u.badge === "RUNNABLE" ? "run" : "no"}`}>{u.badgeWord}</span>
+          <span className={`ustat ${u.statusTone}`}>{u.status}</span>
+          {u.kind ? <span>{u.kind.toUpperCase()}</span> : null}
+          {u.tier ? <span className={u.tier === "red" ? "tred" : undefined}>{u.tier.toUpperCase()} TIER</span> : null}
+          <span>LAST {u.lastRun}</span>
+        </div>
+        {open && u.triggers ? <div className="utrig mono">SHE HEARS: {u.triggers}</div> : null}
+        {u.badge === "RUNNABLE" ? (
+          <button
+            className="cbtn ok hit44 usend"
+            onClick={() => {
+              setDispUnit(u.id);
+              setDispOut(null);
+              deskRef.current?.scrollIntoView({ block: "start" });
+            }}
+          >
+            SEND THIS ONE →
+          </button>
+        ) : (
+          <p className="clocked">
+            {u.badge === "DESK" ? "RUNS AT HIS DESK — NOT FROM HERE" : "NO RUNNER FROM HERE — WORKSPACE ONLY"}
+          </p>
+        )}
+      </div>
+    );
+  };
+
   const aGlyph = (kind: string) =>
     kind === "silent_client" ? "@" : kind === "approval" ? "▸" : kind === "inbox" ? "+" : "•";
 
@@ -782,7 +1155,19 @@ export default function EveApp() {
   ];
   const liveNodeCount = wireNodes.filter((w) => w.st === "live").length;
   const sttOn = conn("deepgram");
-  const ttsOn = conn("elevenlabs");
+  // P6 — THE VOICE LABEL, MEASURED. This line used to read "VOICE: LARA"
+  // whenever ElevenLabs was connected: a name the phone never verified and
+  // never sent. Now it is her configured id resolved to its own name, or an
+  // honest sentence about why there is no name to print.
+  const voiceLabel = !ttsOn
+    ? "VOICE — KEY NEEDED"
+    : !voices
+      ? "VOICE — ASKING"
+      : !voices.ok
+        ? "VOICE — SHE WOULDN'T SAY"
+        : !voices.configuredVoiceId
+          ? "VOICE — BRAIN CAN'T SAY"
+          : `VOICE: ${(voices.voices?.find((v) => v.id === voices.configuredVoiceId)?.name ?? voices.configuredVoiceId).toUpperCase()}`;
 
   // Portrait vs core: his sheet toggle wins; otherwise her worn look decides.
   const showPortrait = (plateMode ?? (wearing ? "portrait" : "core")) === "portrait" && !!wearing?.img;
@@ -796,7 +1181,7 @@ export default function EveApp() {
         ? "PARSING…"
         : mode === "speaking"
           ? "SYNTHESISING"
-          : `${sttOn ? "DEEPGRAM ● LIVE" : "EARS — KEY NEEDED"}\n${ttsOn ? "VOICE: LARA" : "VOICE — KEY NEEDED"}`;
+          : `${sttOn ? "DEEPGRAM ● LIVE" : "EARS — KEY NEEDED"}\n${voiceLabel}`;
 
   const orbEl = (
     <div className="ezone">
@@ -865,9 +1250,16 @@ export default function EveApp() {
           <span className="r">
             <span>EVE//OS {APP_VERSION}</span>
             <span className={`lnk${live.online ? "" : " down"}`}>●</span>
-            <span className={`lnklab${live.online ? "" : " down"}`}>{live.online ? "LINK" : "DOWN"}</span>
+            {/* P7 — three different failures, three different words. "DOWN"
+                alone could not tell a dead brain from a refused token from a
+                route that 500s, and those are three different things to do. */}
+            <span className={`lnklab${live.online ? "" : " down"}`}>
+              {live.online ? "LINK" : linkError?.startsWith("unauthorized") ? "TOKEN" : linkError ? "DOWN" : "…"}
+            </span>
           </span>
         </div>
+        {/* The sentence itself, once, under the bar — not on five screens. */}
+        {!live.online && linkError && <div className="linkbar mono">▲ {linkError}</div>}
 
         <div className="zone">
           {/* ---------- TODAY ---------- */}
@@ -878,36 +1270,61 @@ export default function EveApp() {
                 <span className="r">REFRESHED {clockStr}</span>
               </div>
               <h1 className="h1v6 disp">{greeting}</h1>
-              <p className="ledev6">
-                {live.online && live.latestBrief?.text
-                  ? live.latestBrief.text
-                  : live.online
-                    ? "No brief on the board yet. Run her day below, or just tell her what matters."
-                    : "Her brain is unreachable, so this screen is a shell. It fills in the moment she answers."}
-              </p>
+              {/* P5 — THE BRIEF IS WHATEVER /state SERVES.
+                  No clamp, no assumed shape, and above all not the 25-word
+                  push line: whatever she filed comes through whole, with her
+                  own breaks and emphasis intact (.briefv7 is pre-wrap), so the
+                  day the brain starts writing a four-section brief this screen
+                  renders it without being touched. The three states below are
+                  the only three there are, and not one of them prints a
+                  confident all-clear over a source it could not read. */}
+              {live.online && live.latestBrief?.text?.trim() ? (
+                <>
+                  <div
+                    className="ledev6 briefv7"
+                    dangerouslySetInnerHTML={{ __html: mdLite(live.latestBrief.text) }}
+                  />
+                  <div className="briefstamp mono">HER WORDS · FILED {stampOf(live.latestBrief.at)}</div>
+                </>
+              ) : (
+                <p className="ledev6">
+                  {!live.online
+                    ? `This screen is a shell until she answers. ${asSentence(linkError, "her brain is unreachable")}`
+                    : live.latestBrief
+                      ? "Her brief came back empty. That's a blank source, not an all-clear."
+                      : "No brief on the board yet. Run her day below, or just tell her what matters."}
+                </p>
+              )}
 
-              {/* sales floor */}
+              {/* sales floor — L3: a zero is a MEASUREMENT. When the brain
+                  served no floor (offline, or the degraded three-key return)
+                  this used to print "0/3" and a bar row, which is a claim
+                  nobody made. It prints a dash now, and says which. */}
               <div className="card" style={{ marginTop: 22 }}>
                 <div className="eyeb mono" style={{ fontSize: 9 }}>
                   <span>SALES FLOOR — WEEK {weekNo}</span>
-                  <span className="r">FLOOR: {live.floor?.goal ?? 3} / WK</span>
+                  <span className="r">FLOOR: {floor ? floor.goal : DASH} / WK</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 10 }}>
                   <span className="floorbig disp">
-                    {live.floor?.count ?? 0}
-                    <em>/{live.floor?.goal ?? 3}</em>
+                    {floor ? floor.count : DASH}
+                    <em>/{floor ? floor.goal : DASH}</em>
                   </span>
                   <span style={{ fontSize: 13, color: "rgba(240,237,232,.55)" }}>conversations on the floor</span>
                 </div>
-                <div className="fbars">
-                  {Array.from({ length: live.floor?.goal ?? 3 }).map((_, i) => (
-                    <span key={i} className={(live.floor?.count ?? 0) > i ? "on" : ""} />
-                  ))}
-                </div>
+                {!!floor && (
+                  <div className="fbars">
+                    {Array.from({ length: floor.goal }).map((_, i) => (
+                      <span key={i} className={floor.count > i ? "on" : ""} />
+                    ))}
+                  </div>
+                )}
                 <div className="mline">
-                  {live.online
-                    ? `> ${Math.max(0, (live.floor?.goal ?? 3) - (live.floor?.count ?? 0))} to go — real conversations, not drafts.`
-                    : "> offline — the count lands when her brain answers."}
+                  {floor
+                    ? `> ${Math.max(0, floor.goal - floor.count)} to go — real conversations, not drafts.`
+                    : live.online
+                      ? "> she served no floor count this poll — unmeasured, not zero."
+                      : "> offline — the count lands when her brain answers."}
                 </div>
               </div>
 
@@ -997,28 +1414,39 @@ export default function EveApp() {
 
               {/* live minis */}
               <div className="minis">
+                {/* L3 again: `?? 0` on a key the brain never sent is a count
+                    of nothing dressed as a count of zero. */}
                 <div className="mini">
                   <div className="k mono">ROUTINES</div>
-                  <div className="n disp">{live.routines?.length ?? 0}</div>
+                  <div className="n disp">{live.online && live.routines ? live.routines.length : DASH}</div>
                   <div className="s mono">
-                    {live.routines?.length
+                    {live.online && live.routines?.length
                       ? `best streak ${Math.max(...live.routines.map((r) => r.streak))}d`
-                      : live.online
+                      : live.online && live.routines
                         ? "none tracked yet"
-                        : "—"}
+                        : "not measured"}
                   </div>
-                  {live.routines?.slice(0, 1).map((r) => (
-                    <div className="x mono" key={r.id}>{r.name} — {r.streak}d</div>
-                  ))}
+                  {live.online &&
+                    live.routines?.slice(0, 1).map((r) => (
+                      <div className="x mono" key={r.id}>{r.name} — {r.streak}d</div>
+                    ))}
                 </div>
                 <div className="mini">
                   <div className="k mono">CLIENT PULSE</div>
                   <div className="n disp">
-                    {live.clients?.length ?? 0}
+                    {live.online && live.clients ? live.clients.length : DASH}
                     <em> roster</em>
                   </div>
-                  <div className="s mono">{live.online ? `${quietCount} past cadence` : "—"}</div>
-                  <div className="x mono">{quietCount > 0 ? "she has updates drafted" : "all inside the window"}</div>
+                  <div className="s mono">
+                    {live.online && live.clients ? `${quietCount} past cadence` : "not measured"}
+                  </div>
+                  <div className="x mono">
+                    {!live.online || !live.clients
+                      ? "the radar lands when her brain answers"
+                      : quietCount > 0
+                        ? "she has updates drafted"
+                        : "all inside the window"}
+                  </div>
                 </div>
               </div>
 
@@ -1078,34 +1506,13 @@ export default function EveApp() {
                 )}
                 {errNote && <div className="errline mono">LINK: {errNote}</div>}
 
-                {/* RED-tier confirm cards (02 §6): exact payload + approve round-trip */}
-                {confirms.map((c) => (
-                  <div className="confirmv6" key={c.id}>
-                    <div className="hd mono">▲ RED TIER · {c.kind.replace(/_/g, " ").toUpperCase()} — NOTHING SENDS WITHOUT YOU</div>
-                    <div className="sum">{c.summary}</div>
-                    {Object.entries(c.payload).map(([k, v]) => (
-                      <div className="field" key={k}>
-                        <b>{k.toUpperCase()}</b>
-                        {String(v).slice(0, 240)}
-                      </div>
-                    ))}
-                    {confirmNote[c.id] ? (
-                      <div className={`cnote6${confirmNote[c.id].startsWith("SENT") ? " ok" : ""}`}>{confirmNote[c.id]}</div>
-                    ) : (
-                      <div className="row">
-                        {isDeskOnly(c) ? (
-                          // An INSTRUCTION, not a control: never a <button>, so
-                          // no disabled-opacity stacks on the one line that
-                          // answers "then what do I do?".
-                          <p className="clocked">{DESK_ONLY_LINE}</p>
-                        ) : (
-                          <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE — SEND IT</button>
-                        )}
-                        <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {/* RED-tier confirm cards (02 §6). One renderer, shared with
+                    OPS and with the job detail, so the same single-use card
+                    can never be drawn two different ways on two screens. The
+                    desk-only case is still an INSTRUCTION and never a
+                    <button>: no disabled-opacity stacks on the one line that
+                    answers "then what do I do?". */}
+                {confirms.map((c) => confirmCard(c))}
               </div>
 
               <div className="chiprow">
@@ -1167,6 +1574,145 @@ export default function EveApp() {
             </div>
           )}
 
+          {/* ---------- FLEET (P1 · P3) ----------
+              The thing this phone knew literally nothing about. There is no
+              local list of names here and there never will be: the roster, the
+              badges, the runner kinds and the trigger lines are the brain's
+              own, and a strip that knew names the brain did not would be a
+              strip that lies. OFFLINE and NO-BLOCK are two different states
+              with two different sentences, and neither carries a number. */}
+          {tab === "fleet" && (
+            <div className="scr">
+              <div className="eyeb mono">
+                <span>▸ THE FLEET // HER UNITS</span>
+                <span className="r">
+                  {fleet.kind === "ready" ? sourceWord(fleet.source) : fleet.kind === "offline" ? "OFFLINE" : "NO ANSWER"}
+                </span>
+              </div>
+              <h1 className="h1v6 disp">FLEET</h1>
+
+              {fleet.kind !== "ready" ? (
+                <p className="ledev6">
+                  {fleet.kind === "offline"
+                    ? `Her roster lives on her brain. ${asSentence(linkError, "it is unreachable right now")} No names and no counts until she answers.`
+                    : "Her brain answered but served no fleet block — an older brain, or a degraded read. That is no answer, not an empty roster."}
+                </p>
+              ) : (
+                <>
+                  <p className="ledev6">
+                    {fleet.dispatchable} of {fleet.registered} units run from here. Tap a job line to read it in
+                    full; send one from the desk below.
+                  </p>
+                  <div className="fmeta mono">
+                    <span>{kindsLine(fleet.kinds) || `KINDS ${DASH}`}</span>
+                    <span>ROSTER {sourceWord(fleet.source)} · {stampOf(fleet.at)}</span>
+                  </div>
+
+                  {/* ---- the dispatch desk (P3) ---- */}
+                  <div className="divrow" ref={deskRef}>
+                    <span className="l">SEND A UNIT</span>
+                    <span className="rule" />
+                    <span className="r">{dispUnit ? humanise(dispUnit) : "PICK ONE"}</span>
+                  </div>
+                  <div className="card">
+                    <div className="dispunit mono">
+                      {dispUnit ? `UNIT · ${humanise(dispUnit)}` : "NO UNIT PICKED — TAP “SEND THIS ONE” ON A CARD BELOW"}
+                    </div>
+                    <textarea
+                      className="tinv6 dispbox"
+                      rows={3}
+                      value={dispTask}
+                      onChange={(e) => setDispTask(e.target.value)}
+                      placeholder="Tell her the job, in your own words."
+                      aria-label="The task to send"
+                    />
+                    <div className="row">
+                      <button
+                        className="cbtn ok hit44"
+                        disabled={!dispUnit || !dispTask.trim() || dispBusy}
+                        onClick={() => dispUnit && void sendUnit(dispUnit, dispTask)}
+                      >
+                        {dispBusy ? "SENDING…" : "SEND IT"}
+                      </button>
+                      <button
+                        className="cbtn gh hit44"
+                        onClick={() => {
+                          setDispUnit(null);
+                          setDispOut(null);
+                        }}
+                      >
+                        CLEAR
+                      </button>
+                    </div>
+                    {/* Her answer, verbatim, accepted or refused. A 422 carries
+                        a full body — the say and the alternatives are the two
+                        things the refusal exists to deliver. */}
+                    {dispOut &&
+                      (dispOut.ok ? (
+                        <div className="dsay ok">
+                          <div className="k mono">
+                            ACCEPTED · {dispOut.name.toUpperCase()} · {dispOut.status.replace(/_/g, " ").toUpperCase()}
+                            {dispOut.tier ? ` · ${dispOut.tier.toUpperCase()} TIER` : ""}
+                          </div>
+                          <div className="s">{dispOut.say}</div>
+                          <div className="k mono">JOB {dispOut.jobId}</div>
+                          <button
+                            className="cbtn gh hit44 wide6"
+                            onClick={() => {
+                              setOpenJob(dispOut.jobId);
+                              setTab("ops");
+                            }}
+                          >
+                            WATCH IT RUN →
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="dsay no">
+                          <div className="k mono">
+                            REFUSED · {dispOut.code.replace(/_/g, " ").toUpperCase()}
+                            {dispOut.badge ? ` · ${dispOut.badge.replace(/_/g, " ")}` : ""}
+                          </div>
+                          <div className="s">{dispOut.say}</div>
+                          {!!dispOut.runnable.length && (
+                            <>
+                              <div className="k mono">SHE OFFERED INSTEAD</div>
+                              <div className="altrow">
+                                {dispOut.runnable.map((r) => (
+                                  <button
+                                    key={r.key}
+                                    className="chipv6"
+                                    onClick={() => {
+                                      setDispUnit(r.key);
+                                      setDispOut(null);
+                                    }}
+                                  >
+                                    {r.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* ---- the roster, in the brain's own divisions ---- */}
+                  {fleet.groups.map((g) => (
+                    <div key={g.division}>
+                      <div className="divrow">
+                        <span className="l">{g.division.toUpperCase()}</span>
+                        <span className="rule" />
+                        <span className="r">{g.units.length}</span>
+                      </div>
+                      <div className="ugrid">{g.units.map((u) => unitCard(u))}</div>
+                    </div>
+                  ))}
+                </>
+              )}
+              <div className="footnote mono">you name the unit. she goes.</div>
+            </div>
+          )}
+
           {/* ---------- OPS ---------- */}
           {tab === "ops" && (
             <div className="scr">
@@ -1177,61 +1723,53 @@ export default function EveApp() {
               <h1 className="h1v6 disp">OPS</h1>
               <p className="ledev6">Your signature, not your time.</p>
 
-              {/* RED tier — waiting on your thumb (02 §6) */}
-              {!!pendings.length && (
+              {/* RED tier — waiting on your thumb (02 §6). ONE deduped list:
+                  the poll's cards and any raised on the stream. */}
+              {!!cards.length && (
                 <>
                   <div className="divrow">
-                    <span className="l" style={{ color: "#C41E3A" }}>WAITING ON YOUR THUMB — RED</span>
+                    {/* The section header for the RED tier, and 9.5px type —
+                        --redInk, not the law hex, same rule as the card below
+                        it. #C41E3A on --bg measured 3.38:1 here. */}
+                    <span className="l" style={{ color: "var(--redInk)" }}>WAITING ON YOUR THUMB — RED</span>
                     <span className="rule" />
-                    <span className="r">{pendings.length}</span>
+                    <span className="r">{cards.length}</span>
                   </div>
-                  {pendings.map((c) => (
-                    <div className="confirmv6" style={{ marginBottom: 8 }} key={c.id}>
-                      <div className="sum">{c.summary}</div>
-                      <div className="field">
-                        expires {new Date(c.expiresAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
-                      </div>
-                      {confirmNote[c.id] ? (
-                        <div className="cnote6">{confirmNote[c.id]}</div>
-                      ) : (
-                        <div className="row">
-                          {isDeskOnly(c) ? (
-                            <p className="clocked">{DESK_ONLY_LINE}</p>
-                          ) : (
-                            <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE</button>
-                          )}
-                          <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {cards.map((c) => confirmCard(c))}
                 </>
               )}
 
               <div className="divrow">
-                <span className="l">JOBS IN FLIGHT</span>
+                <span className="l">JOBS — LAST 24 HOURS</span>
                 <span className="rule" />
-                <span className="r">{live.jobs?.length ? `${live.jobs.length} ACTIVE` : "IDLE"}</span>
+                {/* Same unmeasured marker as the inbox below — one signal, one
+                    weight. The guard here was already correct; only the dash's
+                    legibility moved (2.85:1 -> 6.77:1). */}
+                <span className={`r${jobs.absent ? " unmeasured" : ""}`}>
+                  {jobs.absent ? DASH : `${counts.inFlight} IN FLIGHT · ${jobs.rows.length} SEEN`}
+                </span>
               </div>
+              {/* THE DISPATCH FOUR. jobs[] is every job of the last 24 h, any
+                  status, so a length counts nothing — these are four filters
+                  from the shared core. All four dash when the brain served no
+                  jobs key at all: absent is not zero. */}
+              <div className="four6">
+                {four.map((c) => (
+                  <div className={`f6 ${c.tone}`} key={c.key}>
+                    <span className="fv disp">{c.value}</span>
+                    <span className="fk mono">{c.label}</span>
+                  </div>
+                ))}
+              </div>
+              {jobs.error && <div className="errline mono">JOBS READ FAILED: {jobs.error}</div>}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {live.jobs?.length ? (
-                  live.jobs.map((j) => (
-                    <div className="jobrow6" key={j.id}>
-                      <span className="jcode mono">{jobCode(j.agent || "eve")}</span>
-                      <span className="jmain">
-                        <span className="jname">{j.agent || "eve"}</span>
-                        <span className="jtask mono">{j.title}</span>
-                      </span>
-                      <span className={`jtag mono ${j.status === "running" ? "run" : j.status === "in_approvals" ? "appr" : "que"}`}>
-                        {j.status === "running" ? "● RUNNING" : j.status.replace(/_/g, " ").toUpperCase()}
-                      </span>
-                    </div>
-                  ))
+                {jobs.rows.length ? (
+                  jobs.rows.map((j) => jobRowEl(j))
                 ) : (
                   <div className="secnote6">
-                    {live.online
-                      ? "Nothing in flight. Give her the job — by name or just the outcome."
-                      : "Offline — the fleet reports in when her brain answers."}
+                    {jobs.absent
+                      ? `No jobs list came back this poll — that's unmeasured, not empty. ${linkError ? asSentence(linkError, "") : ""}`
+                      : "Nothing in the last 24 hours. Send her a unit from FLEET."}
                   </div>
                 )}
               </div>
@@ -1239,34 +1777,63 @@ export default function EveApp() {
               <div className="divrow">
                 <span className="l">APPROVAL INBOX</span>
                 <span className="rule" />
-                <span className="r">{inbox.length ? `${inbox.length} WAITING` : "CLEAR ✓"}</span>
+                {/* The checkmark is a CLAIM, and it is only earned by a poll
+                    that came back. Offline or a /state with no attention key
+                    reads as a dash — unmeasured — never as clear. */}
+                <span className={`r${attentionAbsent ? " unmeasured" : ""}`}>
+                  {attentionAbsent ? DASH : inbox.length ? `${inbox.length} WAITING` : "CLEAR ✓"}
+                </span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {inbox.length ? (
-                  inbox.slice(0, 8).map((a) => (
-                    <div className="aprow" key={a.id}>
-                      <span className="aglyph mono">{aGlyph(a.kind)}</span>
-                      <span className="amain">
-                        <span className="atitle">{a.message}</span>
-                        <span className="asub mono">
-                          {a.kind.replace(/_/g, " ").toUpperCase()} · N{a.nudge_level}
-                          {a.kind === "silent_client" && a.ref?.draft ? " · DRAFT READY" : ""}
-                        </span>
-                      </span>
-                      {opsBusy === a.id ? (
-                        <span className="cnote6">…</span>
-                      ) : (
-                        <span className="abtns">
-                          <button className="cbtn ok hit44" onClick={() => opsAction(a.id, "approve")}>APPROVE</button>
-                          <button className="cbtn gh hit44" onClick={() => opsAction(a.id, "hold")}>HOLD</button>
-                          <button className="cbtn gh hit44" aria-label="Dismiss" onClick={() => opsAction(a.id, "dismiss")}>✕</button>
-                        </span>
-                      )}
-                    </div>
-                  ))
+                  inbox.slice(0, 8).map((a) => {
+                    // P3, THE THIRD LEG: a worker's deliverable does not come
+                    // back on the job row — it arrives HERE, in ref.content,
+                    // with the attention item. Read it or the job is a rumour.
+                    const raw = a.ref?.content;
+                    const content = typeof raw === "string" && raw.trim() ? raw : null;
+                    const openC = openRef === a.id;
+                    const unit = typeof a.ref?.unit === "string" ? a.ref.unit : null;
+                    return (
+                      <div key={a.id}>
+                        <div className="aprow">
+                          <span className="aglyph mono">{aGlyph(a.kind)}</span>
+                          <span className="amain">
+                            <span className="atitle">{a.message}</span>
+                            <span className="asub mono">
+                              {a.kind.replace(/_/g, " ").toUpperCase()} · N{a.nudge_level}
+                              {unit ? ` · ${humanise(unit)}` : ""}
+                              {a.kind === "silent_client" && a.ref?.draft ? " · DRAFT READY" : ""}
+                            </span>
+                          </span>
+                          {opsBusy === a.id ? (
+                            <span className="cnote6">…</span>
+                          ) : (
+                            <span className="abtns">
+                              <button className="cbtn ok hit44" onClick={() => opsAction(a.id, "approve")}>APPROVE</button>
+                              <button className="cbtn gh hit44" onClick={() => opsAction(a.id, "hold")}>HOLD</button>
+                              <button className="cbtn gh hit44" aria-label="Dismiss" onClick={() => opsAction(a.id, "dismiss")}>✕</button>
+                            </span>
+                          )}
+                        </div>
+                        {content && (
+                          <>
+                            <button className="cbtn gh hit44 wide6" onClick={() => setOpenRef(openC ? null : a.id)}>
+                              {openC ? "HIDE THE WORK" : "READ WHAT SHE BROUGHT BACK"}
+                            </button>
+                            {openC && <div className="deliv6">{content}</div>}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })
                 ) : (
                   <div className="secnote6">
-                    {live.online ? "Nothing needs you. She'll surface it here when it does." : "Offline — nothing to show until her brain answers."}
+                    {attentionAbsent
+                      ? live.online
+                        ? "No approvals list came back this poll — that's unmeasured, not clear."
+                        : "Offline — nothing to show until her brain answers."
+                      : "Nothing needs you. She'll surface it here when it does."}
                   </div>
                 )}
               </div>
@@ -1274,7 +1841,14 @@ export default function EveApp() {
               <div className="divrow">
                 <span className="l">CLIENT PULSE</span>
                 <span className="rule" />
-                <span className="r">{live.online ? `${quietCount} QUIET` : "OFFLINE"}</span>
+                {/* Same shape as the inbox above. "0 QUIET" off a /state that
+                    never carried a clients key is a zero with no source — it
+                    reads as "everyone is inside cadence" when nothing was
+                    counted. Offline already said OFFLINE; the degraded-online
+                    case now says DASH instead of 0. */}
+                <span className={`r${clientsAbsent && live.online ? " unmeasured" : ""}`}>
+                  {clientsAbsent ? (live.online ? DASH : "OFFLINE") : `${quietCount} QUIET`}
+                </span>
               </div>
               <div className="pulcard">
                 {live.clients?.length ? (
@@ -1295,7 +1869,15 @@ export default function EveApp() {
                 ) : (
                   <div className="pulrow">
                     <span className="pulsay">
-                      {live.online ? "No clients in the ledger yet — add them and she starts watching cadences." : "Offline — the radar lands when her brain answers."}
+                      {/* "No clients in the ledger yet" is a MEASUREMENT — it
+                          says her ledger was read and was empty. With the key
+                          absent nothing was read, and the header above already
+                          says so; the body must not contradict it. */}
+                      {clientsAbsent
+                        ? live.online
+                          ? "No client list came back this poll — that's unmeasured, not an empty ledger."
+                          : "Offline — the radar lands when her brain answers."
+                        : "No clients in the ledger yet — add them and she starts watching cadences."}
                     </span>
                   </div>
                 )}
@@ -1391,8 +1973,12 @@ export default function EveApp() {
                   <span className="v">Drafts, then waits. Anything a client will read.</span>
                 </div>
                 <div className="rulerow">
+                  {/* The DOT is the indicator and keeps the law hex; the WORD
+                      beside it is 9px type, so it takes --redInk. #C41E3A on
+                      --panel measured 3.19:1 here — the tier header of the one
+                      tier that never moves without him. 3.19 -> 6.82. */}
                   <span className="dot" style={{ background: "#C41E3A", boxShadow: "0 0 8px rgba(196,30,58,.5)" }} />
-                  <span className="k mono" style={{ color: "#C41E3A" }}>RED</span>
+                  <span className="k mono" style={{ color: "var(--redInk)" }}>RED</span>
                   <span className="v">Never without you. Money out, sends, anything public.</span>
                 </div>
               </div>
@@ -1510,10 +2096,12 @@ export default function EveApp() {
               <div className="mini" style={{ marginTop: 10 }}>
                 <div className="k mono">SALES FLOOR — READ ONLY</div>
                 <div className="n disp">
-                  {vitals.floor?.count ?? 0}
-                  <em>/{vitals.floor?.goal ?? 3}</em>
+                  {vitals.online && vitals.floor ? vitals.floor.count : DASH}
+                  <em>/{vitals.online && vitals.floor ? vitals.floor.goal : DASH}</em>
                 </div>
-                <div className="s mono">CONVERSATIONS THIS WEEK</div>
+                <div className="s mono">
+                  {vitals.online && vitals.floor ? "CONVERSATIONS THIS WEEK" : "NOT MEASURED — NOT ZERO"}
+                </div>
                 <div className="x mono">the floor owns this one. tell her, and it moves.</div>
               </div>
 
@@ -1723,7 +2311,7 @@ export default function EveApp() {
               <span className="l">VOICE — ELEVENLABS</span>
               <span className="rule" />
             </div>
-            <span className="vchip mono">{ttsOn ? "LARA — HER PICK" : "AWAITING KEY"}</span>
+            <span className="vchip mono">{voiceLabel}</span>
 
             <div className="divrow" style={{ margin: "18px 0 10px" }}>
               <span className="l">PRESENCE CHECK — TRY HER STATES</span>
@@ -1753,6 +2341,7 @@ export default function EveApp() {
           {([
             ["today", "TODAY"],
             ["eve", "EVE"],
+            ["fleet", "FLEET"],
             ["ops", "OPS"],
             ["wire", "WIRE"],
             ["body", "BODY"],
@@ -1773,6 +2362,12 @@ export default function EveApp() {
               {id === "eve" && (
                 <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5 }}>
                   <circle cx="10" cy="10" r="4.2" /><ellipse cx="10" cy="10" rx="8.5" ry="3.2" transform="rotate(-16 10 10)" />
+                </svg>
+              )}
+              {id === "fleet" && (
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
+                  <rect x="2.5" y="2.5" width="6" height="6" rx="1.4" /><rect x="11.5" y="2.5" width="6" height="6" rx="1.4" />
+                  <rect x="2.5" y="11.5" width="6" height="6" rx="1.4" /><rect x="11.5" y="11.5" width="6" height="6" rx="1.4" />
                 </svg>
               )}
               {id === "ops" && (

@@ -9,7 +9,7 @@ import { useCallback, useState } from "react";
 import type { AttentionAction, EveState } from "@shared/contract";
 import { Cbtn, Divrow, OpRow, StatLine } from "../../components/atoms";
 import { agentCode, kindGlyphExt, kindLabel } from "../format";
-import { isInFlight } from "../../core/jobs";
+import { isInFlight } from "@shared/core/jobs";
 import { SHELL_COPY } from "./shell";
 
 export interface OpsPaneProps {
