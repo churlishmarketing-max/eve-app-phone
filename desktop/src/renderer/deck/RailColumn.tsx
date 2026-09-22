@@ -12,7 +12,7 @@ import type { ConnectorStatus } from "@shared/contract";
 import RingCanvas from "../components/RingCanvas";
 import VoiceLabel from "../voice/VoiceLabel";
 import { Chip } from "../components/atoms";
-import { closetLine } from "../core/counters";
+import { closetLine } from "@shared/core/counters";
 import { ENT, type EveMode, type WardrobeView } from "./types";
 
 export interface RailColumnProps {
