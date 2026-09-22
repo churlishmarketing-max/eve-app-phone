@@ -20,6 +20,7 @@ import { runE2E } from "./e2e.js";
 import { brainUrl, isHarness, isMock, isSmoke, readConfig, windowsHidden, writeConfig } from "./config.js";
 import { isQuietHours } from "./quiet.js";
 import { lastState, pollOnce, startPoll, stopPoll } from "./poll.js";
+import { startWardrobeSync, stopWardrobeSync, syncOnce, findWardrobeDir, wardrobeSyncState, _resetWardrobeSyncForTests } from "./wardrobe-sync.js";
 import { setToken, tokenSet } from "./secrets.js";
 import { createTray, describeMenu as describeTrayMenu, destroyTray, refreshMenu as refreshTrayMenu, setTrayState, wireDeskKill } from "./tray.js";
 import {
@@ -144,6 +145,7 @@ app.on("window-all-closed", () => {
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
   stopPoll();
+  stopWardrobeSync();
   api.abortAllChats();
   destroyTray();
 });
@@ -494,6 +496,9 @@ function registerIpc(): void {
   );
   ipcMain.handle(IPC.wardrobeGet, () => api.getWardrobe());
   ipcMain.handle(IPC.wardrobeWear, (_e, file: string) => api.postWear(file));
+  // A COUNT, asked for by a window that may have opened after the sync ran.
+  // There is deliberately no handler that STARTS a sync or removes anything.
+  ipcMain.handle(IPC.wardrobeSyncState, () => wardrobeSyncState());
   ipcMain.handle(IPC.voiceTranscribe, (_e, a: { buf: ArrayBuffer; mime?: string }) =>
     api.postTranscribe(a.buf, a.mime),
   );
@@ -810,6 +815,9 @@ app.whenReady().then(() => {
     return;
   }
   startPoll();
+  // HER CLOSET, SYNCED. Returns immediately — the first pass is on a timer, so
+  // a slow disk or a dead brain can never delay a launch. It only ever ADDS.
+  startWardrobeSync();
 
   console.log(
     `[eve] desktop ${APP_VERSION} · ${isDev ? "dev" : "packaged"} · brain ${brainUrl()} · ` +
@@ -1165,4 +1173,36 @@ if (process.env.EVE_SHOT_URL) {
 
 if (process.env.EVE_E2E === "1") {
   runE2E({ desk, getDeck, brainUrl });
+}
+
+// ---------------------------------------------------------------------------
+// WARDROBE-SYNC MODE — the main-process half of verify/wardrobe-e2e-harness.mjs.
+//
+// One PHASE per launch, named by EVE_WSYNC_PHASE, so the LAUNCHER counts the
+// objects in the scratch store before and after from outside this process. That
+// separation is the point: the claim "the bucket was untouched" is then made by
+// a different process than the one that would be lying.
+//
+// Same shape as the EVE_SMOKE / EVE_SHOTS / EVE_E2E blocks above, and inert
+// without the variable.
+// ---------------------------------------------------------------------------
+
+if (process.env.EVE_WSYNC_PHASE) {
+  app.whenReady().then(async () => {
+    const phase = process.env.EVE_WSYNC_PHASE;
+    _resetWardrobeSyncForTests();
+    console.log(`WSYNC: phase=${phase}`);
+    console.log(`WSYNC: folder=${findWardrobeDir() ?? "(none)"}`);
+    try {
+      const r = await syncOnce();
+      console.log(`WSYNC: added=${r.added} alreadyThere=${r.alreadyThere} refused=${r.refused} note=${r.note ?? "-"}`);
+      console.log(`WSYNC: session=${wardrobeSyncState().addedThisSession}`);
+    } catch (err) {
+      console.log(`WSYNC: threw=${err instanceof Error ? err.message : String(err)}`);
+    }
+    console.log("WSYNC: done");
+    // A beat before exiting: app.exit() does not drain a piped stdout, and the
+    // lines above are the whole output of this mode.
+    setTimeout(() => app.exit(0), 800);
+  });
 }

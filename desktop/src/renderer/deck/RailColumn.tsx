@@ -12,6 +12,7 @@ import type { ConnectorStatus } from "@shared/contract";
 import RingCanvas from "../components/RingCanvas";
 import VoiceLabel from "../voice/VoiceLabel";
 import { Chip } from "../components/atoms";
+import { closetLine } from "../core/counters";
 import { ENT, type EveMode, type WardrobeView } from "./types";
 
 export interface RailColumnProps {
@@ -33,6 +34,13 @@ export interface RailColumnProps {
   voiceName?: string | null;
   silentAtDesk: boolean;
   quietHours: boolean;
+  /**
+   * W3 — LOOKS ADDED TO HER CLOSET THIS SESSION, and nothing else about them.
+   * A COUNT, measured by the main process from the 200s it observed; no
+   * filename crosses the bridge, so there is none to render. Zero draws NOTHING
+   * (counters.ts closetLine) — on the ordinary day this row does not exist.
+   */
+  looksAdded: number;
   onToggleSilent: () => void;
   onOpenWardrobe: () => void;
   onOpenSettings: () => void;
@@ -77,6 +85,7 @@ export default function RailColumn(p: RailColumnProps) {
     : `${ent.dot} ${ent.label}${p.mode === "thinking" && p.toolNote ? ` · ${p.toolNote.replace(/_/g, " ").toUpperCase()}` : ""}`;
   const stateClass = `stateline${p.mode === "listening" ? " listen" : p.mode === "thinking" ? " think" : alert ? " alert" : ""}`;
 
+  const closet = closetLine(p.looksAdded);
   const dg = findConnector(p.connectors, "deepgram");
   const liveCount = p.connectors.filter((c) => c.connected).length;
 
@@ -228,6 +237,27 @@ export default function RailColumn(p: RailColumnProps) {
       >
         {p.quietHours ? "☾ " : ""}QUIET 21:30–06:30
       </div>
+
+      {/* ---- her closet grew ------------------------------------------------
+          Quiet by construction: one 9px mono line in the rail, no modal, no
+          toast, no sound, and TEAL because teal is done — not gold (nothing
+          needs his attention) and never red (that is the confirm tier's and
+          the live mic's, and this is neither). It renders only when the count
+          is real; silence is the ordinary day. */}
+      {closet ? (
+        <div
+          style={{
+            marginTop: 8,
+            fontFamily: "var(--mono)",
+            fontSize: 9,
+            letterSpacing: ".16em",
+            color: "var(--tealHi)",
+          }}
+          title="Added automatically from your wardrobe folder. Nothing is ever removed."
+        >
+          {closet}
+        </div>
+      ) : null}
 
       {/* ---- wire micro-row, pinned bottom --------------------------------- */}
       <button

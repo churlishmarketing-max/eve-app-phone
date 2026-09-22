@@ -172,9 +172,17 @@ export function isSmoke(): boolean {
 }
 
 /** Windows stay hidden under smoke, shots and the generic shot-url harness —
- *  never steal the user's screen. */
+ *  never steal the user's screen. EVE_WSYNC_PHASE (verify/wardrobe-e2e-harness)
+ *  joins the list for the same reason: a verification launch must not flash a
+ *  deck across whatever he is doing. */
 export function windowsHidden(): boolean {
-  return isSmoke() || process.env.EVE_SHOTS === "1" || !!process.env.EVE_SHOT_URL || isE2E();
+  return (
+    isSmoke() ||
+    process.env.EVE_SHOTS === "1" ||
+    !!process.env.EVE_SHOT_URL ||
+    isE2E() ||
+    !!process.env.EVE_WSYNC_PHASE
+  );
 }
 
 /**

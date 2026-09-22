@@ -64,6 +64,30 @@ export function memoryCell(health: Health | null): { value: string; tone: Tone }
   return health.memoryReady ? { value: "READY", tone: "acc" } : { value: "DOWN", tone: "hot" };
 }
 
+/**
+ * HER CLOSET GREW — and this file's own rule, applied to it.
+ *
+ * The rule here is "offline is a DASH, never a zero", because a zero is a
+ * measurement and a dash is the truth when nothing was measured. This counter
+ * gets a THIRD answer, and it is NOTHING AT ALL:
+ *
+ *   n > 0     the main process counted this many 200s from the brain while
+ *             uploading looks it found on his disk. MEASURED. Print it.
+ *   n === 0   nothing was added. That is the ordinary day, and the correct
+ *             output for it is SILENCE — not "0 LOOKS ADDED", which would be
+ *             an announcement that nothing happened, every day, forever.
+ *   no answer the row does not exist, so there is no slot to dash. A count that
+ *             was never taken cannot appear here at all.
+ *
+ * So this returns null and the rail renders no row, rather than returning DASH.
+ * The dash rule governs a PERMANENT cell whose value is missing; this is an
+ * EVENT line that either happened or did not.
+ */
+export function closetLine(addedThisSession: number): string | null {
+  if (!Number.isFinite(addedThisSession) || addedThisSession <= 0) return null;
+  return `+${addedThisSession} LOOK${addedThisSession === 1 ? "" : "S"} ADDED`;
+}
+
 /** Connectors: how many are up, out of how many the brain reported. */
 export function wireCount(state: EveState): { live: number; total: number } {
   const cs = state.connectors ?? [];

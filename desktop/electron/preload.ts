@@ -25,6 +25,7 @@ import {
   type StateUpdate,
   type SummonShownEvent,
   type Unsub,
+  type WardrobeSyncEvent,
   type VoiceEventWire,
 } from "../src/shared/contract.js";
 
@@ -75,6 +76,12 @@ const eve: EveBridge = {
   wardrobe: {
     get: () => ipcRenderer.invoke(IPC.wardrobeGet),
     wear: (file: string) => ipcRenderer.invoke(IPC.wardrobeWear, file),
+    // AUTOMATIC SYNC — both members are READ-ONLY. Look at what is not here:
+    // no `sync()`, no `prune()`, no path, no filename in either direction. The
+    // renderer cannot start a sync and cannot express a removal, and the only
+    // thing that comes back is a count.
+    syncState: () => ipcRenderer.invoke(IPC.wardrobeSyncState),
+    onSync: (cb) => on<WardrobeSyncEvent>(IPC.wardrobeSync, cb),
   },
   voice: {
     // The ArrayBuffer is structured-cloned across the bridge — no base64, no

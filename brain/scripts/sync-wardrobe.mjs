@@ -8,6 +8,25 @@
 // Drop new PNGs in data/wardrobe, run this, done — she sees them within a
 // minute. (Removing a look: delete it in the Supabase dashboard, or pass
 // --prune here to mirror local deletions.)
+//
+// ---------------------------------------------------------------------------
+// ADDING IS NOW AUTOMATIC. PRUNING IS STILL, DELIBERATELY, BY HAND.
+//
+// As of 2026-09-06 the desktop syncs ADDITIONS on its own: it lists this folder
+// in the Electron main process, asks the brain what the bucket holds
+// (POST /wardrobe/sync/manifest) and uploads only what is missing
+// (POST /wardrobe/sync/look/:name). That path is in brain/src/wardrobe-add.ts
+// and desktop/electron/wardrobe-sync.ts, and it has NO DELETE BRANCH AT ALL.
+// So you should rarely need this script for adding any more.
+//
+// --prune BELOW IS THE ONLY WAY A LOOK EVER LEAVES THE BUCKET, and that is not
+// an oversight — it is the whole design. A file missing from this folder does
+// not reliably mean the look was retired: OneDrive may not have synced it down,
+// the folder may have moved, a drive may be disconnected, a copy may have died
+// halfway. Automating the prune means that on any of those days her closet
+// empties itself and there is no undo. So it stays here, under a flag, run by a
+// human who has just looked at the folder and knows what they are seeing.
+// ---------------------------------------------------------------------------
 
 import "dotenv/config";
 import { readFileSync, readdirSync } from "node:fs";
