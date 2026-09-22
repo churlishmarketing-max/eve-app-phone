@@ -19,6 +19,18 @@
 // Binaries, scripts, html, fonts, office files are skipped and listed. Each
 // skill is capped at MAX_BYTES; over the cap the largest references are
 // dropped (SKILL.md is never dropped) and the trim is recorded.
+//
+// OVERRIDES. skills/ is generated and the plugin cache is not ours to edit, so
+// a Churlish ruling that contradicts a plugin file lives in
+// skills-overrides/<key>/<relative path> (see skills-overrides/README.md). Each
+// override is a WHOLE-FILE replacement of the upstream file at that path: it is
+// copied over the destination after the upstream copy and its bytes (not the
+// upstream file's) count toward the cap. Applied overrides are recorded on the
+// manifest row as { overrides: [...] } so the evidence travels with the bundle.
+// An override with no upstream counterpart is still bundled (it may be a new
+// reference) but is called out, so a typo in a path is loud, not silent. An
+// override for a key that is not RUNNABLE aborts the sync — a correction to a
+// skill she cannot dispatch is a correction to nothing.
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, statSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -27,6 +39,7 @@ import path from "node:path";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const brain = path.join(here, "..");
 const OUT = path.join(brain, "skills");
+const OVERRIDES = path.join(brain, "skills-overrides");
 const MANIFEST = path.join(OUT, "MANIFEST.json");
 const DRY = process.argv.includes("--dry");
 
@@ -102,11 +115,14 @@ const EXCLUDED = {
   "churlish-master-plan-style": "HTML/CSS + python-docx build helpers producing HTML/PDF/DOCX; binary document generation",
   "consolidate-memory": "edits memory files on disk",
   "cyborg": "builds live Meta campaign objects through the Meta Ads MCP, which the brain does not hold",
+  "docs": "a shim over the host's docs connector (its whole body is 'follow the docs connector's instructions'); the brain holds no docs tools and there is no doctrine to run",
   "docx": "python scripts + OOXML schemas for .docx generation; binary document generation",
   "eve-super-brain": "EVE's own operating doctrine — she IS this unit; dispatching herself is a loop, not a job",
   "explain-usage": "reads session .jsonl transcripts from the local disk",
   "frontend-design": "UI design guidance applied inside a codebase; needs the repo",
   "import-memory": "writes to Claude's memory tools",
+  "kyle-rayner": "renders motion graphics through the Higgsfield MCP (image/video batches, cost preflight, item-level approval gallery), which the brain does not hold; the deliverable is a render, not text",
+  "lois-lane": "weekly HLP publish kit through vidIQ, the local browser (player scrubbing + frame capture), Drive staging and a Canva copy, none of which the brain holds; the text pieces already run as hlp-clip-finder and hlp-youtube-package",
   "mcp-builder": "builds MCP servers (python/node scripts, evaluation harness); code, not text",
   "morning": "playwright render of an HTML artifact with a bundled woff2 font; needs the local browser",
   "pdf": "python scripts for PDF forms/merging/rendering; binary document handling",
@@ -114,6 +130,7 @@ const EXCLUDED = {
   "reel-vision": "ffmpeg/whisper-cli/yt-dlp pipeline over local video files",
   "schedule": "creates scheduled tasks through the host's scheduler tool",
   "second-brain": "filesystem census (ls ~/.claude/skills) + OS roster sync writes; fleet_roster already answers the read side",
+  "setup-claude": "guided plugin install/connector flow inside the Claude app (role picker, plugin and connector widgets, try-a-skill cards); a host onboarding tour, not a Churlish job",
   "setup-cowork": "guided plugin install/connector flow inside Cowork",
   "skill-creator": "python eval/packaging scripts over skill directories on disk",
   "ui-ux-pro-max": "python search scripts over bundled CSV data (3.5 MB); needs the local toolchain",
@@ -223,14 +240,70 @@ if (unclassified.length) {
 const missing = [...Object.keys(RUNNABLE), ...Object.keys(EXCLUDED)].filter((n) => !found.has(n));
 if (missing.length) console.warn(`[sync-skills] classified but not found on disk (skipped): ${missing.join(", ")}`);
 
+// ---- overrides: skills-overrides/<key>/<relative path> ----
+// Keyed by the ROSTER key (the skills/<key>/ directory name), not the upstream
+// dir name, because that is the path the correction has to land on. Only
+// directories count; the README at the top level is documentation.
+const runnableKeys = new Map(Object.entries(RUNNABLE).map(([dir, v]) => [v.as ?? dir, dir]));
+const overrides = new Map(); // key → [relative paths], sorted
+if (existsSync(OVERRIDES)) {
+  for (const ent of readdirSync(OVERRIDES, { withFileTypes: true })) {
+    if (!ent.isDirectory()) continue;
+    const key = ent.name;
+    const files = walk(path.join(OVERRIDES, key)).sort();
+    if (!files.length) continue;
+    if (!runnableKeys.has(key)) {
+      console.error(`[sync-skills] OVERRIDE FOR A KEY THAT IS NOT RUNNABLE: skills-overrides/${key}/ (${files.join(", ")}) — a correction to a skill she cannot dispatch is a correction to nothing. Name the skill in RUNNABLE (the override dir is its roster key, e.g. "master-plan-formula", not "churlish-master-plan-formula") or remove the override.`);
+      process.exit(3);
+    }
+    const srcDir = runnableKeys.get(key);
+    if (!found.has(srcDir)) {
+      console.error(`[sync-skills] OVERRIDE FOR A SKILL NOT ON DISK: skills-overrides/${key}/ — RUNNABLE names "${srcDir}" but no source has it, so nothing would be bundled for the override to correct.`);
+      process.exit(3);
+    }
+    const nonText = files.filter((f) => f !== "SKILL.md" && !TEXT_EXT.has(path.extname(f).toLowerCase()));
+    if (nonText.length) {
+      console.error(`[sync-skills] OVERRIDE IS NOT A TEXT REFERENCE: skills-overrides/${key}/${nonText.join(", ")} — the bundle carries ${[...TEXT_EXT].join(" ")} only.`);
+      process.exit(3);
+    }
+    overrides.set(key, files);
+  }
+}
+const overrideCount = [...overrides.values()].reduce((n, f) => n + f.length, 0);
+
 // ---- bundle ----
 const units = [];
 const report = [];
+// Drift: what this run puts in skills/<key>/ versus what is there now. In a
+// dry run this is the list of what a real run WOULD change — upstream movement
+// since the last MANIFEST.json, plus any override that is not yet on disk.
+const drift = [];
+function driftOf(cur, next) {
+  if (!existsSync(cur)) return "added";
+  const have = readFileSync(cur);
+  if (have.equals(next)) return null;
+  const norm = (b) => b.toString("utf8").replace(/\r/g, "");
+  return norm(have) === norm(next) ? "changed (line endings only)" : "changed";
+}
 for (const [dir, { src, source }] of [...found.entries()].sort()) {
   if (!(dir in RUNNABLE)) continue;
   const verdict = RUNNABLE[dir];
   const key = verdict.as ?? dir;
-  const md = readFileSync(path.join(src, "SKILL.md"), "utf8");
+
+  // Overrides for this key: whole-file replacements at the same relative path.
+  // srcOf() names the bytes that actually land in skills/<key>/<f>, so the
+  // frontmatter, the sizes and the cap all see the override, not the upstream.
+  const ov = overrides.get(key) ?? [];
+  const ovDir = path.join(OVERRIDES, key);
+  const all = walk(src);
+  const upstream = new Set(all);
+  const srcOf = (f) => (ov.includes(f) ? path.join(ovDir, f) : path.join(src, f));
+  const overridesWithoutUpstream = ov.filter((f) => !upstream.has(f));
+  for (const f of overridesWithoutUpstream) {
+    console.warn(`[sync-skills] ${key}: override with no upstream counterpart — skills-overrides/${key}/${f} (bundled as a new reference; if it was meant to replace an upstream file, the path is wrong)`);
+  }
+
+  const md = readFileSync(srcOf("SKILL.md"), "utf8");
   const fm = parseFrontmatter(md);
   const r = roster.get(key);
   const name = r?.name ?? titleize(fm.name || dir);
@@ -238,27 +311,45 @@ for (const [dir, { src, source }] of [...found.entries()].sort()) {
   const role = firstSentence(desc || r?.job || name);
   const triggers = shortTriggers(r?.triggers || triggersFromDescription(desc, name));
 
-  const all = walk(src);
-  const text = all.filter((f) => f !== "SKILL.md" && TEXT_EXT.has(path.extname(f).toLowerCase()));
+  const text = [...new Set([...all, ...ov])].filter((f) => f !== "SKILL.md" && TEXT_EXT.has(path.extname(f).toLowerCase()));
   const skipped = all.filter((f) => f !== "SKILL.md" && !TEXT_EXT.has(path.extname(f).toLowerCase()));
-  const sized = text.map((f) => ({ f, bytes: statSync(path.join(src, f)).size })).sort((a, b) => a.bytes - b.bytes);
+  const sized = text.map((f) => ({ f, bytes: statSync(srcOf(f)).size })).sort((a, b) => a.bytes - b.bytes);
   const skillBytes = Buffer.byteLength(md, "utf8");
   let total = skillBytes + sized.reduce((n, x) => n + x.bytes, 0);
   const trimmed = [];
   while (total > MAX_BYTES && sized.length) {
     const drop = sized.pop();
     trimmed.push({ file: drop.f, bytes: drop.bytes });
+    if (ov.includes(drop.f)) console.warn(`[sync-skills] ${key}: TRIMMED AN OVERRIDE — skills-overrides/${key}/${drop.f} is over the cap and is NOT in the bundle; the ruling in it does not reach her`);
     total -= drop.bytes;
   }
   if (total > MAX_BYTES) console.warn(`[sync-skills] ${key}: SKILL.md alone is ${skillBytes} bytes (> cap) — kept anyway`);
   const files = ["SKILL.md", ...sized.map((x) => x.f).sort()];
+  const applied = ov.filter((f) => files.includes(f)).sort();
+
+  const dst = path.join(OUT, key);
+  if (!existsSync(dst)) {
+    drift.push(`${key}/: NEW BUNDLE (${files.length} files)`);
+  } else {
+    for (const f of files) {
+      const d = driftOf(path.join(dst, f), readFileSync(srcOf(f)));
+      if (d) drift.push(`${key}/${f}: ${d}${applied.includes(f) ? " [override]" : ""}`);
+    }
+    for (const f of walk(dst)) if (!files.includes(f)) drift.push(`${key}/${f}: removed`);
+  }
 
   if (!DRY) {
-    const dst = path.join(OUT, key);
     rmSync(dst, { recursive: true, force: true });
+    // 1. the upstream copy (post-cap file list)
     for (const f of files) {
+      if (!upstream.has(f)) continue;
       mkdirSync(path.dirname(path.join(dst, f)), { recursive: true });
       writeFileSync(path.join(dst, f), readFileSync(path.join(src, f)));
+    }
+    // 2. overrides over the destination — whole-file replacement at the same path
+    for (const f of applied) {
+      mkdirSync(path.dirname(path.join(dst, f)), { recursive: true });
+      writeFileSync(path.join(dst, f), readFileSync(path.join(ovDir, f)));
     }
   }
 
@@ -278,10 +369,12 @@ for (const [dir, { src, source }] of [...found.entries()].sort()) {
     bytes: total,
     skipped,
     trimmed,
+    overrides: applied,
+    ...(overridesWithoutUpstream.length ? { overridesWithoutUpstream } : {}),
     why: verdict.reason,
     ...(verdict.note ? { note: verdict.note } : {}),
   });
-  report.push(`${key.padEnd(26)} ${String(Math.round(total / 1024)).padStart(4)} KB  files=${files.length}${skipped.length ? ` skipped=${skipped.length}` : ""}${trimmed.length ? ` TRIMMED=${trimmed.map((t) => t.file).join(",")}` : ""}`);
+  report.push(`${key.padEnd(26)} ${String(Math.round(total / 1024)).padStart(4)} KB  files=${files.length}${skipped.length ? ` skipped=${skipped.length}` : ""}${trimmed.length ? ` TRIMMED=${trimmed.map((t) => t.file).join(",")}` : ""}${applied.length ? ` OVERRIDES=${applied.join(",")}` : ""}`);
 }
 
 const excluded = [...found.keys()]
@@ -293,24 +386,29 @@ const manifest = {
   generatedAt: new Date().toISOString(),
   generator: "scripts/sync-skills.mjs",
   sources: SOURCES,
+  overridesDir: "skills-overrides",
+  overrideFiles: overrideCount,
   maxBytesPerSkill: MAX_BYTES,
   pinned: [...PINNED].sort(),
   units: units.sort((a, b) => a.key.localeCompare(b.key)),
   excluded,
 };
 
+// Stale bundles (a skill retired or reclassified since the last sync).
+const keep = new Set(units.map((u) => u.key));
+const stale = existsSync(OUT) ? readdirSync(OUT, { withFileTypes: true }).filter((e) => e.isDirectory() && !keep.has(e.name)).map((e) => e.name) : [];
+for (const n of stale) drift.push(`${n}/: STALE BUNDLE (not RUNNABLE any more) — removed`);
+
 if (!DRY) {
   mkdirSync(OUT, { recursive: true });
-  // Remove stale bundles (a skill retired or reclassified since the last sync).
-  const keep = new Set(units.map((u) => u.key));
-  for (const ent of readdirSync(OUT, { withFileTypes: true })) {
-    if (ent.isDirectory() && !keep.has(ent.name)) {
-      rmSync(path.join(OUT, ent.name), { recursive: true, force: true });
-      console.log(`[sync-skills] removed stale bundle ${ent.name}`);
-    }
+  for (const n of stale) {
+    rmSync(path.join(OUT, n), { recursive: true, force: true });
+    console.log(`[sync-skills] removed stale bundle ${n}`);
   }
   writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
 }
 
 console.log(report.join("\n"));
-console.log(`\n${units.length} RUNNABLE bundled, ${excluded.length} WORKSPACE_ONLY excluded, ${found.size} skill dirs scanned${DRY ? " (dry run — nothing written)" : ` → ${MANIFEST}`}`);
+console.log(`\nDRIFT — ${DRY ? "what a real run WOULD change" : "what this run changed"} in skills/ (${drift.length} item${drift.length === 1 ? "" : "s"}; MANIFEST.json always rewrites):`);
+console.log(drift.length ? drift.map((d) => `  ${d}`).join("\n") : "  (none — skills/ already matches the sources + overrides)");
+console.log(`\n${units.length} RUNNABLE bundled, ${excluded.length} WORKSPACE_ONLY excluded, ${found.size} skill dirs scanned, ${overrideCount} override file${overrideCount === 1 ? "" : "s"} across ${overrides.size} key${overrides.size === 1 ? "" : "s"}${DRY ? " (dry run — nothing written)" : ` → ${MANIFEST}`}`);
