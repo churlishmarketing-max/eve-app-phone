@@ -40,6 +40,9 @@ export default function App() {
   const [transientNote, setTransientNote] = useState<string | null>(null);
   const [config, setConfig] = useState<ConfigView | null>(null);
   const [voiceName, setVoiceName] = useState<string | null>(null);
+  // W3 — looks the MAIN process added to her closet this session. A count, and
+  // only a count: main never sends a filename over this channel.
+  const [looksAdded, setLooksAdded] = useState(0);
   const [resolvedIds, setResolvedIds] = useState<string[]>([]);
   // v0.2 — what the FLEET tab's DISPATCH button put in THE CORE's command bar.
   const [corePrefill, setCorePrefill] = useState<CorePrefill | null>(null);
@@ -92,6 +95,26 @@ export default function App() {
     counted.current = true;
     if (!config.harness) setSessionNo(bootSession(false));
   }, [config]);
+
+  // ---- her closet quietly grew --------------------------------------------
+  // Asked once on mount BECAUSE THE SYNC MAY HAVE ALREADY RUN before this
+  // window existed, then subscribed for later passes. Main only broadcasts when
+  // a look was actually added, so a session with no new looks never fires this
+  // and the rail stays silent — which is the correct output on the ordinary day.
+  useEffect(() => {
+    let dead = false;
+    void window.eve.wardrobe
+      .syncState()
+      .then((e) => {
+        if (!dead) setLooksAdded(e.addedThisSession);
+      })
+      .catch(() => undefined);
+    const unsub = window.eve.wardrobe.onSync((e) => setLooksAdded(e.addedThisSession));
+    return () => {
+      dead = true;
+      unsub();
+    };
+  }, []);
 
   // ---- her voice's name — never baked in ----------------------------------
   useEffect(() => {
@@ -302,6 +325,7 @@ export default function App() {
         chat={chat}
         mode={mode}
         transientNote={transientNote}
+        looksAdded={looksAdded}
         wardrobe={wardrobe}
         plateMode={plateMode}
         voiceName={voiceName}

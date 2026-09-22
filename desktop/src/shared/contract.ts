@@ -464,6 +464,33 @@ export interface Wardrobe {
   looks: WardrobeLook[];
 }
 
+/** POST /wardrobe/sync/manifest — what the bucket actually holds. A FAILED
+ *  read is `ok:false`, never an empty list: "the closet is empty" and "I
+ *  couldn't see the closet" are different facts and only one of them is safe. */
+export type LookManifest =
+  | { ok: true; looks: { file: string; size: number | null }[] }
+  | { ok: false; error: string };
+
+/** POST /wardrobe/sync/look/:name — one look, added or already hers. */
+export type LookPut =
+  | { ok: true; status: "added" | "unchanged" }
+  | { ok: false; error: string };
+
+/**
+ * WARDROBE SYNC — main -> renderer, and the answer to eve:wardrobe:syncstate.
+ *
+ * A COUNT AND A TIMESTAMP. NO FILENAME EVER CROSSES THIS LINE: a filename is
+ * untrusted third-party text by desk.ts's whole thesis, and the deck needs no
+ * name to say that a number moved. `addedThisSession` is MEASURED — it counts
+ * 200s the main process observed — so the deck may print it; when nothing was
+ * added the deck prints nothing at all, which is the correct output on the
+ * ordinary day.
+ */
+export interface WardrobeSyncEvent {
+  addedThisSession: number;
+  lastRunAt: string | null;
+}
+
 export interface Transcript {
   ok: boolean;
   transcript?: string;
@@ -801,6 +828,10 @@ export const IPC = {
   capture: "eve:capture",
   wardrobeGet: "eve:wardrobe:get",
   wardrobeWear: "eve:wardrobe:wear",
+  // AUTOMATIC WARDROBE SYNC. Read-only from the renderer's side: there is no
+  // channel here that starts a sync, names a file, or removes anything — the
+  // renderer can ask how many looks were added and nothing else.
+  wardrobeSyncState: "eve:wardrobe:syncstate",
   voiceTranscribe: "eve:voice:transcribe",
   voiceSpeak: "eve:voice:speak",
   voices: "eve:voice:voices",
@@ -837,6 +868,7 @@ export const IPC = {
   summonShown: "eve:summon:shown",
   voiceEvent: "eve:voice:event",
   deskProgress: "eve:desk:progress",
+  wardrobeSync: "eve:wardrobe:sync",
 } as const;
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC];
@@ -907,6 +939,10 @@ export interface EveBridge {
   wardrobe: {
     get(): Promise<Wardrobe>;
     wear(file: string): Promise<WriteResult>;
+    /** How many looks the main process has added this session. Count only. */
+    syncState(): Promise<WardrobeSyncEvent>;
+    /** Fires only when a look was actually added. Silence is the ordinary day. */
+    onSync(cb: (e: WardrobeSyncEvent) => void): Unsub;
   };
   voice: {
     transcribe(buf: ArrayBuffer, mime?: string): Promise<Transcript>;

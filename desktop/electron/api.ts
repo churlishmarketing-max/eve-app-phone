@@ -30,6 +30,8 @@ import type {
   DestinationCheck,
   EveState,
   Health,
+  LookManifest,
+  LookPut,
   PendingConfirm,
   SpeakAudio,
   Transcript,
@@ -78,6 +80,8 @@ export function setDeskIndex(access: DeskIndexAccess | null): void {
 
 // JSON calls get 10s. The SSE stream gets none — a long agent turn is normal.
 const JSON_TIMEOUT_MS = 10_000;
+// A look is up to 10 MB over a home uplink; 10s would fail honest uploads.
+const UPLOAD_TIMEOUT_MS = 60_000;
 
 function headers(json: boolean, auth = true): Record<string, string> {
   const h: Record<string, string> = {};
@@ -321,6 +325,70 @@ export async function postCapture(text: string, sourceLink?: string): Promise<Wr
 export async function postWear(file: string): Promise<WriteResult> {
   if (isMock()) return fx.mockWrite();
   return write(await callJson<WriteResult>("/wardrobe/wear", { method: "POST", body: { file } }));
+}
+
+// ---------------------------------------------------------------------------
+// AUTOMATIC WARDROBE SYNC — the two calls wardrobe-sync.ts makes.
+//
+// Both are POST, which is load-bearing: the brain's auth middleware exempts GET
+// /wardrobe (an <img> tag cannot send Authorization), so a GET here would be an
+// UNAUTHENTICATED write door. POST puts them back behind the bearer.
+//
+// They do their own fetch rather than going through callJson because the
+// brain's refusal REASON is the whole value of a refusal — "HTTP 409" tells him
+// nothing and `"AUTHORITY.png" already names a DIFFERENT look` tells him what
+// to do. Same headers(), same brainUrl(), same never-throws contract as
+// everything else in this file.
+//
+// AND THERE IS NO DELETE CALL. Not here, not anywhere on this path.
+// ---------------------------------------------------------------------------
+
+/** What the bucket holds. A failed read is ok:false — NEVER an empty list. */
+export async function lookManifest(): Promise<LookManifest> {
+  // EVE_MOCK has no closet, and an empty list would read as "the bucket is
+  // empty" — which would make the sync upload everything. It says it cannot see.
+  if (isMock()) return { ok: false, error: "mock brain — no closet to read" };
+  try {
+    const res = await fetch(`${brainUrl()}/wardrobe/sync/manifest`, {
+      method: "POST",
+      headers: headers(false, true),
+      signal: AbortSignal.timeout(JSON_TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      return { ok: false, error: res.status === 401 ? "unauthorized — check the brain token" : `HTTP ${res.status}` };
+    }
+    const body = (await res.json()) as { looks?: { file?: unknown; size?: unknown }[] };
+    const looks = (body.looks ?? [])
+      .filter((l): l is { file: string; size: unknown } => typeof l.file === "string" && !!l.file)
+      .map((l) => ({ file: l.file, size: typeof l.size === "number" ? l.size : null }));
+    return { ok: true, looks };
+  } catch (err) {
+    return { ok: false, error: safeMessage(err) };
+  }
+}
+
+/** One look, raw bytes. The brain sanitises the name and may refuse it. */
+export async function putLook(file: string, bytes: Uint8Array): Promise<LookPut> {
+  // Never claim a mock upload happened. Nothing was stored anywhere.
+  if (isMock()) return { ok: false, error: "mock brain — nothing was uploaded" };
+  try {
+    const res = await fetch(`${brainUrl()}/wardrobe/sync/look/${encodeURIComponent(file)}`, {
+      method: "POST",
+      headers: { ...headers(false, true), "Content-Type": "application/octet-stream" },
+      body: bytes as BodyInit,
+      signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+    });
+    const body = (await res.json().catch(() => null)) as { status?: string; error?: string } | null;
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: body?.error ?? (res.status === 401 ? "unauthorized — check the brain token" : `HTTP ${res.status}`),
+      };
+    }
+    return { ok: true, status: body?.status === "unchanged" ? "unchanged" : "added" };
+  } catch (err) {
+    return { ok: false, error: safeMessage(err) };
+  }
 }
 
 // ---------------------------------------------------------------------------

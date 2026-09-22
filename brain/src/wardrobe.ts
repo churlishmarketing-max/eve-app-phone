@@ -15,7 +15,9 @@ import { db } from "./db.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const localDir = path.join(here, "..", "data", "wardrobe");
-const BUCKET = "wardrobe";
+/** The one bucket name. Exported so wardrobe-add.ts adds to the SAME closet
+ *  rather than growing a second opinion about where her looks live. */
+export const BUCKET = "wardrobe";
 const WEARING_KEY = "wardrobe.wearing";
 
 let cache: { files: string[]; at: number } = { files: [], at: 0 };
@@ -49,6 +51,22 @@ export async function listLooksAsync(): Promise<string[]> {
 // Sync view for the tools — served from cache, warmed at boot.
 export function listLooks(): string[] {
   return cache.files.length ? cache.files : localLooks();
+}
+
+/** Drop the 60s listing cache. Called after a look is ADDED (wardrobe-add.ts)
+ *  so a new look is wearable within the minute instead of within two. Nothing
+ *  calls this for a removal, because nothing here removes. */
+export function invalidateLooksCache(): void {
+  cache = { files: [], at: 0 };
+}
+
+/** Content type from the extension — the same three-way map
+ *  scripts/sync-wardrobe.mjs has used since the closet moved to storage. */
+export function mimeOf(file: string): string {
+  const e = file.toLowerCase();
+  if (e.endsWith(".png")) return "image/png";
+  if (e.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
 }
 
 export function lookUrl(file: string): string | null {

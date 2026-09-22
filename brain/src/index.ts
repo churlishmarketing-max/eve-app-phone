@@ -38,6 +38,7 @@ import {
   isVoiceId,
 } from "./voice.js";
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
+import { MAX_LOOK_BYTES, addLook, bucketManifest } from "./wardrobe-add.js";
 import { warmBoard, boardSnapshotReady } from "./os.js";
 import { warmFleet, fleetViewStatus } from "./fleet.js";
 import { registryCounts } from "./registry.js";
@@ -448,6 +449,53 @@ app.post("/wardrobe/wear", async (req, res) => {
   if (typeof file !== "string" || !file) return res.status(400).json({ error: "file (string) required" });
   res.json(await setWearing(file));
 });
+
+// ---------------------------------------------------------------------------
+// AUTOMATIC WARDROBE SYNC — the door his desktop pushes new looks through.
+//
+// His authoring folder is on HIS DISK. Railway cannot see it, so the desktop
+// lists the folder, asks the manifest below what the bucket already holds, and
+// POSTs only the bytes that are missing. The desktop never gets a Supabase key
+// (the one-secret law): THIS is the only thing that touches storage.
+//
+// Both are POST, which is not cosmetic — the auth exemption above is GET-only,
+// so POST is what makes them bearer-gated like every other write route.
+//
+// THE BYTES GO TO THE STORAGE BUCKET AND NEVER TO THE MODEL. This is not the
+// image-intake path (src/intake.ts, switched off at the door); it is a file
+// store. See the header of src/wardrobe-add.ts.
+//
+// AND THERE IS NO DELETE ROUTE HERE. Not a guarded one, not a flagged one.
+// Removing a look stays a hand-run of `node scripts/sync-wardrobe.mjs --prune`,
+// because a file missing from his folder means "OneDrive hasn't synced yet" at
+// least as often as it means "he retired it", and an automatic prune on the
+// wrong day silently empties her closet with no undo.
+// ---------------------------------------------------------------------------
+
+// What the bucket holds, with sizes, so the desktop can skip what is already
+// there instead of re-uploading the whole closet every cycle. A failed listing
+// is a failure, never an empty list — see bucketManifest().
+app.post("/wardrobe/sync/manifest", async (_req, res) => {
+  const m = await bucketManifest();
+  if (!m.ok) return res.status(503).json({ ok: false, error: m.error });
+  res.json({ ok: true, bucket: "wardrobe", looks: m.looks });
+});
+
+// One look, raw bytes, name in the path. The name is UNTRUSTED third-party
+// text and is refused rather than repaired — see vetLookName().
+app.post(
+  "/wardrobe/sync/look/:name",
+  // The parser's ceiling sits a little ABOVE the look ceiling on purpose: a
+  // body one byte over gets addLook()'s honest JSON refusal instead of
+  // body-parser's HTML 413. The parser is the backstop for absurd bodies.
+  express.raw({ type: ["image/*", "application/octet-stream"], limit: MAX_LOOK_BYTES + 64 * 1024 }),
+  async (req, res) => {
+    const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    const r = await addLook(req.params.name, body);
+    if (!r.ok) return res.status(r.httpStatus).json({ ok: false, status: r.status, error: r.error });
+    res.json({ ok: true, status: r.status, file: r.file });
+  },
+);
 
 // Routine tick — idempotent per (routine, local day); optional onDate back-dates
 // inside the last 7 days (ops.ts). URL unchanged; body may add { onDate }.

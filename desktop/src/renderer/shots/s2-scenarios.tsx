@@ -328,6 +328,14 @@ const LOCKED_THREAD: DeckMsg[] = [
 export const scenarios: Record<string, () => JSX.Element> = {
   deck: () => <Deck {...base()} />,
 
+  // W3 — HER CLOSET QUIETLY GREW. The whole feature's visible surface is the
+  // one teal line under QUIET in the rail: no modal, no toast, no red, nothing
+  // he has to dismiss. The number is the count the main process observed while
+  // uploading; `deck` above is the same board with nothing added, and the row
+  // is simply ABSENT there — the pair is the proof that silence is what an
+  // ordinary day renders.
+  "deck-looks-added": () => <Deck {...base({ looksAdded: 14 })} />,
+
   // NO CARD. Real Deck, real TalkColumn, and `confirms` deliberately absent on
   // every message — the rail stays calm, there is nothing to approve, and the
   // last word on the screen is a question back to him.

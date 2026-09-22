@@ -39,6 +39,9 @@ export interface DeckProps {
   voiceName: string | null;
   silentAtDesk: boolean;
   quietHours: boolean;
+  /** W3 — looks added to her closet this session. Optional so every existing
+   *  fixture keeps compiling; absent reads as "none added", which draws nothing. */
+  looksAdded?: number;
   view: DeckView;
   /** The wardrobe overlay's state. It is NOT a DeckView (App.tsx owns it as a
       separate boolean), but the nav has to be able to light it and close it,
@@ -190,6 +193,7 @@ export default function Deck(p: DeckProps) {
             voiceName={p.voiceName}
             silentAtDesk={p.silentAtDesk}
             quietHours={p.quietHours}
+            looksAdded={p.looksAdded ?? 0}
             onToggleSilent={p.onToggleSilent}
             onOpenWardrobe={p.onOpenWardrobe}
             onOpenSettings={() => p.onView("settings")}
