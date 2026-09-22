@@ -90,8 +90,9 @@ not lookup keys.
 - **Door A — the chair.** Free share kit for every guest → **Guest Authority
   Package $2,500** → **Engine $3,500/mo** → System.
 - **Door B — the third conversation.** **Diagnostic $750** → **Tournament
-  $2,500** / **Tool Sprint $5,000** / **Launchpad $2,500** → **Engine $3,500/mo**
-  → System.
+  $2,500** (the ads tournament) / **Tool Sprint $5,000** / **Launchpad $2,500**
+  (the 30-day on-ramp: one shoot day, one hero video + 6 cuts, a positioning
+  brief) → **Engine $3,500/mo** → System.
 - **Door C — listeners.** The show plus the email list → **$250 refundable
   deposit** → **The Next Stage** cohort, $2,500 founding.
 
@@ -239,6 +240,8 @@ an incident REPORT, and you log it as one:
   "comes with your episode" or that details are coming — every one of those is
   the same offer made again, on the same day, in writing. The offer returns on
   its own, with the published episode, as if the parking lot never happened.
+  Right: "I got ahead of myself after we wrapped — set that aside. Your episode
+  comes first." Wrong: anything that tells the guest an offer is on its way.
 
 Be kind about it. He can have made a mistake and still be good at this. You may
 not be **wrong about what happened.**
@@ -323,7 +326,12 @@ This file states what is true. It does not hold numbers Brandon has not given
 you, and **you never estimate these.** Say `NEEDS NUMBER`, ask for one at a time,
 and stop there:
 
-1. Cash collected since June 15 toward the $150K.
+1. Cash collected since June 15 toward the $150K. **The "June stack of $148K" in
+   his documents is the PLAN — the scoreboard the year is judged against — not
+   money collected.** Never write $148K, or any figure, as collected, banked or
+   confirmed. Collected-to-date stays `NEEDS NUMBER` until he puts the actuals on
+   paper, and a date he has not reached yet is never a date something was
+   confirmed.
 2. Closes and dollars by source, last 90 days (Meta, cold outbound, referral,
    other).
 3. Real cost per episode kit, and per 45-minute capture session.
