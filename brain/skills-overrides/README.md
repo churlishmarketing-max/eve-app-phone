@@ -85,8 +85,8 @@ the bundle is text-only by design, and a binary here is also an abort.
    the roster key. Keep the upstream line-ending style (the plugin files are
    CRLF) so the override diff stays readable.
 3. Make the correction in the override. Follow the sweep's law: a dead number
-   is replaced by a prohibition or by `NEEDS NUMBER` / `NEEDS DECISION`, never
-   by a guessed replacement.
+   is replaced by a prohibition or by `NEEDS NUMBER` (or a flagged open
+   question when the choice is his), never by a guessed replacement.
 4. Add a row to the register below: path, the ruling it carries, the date.
 5. `node scripts/sync-skills.mjs --dry` — the DRIFT section should show your
    file as `changed [override]` (or `added`) and nothing you did not intend.
@@ -101,9 +101,11 @@ file here, re-sync, and remove its register row.
 ## Register — what is overridden and why
 
 All rulings below date from the Sept 21, 2026 pivot (Crucible-level strategy
-work is Kelly Bromley's lane; Authority Lite is retired; the Engine minimum
-term is not ruled) and the Sept 22 dead-fact sweep. All 14 upstream originals
-are in the plugin cache and still carry the dead facts.
+work is Kelly Bromley's lane; Authority Lite is retired), the Sept 22 dead-fact
+sweep, and Brandon's Sept 22 rulings (Engine is 4 months, System is 6; the
+grandfathered Lite rate exists only for Transparency and GE Outdoors, everyone
+else moved to the Launchpad or the Tournament at $2,500). All 14 upstream
+originals are in the plugin cache and still carry the dead facts.
 
 | Override (roster key / path) | Ruling it carries |
 |---|---|
@@ -111,13 +113,13 @@ are in the plugin cache and still carry the dead facts.
 | `avatar-bible-loader/references/active-avatars.md` | The Crucible avatar is Kelly's lane; survives as an ICP for recognising the owner, never an offer to sell, scope or price. Revenue X-Ray, Crucible Core and Performance Partnership are dead. |
 | `blue-beetle/SKILL.md` | Service-track ICP is `[NEEDS: …]` — the Crucible avatars retired to Kelly; Brandon names the replacement. |
 | `fable-mind/references/proven-calls.md` | The Tournament ($2,500) took Lite's slot; the Launchpad is a separate rung and did not replace Lite. |
-| `guardian/SKILL.md` | Lite's legacy rate is `NEEDS NUMBER`; the Engine term (and so its renewal clock) is `NEEDS DECISION`. |
+| `guardian/SKILL.md` | Lite's grandfathered rate is `NEEDS NUMBER` and belongs to Transparency and GE Outdoors only; the Engine row carries the 4-month term and its clock (Day 75 / Day 85). |
 | `kid-flash/SKILL.md` | Same service-track ICP `[NEEDS: …]` as blue-beetle. |
 | `master-plan-formula/SKILL.md` | "3 months on lite tier" → "3 months on entry tier" (Lite is not a tier name). |
 | `master-plan-formula/references/brain-dump-parser.md` | Same: "entry tier", not "lite". |
-| `master-plan-formula/references/churlish-formula.md` | No performance partnership / revenue share as a Churlish rung; the AE example subtotal and total are `NEEDS DECISION` until the Engine term is ruled. |
+| `master-plan-formula/references/churlish-formula.md` | No performance partnership / revenue share as a Churlish rung; the AE example runs at the 4-month Engine term (3 × $3,500 × 4 = $42,000; total $179,500, stated as short of the $200K target rather than fudged). |
 | `master-plan-formula/references/pricing-architectures.md` | No $1,750 Starter rung (that was Lite, retired); Churlish's own ladder stated; "Tournament / Engine / System", never "Lite / Engine / System". |
-| `master-plan-formula/references/section-templates.md` | AE example math and the "Why 6-month minimum on Engine?" Q&A are `NEEDS DECISION` until the Engine term is ruled. |
+| `master-plan-formula/references/section-templates.md` | AE example math at the 4-month Engine term ($42,000 / $179,500) and the Q&A reads "Why a 4-month minimum on Engine?". |
 | `proposal-generator/references/industry-angles.md` | The Crucible / Dynamic Edge is not a Churlish proof point; `[NEEDS: …]` a Churlish-owned one. |
-| `proposal-generator/references/pricing-engine.md` | Lite has no price on the page; Engine and Organic Engine terms are `NEEDS DECISION`; no Crucible tier, no Crucible price — the line is "That's not a video problem. I know who fixes that." |
-| `proposal-generator/references/proposal-architecture.md` | Engine and Organic Engine minimum terms are `NEEDS DECISION`; write no term for either until he rules. |
+| `proposal-generator/references/pricing-engine.md` | Lite has no price on the page and its grandfathered rate belongs to Transparency and GE Outdoors only; Engine and Organic Engine are 4-month minimums; no Crucible tier, no Crucible price — the line is "That's not a video problem. I know who fixes that." |
+| `proposal-generator/references/proposal-architecture.md` | Engine and Organic Engine minimum terms are 4 months; System is 6; the Launchpad has no term. |

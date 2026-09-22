@@ -304,9 +304,9 @@ Subhead: Not heroic. Just the math working.
 
 Breakdown:
 - 10 CRF clients × $1,250 × 9 months = $112,500
-- 3 AE clients × $3,500 × NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled) = NEEDS DECISION [subtotal cannot be computed until the Engine term is ruled]
+- 3 AE clients × $3,500 × 4 months = $42,000
 - Project work (blended) = $25,000
-- Total = NEEDS DECISION [$112,500 + AE subtotal + $25,000 — cannot be summed until the Engine term is ruled]
+- Total = $179,500 ($20,500 short of the $200K target — the target or the offer mix moves, not the math)
 ```
 
 **HTML pattern:**
@@ -325,9 +325,9 @@ Breakdown:
 
   <table class="metric-table" style="margin-top: 24px;">
     <tr><td>CRF clients @ $1,250</td><td>10 × $1,250 × 9 = $112,500</td></tr>
-    <tr><td>AE retainers @ $3,500</td><td>3 × $3,500 × NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled) = NEEDS DECISION [cannot be computed until the Engine term is ruled]</td></tr>
+    <tr><td>AE retainers @ $3,500</td><td>3 × $3,500 × 4 = $42,000</td></tr>
     <tr><td>Project work blended</td><td>$25,000</td></tr>
-    <tr><td><strong>Total 2026</strong></td><td><strong>NEEDS DECISION</strong> [$112,500 + AE subtotal + $25,000 — cannot be summed until the Engine term is ruled]</td></tr>
+    <tr><td><strong>Total 2026</strong></td><td><strong>$179,500</strong> ($20,500 short of the $200K target)</td></tr>
   </table>
 </div>
 ```
@@ -604,8 +604,8 @@ Common questions to pre-empt:
 
 **Example (filled):**
 ```
-Q: Why a minimum term on Engine? [Engine term: NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled)]
-A: Content authority compounds. Three months covers ramp; the rest of the minimum covers optimization. Buyers who won't commit to the full minimum aren't the right buyers for this tier.
+Q: Why a 4-month minimum on Engine?
+A: Content authority compounds. Four months is the Engine minimum — System carries six — and buyers who won't commit to four aren't the right buyers for this tier.
 
 Q: Why not lower the entry price to win more clients?
 A: Lower prices attract clients who treat the work as discretionary. Higher minimums filter for clients who treat it as essential. The math works on retention, not volume.
@@ -627,8 +627,8 @@ A: When free tier hits 500 active members. Not before. Pre-launch revenue from a
   <p>Questions this plan will raise, answered up front.</p>
 
   <div class="qa-block">
-    <div class="qa-q">Why a minimum term on Engine? [Engine term: NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled)]</div>
-    <div class="qa-a">Content authority compounds. Three months covers ramp; the rest of the minimum covers optimization. Buyers who won't commit to the full minimum aren't the right buyers for this tier.</div>
+    <div class="qa-q">Why a 4-month minimum on Engine?</div>
+    <div class="qa-a">Content authority compounds. Four months is the Engine minimum — System carries six — and buyers who won't commit to four aren't the right buyers for this tier.</div>
   </div>
   <!-- repeat for each Q&A -->
 </div>

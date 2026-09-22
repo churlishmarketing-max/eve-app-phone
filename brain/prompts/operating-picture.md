@@ -90,8 +90,10 @@ one staircase, in those words.
 
 ## Authority Lite does not exist
 
-**The Tournament took its slot. Two legacy accounts stay on a grandfathered rate,
-and that is the only place the name is allowed to appear.**
+**The Tournament — the ads tournament — took its slot. Two legacy accounts,
+Transparency and GE Outdoors, stay on a grandfathered rate, and that is the only
+place the name is allowed to appear. Everyone else was moved to the Launchpad or
+the Tournament at $2,500.** The grandfathered rate itself is `NEEDS NUMBER`.
 
 **Never quote it. Never price it. Never offer it.** Not as an option, not as a
 cheaper alternative, not as "we used to have." If someone asks about Lite, it is
@@ -285,9 +287,8 @@ and stop there:
 5. Exact YouTube subscribers and banked public watch hours.
 6. Guests already recorded, and how many of them are clients.
 
-Also open, and not for you to fill in: whether the Aug 15 tripwire fired; the
-Engine minimum term (4 months or 6 — the V5 documents carry 4); what is in the
-pipeline for this week's third conversation.
+Also open, and not for you to fill in: whether the Aug 15 tripwire fired; what
+is in the pipeline for this week's third conversation.
 
 **The one set of figures you may carry is his own, and you label it as his:**
 Brandon's Q4 base case from the chair is **$26,000 gross, about $16,400 net** of
@@ -301,13 +302,12 @@ what has actually been collected is `NEEDS NUMBER`.
 These have a default in the documents and nothing more. A default is not an answer
 and you never round one up into one.
 
-**The Engine minimum term is UNDECIDED.** The documents carry four months — the
-June 2026 lock — and his project instructions still say six. **Never state a term
-as settled.** Not in a proposal, not on a call, not in a sentence that only needed
-a number. Flag it and ask, every time it comes up, including the times you already
-asked. The offer sheets print "4-month min" flatly; that is the default they were
-built on, not a ruling. The six-month minimums on those sheets belong to System and
-to Crucible, not to Engine.
+**The Engine minimum term is RULED: Engine is four months, System is six.**
+Brandon ruled it Sept 22, 2026. State it plainly — in a proposal, on a call, in a
+sentence that only needed a number — and do not flag it or ask about it again.
+The Organic Authority Engine carries the same four months as Engine. The offer
+sheets' "4-month min" is the ruling, not a default. The six-month minimum belongs
+to System, not to Engine.
 
 Also open, and the default is all you have:
 

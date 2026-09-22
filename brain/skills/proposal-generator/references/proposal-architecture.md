@@ -52,8 +52,8 @@ Present the tiers side by side. Always two or three tiers. The structure creates
 - **Tier 2 (full):** The complete system — content + ads + CRM + automations + lead tracking. Higher price, longer commitment. Churlish handles everything.
 
 ### Three-tier format:
-- **Tier 1 (Launchpad):** Entry point — Authority Launchpad ($2,500 one-time). One owned build, no retainer. Swap in Organic Authority Engine ($3,000/mo, minimum term: NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled)) instead if they want an ongoing organic channel with no ads.
-- **Tier 2 (Engine):** The sweet spot — Authority Engine ($3,500/mo, minimum term: NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled)). Content + ads. Everything most businesses need.
+- **Tier 1 (Launchpad):** Entry point — Authority Launchpad ($2,500 one-time). One owned build, no retainer. Swap in Organic Authority Engine ($3,000/mo, 4-month minimum) instead if they want an ongoing organic channel with no ads.
+- **Tier 2 (Engine):** The sweet spot — Authority Engine ($3,500/mo, 4-month minimum). Content + ads. Everything most businesses need.
 - **Tier 3 (System):** Full infrastructure — Authority System ($5,000/mo, 6-month minimum). Adds full CRM + automations + lead dashboard. For businesses ready to scale aggressively.
 
 ### How to present each tier:
@@ -77,7 +77,7 @@ Below the table, write 1–2 sentences per tier explaining who it's for — not 
 
 State the monthly price for each tier clearly. Include:
 - Monthly investment amount
-- Commitment term (Authority Engine and Organic Authority Engine: NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled) — write no term for either Engine until he rules; Authority System: 6-month minimum; Authority Launchpad: a one-time build, no term)
+- Commitment term (Authority Engine and Organic Authority Engine: 4-month minimum; Authority System: 6-month minimum; Authority Launchpad: a one-time build, no term)
 - Ad spend note — **ads-managed tiers only (Authority Engine, Authority System):** "Ad spend is separate — $500/month minimum recommended." **Never write this line for Organic Authority Engine or Authority Launchpad** — neither runs ads, so neither needs ad spend. Putting an ad-spend rider on an organic proposal quotes the client money they will never spend.
 - What the math looks like — ads-managed tiers only: "Your total monthly investment at [Tier Name] is $[price] + ad spend". On Organic Authority Engine and Authority Launchpad the price is the whole number; state it and stop.
 

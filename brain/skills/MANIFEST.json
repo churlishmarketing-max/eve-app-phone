@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-22T12:49:45.290Z",
+  "generatedAt": "2026-09-22T18:13:33.706Z",
   "generator": "scripts/sync-skills.mjs",
   "sources": [
     "C:/Users/mrkin/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/cae82843-359e-4be7-8cdb-7e9039f69fb3/fb4f662d-e133-4c51-97b4-17c756ca0e45/skills",
@@ -481,7 +481,7 @@
       "files": [
         "SKILL.md"
       ],
-      "bytes": 6864,
+      "bytes": 6703,
       "skipped": [],
       "trimmed": [],
       "overrides": [
@@ -704,7 +704,7 @@
         "templates/exec-summary-outline.md",
         "templates/master-plan-outline.md"
       ],
-      "bytes": 87583,
+      "bytes": 86967,
       "skipped": [
         "scripts/build_master_plan.py"
       ],
@@ -794,7 +794,7 @@
         "references/pricing-engine.md",
         "references/proposal-architecture.md"
       ],
-      "bytes": 30953,
+      "bytes": 30585,
       "skipped": [],
       "trimmed": [],
       "overrides": [

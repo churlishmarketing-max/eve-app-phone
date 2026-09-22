@@ -126,9 +126,9 @@ If the math doesn't reach the target with realistic assumptions, the **target ne
 **Example (Churlish 2026):**
 - Target: $200K annual revenue
 - 10 CRF clients × $1,250 × 9 months = $112,500
-- 3 AE retainers × $3,500 × NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled) = NEEDS DECISION [subtotal cannot be computed until the Engine term is ruled]
+- 3 AE retainers × $3,500 × 4 months = $42,000
 - Project work blended = $25,000
-- Total = NEEDS DECISION [$112,500 + AE subtotal + $25,000 — cannot be summed until the Engine term is ruled]
+- Total = $179,500 — $20,500 short of the $200K target. That is the rule above in action: the target or the offer mix changes, not the math.
 
 Use the `cash-hero` component for the target statement and `metric-table` for the breakdown.
 

@@ -18,8 +18,8 @@ No retainer reaches its final 30 days without a receipts-built renewal case on B
 
 | Offer | Minimum term | Renewal motion opens | Case due on Brandon's desk |
 |---|---|---|---|
-| Authority Lite (grandfathered rate — `NEEDS NUMBER`) — **RETIRED: two legacy accounts only, never sell, never price** | 3 months | Day 45 | Day 55 (35 days runway) |
-| Authority Engine ($3,500/mo) | NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled) | NEEDS DECISION [clock cannot be computed until he rules] | NEEDS DECISION [clock cannot be computed until he rules; the 35-day runway rule still applies] |
+| Authority Lite (grandfathered rate — `NEEDS NUMBER`) — **RETIRED: Transparency and GE Outdoors only, never sell, never price** | 3 months | Day 45 | Day 55 (35 days runway) |
+| Authority Engine ($3,500/mo) | 4 months | Day 75 | Day 85 (35 days runway) |
 | Authority System ($5,000/mo) | 6 months | Day 120 | Day 145 (35 days runway) |
 | CRF tiers (monthly sub) | rolling | on engagement decay, not a date | within 7 days of a decay flag |
 | Spark / Ignition / Launch (one-off) | n/a | at delivery | with the final deliverable — the next-step offer ships with the last file |
@@ -35,7 +35,7 @@ Hard rule: **the case ships with 30+ days of runway.** A renewal pitch in the fi
    - 🔴 **Red** — thin results + quiet client. Immediate escalation; renewal is off the table until the account is rescued. Hand to Huntress for a leak read on what broke.
 3. **Build the renewal case — receipts only.** Numbers delivered vs baseline (leads, views, booked calls, revenue where attributable), deliverables shipped vs scoped, the strongest before/after, in the client's own metrics. **If results are thin, the case says so** (Fable Law 9) — and the play changes from renewal pitch to make-good plan: what went wrong, what changes, what the next 60 days prove. An honest make-good saves more accounts than a papered-over pitch.
 4. **Draft the next-phase offer.** A renewal is never "same thing again" — same-thing-again invites the client to shop the price. The three plays:
-   - **Ladder up** — Lite → Engine → System, justified by the receipts ("the content engine works; the constraint is now distribution — that's the Engine tier"). **Lite is RETIRED**: it appears here only as the starting rung a legacy client already sits on while being moved UP off it. Never sell into Lite, never quote the legacy rate (it is `NEEDS NUMBER` here on purpose — ask Brandon), never ladder anyone down to it.
+   - **Ladder up** — Lite → Engine → System, justified by the receipts ("the content engine works; the constraint is now distribution — that's the Engine tier"). **Lite is RETIRED**: it appears here only as the starting rung Transparency or GE Outdoors already sits on while being moved UP off it. Never sell into Lite, never quote the legacy rate (it is `NEEDS NUMBER` here on purpose — ask Brandon), never ladder anyone down to it.
    - **Same tier + new front** — add the Answer Engine add-on (Brother Eye), a CRF lane, or an ads scope. Fresh value, fresh conversation.
    - **Hold with proof** — same tier restated against the receipts, when the ladder genuinely doesn't fit.
    Pricing law applies: never discount — renewals add value, they don't cut price. New scopes route through invoice-scoper; tier jumps route through churlish-proposal-generator.

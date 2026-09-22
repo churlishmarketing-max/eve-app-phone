@@ -12,11 +12,11 @@ These are the default tier structures. The user may override any pricing — alw
 
 **The Authority Launchpad ($2,500 one-time, below) is a separate rung, not Lite's replacement.** It is the one-time build door on its own. Do not write "Lite was replaced by the Launchpad" — that is a fact error; the Tournament took the slot.
 
-Two legacy accounts stay on a grandfathered rate, and those two accounts are the only place the name is allowed to appear. **That rate is `NEEDS NUMBER`** — the old monthly figure is dead and is deliberately not written here, because a price on this page is a price that reaches a client. Ask Brandon for the legacy rate if a legacy account ever needs one; never reconstruct it.
+Two legacy accounts — **Transparency and GE Outdoors** — stay on a grandfathered rate, and those two accounts are the only place the name is allowed to appear. Every other former Lite account was moved to the Authority Launchpad or the Tournament ($2,500). **That rate is `NEEDS NUMBER`** — the old monthly figure is dead and is deliberately not written here, because a price on this page is a price that reaches a client. Ask Brandon for the legacy rate if a legacy account ever needs one; never reconstruct it.
 
 ### Authority Engine
 - **Monthly:** $3,500
-- **Commitment:** NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled)
+- **Commitment:** 4-month minimum
 - **Video shoots:** 1/month
 - **Short-form pieces:** 8–12
 - **Brand photo session:** Yes, 1/month
@@ -42,7 +42,7 @@ Two legacy accounts stay on a grandfathered rate, and those two accounts are the
 
 ### Organic Authority Engine
 - **Monthly:** $3,000
-- **Commitment:** NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled)
+- **Commitment:** 4-month minimum
 - **Video shoots:** 2 shoot days/month → 2–4 long-form YouTube videos
 - **Short-form pieces:** 16–20/month across Reels, TikTok and Shorts
 - **Brand photo session:** Yes
@@ -88,7 +88,7 @@ CRF is positioned as the lowest-friction entry point into the Churlish ecosystem
 
 ## Pricing presentation rules
 
-1. On the monthly tiers, always show monthly investment, not total contract value. "$3,000/month" is easier to process than "$[total] over [term] months." [The Engine term is NEEDS DECISION (Engine term: 4 or 6 months — Brandon has not ruled), so no Engine contract total can be written until he rules.] One-time offers (the Authority Launchpad) show the one-time price and no term.
+1. On the monthly tiers, always show monthly investment, not total contract value. "$3,500/month" is easier to process than "$14,000 over 4 months." One-time offers (the Authority Launchpad) show the one-time price and no term.
 2. On the ads-managed tiers only (Authority Engine, Authority System), ad spend is ALWAYS noted as separate — never bundle it into the tier price. **Never attach the ad-spend note to the Organic Authority Engine or the Authority Launchpad:** neither runs ads and neither requires any ad budget, so the rider quotes the client money they will never spend.
 3. When presenting two or three tiers side by side, the contrast does the selling. The lower tier shows what they'd be missing. The higher tier shows full commitment. The middle tier (when three are presented) becomes the natural choice.
 4. Never discount the first month. Never offer "first month free." The pricing reflects the value; undermining it on day one undermines the relationship.
