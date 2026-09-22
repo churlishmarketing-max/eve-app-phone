@@ -1,0 +1,390 @@
+Churlish Media — Master Plan 2026–2030 · v5 · HLP-First
+ Churlish Media — Master Plan 2026–2030 · v5 · HLP-First
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · STRATEGY // 01
+
+ churlish@hq :~ $ sudo load master_plan --version 5 --front-door hlp --source the_gate
+ > parsing council rulings · sept 21 DONE
+ > applying founder decisions 1–7 DONE
+ > authority_lite NOT FOUND
+ > deleting opinions DONE
+
+ Master Plan Master Plan Master Plan
+ 2026–2030.
+ Version 5. Built on the War Room findings, the June Council verdict, and the Sept 21 gate on going podcast-first. One document, one number, one clock, and now one front door. Everything else in the OS answers to this file.
+ CHURLISH MEDIA · MASTER PLAN V5 · HLP-FIRST · PREPARED FOR BRANDON KING · SEPT 21, 2026 · +$150,000 COLLECTED BY DEC 31, 2026 · $1,000,000 RUN-RATE BY DEC 31, 2030 · OS TERMINAL EDITION — SEPTEMBER 2026
+ week 1 of 13 — mission active
+
+ // 00 · WHAT CHANGED · FROM THE JUNE 12 PLAN
+ Version 5 in three moves
+
+ MOVE 01
+ The front door moved
+ Clients used to arrive through a Meta lead form and a cold email. Now they arrive through a microphone. High Level Pros goes from "the pillar that compounds" to the way owners meet us. The method, the prices and the standing rules do not change.
+
+ MOVE 02
+ The councils said staged
+ Sept 21 gate: conditional green. The Chair overruled a 3–2 majority because nobody had the last 90 days of actuals on paper. Three conditions, all dated. Base case restated down to $26K gross, $16.4K net.
+
+ MOVE 03
+ Five decisions since
+ Lite is gone; the Tournament took its slot. Two accounts grandfathered. Crucible-level work is Kelly's. Engine and System stay with Brandon plus a delivery hire. The back catalog cannot test the package, so the first four new chairs do.
+
+ // 01 · THESIS · THE WHOLE GAME
+ The strategic bet
+
+ $ CAT THE_BET.TXT
+ The first AI-operated story studio in the Midwest
+ Unchanged. Churlish wins the next four years not by selling marketing deliverables — that layer is commoditizing under every agency's feet, including ours — but by pairing cinema-grade story on the front end with an autonomous operating system on the back end, sold as outcomes at clear prices. We eat our own delivery cost with AI before a competitor uses AI to eat our price.
+
+ ★ What v5 adds to the bet
+ AI makes cold outreach cheaper for everyone, which makes it worth less for everyone. An invitation is a different animal: it asks for nothing and offers status. The owners Churlish most wants will not answer a pitch. They will answer an invitation. So the show becomes the room where the relationship starts, the fleet does everything around the chair, and the score that runs everything stays the same: how much of this was delivered without Brandon in the room?
+
+ // 02 · MODEL · ONE SHOW · TWO FUNNELS · THREE LANES
+ The operating model — five pillars, re-jobbed
+
+ Pillar What it is Its job now Q4 2026 posture
+ P4 — Media & Education High Level Pros: the show, the cohort, later the sponsors The front door. Guests become clients; listeners become students 2 recordings a week · 24 by Dec 18
+ P1 — Studios / Authority Engine Retainers: story-driven video + direct response + positioning Cash flow + proof Sold from the chair and from the Diagnostic. Brandon + a delivery hire
+ P2 — Products Guest package · Diagnostic · Tournament · Tool Sprint Fast cash + the paid first yes The third conversation of every week sells these through Dec 31
+ P3 — CRF Subscription editing Recurring floor + the editor bench Bench also cuts HLP; a paying turnaround is never bumped
+ P5 — Ventures Lab MindCTRL · CINEFLUX / EVE · Transparency · fiction Optionality Frozen until Jan 1 (EVE ≤5 hrs/wk)
+ ▲ The pillar rule · v5
+ P4 opens the door, P1 pays the bills, P2 collects fast, P3 holds the floor, P5 waits its turn.
+
+ Lane Who pays What they buy When it pays
+ 1 · The Chair Guests, owners at $500K–$10M Guest package $2,500 → Engine $3,500/mo → System $5,000/mo Now. 30–60 days from recording to first invoice
+ 2 · The Cohort Listeners, owners at $150K–$750K The Next Stage, $2,500 founding Deposits Oct 19 · starts Jan 12, 2027
+ 3 · The Room Omaha B2B firms that want these owners Sponsor seats $750–$2,000 Q1 2027. Outreach opens Dec 1
+ THE LINE · DECIDED SEPT 21
+ Production here. Strategy above it → Kelly.
+ Churlish keeps standard filming, lead gen, commercials, testimonials, and the Engine and System retainers. Crucible-level work — embedded implementation, revenue operations, the home-service partner package — is a complete handoff to Kelly Bromley and her team. Churlish refers and films.
+
+ THE DELIVERY SEAT · OPEN
+ Hire #1, pulled forward
+ Producer / account manager, contract to start. Fires the day the first chair-sourced Engine signs, or founder hours pass ~115/mo two weeks running. Owns kickoff logistics, calendars, editor briefs, report assembly (SOPs C1–C5). Never owns the chair, the debrief, the close, or final creative. Planning cap: 30% of the retainer dollars the seat serves — $2,100/mo at two Engines — until Brandon sets the real number.
+
+ ★ The editorial wall · non-negotiable
+ Guests are booked on the Guest Score. Buyer-fit is 3 of 15 points and can never be the reason someone is booked.
+ No offer of any kind before, during, or on the day of a recording. The invitation to talk arrives with the published episode.
+ A guest who never buys gets the same edit, the same packaging, the same promotion.
+ If a guest is a current client or a sponsor, the episode says so on air and in the description.
+ Nobody pays to sit in the chair. Ever.
+
+ // 03 · PRICING · TWO NEW RUNGS INSTALLED
+ Pricing architecture
+
+ NEW · GUESTS ONLY
+ $2,500 PIF
+ The guest package
+ One cut, their pick: Owner, Customer or Hiring. Hero video, 45-minute capture session, 10 shorts, carousel, article, 5 graphics, ad license. First 3 @ $1,500 as case-study exchanges. Offered only after the episode is live.
+
+ NEW · LISTENERS
+ $2,500
+ The Next Stage
+ 8 weeks, 10 seats, taught by four owners who did it plus the system from the studio that films them. $250 refundable deposit. Or 3 × $950. Cohort 2 at $3,500.
+
+ UNCHANGED · EVERYONE ELSE
+ $750 PIF
+ Authority Diagnostic
+ 48-hour scored teardown. Writes the retainer proposal for us. Still the front door for every lead that did not sit in the chair.
+
+ RULE 01
+ Ad spend is always separate
+ $500/mo minimum. Never bundled into a retainer number, paid directly to the platform, never marked up.
+
+ RULE 02
+ Never discount month one
+ The first-three price on the Tournament and the guest package is a case-study exchange with a deliverable attached, framed that way in writing. Not a markdown.
+
+ RULE 03
+ 50% upfront on one-offs
+ All one-offs and sprints collect half before work starts. PIF incentives are bonus deliverables, never price cuts.
+
+ RULE 04
+ 6% annual uplift
+ Every retainer agreement carries it. Pricing keeps pace without a renegotiation.
+
+ RULE 05 · NEW
+ Nobody pays for a chair
+ No offer before, during, or on the day of a recording. Guests who never buy get the same edit and the same promotion. Clients and sponsors are disclosed on air.
+
+ RULE 06 · NEW
+ Meta ads have three jobs
+ Amplify clips that already won. Fill the cohort, warm audiences only. Retarget episode viewers with package proof. Cold lead gen for Churlish is off.
+
+ // 04 · LADDER · HOW A STRANGER BECOMES A $30K ACCOUNT
+ The service ladder — three doors, one staircase
+
+ Nobody is asked to marry us on the first conversation. Every door opens on something small, and every rung up is a smaller leap than the last one was.
+ Door A · The Chair — guests, owners at $500K–$10M
+ FREE · EVERY GUEST
+ Share kit
+ Episode, trailer, 2 shorts. No strings, buyer or not.
+
+ »
+ FIRST YES
+ Guest package
+ $2,500 PIF. One cut: Owner, Customer or Hiring. 45-min capture after purchase.
+
+ »
+ ANCHOR
+ Authority Engine
+ $3,500/mo, 4-month min. The core retainer.
+
+ »
+ SCALE
+ Authority System
+ $5,000/mo, 6-month min. Adds CRM + lead dashboard.
+
+ Door B · The Diagnostic — referrals, inbound, the third conversation of the week
+ FIRST YES
+ Diagnostic
+ $750, 48 hrs. "Here's exactly what's broken and what it's costing you."
+
+ »
+ PRODUCT
+ Tournament / Tool Sprint
+ $2,500 if they run ads · $5,000 if they run on chaos · Launchpad $2,500 as the 30-day on-ramp.
+
+ »
+ ANCHOR
+ Authority Engine
+ $3,500/mo, 4-month min.
+
+ »
+ SCALE
+ Authority System
+ $5,000/mo, 6-month min.
+
+ Door C · The Cohort — listeners, owners at $150K–$750K
+ FREE
+ The show + the list
+ Episodes, solo teaching episodes, one email a week.
+
+ »
+ DEPOSIT
+ $250, refundable
+ Holds a seat. Replaces the waitlist. Opens Oct 19.
+
+ »
+ THE PROGRAM
+ The Next Stage
+ 8 weeks, 10 seats. $2,500 founding (or 3 × $950). $3,500 cohort 2.
+
+ »
+ AFTER WEEK 8
+ Coaching or Engine
+ Alumni-only coaching $500/mo, cap 3. Or done-for-you: Launchpad / Engine.
+
+ // 05 · REVENUE · COLLECTED, NOT BOOKED
+ The revenue model — the honest math
+
+ THE NUMBER · STILL THE NUMBER
+ +$150,000 collected by December 31.
+ "$150K made" = collected cash from new sales between June 15 and December 31, 2026. Renewals do not count; expansions do. Cash collected to date goes on paper Friday, Sept 25 (League Condition 1). The June stack of $148K stands as the scoreboard. What follows is only what the new front door adds.
+
+ Line Math Collected in 2026
+ Guest package 24 guests → ~14 buyer-fit → 6 sold. First 3 @ $1,500 (case-study exchange), next 3 @ $2,500. All PIF $12,000
+ Authority Engine from the chair 2 signed by Nov 1 × $3,500 × 2 months (contract value $28,000) $14,000
+ The Next Stage, founding cohort 5 PIF seats × $2,500. Upside, not base case upside $12,500
+ Sponsors · AdSense · Facebook Not sold before 12-episode proof $0
+ Q4 base case, gross $26,000
+ Less production 24 kits × $400 planning cap −$9,600
+ Q4 BASE CASE, NET $16,400
+ ★ The honest read
+ Every rate above is a planning assumption. There is no historical guest-to-client conversion rate, so none is claimed. The $150K does not close on the chair alone in 12 weeks. Existing retainers, CRF additions and products already in motion carry Q4. The chair builds the 2027 pipeline while paying for itself. If the gap widens, the fix is more straight sales conversations, not a new plan.
+
+ THE REFRAMED CLOCK
+ 12 working weeks
+ Sept 21 → Dec 31 is 14.5 calendar weeks. Minus Thanksgiving week and Dec 21–31 = 12 working weeks = 24 recordings. Anything retainer-shaped signed after Nov 15 collects six weeks or less inside 2026.
+
+ WHY THE CHAIR ANYWAY
+ 2.5 hours, 12 assets
+ A straight sales call costs ~1 founder-hour and leaves notes. A fit guest costs ~2.5 hours and leaves an owner telling you their numbers, 12 published pieces, a warm relationship and a referral. The chair loses on closes per hour and wins on everything else.
+
+ CAPACITY CHECK
+ ~7 hrs/wk on the chair
+ HLP capped at 12 hrs/wk in November. Founder cap ~115 hrs/mo. Seven joints are still founder-only; scheduling comes off first (Oct 5), then everything but the chair by Mar 31, 2027.
+
+ // 06 · KPIS · ONE SCOREBOARD, EVERY FRIDAY
+ KPIs & tracking — the Friday Five, v5
+
+ THE FRIDAY FIVE · V5 · WEEKLY
+ The scoreboard
+ 1 · Conversations held (floor 3: two chairs + one straight sales conversation). 2 · Debriefs held + offers out (floor 2). 3 · Dollars signed this week, chair-sourced tagged. 4 · Dollars collected vs. $150K, and chair-sourced net of production vs. the $15K line. 5 · Founder-free % of dollars delivered, with HLP hours beside it (cap 12/wk).
+
+ THE SHOW PANEL · REPORTED, NOT JUDGED
+ First 90 days
+ Recordings banked · episodes published on schedule · chairs filled by fit owners · email signups · cohort deposits · invitation reply rate. Views and subscribers are written down every Friday and argued about on Dec 18, not before. Under 1,000 subscribers the show is a meeting format with a camera.
+
+ The tripwires — the only things allowed to change the plan before Dec 18
+ Trigger Response
+ Any Friday: fewer than 2 recordings booked for next week Blue Beetle doubles sends. Brandon makes 5 personal asks that day.
+ Nov 6: zero paid packages from the first four buyer-fit debriefs (replaces the dead Oct 9 back-catalog test) JSA re-tries the package before more chairs are aimed at it.
+ Oct 31: invitation reply rate under 15% across the first 100 sends Perry White rewrites the invitation. Tournament of 5 subject lines.
+ Oct 31: fewer than 3 of the first 8 fit guests take the debrief Sales coach reviews the ask. Fix the ask, not the show.
+ Any guest answers "yes" to the wall question on the day-after survey Same-day founder call to that guest. SOP D5 audit of the last 4 episodes.
+ Nov 7: fewer than 8 cohort deposits Start moves Jan 12 → Feb 16. Keep recruiting.
+ Nov 15: fewer than 3 guest packages sold JSA on price, contents, timing. The Diagnostic returns as the post-record offer.
+ Nov 15: a search for the show name does not return the channel in the top 3 The descriptor moves into the channel name itself.
+ Nov 20: fewer than 16 recordings Automatic League re-trial.
+ Publishing slips two weeks running Publish once a week. Keep recording twice. The chair is the revenue.
+ Any base retainer shows a churn signal Same-week founder call. Guardian builds the renewal case.
+ Founder hours over ~115/mo, or HLP over 12 hrs/wk in November Delegation pass. Booking and publishing come off Brandon first.
+ Dec 31: chair-sourced cash net of production under $15,000 League re-trial in January. Service outbound restored to 50% of sends.
+ ▲ The 24-recording lock
+ No change to the show format, the offer ladder, or the channel strategy until the 24th recording and the Dec 18 League full board , except by tripwire. New ideas go to the parking ledger with a 48-hour hold and must name what they displace (SOP D6).
+
+ // 07 · GAPS · RANKED BY MONEY
+ Gap analysis — named, not papered over
+
+ Red — bleeding now
+ ★ No incumbent actuals
+ The League ruled blind on the benchmark. Fix: closes and dollars by source for the last 90 days, plus cash collected since June 15, on paper by Fri Sept 25. Rule set in advance: 2+ closes from outbound and ads → service outbound keeps 30% of sends through Oct 31. Fewer than 2 → zero now.
+
+ ★ The package is unproven and its first test is dead
+ The one recorded guest who got the offer did not need it, and nobody else in the back catalog is a viable buyer. The whole lane leans on one behavior nobody has observed. Fix: the first four chairs are picked at Guest Score 12+ with full buyer-fit, debriefed inside 7 days of publish, and read out Nov 6.
+
+ ★ Seven founder-only joints, and scheduling has no owner
+ Pre-interview, recording, debrief, package review, cohort teaching, enrollment calls, and the calendar itself. The front door closes when Brandon gets the flu. Fix: Guest Coordinator named this week and running SOP E2 by Oct 5 · 4-episode bank before Tue/Thu · the delivery seat defined (section 02).
+
+ ✓ No debrief mechanics — RESOLVED in this rebuild
+ No script, no timer, no owner. Fixed: OS Sales Script Part 3 (the Debrief Call), SOP A7, the three-note runway, and the day-after wall survey all ship with v5.
+
+ Gold — friction, costing real money
+ ▲ Own rules not followed
+ Ventures frozen to Jan 1: at least four opened since Aug 26. New ideas park 48 hours: this overhaul was decided and built the same day. Three conversations a week: no log the board could see. Fix: SOP D6 makes the parking ledger a procedure; the Friday Five is logged or the week did not happen.
+
+ ▲ Release + disclosure page not at the attorney · no email capture · production unpriced
+ The release blocks every package and every paid use of footage: to counsel this week. One email field on the site and in every description, day one. $400 per kit is a planning cap until the real editor rate replaces it.
+
+ Teal — noted, scheduled
+ ■ Sponsors · memberships · the clean-room gate · YPP
+ Sponsor outreach Dec 1. Memberships at 2 cohorts + 1,000 emails. The clean-room council run waits on six numbers. YouTube monetization is a second-half-2027 event; planned at $0.
+
+ // 08 · ROADMAP · SEPT 21 → DEC 18 → $1M
+ Roadmap — thirteen weeks, then three horizons
+
+ Wk Dates What happens Owner
+ 1 Sep 21–27 Sign nothing before Tue Sep 22 · approval sheet initialed · base clients told first · release + disclosure page to the attorney · Fri Sep 25: incumbent actuals, production cap in writing, first 20 invitations out with the first four chairs picked for buyer-fit · one-page site build starts Brandon · Kid Flash · Blue Beetle
+ 2 Sep 28–Oct 4 One-page HLP site + application live (after Mid-Nite surgery) · first 2 recordings · Guest Coordinator named · scheduling off Brandon by Oct 5 Brandon · Lovable build
+ 3–4 Oct 5–18 Publishing starts Tue Oct 6 , weekly · first debriefs · email capture live on every episode Lois Lane · Starfire
+ 5–6 Oct 19–Nov 1 Cohort deposits open on air Oct 19 · Tue/Thu begins once 4 are banked (~Oct 20) · solo episode 1 · Oct 31 tripwire checks Brandon · EVE
+ 7–8 Nov 2–15 Nov 6 package test reads out · Nov 7 go / no-go on 8 deposits · "meet the instructors" Nov 10 · first supercut · Nov 15 package tripwire Brandon · JSA if tripped
+ 9–10 Nov 16–29 Bank episodes for Thanksgiving · media kit from real numbers · Nov 20 demotion check (16 recordings) Lois Lane · Starfire
+ 11–12 Nov 30–Dec 13 Sponsor outreach opens Dec 1, 15 named targets · cohort enrollment closes Dec 12 Perry White · Brandon
+ 13 Dec 14–20 24th recording · YPP status check · Dec 18 League full board · 2027 goal ledger proposed League · EVE
+ — Jan 12, 2027 The Next Stage, founding cohort, session 1 Brandon
+ — Feb 1, 2027 YouTube's watch-hour bar doubles for new applicants —
+ Year · levers Run-rate
+ 2027 — the chair matures into the pipeline (~96 recordings → ~36 packages + ~8 retainers) · cohorts 1–3 · sponsor seats · licensing beta · Hire #1 seated ~$475,000
+ 2028 — licensing GA · CRF scaled on the bench · guest-host bench seeded from cohort alumni · Hire #2 (sales) ~$650,000
+ 2029 — premium-pricing era (System → ~$6,500/mo) · recording batches to 2 days a month · Hire #3 ~$825,000
+ 2030 — $1M run-rate · four people and the machine · the show runs without Brandon in the chair $1,000,000
+ ★ Kill criteria — pre-committed
+ Licensing dies under 10 paying operators after two full quarters of selling it. Any product line dies if it cannot hold 3 units/month by its second quarter at list. Any P5 venture without revenue or a strategic job by Jun 2027 gets archived. The guest package dies or reshapes on the Nov 15 tripwire. The chair itself goes back to the League on Dec 31 if net chair cash is under $15,000.
+
+ // 09 · ENDGAME · DECEMBER 31, 2030
+ The endgame
+
+ $ WHOAMI — DECEMBER 31, 2030
+ A $1M studio run by four people and one machine.
+ A Midwest shop with a camera, a show and an operating system out-delivers a coastal agency of forty. Brandon hosts through Dec 31, 2028, then the bench takes the chair.
+
+ STUDIOS
+ $400K
+
+ PRODUCTS
+ $250K
+
+ LICENSE + EDU
+ $225K
+
+ CRF
+ $125K
+
+ // 10 · NOTES · THE QUESTIONS SOMEONE WILL ASK
+ Q&A / internal notes
+
+ Why move the front door with twelve weeks left in a $150K year? Because the chair is also two of the three weekly sales conversations. Nothing is removed from the floor. It is staged so the old channels taper on data, not on a feeling.
+ What if guests do not buy the package? Then on Nov 15 the JSA reshapes or kills it and the Diagnostic returns as the post-record offer. The show keeps recording either way: the relationships and the library are the asset.
+ What happened to Authority Lite? It does not exist. The Tournament took its slot. Two legacy accounts keep a grandfathered rate and nobody else is ever quoted it.
+ Where does the Crucible fit? It doesn't, inside Churlish. Crucible-level work is Kelly's pen. Churlish refers and films.
+ Who delivers the Engines the chair sells? Brandon plus the delivery seat. The seat is defined in section 02 and hired on a trigger, not a hope.
+ Why no sponsors yet? A media kit without twelve on-schedule episodes is a promise. We prove before we promise.
+ What counts toward the $150K? Same as June: collected cash from sales closed on or after June 15. Renewals do not count; expansions do.
+ ▲ Decisions pending, with dates
+ Approval sheet items 1–8 — Tue Sept 22 or later (48-hour rule). Incumbent actuals + production cap — Fri Sept 25 . Guest Coordinator named — by Oct 5 . Engine minimum term: this plan carries the June lock ( 4 months ); the project instructions still say 6. Settle it once. Item 9 leftovers (workshop product, fleet productization, EVE desktop) — keep or park to Dec 18 .
+
+ // 11 · OFFER SHEET · ONE PLACE
+ Every offer, every price
+
+ Current as of Sept 21, 2026. ★ marks the flagship in each line. Status is noted wherever something is not sold on demand today.
+ P1 · Studios / Authority Engine — live
+ Offer Price Terms
+ Authority Launchpad $2,500 one-time 30-day on-ramp: one shoot day, one hero video + 6 cuts, positioning brief. Feeds Engine / System
+ Authority Engine ★ $3,500/mo 4-month minimum. The core retainer
+ Authority System $5,000/mo 6-month minimum. Scale tier; adds CRM + lead dashboard
+ Full Production $8,000–$20,000/mo Studios engagement, custom scope
+ Studio Day Rate $2,500/day The Hub, when operational
+ Authority Lite RETIRED Does not exist. Never quoted, never sold. Two legacy accounts stay on a grandfathered rate; on any client line it reads "grandfathered Lite rate." The Tournament took its slot as the low-commitment way in
+ P2 · Products — live , the paid first yeses
+ Offer Price Terms
+ Guest package ★ NEW $2,500 PIF Guests only, offered after their episode publishes. Three cuts, pick one: Owner · Customer · Hiring. Includes a 45-minute capture session. First 3 @ $1,500 (case-study exchange, never a discount). Unproven until the first four buyer-fit chairs
+ Authority Diagnostic ★ $750 PIF 48-hr scored authority + ad/funnel report. 90-day credit toward Engine / System. The paid first yes for everyone who is not a guest
+ Ad Creative Tournament $2,500 PIF First 3 @ $1,500 (case-study exchange, never a discount)
+ 48-Hour Tool Sprint $5,000 flat 50% upfront. Working internal tool + plain-English guide
+ Quick Win $997 one-time 5-day fast content sprint
+ Sprint $3,500 one-time 30-day focused intensive
+ Brand / CPG engagements Quoted per scope Spark / Ignition / Launch. Hybrid cash + product-trade for challenger brands. One-off, never retainers
+ P3 · Cutting Room Floor — live , subscription editing (annual saves 20%)
+ Offer Price Terms
+ CRF Starter $1,250/mo · $1,000 annual 3-mo min · 4 long-form / 12 short-form / 72-hr / 1 revision
+ CRF Growth ★ $2,400/mo · $1,920 annual 6-mo min · 8 long-form / 24 short-form / 48-hr / 2 revisions
+ CRF Bespoke $3,500+/mo 6-mo min · unlimited long-form / 24-hr / unlimited revisions
+ The bench rule NEW An HLP episode kit never bumps a paying CRF turnaround. Planning cap $400 per kit until the real editor rate replaces it
+ P4 · Media & Education — High Level Pros , the front door
+ Offer Price Terms / status
+ The show Free High Level Pros · Midwest owners, real numbers. Nobody pays for a chair
+ Guest share kit Free Every guest: the episode, the trailer, 2 shorts. Shipped on publish day, buyer or not
+ The Next Stage ★ NEW $2,500 founding (or 3 × $950) · $3,500 cohort 2 · $4,500 cohort 3+ 8 weeks · 10 seats · $250 refundable deposit replaces the waitlist · deposits open Oct 19 · go at 8 deposits by Nov 7, else the start moves Jan 12 → Feb 16, 2027
+ Authority Coaching seat $500/mo Alumni only · 3-mo · cap 3 seats
+ Sponsor seats (The Room) Presenting $1,500/mo · Segment $750/mo · Live recording $2,000/event NOT YET. Quarterly commitments, disclosed on air. Sold after 12 consecutive on-schedule episodes + a media kit with real numbers, or Jan 15, 2027. Outreach opens Dec 1
+ AdSense · Facebook $0 in the plan YouTube needs 1,000 subs + 4,000 watch hours. From Feb 1, 2027 new applicants need 8,000 hours
+ Membership tiers · Authority Event · paid newsletter $47 / $97 / $197 · GA $497 – $1,997 · $9 / $29 PARKED. Trigger: 2 cohorts graduated + 1,000 email subscribers, or Q3 2027
+ Paid guest seats KILLED A bought chair ends the anti-guru premise. The money moved to the guest package (after recording) and disclosed sponsor seats
+ The Crucible — Kelly's pen
+ Offer Price Terms
+ Revenue X-Ray $3,500 Credited toward engagement. Distinct from the $750 Diagnostic
+ Crucible Core $5,000–$8,000/mo 6-month minimum
+ Performance Partnership Fee + 20–25% of growth Standard fee + share of attributed growth · quarterly review
+ ▲ The line · decided Sept 21
+ Crucible-level work is a complete handoff to Kelly Bromley and her team : priced, sold and delivered under the Dynamic Edge umbrella. Churlish keeps production : standard filming, lead gen, commercials, testimonials, and the Engine and System retainers (Brandon plus a delivery hire). When a client needs strategy above that line, Churlish refers, films, and stays out of the way.
+
+ P5 · Ventures Lab — frozen until Jan 1, 2027
+ Offer Price Terms
+ MindCTRL Full Production $8,000–$20,000/mo Branded shows / original IP
+ MindCTRL Legacy $15,000+/mo + IP rev-share Demo first
+ Proof Run · Transparency · fiction Venture-stage No standard price. Assigned a number or a kill date by Jun 2027
+ // 12 · APPROVAL SHEET · RED TIER
+ Ten decisions, ten initials
+
+ Nothing here is live until it is initialed. Nothing gets initialed before Tuesday, Sept 22.
+ # Decision Status · Sept 21
+ 1 HLP-first is the operating model, staged . Meta cold lead gen for Churlish ends; service outbound tapers on the Sept 25 actuals rule; ads limited to three jobs. [ ] not initialed
+ 2 Guest package at $2,500 PIF: three cuts, 45-minute capture session, free share kit for every guest. First 3 @ $1,500 as case-study exchanges. [ ] unproven · test moved to the first four chairs
+ 3 Editorial wall + on-air disclosure rule. Paid guest seats killed. [ ] not initialed
+ 4 Cohort named The Next Stage. $2,500 founding (or 3 × $950) · $3,500 cohort 2 · 10 seats · $250 refundable deposits · starts Jan 12 on 8 deposits. [ ] not initialed
+ 5 Authority Coaching becomes alumni-only. Price and cap unchanged. [ ] not initialed
+ 6 Membership tiers, Authority Event and paid newsletter parked with triggers. [ ] not initialed
+ 7 Sponsor rate card as written. Outreach opens Dec 1. [ ] not initialed
+ 8 Publish Tuesdays, then Tue/Thu once 4 are banked. Show and channel stay High Level Pros , descriptor locked: "Midwest owners, real numbers." [ ] not initialed
+ 9 Portfolio against the 2-live cap. Crucible-level work → Kelly (decided). Still open: positioning-workshop product launch · fleet productization · EVE desktop beyond 5 hrs/wk. Keep, or park to Dec 18. [ / ] partial
+ 10 24-recording lock until the Dec 18 League full board. Authority Lite retired (decided); two accounts grandfathered. EVE proposes the rewritten goal ledger once 1–9 are initialed. [ / ] partial
+
+ Churlish Media — Master Plan 2026–2030 · v5 · HLP-First CHURLISHMEDIA.COM · 402-819-8168
+
+ ONE NUMBER. ONE CLOCK. ONE FRONT DOOR. CHURLISHMEDIA.COM

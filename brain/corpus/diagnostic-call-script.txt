@@ -1,0 +1,137 @@
+Churlish Media · OS Sales Script Pt 1 · Diagnostic Call
+ Churlish Media · OS Sales Script Pt 1 · Diagnostic Call
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · SALES // 001
+
+ churlish@hq :~ $ run diagnostic_call --spine nepq --tools voss --door B
+ > loading six-step structure DONE
+ > disabling retainer pitch DONE
+ > routing guests to debrief script DONE
+
+ The Diagnostic The Diagnostic The Diagnostic
+ Call Script.
+ One job: convert a booked discovery call into a paid $750 Diagnostic . Not a retainer. Not a proposal. The Diagnostic sells the retainer later, better than you can. NEPQ spine, Voss handwork, six steps. You ask, you don't pitch. V5 keeps every word that worked and tells you which conversations this script still owns.
+ CHURLISH MEDIA · OS SALES SCRIPT · PART 1 · V5 · STATUS: LIVE · DOOR B · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 00 · WHERE THIS CALL LIVES NOW · V5
+ Door B, the third conversation
+
+ WHO GETS THIS CALL
+ Everyone who is not a guest
+ Referrals, inbound, listeners who want it done for them, and whatever service outreach the Sept 25 actuals rule keeps alive. Guests get the Debrief script (Part 3), never this one.
+
+ THE WEEKLY SLOT
+ Two chairs + one of these
+ The floor is three conversations a week. Two are recordings. The third is a straight sales conversation, and through Dec 31 it sells what collects fast: the Diagnostic, the Tournament, the Tool Sprint.
+
+ WHAT DID NOT CHANGE
+ The six steps
+ Same spine, same words, same close. The only edits: a listener opener, a branch at Step 05 for prospects who already know what is broken, and the handoff line when the work is Kelly's.
+
+ // 01 · THE FRAME · BEFORE YOU DIAL
+ The posture of the call
+
+ RULE 01
+ Sell the $750 , nothing else
+ The only yes you are collecting today is the Diagnostic. If they try to jump to a retainer, slow them down: “the Diagnostic writes that proposal for us.” A $750 yes today beats a maybe on $14,000.
+
+ RULE 02
+ They talk 70%
+ If you are talking more than they are, you are pitching. The prospect should discover their own problem out loud. Your questions are the product on this call.
+
+ RULE 03
+ Proof, not pressure
+ Calm, low, unhurried. Voss's late-night FM DJ voice. Certainty comes from having a sample report in hand, not from pushing. You have the receipts; act like it.
+
+ ★ The one-line job description
+ Get them to name what is broken, price what it is costing them, and pay $750 to find out exactly why. Everything below serves that sentence.
+
+ // 02 · THE SPINE · SIX STEPS, IN ORDER
+ The call, step by step
+
+ The six steps from SOP A3, verbatim. Say the bolded lines as written until they are muscle memory, then make them yours. Never skip a step; the order is the persuasion.
+ 01 Open / disarm 0–3 MIN
+ NEPQ STAGE
+Connect. Lower the guard before anything else
+ VOSS TOOL
+Tone + a no-oriented question
+
+ SAY > “Before we start: I'm not here to pitch you a retainer. Would it be ridiculous if we just spent twenty minutes figuring out where your marketing is actually leaking, and whether we can even help?”
+ THEN > Shut up. Let them fill the silence. Their opener tells you which door they walked in through: referral, the show, inbound, outreach.
+ IF HLP > If they came from the show: “Which episode?” Whatever they name is the problem they think they have. Write it down; it comes back in Step 03.
+ WHY > “Would it be ridiculous” invites a no, and a no makes people feel safe. Killing the pitch expectation in sentence one buys you honesty for the next twenty minutes.
+
+ 02 Situation 3–8 MIN
+ NEPQ STAGE
+Situation. Map the machine as it exists
+ VOSS TOOL
+Mirrors. Repeat their last 1–3 words as a question
+
+ ASK > “Walk me through it. When a lead shows up today, where do they come from and what happens next?” Map the full lead-to-customer path.
+ ASK > “How many leads in a normal month? And how many turn into paying work?” Vague answers get a mirror: “‘A decent amount’?” Then wait.
+ ASK > “What are you spending to get those leads: ads, tools, anyone's time?” and “What happens to the people who don't buy?”
+ LOG > Volume, close rate, spend, and the non-buyer black hole. These four numbers become Step 04's ammunition.
+
+ 03 Problem awareness 8–13 MIN
+ NEPQ STAGE
+Problem awareness. They name it, not you
+ VOSS TOOL
+Labels. “It sounds like…” / “It seems like…”
+
+ ASK > “Where do you think it's breaking?” Then silence. The diagnosis they say out loud is worth ten you could tell them.
+ LABEL > “It sounds like the leads show up but nobody's home to catch them.” Aim for a “that's right.” (“You're right” means you pushed; back off.)
+ DIG > “How long has it been like that?” and “What have you already tried?” This surfaces the dead agency, the nephew who runs the page, the boosted posts.
+
+ 04 Consequence 13–17 MIN
+ NEPQ STAGE
+Consequence. Price the problem in their math
+ VOSS TOOL
+Calibrated questions. “How” and “what,” never “why”
+
+ ASK > “If nothing changes in the next 6–12 months, what does that look like?” Let them live in it for a second.
+ ASK > “What's one closed job actually worth to you?” Then do the math with them, out loud, with their Step 02 numbers.
+ RULE > Their numbers, their words, your arithmetic. If the gap does not clear $750 by an order of magnitude, they are not a fit. Say so and end warmly. That honesty is the brand.
+
+ 05 Present the Diagnostic 17–22 MIN
+ NEPQ STAGE
+Solution awareness. The fix, priced and scoped
+ VOSS TOOL
+Anchor with the sample. Proof before promise
+
+ SAY > “Here's what I'd do next. It's called the Authority Diagnostic: $750, paid up front. In 48 hours you get a scored teardown of exactly where it's breaking, and the three fixes, ranked by what they're worth. You keep it whether or not we ever work together.”
+ SHOW > “Want to see what it looks like?” Send the Summit Comfort sample while still on the call.
+ BRANCH > If they already run ads and the leak is plainly the creative: the Tournament ($2,500) is the honest first yes. If they run on spreadsheets and group texts: the Tool Sprint ($5,000, 50% upfront) . One offer. Never a menu.
+ FRAME > “A price without knowing what's broken is how you overpay. This is how you don't.”
+
+ 06 Commit 22–25 MIN
+ NEPQ STAGE
+Commitment. One small decision, made now
+ VOSS TOOL
+Alternative close. Two yeses, no maybe
+
+ SAY > “Card now, or invoice today?” Not “want to move forward?” That is a maybe machine.
+ THEN > Get the best email for the report and the invoice before the call ends. The 48-hour clock starts when payment lands.
+ KELLY > If what they described is a business problem above production (ops, offer, team), say so: “That's not a video problem. I know who fixes that.” Introduce Kelly the same day. The Diagnostic can still be the first yes.
+ LOG > Pipeline → “Diagnostic Sold.” Invoice out the same hour. Tag the door. Done when payment is taken or the invoice is sent. Nothing else counts.
+
+ // 03 · THE TOOLBELT · ON ONE PAGE
+ The Voss moves you'll actually use
+
+ Move What it is On this call
+ Mirror Repeat their last 1–3 words as a question, then wait. Turns “leads are fine, mostly” into the real story behind “mostly.”
+ Label “It sounds like… / It seems like…” Names the pain so they don't have to. Hunt for “that's right.”
+ Calibrated question Open “how / what” questions that make them solve out loud. “How am I supposed to price a fix without knowing what's broken?”
+ No-oriented question Invite a no; no feels safe, yes feels like commitment. “Would it be ridiculous if…” / “Is it a bad idea to at least know?”
+ Silence Ask, then stop. Count four seconds in your head. After “where's it breaking?” and after every close.
+ The DJ voice Low, slow, downward inflection. Anytime money comes up. Calm is the most expensive sound on the call.
+ ▲ What this call is never
+ Not a free consult: insight past the four mapping numbers gets scoped into the Diagnostic. Not a retainer pitch. Not a negotiation: the price is $750 and we never invent a discount. Not for guests: a guest who asks about working together gets the debrief, after their episode is live. If they hesitate, Part 2 takes over.
+
+ churlish@hq :~ $ log_call --outcome diagnostic_sold --door B
+ > invoice sent · pipeline updated · 48hr clock armed DONE
+
+ Churlish Media · OS Sales Script Pt 1 · Diagnostic Call CHURLISHMEDIA.COM · 402-819-8168
+
+ ASK. DON'T PITCH. CHURLISHMEDIA.COM

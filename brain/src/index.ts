@@ -41,6 +41,7 @@ import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from ".
 import { warmBoard, boardSnapshotReady } from "./os.js";
 import { warmFleet, fleetViewStatus } from "./fleet.js";
 import { registryCounts } from "./registry.js";
+import { corpusState } from "./corpus.js";
 import { rotateLook, initRotationConfig } from "./rotation.js";
 import { stamp, getStamp } from "./health.js";
 // R1 · the conversation key is request body — shape-checked before it becomes
@@ -198,6 +199,12 @@ app.get("/health", (_req, res) => {
     // units with a runner here, kinds = by runner kind, pinned, and whether
     // skills/MANIFEST.json loaded. Equal to /state.fleet.dispatchable.
     fleet: { ...fleetViewStatus(), ...registryCounts() },
+    // THE REFERENCE SHELF (corpus.ts). Counts and the ambient index SIZE only —
+    // no title, no prose. `loaded:false` means corpus/MANIFEST.json did not
+    // parse, and she says the shelf is unavailable instead of answering from
+    // memory. indexChars is here so the one cost this corpus charges every turn
+    // is checkable from outside the container.
+    corpus: corpusState(),
     // Dispatcher v0.1 (D-DISPATCH §1.1 / sql/004_dispatch.sql). migrated:false =
     // the brain is running against the legacy jobs table in pre-migration
     // mode: unit rides in `agent`, why/tier/confirmId/result live in memory

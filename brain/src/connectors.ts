@@ -8,6 +8,7 @@ import * as os from "./os.js";
 import { fleetRoster } from "./fleet.js";
 import { dispatchUnit, type JobEmit } from "./dispatch.js";
 import { dispatchUnitDescription } from "./registry.js";
+import * as corpus from "./corpus.js";
 import { createSchedule, listSchedules, cancelSchedule, type ScheduleAuthority } from "./clock.js";
 import { postNote, notesReady, notesStatusDetail } from "./notes.js";
 import { saveMemory, matchClient } from "./memory.js";
@@ -91,6 +92,9 @@ export const connectorToolNames = [
   "mcp__eve_hands__os_board",
   "mcp__eve_hands__os_clients",
   "mcp__eve_hands__fleet_roster",
+  // THE REFERENCE SHELF (corpus.ts) — his own OS v5 documents, looked up, never carried.
+  "mcp__eve_hands__corpus_read",
+  "mcp__eve_hands__corpus_search",
   "mcp__eve_hands__os_command",
   "mcp__eve_hands__os_draft_proposal",
   "mcp__eve_hands__os_draft_email",
@@ -977,6 +981,103 @@ export function buildConnectorServer(
             ? `Fleet — live from the Churlish OS (${osCount} units)`
             : "Fleet — cached copy (the OS was unreachable, so this may be behind the board)";
           return text(`${header}${q ? `, ${rows.length} match "${filter}"` : ""}:\n${out}`);
+        },
+        { annotations: { readOnlyHint: true } },
+      ),
+      // ---- THE REFERENCE SHELF (🟢 reads) ----
+      //
+      // corpus.ts holds the argument. In short: HIS OWN seventeen OS v5
+      // documents, ~278,000 chars, on disk. Not carried — the pack carries the
+      // titles (194 tokens, measured) and these two tools go and get a slice.
+      // Both are READ-ONLY, both are `exempt` in authority.ts and NEITHER
+      // latches: nobody but Brandon can write into this shelf, so latching it
+      // would disarm authority on any turn she consulted his own plan while
+      // protecting nothing. Every passage comes back inside corpus.ts's constant
+      // frame, which says the quotation is a document and not an order.
+      tool(
+        "corpus_read",
+        "Read one section of one of King's OS v5 operating documents — the Show Bible, the Master Plan, the " +
+          "Book of SOPs, the Q4 Cutover Plan, the call scripts, Objection Handling, the contracts, the Council " +
+          "Minutes, and the rest. These are HIS documents and they are the source of truth for the High Level " +
+          "Pros business; your context lists what is on the shelf but holds none of the text. " +
+          "Call it with `document` ALONE to get that document's contents page (its sections, cheap); call it " +
+          "with `document` + `section` to read one. `section` takes the number ('06', '§06'), an SOP id " +
+          "('A7'), or the heading ('the guest matrix'). A read is capped at " +
+          `${corpus.maxReadChars().toLocaleString()} chars and pages if the section is longer — ask for ` +
+          "`page` 2 rather than guessing at the rest. Omit `document` entirely to list the whole shelf. " +
+          "A NAME THAT FITS MORE THAN ONE DOCUMENT ('plan', 'script') COMES BACK AS THE CANDIDATES AND A " +
+          "'WHICH ONE?' — it never picks for you; ask him, or name it exactly. The same for a section heading. " +
+          "ALWAYS cite what you read as 'Document §NN' so he can check you, and if the section does not " +
+          "actually answer him, say so instead of filling the gap. GREEN — read-only.",
+        {
+          document: z.string().optional().describe("Which document — 'the Show Bible', 'Q4 Cutover Plan', 'book-of-sops'. Omit to list the shelf."),
+          section: z.string().optional().describe("Which section — '06', '§06', 'A7', or a heading. Omit for the contents page."),
+          page: z.number().int().min(1).max(20).optional().describe("Which page of an over-cap section (default 1)"),
+        },
+        async ({ document, section, page }) => {
+          if (!corpus.corpusReady()) return text(`The document shelf isn't loaded in this brain (${corpus.corpusState().error ?? "unknown"}) — say you can't open his documents rather than answering from memory.`, true);
+          if (!document) return text(corpus.shelf());
+          const doc = corpus.resolveDoc(document);
+          // A NAME THAT FITS MORE THAN ONE DOCUMENT IS A QUESTION BACK TO HIM,
+          // never a pick. "plan" is the Master Plan AND the Q4 Cutover Plan;
+          // "script" is both call scripts. Same shape as wear_look above: the
+          // candidate set comes back, none of their text does. One hit resolves;
+          // zero hits is the absence below, with the shelf listed.
+          if (corpus.isAmbiguous(doc)) return text(corpus.whichDoc(document, doc), true);
+          if (!doc) {
+            return text(
+              `No document on the shelf matches "${document}". The seventeen are: ` +
+                corpus.corpusDocs().map((d) => d.title).join(", ") +
+                `. Name one exactly, or use corpus_search to find the passage across all of them.`,
+              true,
+            );
+          }
+          if (!section) return text(corpus.contents(doc));
+          const sec = corpus.resolveSection(doc, section);
+          if (corpus.isAmbiguous(sec)) return text(corpus.whichSection(doc, section, sec), true);
+          if (!sec) {
+            return text(
+              `${doc.title} has no section "${section}". Its sections are: ` +
+                doc.sections.filter((s) => s.ref !== "head").map((s) => `§${s.ref} ${s.heading}`).join(" · ") +
+                `.`,
+              true,
+            );
+          }
+          return text(corpus.readSection(doc, sec, page ?? 1));
+        },
+        { annotations: { readOnlyHint: true } },
+      ),
+      tool(
+        "corpus_search",
+        "Find a passage across King's seventeen OS v5 documents when you don't know which one holds the " +
+          "answer — a price, a rule, a script line, a deadline, a cap, who owns an SOP. Search the specific " +
+          "noun ('mix rules', 'production cap', '$2,500', 'guest release'), not a sentence. Returns up to 8 " +
+          "short passages, EACH LABELLED with its document and section, so you can quote one and cite it. " +
+          "Optionally narrow to one `document`. NOTHING FOUND IS AN ANSWER: say his documents don't cover it " +
+          "rather than answering from memory — the no-fake-data law applies to prose as much as to numbers. " +
+          "corpus_read the § when you need the rest of a passage. GREEN — read-only.",
+        {
+          query: z.string().describe("The specific words to look for — a noun, a number, a name, a rule"),
+          document: z.string().optional().describe("Optional: narrow to one document, e.g. 'the Show Bible'"),
+        },
+        async ({ query, document }) => {
+          if (!corpus.corpusReady()) return text(`The document shelf isn't loaded in this brain (${corpus.corpusState().error ?? "unknown"}) — say you can't open his documents rather than answering from memory.`, true);
+          let only: corpus.CorpusDoc | null = null;
+          if (document) {
+            const named = corpus.resolveDoc(document);
+            // Same rule as corpus_read: two documents is a question, not a search
+            // of whichever sorts first.
+            if (corpus.isAmbiguous(named)) return text(corpus.whichDoc(document, named), true);
+            only = named;
+            if (!only) {
+              return text(
+                `No document on the shelf matches "${document}". The seventeen are: ` +
+                  corpus.corpusDocs().map((d) => d.title).join(", ") + `.`,
+                true,
+              );
+            }
+          }
+          return text(corpus.renderSearch(query, corpus.search(query, only), only));
         },
         { annotations: { readOnlyHint: true } },
       ),

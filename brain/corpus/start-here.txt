@@ -1,0 +1,89 @@
+Churlish Media · OS V5 · Start Here
+ Churlish Media · OS V5 · Start Here
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · BOOT // 000
+
+ churlish@hq :~ $ boot os_v5 --front-door hlp --date 2026-09-21
+ > loading 17 documents DONE
+ > applying founder decisions 1–7 DONE
+ > authority_lite RETIRED
+ > guest list EMPTY
+
+ Start Start Start
+ Here.
+ Churlish OS V5, the HLP-first edition: every operating document rebuilt in the terminal look around the show as the front door, plus the five pieces that were missing. This page is the index, the seven decisions made after the gate, what is still yours to decide, and what to do at 9:00.
+ CHURLISH MEDIA · OS V5 · INDEX + MONDAY RUN SHEET · MONDAY, SEPTEMBER 21, 2026 · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 01 · THE STING FIRST · READ THIS BEFORE THE INDEX
+ Seventeen documents. None of them books a guest.
+
+ ★ The Squad's archaeology, applied to this morning
+ The record says builds beat conversations when they compete, and that the tell is a scope word right before a pivot. This set was ordered at 4:40 AM with the word "everything." It is done, so it cannot eat the week. The thing that pays is still a named owner saying yes to a chair. Twenty invitations are due Friday and there are zero names on the list. Item 01 below is the job. The rest of this set is what you hand to the people and agents who take everything else off you.
+
+ // 02 · TODAY, 9:00 AM
+ In this order. Stop when it is noon.
+
+ 01 Kid Flash: 40 candidates against slate slots 1–8. Verify line one for the first 20. Pick the first four chairs with buyer-fit weighed on purpose (they carry the package test). KIT §01 · BIBLE §05
+ 02 Tell the base first. Send note C1 to every current client; call the two largest. Nothing public about the show until this is done. KIT §09
+ 03 Name the Guest Coordinator, or post the seat. Due seated by Oct 5. It has had no owner for two sessions. SOP D7
+ 04 Release + disclosure page to the attorney. It blocks every recording and every package. PAPER §04
+ 05 Paste the Lovable prompt. One page, one form. Do not touch it again until Mid-Nite has been through it. SITE SPEC §03
+ 06 Pull the six numbers. Closes and dollars by source (last 90 days) and the production cap are both League conditions due Fri Sept 25. CUTOVER PLAN §04
+ 07 Tue Sept 22 or later: initial the approval sheet, items 1–8 and 10. Not before. Your own 48-hour rule. MASTER PLAN §12
+ FRI Twenty invitations out. Subject lines rotated A–D, reply rate logged from send one. KIT §02–03
+
+ // 03 · THE SET
+ What is in the folder, and what each file is for
+
+ # Document Status Use it when
+ 000 Start Here (this file) NEW Monday morning.
+ 001 The Company Handbook · V5 REBUILT Anyone new sits down. The Guest Coordinator and the Delivery Producer read this first.
+ 002 Master Plan 2026–2030 · V5 REBUILT The strategy, the honest Q4 math, the approval sheet.
+ 003 Offer Ladder & Pricing REBUILT Any price leaves your mouth. Lite is gone; three doors, one staircase.
+ 004 Positioning Document REBUILT Any copy gets written. Now carries the show, the three avatars and the wall.
+ 005 Q4 Cutover Plan (replaces the 90-Day Sprint Plan) REBUILT Every Friday. The math, the 13 weeks, the conditions, the tripwires.
+ 006 The Book of SOPs · V5 · 35 procedures REBUILT A thing needs doing. Part E is the show, chair to cohort.
+ 007 The Debrief Call Script · Sales Script Pt 3 NEW Twenty minutes with a guest whose episode is live.
+ 008 The Diagnostic Call Script · Pt 1 REBUILT The third conversation of the week.
+ 009 Objection Handling · Pt 2 REBUILT Seven carried, plus the invitation, the $2,500 cut and the cohort.
+ 010 Contract + Invoice Templates · V3 REBUILT Paper goes out. Adds the guest release, package agreement, case-study exchange, cohort terms. Drafts for the attorney.
+ 011 The Ad Templates · V5 REBUILT Meta has three jobs now. Cold lead gen for Churlish is off.
+ 012 HLP Show Bible · V1.1 RE-SKINNED Booking, prepping or packaging an episode. 58 owner types, the full question bank, the 24-slot slate.
+ 013 The Guest Invitation Kit + paste file NEW Anything is about to reach a guest before they buy.
+ 014 HLP Site Build Spec + paste file NEW Building the page in Lovable.
+ 015 Guest Package One-Pager (guest-facing) NEW After a guest says "send me something." Never before their episode publishes.
+ 000-R Council Minutes · The Gate RE-SKINNED Someone asks why. The record as ruled, with a same-day addendum.
+ // 04 · WHAT CHANGED AFTER THE GATE
+ Seven decisions the documents now carry
+
+ Authority Lite does not exist. The Tournament took its slot. Two accounts stay on a grandfathered rate; nobody else is ever quoted it.
+ Crucible-level work is Kelly's pen. The line is production vs. strategy. Filming, lead gen, commercials, testimonials, Engine and System stay here.
+ Brandon keeps Engine and System and brings someone on to fulfill. Written as the Delivery Producer seat: opens on the first new Engine, or Nov 1.
+ Peyton Hogan got the offer and does not need it. He also gave Brandon the idea for the show.
+ The back catalog cannot test the package. The first four new chairs carry it.
+ The Oct 9 tripwire is dead. Replaced: zero paid packages from the first four buyer-fit debriefs by Nov 6 → JSA re-tries the package.
+ The first action changed again. It is the twenty invitations, and the names behind them.
+ // 05 · STILL YOURS TO DECIDE
+ Open items, with a default in the documents
+
+ Open item What the documents assume until you say otherwise Decide by
+ Engine minimum term: 4 or 6 months 4 months (the June 2026 lock). The project instructions still say 6. Before the next Engine proposal
+ Delivery Producer: role, date, cost Contract, part-time. Seat opens on the first new Engine or Nov 1. No cost in the plan yet. Oct 15
+ Guest Coordinator: who Intern or VA, about 6 hrs a week. Oct 5
+ Approval item 9 leftovers Positioning-workshop launch, fleet productization, EVE desktop past 5 hrs/wk: parked to Dec 18. Tue Sept 22+
+ Studio address in guest notes Left as a gold bracket. Not guessed. Before the first prep note
+ Active-client list in the Handbook Carried from the July edition plus the project list. Before a new operator reads it
+ HLP site look The OS look: near-black, cream, one red. Swap the tokens if the show has its own kit. Before the build
+ ▲ Not in this set, on purpose
+ The Omaha Ten. You asked for it last, it needs live research, and the slate's first eight slots matter more than ten famous names this week. DOCX twins. The terminal look does not survive Word; say the word and the three strategy documents get cream-and-teal DOCX versions. The clean-room gate. Still blocked on the six numbers.
+
+ churlish@hq :~ $ status os_v5
+ > documents built · 17 pdf + 17 html + 3 paste files DONE
+ > guest names on the list 0
+ > invitations due fri sept 25 20
+
+ Churlish Media · OS V5 · Start Here CHURLISHMEDIA.COM · 402-819-8168
+
+ A CHAIR, NOT A PITCH. CHURLISHMEDIA.COM

@@ -1,0 +1,540 @@
+Churlish OS v5 — HLP Show Bible
+ Churlish OS v5 — HLP Show Bible
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · THE SHOW // 008
+
+ churlish@hq :~ $ open hlp --show-bible
+ > premise ...... locked to the founder's own words OK
+ > format ...... the breakthrough arc · 7 segments OK
+ > guest matrix ...... 7 categories · 58 owner types OK
+ > question bank ...... spine + 5 stage + 14 specialty + 7 industry modules OK
+ > video list ...... 9 groups · 12 pieces per recording OK
+ > status: READY TO RECORD
+
+ High Level High Level High Level
+ Pros.
+ The Show Bible. What the show is, how it talks, who sits in the chair, every question they get asked, and every video it produces.
+ DOCUMENT HLP Show Bible v1.1 · amended by the Sept 21 gate
+PREPARED Sept 20, 2026 · amended Monday, Sept 21, 2026
+FOR Brandon King · Host, High Level Pros
+SET 2 of 4 · [1] Operating Model [2] Show Bible [3] SOP Set v5 [4] Site + Omaha Ten
+USE Source of truth for the site copy, the invitation sequence, editor briefs, and every fleet unit that touches HLP
+
+ // 01 · THE PREMISE
+ What High Level Pros is
+
+ A twice-weekly interview show where Midwest owners doing mid-six and seven figures explain, with numbers, exactly what they changed to get from one stage to the next. No billionaires. No one who has never made payroll.
+ ▲ The plot, in your words
+ Put an end to the guru. Open the door for entrepreneurs to listen to people in a similar boat. Don't listen to the billionaire. Listen to the guy who was just there a few years ago. He understands your pain and can get you out of it faster.
+
+ The one question every episode answers
+ "What did you have to change to get from [stuck number] to [where you are now]?" If an episode cannot be summarized as one stage jump, three mistakes, and a set of moves, it is not an HLP episode. The Peyton Hogan recording is the template: mid-six to seven figures in a therapy practice, the three mistakes that keep owners stuck, and what it took to get past each one.
+ Positioning line — tournament
+ # Candidate Judged against a $300K owner, 9pm, thumb on the screen Result
+ 1 No gurus. Just the owner who was where you are three years ago. Names the enemy and the promise in one breath. Sounds like Brandon. WINNER
+ 2 Real owners. Real numbers. The stage you're stuck on. Best three-beat for thumbnails, banners, the site hero. KEEP as tagline
+ 3 The people who just did it, explaining how. Clean, a little soft. Backup
+ 4 How Midwest owners actually broke seven figures. Strong for search and the About line. Too narrow for guests at other stages. Use in descriptions
+ 5 Two steps ahead of you. Not two hundred. Good line for the cold open, not a position. Use on air
+ Why it exists — the 40-second version for the site and the trailer
+ Every owner I know has bought the course, watched the billionaire, and gone back to work Monday with nothing they could use. The advice was built for a business a hundred times their size. Meanwhile the person who could actually help is fifteen minutes away: an owner who was stuck at the same number three years ago and got past it. Nobody was handing that person a microphone. So we built a room, put a camera on it, and started asking for the numbers.
+ // 02 · TWO AUDIENCES
+ The listener and the guest are different people
+
+ The show is made for the listener. The business is built on the guest. Confuse the two and both funnels break.
+ THE LISTENER THE GUEST
+ Who Owner-operator at $150K–$750K . Service business, practice, trade, shop. Omaha metro and the Midwest first. Owner at $500K–$10M , still in the seat, with one thing they do better than almost anyone in their industry.
+ Stuck on A number. Usually the same one for 18+ months. Visibility. The business is bigger than the reputation.
+ Has tried Courses, a coach, an agency that burned them, YouTube at midnight. Referrals, a website nobody updates, maybe an agency, never real video.
+ Wants The specific next move from someone who made it. To be known in their market the way they are known by their clients.
+ Fears Wasting another year. Looking desperate online. Looking like a self-promoter.
+ What HLP gives them Stage-specific moves, with numbers, twice a week. A cinema-grade hour that makes them look like what they are.
+ Where they go next Email list → The Next Stage cohort → Diagnostic / Launchpad / Engine Debrief → Guest Authority Package → Engine / System
+ The two-step rule The guest should be close enough that the listener thinks "that could be me in three years." Guests at $10M+ are capped at 1 in 8. Past that, the premise breaks.
+ // 03 · THE MESSAGING SYSTEM
+ How the show talks
+
+ Four pillars. One enemy. A short list of words that never get said.
+ Pillar What it means on air What it sounds like
+ Stage, not story Every conversation is anchored to a revenue stage and the jump out of it. Biography is 3 minutes, not 30. "You were at $640K for two years. What was holding it there?"
+ Numbers on the table Revenue, headcount, price, margin, what they paid themselves. Agreed in the pre-interview, said on camera. "What did that hire cost you, all in?"
+ Built here Midwest operators, Midwest markets. Omaha is a feature. The advice works in a town where everyone knows your last customer. "That works in Austin. Does it work in Papillion?"
+ Earned, not claimed Nobody teaches anything they have not done with their own money in the last five years. Authority is proof stacked, never adjectives. "Show me. What happened the first month you tried it?"
+ ■ The enemy
+ Not a person. The advice gap : guidance built for billion-dollar companies, sold to a guy with six employees and a truck payment. The show never names or mocks individual gurus. It just keeps putting real operators with real numbers next to the hype and lets the audience do the math.
+
+ Say this · never this
+ Say Never
+ owner · operator entrepreneur (as identity) · CEO mindset · boss
+ the stuck number · the jump · the stage level up · 10x · scale to the moon
+ what it cost · the bill the journey · the grind · hustle
+ authority thought leader · influencer · personal brand guru
+ moves · what you actually did secrets · hacks · blueprint
+ "what was the number?" "tell me your story"
+ On-air scripts — drafts for your voice; rewrite freely
+ COLD OPEN (after the 30-45s guest hook)
+"This is High Level Pros. No gurus. No billionaires. Just the owner who was
+where you are a few years ago, and exactly what they did to get out.
+I'm Brandon King. Today: [GUEST], who took [BUSINESS] from [STUCK NUMBER]
+to [NOW]. Here are the three things that kept them stuck."
+
+MID-ROLL (one ask, owned audience)
+"Everything [GUEST] just walked through in 'Steal This' is on one page.
+It's free. Link's in the description. Go get it and use it Monday."
+
+CLOSE
+"If you're sitting at a number and it won't move, tell me the number.
+Comment it or email me. I read every one, and the next owner in this chair
+might be the one who already got past it."
+
+SPONSOR / CLIENT DISCLOSURE (when it applies, said in the open)
+"Quick note: [GUEST / SPONSOR] is a [client of my studio / partner of this
+show]. You should know that going in." CTA law: one ask per episode. Mid-roll is always the owned-audience ask. The close is always a conversation ask. No "like and subscribe" as the only CTA, and none of the banned CTAs. During cohort enrollment windows the mid-roll becomes the waitlist.
+ // 04 · THE FORMAT
+ The Breakthrough Arc
+
+ 35 to 45 minutes for the first 12 episodes (YouTube Council, Sept 21), 45 to 60 after. Seven segments. Every segment is also a clip franchise, which is how one recording becomes twelve published pieces.
+ # Segment Min What happens Clip franchise
+ 0 Cold open 0:45 The hardest line the guest said, cut to the top. Then the scripted open. Trailer
+ 1 The Stuck Number 5 The number lands inside the first 30 seconds: what it was, how long they sat there, what a Tuesday looked like. Biography comes later and stays short. THE STUCK NUMBER
+ 2 The Three Mistakes 12 What they were doing that kept them there. One at a time, each with what it cost. MISTAKE #1 / #2 / #3
+ 3 The Moves 8 What they actually did, in order, with the timeline and the first proof it worked. Mid-form cut A
+ 4 The Bill 4 Money, people, sleep. What getting unstuck cost them. THE BILL
+ 5 Steal This 9 Their specialty, taught. The one thing they do better than anyone in their trade, specific enough to use Monday. STEAL THIS · mid-form cut B · the free one-pager
+ 6 The Owner's Ledger 4 The same five questions every guest answers. Feeds the supercut episodes. OWNER'S LEDGER
+ 7 Monday Morning + Who's Next 2 One thing the listener does Monday. Then: who should sit in this chair next? MONDAY MORNING
+ Episode types and cadence
+ Type Cadence Job
+ Guest episode Tuesdays from Oct 6 · Tue + Thu once 4 are banked The engine. Audience, guest pipeline, library.
+ Solo episode (Brandon) 1 a month from Oct Host authority. Pre-sells the cohort. Built only from what the tape supports.
+ Supercut 1 a month once 8 Ledgers are banked Cheap to make, highest share rate, best entry point for new viewers.
+ Live recording Quarterly from Q1 2027 The sponsor asset. The room.
+ ▲ The first-90-day scoreboard
+ Chairs filled by fit owners. Debriefs held. Email signups. Views are reported, not judged. Under 1,000 subscribers the show is a meeting format with a camera; long-form episodes drawing tens to low hundreds of views for a quarter is normal and is not failure.
+
+ ★ What never happens on HLP
+ Nobody pays to sit in the chair.
+ Nobody pitches. "Where do people find you" gets one answer, one place.
+ No offer to a guest before, during, or on the day of a recording.
+ No number on air the guest did not clear in the pre-interview.
+ No guest who cannot name a real stuck number and a real after.
+
+ Packaging: titles, descriptions and thumbnail text run through hlp-youtube-package , judged by the YouTube Council, scored against the tape by Cassandra Cain. Thumbnails keep the current style with two people in frame (Sept 2026 decision). Title direction (YouTube Council, Sept 21): topic-first. Number jump + trade + three mistakes; the guest's name goes in the description, not the title. Spine: [Stuck number] to [Now]: the 3 mistakes keeping [owner type] stuck . Channel descriptor, locked: "High Level Pros · Midwest owners, real numbers."
+ // 05 · GETTING ON THE SHOW
+ Standards, score, application
+
+ This section is also the copy source for the "How to get on" page of the site.
+ The five standards
+ You own it and you're in it. Owner-operator, in the seat today. Not a consultant describing someone else's business.
+ Mid-six figures or more, and you'll say so. $500K+ in annual revenue, with real numbers on camera. Breakout guests under $500K are booked by exception, 1 in 12.
+ A real stuck number. A stage you sat at, how long you sat there, and where you are now.
+ One thing you can teach in 15 minutes. Hiring, pricing, sales, operations — something specific enough that an owner can use it Monday.
+ No pitch. You are here to help the owner behind you. The episode will do more for your reputation than a plug would.
+ ■ What a guest needs to know, in plain words — for the invitation and the site
+ How long: 45 minutes of recording, 90 on site. Where: the studio in Omaha. What you will be asked: the number you were stuck at, the three mistakes, what you did. Who watches: owners a few years behind you. What you walk away with, free: the full episode, a trailer, and two shorts to post. No house vocabulary on guest-facing pages: no "Authority Engine," no "debrief," no "Breakthrough Arc."
+
+ ★ The first four chairs carry the package test
+ The back catalog could not test the package: the one recorded guest who got the offer did not need it, and nobody else recorded is a viable buyer. So the first four chairs are picked with buyer-fit weighed deliberately: real ad or content spend, a louder owner / customer / hiring problem, revenue at $1M or more. The score still has to clear 10 of 15 and the wall still holds: no ask in the room, none on recording day. Tripwire: zero paid packages from the first four buyer-fit debriefs by Nov 6 → JSA re-tries the package.
+
+ The Guest Score — book at 10 or higher
+ Criterion 0 3 Max
+ Story: a clear stuck number and a clear after Vague growth Exact numbers, exact dates 3
+ Specialty: teachable and specific "We just work hard" A method with steps 3
+ Numbers on the record Refuses Revenue, price, pay, cost 3
+ Reach and respect in their market Unknown Owners in their trade know the name 3
+ Buyer-fit for Churlish Not a fit Service business, visible gap 3
+ Buyer-fit is 3 of 15. A guest can score zero on it and still be booked at 12. That is the editorial wall expressed as arithmetic. Kid Flash pre-scores, Brandon confirms after the pre-interview.
+ The application — nine fields
+ Name, business, city
+ What the business does, in one sentence
+ Annual revenue band: $250–500K · $500K–1M · $1–3M · $3–10M · $10M+
+ Years as the owner · team size
+ The number you were stuck at the longest, and for how long
+ What finally moved it (3 sentences)
+ The one thing you could teach another owner in 15 minutes
+ Are you comfortable sharing real numbers on camera? Y / N / some
+ Who referred you, or which episode made you apply
+ // 06 · THE GUEST MATRIX
+ Every owner type worth a chair
+
+ Seven categories, 58 owner types. Each row carries the question only that owner can answer, which is the reason to book them.
+ A · HOME SERVICES & TRADES
+ Owner type The question only they can answer
+ HVAC · plumbing · electrical How do you keep techs when the shop down the road pays a dollar more?
+ Roofing · siding · exteriors How do you run a sales team in a storm-chaser market without becoming one?
+ Landscaping · hardscape · lawn · snow How do you make payroll in February?
+ Remodeling · general contracting · custom homes How do you price a job so change orders don't eat the margin?
+ Concrete · foundation · garage doors · fencing When did you stop bidding everything?
+ Cleaning · restoration · pest · junk removal How do you build recurring revenue into a one-time service?
+ Auto repair · body · detailing · towing How do you get out from under the hood?
+ Commercial subs (mechanical, electrical, fire) How do you survive 90-day pay terms?
+ B · HEALTH & WELLNESS PRACTICES
+ Owner type The question only they can answer
+ Therapy / counseling group practice How do you grow past your own caseload? (Hogan episode)
+ Dental · orthodontic · oral surgery What did dropping an insurance plan do to revenue?
+ Chiropractic · physical therapy How do you sell care plans without feeling like a salesman?
+ Med spa · aesthetics · dermatology What is your rebooking rate and how did you build it?
+ Optometry · veterinary · pharmacy How do you compete with the chain across the street?
+ Gym · studio · personal training How do you grow when your body is the product?
+ Thermography · functional · integrative clinics How do you market care people don't know exists?
+ Home health · senior care · disability services How do you staff a business with 60% turnover as the industry norm?
+ C · PROFESSIONAL SERVICES
+ Owner type The question only they can answer
+ CPA · bookkeeping · fractional CFO Which clients did you fire to grow?
+ Law firm (small / boutique) How did you get off the billable hour?
+ Financial advisor · RIA · wealth How do you earn trust in a town where everyone has "a guy"?
+ Insurance agency (P&C, commercial, benefits) How do you build a book that doesn't depend on you?
+ Real estate team · brokerage · property management When did you stop selling and start leading?
+ Mortgage · title · commercial lending How do you survive a rate cycle?
+ Staffing · recruiting · HR / PEO What do owners get wrong about hiring, every single time?
+ IT / managed services · cybersecurity How did you move clients from break-fix to monthly?
+ Architecture · engineering · surveying How do you price expertise instead of hours?
+ D · FOOD, HOSPITALITY & RETAIL
+ Owner type The question only they can answer
+ Restaurant, 2+ units What broke when you opened the second one?
+ Coffee · bakery · dessert What is your real margin on a $6 drink?
+ Brewery · distillery · winery Taproom or distribution: which one actually pays?
+ Catering · event venue · wedding How do you smooth a seasonal calendar?
+ Specialty retail · boutique · outdoor · hobby How do you beat Amazon from a storefront?
+ Product brand / e-commerce (made here) How did you get from craft fair to real distribution?
+ Franchisee, multi-unit What does the franchisor never tell you?
+ Hotel · short-term rental operator What is the number that tells you a property works?
+ E · B2B, INDUSTRIAL & AG
+ Owner type The question only they can answer
+ Manufacturing · fabrication · machining How do you quote so the shop stays full and profitable?
+ Trucking · logistics · freight brokerage How do you survive when rates fall 30%?
+ Ag services · equipment · grain · livestock How do you run a business the weather can veto?
+ Commercial cleaning · facility services How do you win and keep contracts without being the cheapest?
+ Print · signage · promotional How did you reinvent a shrinking category?
+ Wholesale · distribution · equipment dealer What do you do when your biggest customer is 40% of revenue?
+ Construction supply · lumber · building materials How do you sell on something other than price?
+ Waste · recycling · environmental How do you build a business nobody thinks about?
+ F · COACHES, CONSULTANTS & CREATIVE
+ Owner type The question only they can answer
+ Leadership / executive coach with a real firm How did you stop trading hours for dollars?
+ Agency owner (marketing, web, PR) How do you keep clients past month six?
+ Photographer · videographer · studio When did you raise prices and who left?
+ Software / SaaS founder (bootstrapped) How did you get the first 100 paying customers in the Midwest?
+ Training · education · childcare company How do you grow a business built on licensed staff?
+ Nonprofit executive who runs it like an operator How do you make payroll on grants and donors?
+ Speaker · author with an operating business behind it What does the business look like when you're not on stage?
+ G · OPERATORS WITH A TWIST
+ Owner type The question only they can answer
+ Bought the business (acquisition entrepreneur) What did due diligence miss?
+ Second / third generation family business How did you take the keys without breaking the family?
+ Husband-and-wife or sibling partners Who decides when you disagree?
+ Veteran-owned What transferred from the service and what didn't?
+ Sold the company (exited founder) What would you do differently in the last 24 months before the sale?
+ Failed once, rebuilt What did the first one teach you that the second one needed?
+ Employee who became the owner What changed the day you signed?
+ Rural / small-town operator How do you grow when your whole market is 8,000 people?
+ Owner who got out of daily operations What was the last job you gave away, and to whom?
+ Immigrant- or first-generation-founded business What did you have to figure out that nobody told you?
+ Stage bands and the season mix
+ Stage Band The wall Share of guests
+ Breakout $250K–$500K The owner does everything 1 in 12, by exception
+ Stage 2 $500K–$1M The owner is the bottleneck 30%
+ Stage 3 $1M–$3M The team breaks 35%
+ Stage 4 $3M–$10M The business outgrows the founder's skills 25%
+ Stage 5 $10M+ or exited Capital, succession, the sale Capped at 1 in 8
+ Mix rules per 12 episodes: 4 home services · 3 health and wellness · 2 professional services · 1 food / retail · 1 B2B / industrial · 1 operator with a twist. No specialty lane repeats inside 6 episodes. No two guests from the same trade inside 8.
+ // 07 · THE QUESTION BANK
+ Every set of questions
+
+ Built on NEPQ for structure and Voss for follow-ups. The spine never changes. Modules swap in by stage, specialty, and industry. Pick 1 stage module + 1 specialty module + 3–4 industry questions per guest.
+ A · Pre-interview — 15 minutes, not recorded
+ Job: find the stuck number, the three mistakes, and the specialty before the camera rolls. Clear the numbers. Set the no-pitch rule.
+ Walk me through the business in numbers: revenue last year, team size, years as the owner.
+ What number were you stuck at the longest, and for how long?
+ If you had to name the three things that were keeping you there, what were they?
+ What finally moved it? What was the first thing that actually worked?
+ What did you believe back then that turned out to be wrong?
+ What is the one thing you do better than almost anyone in your trade?
+ Which numbers are you comfortable saying on camera? What is off the table?
+ What did getting unstuck cost you? Anything there you would rather I not touch?
+ Picture the owner listening who is where you were. Who are they?
+ Anything you are promoting right now? (Set the rule: one place to find you, no pitch.)
+ Who else should be sitting in this chair?
+ B · The spine — every guest, in this order
+ Take me to the stuck number. What was revenue, and how long had it been sitting there?
+ Give me the business in 30 seconds. What you do, how big, how long.
+ What did a normal Tuesday look like for you at that number?
+ At the time, what did you think the problem was?
+ What was it actually?
+ Mistake one. What were you doing that was keeping you there?
+ What did that one cost you? Put a number on it if you can.
+ Mistake two. (Repeat the cost question.)
+ Mistake three. (Repeat the cost question.)
+ What was the first move that actually worked, and how fast did you see it?
+ Walk me through the next 12 months in order. What came second? Third?
+ What was the bill? Money, people, sleep.
+ Where is the business now? Give me the after.
+ [SPECIALTY MODULE — Steal This]
+ [OWNER'S LEDGER]
+ Somebody listening is sitting at your old number right now. What do they do Monday morning?
+ What do they stop doing?
+ Who should sit in this chair next, and why them?
+ C · Stage modules
+ Breakout → $500K · "the owner does everything"
+ What was the first job you gave away, and how badly did it go the first time?
+ How did you decide what you were worth per hour, and what did that change?
+ What did you say no to that year that you would have said yes to before?
+ What was the first system you wrote down?
+ $500K → $1M · "the owner is the bottleneck"
+ When did you realize the business could not grow past your own calendar?
+ Who was the first person you trusted with customers, and how did you pick them?
+ How did you get sales off your plate without sales falling off a cliff?
+ What did cash flow look like in the month you were sure you had made a mistake?
+ $1M → $3M · "the team breaks"
+ What broke first when you crossed a million?
+ Who was your first real manager, and what did you get wrong about that hire?
+ When did you first see true margin by job or by service line, and what did it show you?
+ Which employee who got you to $1M could not get you to $3M, and how did you handle it?
+ $3M → $10M · "the business outgrows the founder"
+ What skill did you not have that the business suddenly needed?
+ What does your leadership team own that you used to own?
+ How did you fund the jump: cash, debt, a partner?
+ What is your actual job now? What is on your calendar this week?
+ $10M+ / exit · "capital, succession, the sale"
+ When did you start building the business to be sold or handed off?
+ What did the buyer or the successor care about that surprised you?
+ What would you fix 24 months earlier?
+ What do you do with a Tuesday now?
+ D · Specialty modules — the "Steal This" block
+ Hiring
+ Where do your best people actually come from?
+ Walk me through your interview. What is the one question that tells you the most?
+ What does week one look like for a new hire?
+ What do you pay compared to the shop down the road, and why?
+ Firing and standards
+ How long did you keep your worst employee too long?
+ What is the standard, and how does someone know they are under it?
+ Walk me through the actual conversation.
+ What happened to the team the week after?
+ Pricing and margin
+ When did you last raise prices, by how much, and who left?
+ How do you know what a job really costs you?
+ What do you refuse to discount, and what do you say when they ask?
+ What is the margin you will not go below?
+ Sales process
+ Walk me through a sale from first contact to signed.
+ What do you ask that your competitors do not?
+ How did you train someone else to close like you?
+ What is your close rate, and what was it three years ago?
+ Marketing and lead flow
+ Where did your last 10 customers come from? Actually count.
+ What did you stop spending money on?
+ What is the one thing that made you known in your market?
+ What do you spend a month, and what comes back?
+ Operations and SOPs
+ What is the first process you documented, and why that one?
+ How do you know a job went right without being there?
+ What do you measure every week?
+ What fell apart the first time you took a real vacation?
+ Cash, debt and financing
+ Tell me about the closest you came to missing payroll.
+ How many months of expenses do you keep, and when did you start?
+ What debt was worth it? What debt was not?
+ What does your banker know about you that most owners never tell theirs?
+ Leadership and culture
+ What did your team say about you three years ago that was true?
+ What is a rule in your company that would surprise people?
+ How do you deliver bad news?
+ Who tells you the truth?
+ Expansion: second location, acquisition
+ What made you sure the first one was ready to be copied?
+ What did not copy?
+ How did you pay for it?
+ What would make you close it?
+ The owner's time
+ Show me last week's calendar. What should not have been on it?
+ What was the hardest thing to let go of?
+ What do you do now that only you can do?
+ How many hours, honestly?
+ Retention and recurring revenue
+ What percent of revenue repeats, and what was it before?
+ What do you do in the first 30 days that keeps a customer for years?
+ Why do customers leave you? The real reason.
+ What did you build so that January looks like June?
+ Tech and AI in the shop
+ What tool actually paid for itself?
+ What did you buy that nobody uses?
+ Where is AI doing real work in your business today, if anywhere?
+ What will you never automate?
+ Family, health and burnout
+ What did the business cost you at home?
+ When did you know you were burned out, and what did you do that week?
+ What is a boundary you hold now?
+ What would your spouse say the turning point was?
+ Exit and succession
+ Who runs it if you are gone for six months?
+ What is it worth, and how do you know?
+ Family, employees, or a buyer: how did you decide?
+ What are you doing this year to make it worth more?
+ E · Industry prompts — pick 3–4
+ Home services and trades
+ What does one truck need to bring in per day?
+ How do you handle the slow season?
+ What is your callback rate, and what did you do about it?
+ How do you get a tech to sell without turning him into a salesman?
+ Health and wellness practices
+ How much of your revenue still depends on you seeing patients?
+ What did you change about insurance, cash pay, or memberships?
+ How do you market something people are embarrassed to search for?
+ How do you keep clinicians from leaving to open their own shop?
+ Professional services
+ How did you move off hourly billing, if you did?
+ Which clients did you fire, and what happened to revenue?
+ How do you sell something people cannot see?
+ What does your referral network actually look like?
+ Food, hospitality and retail
+ What is your prime cost, and what was it when you were struggling?
+ What did the second location teach you about the first?
+ How do you compete with a chain's prices?
+ What is the one item or product that carries the business?
+ B2B, industrial and ag
+ How concentrated is your customer base, and does that scare you?
+ How do you quote?
+ How long do you wait to get paid, and how do you fund the gap?
+ How do you find skilled labor out here?
+ Coaches, consultants and creative
+ What did you stop offering?
+ How did you get past trading time for money?
+ What is your retention past six months?
+ How do you prove results to a skeptical buyer?
+ Operators with a twist
+ What did you inherit, good and bad?
+ What did the previous owner or generation do that you had to undo?
+ How do you separate the family table from the conference table?
+ What would you tell someone about to sign?
+ F · The Owner's Ledger — same five, every guest
+ Your worst hire, and what it cost.
+ The best $1,000 you ever spent on the business.
+ What did you pay yourself the year it finally broke open?
+ One thing you believed at your stuck number that you would be embarrassed to say now.
+ Who was two steps ahead of you that you learned from? Not a celebrity. A person.
+ G · The Voss toolkit — follow-ups that get the real answer
+ Tool Use it when Sounds like
+ Mirror They say something loaded and move on "…almost missed payroll?"
+ Label There is feeling under the answer "It sounds like that one still stings."
+ Calibrated question The answer was a headline, not a how "How did you actually do that?" · "What made you sure?"
+ Number ask They gave an adjective "Expensive — what is expensive?"
+ Silence They finished but are not done Count four. Say nothing.
+ Accusation audit Before a hard topic "This might feel like I am prying, and tell me to back off…"
+ No-oriented ask You need permission "Would it be out of line to ask what you paid yourself that year?"
+ Rewind They skipped the hard part "Back up. Between the day you decided and the day it worked, what happened?"
+ H · The debrief — off air, after the recording
+ Nothing is asked in the room. A thank-you goes out the next day with no ask. The debrief invitation rides with the published episode: twenty minutes, inside seven days of publish. This is where Lane 1 lives. Full procedure is SOP 06 in the v5 set; these are the questions.
+ (Day after · note) Thank you. Here is when it publishes. No ask.
+ (Publish day · note) Your episode is live, with your trailer and two shorts to post. I would like to show you what we could build from it for your own market. Twenty minutes. Thursday or Friday?
+ (Call · open) How did that feel? When people see it, what would you want it to do for you?
+ (Call · situation) What are you doing right now to get in front of new customers?
+ (Call · problem) How is that working compared with a year ago?
+ (Call · problem) What happens to the business if that slows down?
+ (Call · solution) If owners in this market saw you the way you came across in that chair, what would change?
+ (Call · consequence) What does it cost you each month that they do not?
+ (Call · above $3M) Who else on your team should be in this conversation?
+ (Call · close) There are three ways to cut it: for other owners, for your customers, or for hiring. Which problem is louder right now?
+ (Call · close) Would it be a bad idea to start there?
+ (Always) Who do you know that is stuck where you were three years ago?
+ // 08 · THE MASTER VIDEO LIST
+ Every video HLP needs
+
+ Nine groups. Per recording: 1 long-form, 1 trailer, 5 shorts, 2 mid-form, 1 carousel, 1 article, 1 newsletter = 12 published pieces. At two recordings a week, that is ~100 pieces a month from 8 chairs.
+ A · Channel foundation — make once
+ # Video Length Job
+ A1 Channel trailer: "No gurus. Just the owner who was where you are." 60–90s Converts a first-time visitor
+ A2 The manifesto: why High Level Pros exists 6–8 min Pinned. The plot, told once, properly
+ A3 Brandon's own stuck number 8–10 min The host goes first. Real numbers or the premise is a costume
+ A4 How to get on the show 2–3 min Lives on the site. The five standards
+ A5 What to expect as a guest 3 min, unlisted Sent with every booking. Cuts prep time, calms nerves
+ A6 Start Here playlist intro 90s Routes viewers by stage
+ A7 Season trailer 90s, every 12 eps Guest faces, best lines
+ B · Guest episodes — see the Q4 slate, section 09
+ C · Solo episodes — one a month, tied to cohort weeks
+ Working titles. The council judges final packaging. Titles 1, 6 and 12 quote the tape, so they ship only when the tape supports them.
+ I asked 8 owners what kept them stuck. The same 3 answers kept coming up.
+ Why the marketing that got you to $300K stops working at $800K
+ Stop saying you can't afford to hire. Here's the math.
+ The price you're scared to charge, and the owners who charged it
+ You don't have a lead problem. You have a follow-up problem.
+ What seven-figure owners do on Monday that you don't
+ Nobody knows you exist: the authority gap in Omaha
+ One video a week: the content plan for owners who hate content
+ The sales call that sells without pitching
+ Getting out of the truck: the first 10 hours you buy back
+ What a guru can't tell you, because they've never made payroll
+ Year in review: the best advice from every owner who sat in this chair
+ D · Supercuts — built from the Owner's Ledger
+ Owners on their worst hire
+ The best $1,000 I ever spent
+ What they paid themselves the year it broke open
+ What I believed at my stuck number
+ Who was two steps ahead of me
+ Every "Monday morning" answer, back to back
+ E · Shorts franchises — 5 per episode, 9:16, burned-in captions
+ Series Source segment Hook pattern
+ THE STUCK NUMBER Segment 1 "I sat at $640K for two years."
+ MISTAKE #1 / #2 / #3 Segment 2 "The thing keeping [trade] owners stuck is…"
+ STEAL THIS Segment 5 "Here's exactly how we hire techs."
+ THE BILL Segment 4 "It cost me $80,000 and my best foreman."
+ OWNER'S LEDGER Segment 6 "Worst hire I ever made…"
+ MONDAY MORNING Segment 7 "If you're stuck at $500K, do this Monday."
+ F · Mid-form — 2 per episode, 4–7 min, YouTube + LinkedIn
+ Cut A · The Three Mistakes — complete idea, cold open, landing, bridge to the full episode.
+ Cut B · Steal This — the specialty, taught start to finish. Pairs with the free one-pager.
+ G · Conversion and operations videos
+ # Video When Rule
+ G1 The Next Stage cohort: the case (VSL) Before Oct 19 waitlist Founding cohort, said plainly. No result claims.
+ G2 The Next Stage: who it is for, who it is not Before Nov 10 Disqualifies on purpose
+ G3 Guest Authority Package explainer Before first debrief Sent after a recording only. Never public-facing bait.
+ G4–6 Package case studies 1–3 As real numbers arrive From the three case-study exchanges
+ G7 Application thank-you With site launch Sets timeline and the pre-interview
+ G8 Engine pre-call video (update the existing Brand Lift VSL) Before first Engine proposal Now references the episode, not an ad
+ G9 Sponsor sizzle After 12 episodes Real roster, real numbers
+ G10 Cohort graduate stories March 2027 Only what happened
+ H · Facebook-native — weekly
+ 3 native clip uploads a week (uploaded to Facebook, not linked from YouTube), captions burned in.
+ 1 "owner question of the week" post: a Ledger answer as the prompt, comments as the point.
+ Reels cross-posted from the shorts wall.
+ Guest tags and guest-shared posts: the guest's network is the distribution.
+ Local business groups: share by each group's rules, as a member, never as a drop-and-run.
+ I · Live and special
+ Quarterly live recording with an audience, first one Q1 2027. The sponsor asset.
+ Year-end special, Tue Dec 29 : the best of the Ledger. Built from banked tape, publishes while you are off.
+ // 09 · THE Q4 SLATE
+ 24 chairs, by type
+
+ Slots, not names. The Omaha Ten and the wider candidate list fill these. Episode zero is already recorded: Peyton Hogan, therapy practice, mid-six to seven figures. He is also the one who gave Brandon the idea for the show.
+ # Record wk of Owner type Stage Specialty lane
+ 1 Sep 28 HVAC or plumbing $1–3M Hiring
+ 2 Sep 28 Dental or orthodontic $1–3M Pricing and margin
+ 3 Oct 5 CPA / bookkeeping firm $500K–1M Firing clients, raising prices
+ 4 Oct 5 Landscaping / hardscape $1–3M Cash through the slow season
+ 5 Oct 12 Restaurant, 2+ units $3–10M Expansion
+ 6 Oct 12 Insurance or financial advisory $500K–1M Sales off the owner
+ 7 Oct 19 Roofing / exteriors $3–10M Sales team and lead flow
+ 8 Oct 19 Med spa / wellness clinic $500K–1M Retention and recurring revenue
+ 9 Oct 26 Manufacturing / fabrication $3–10M Operations and SOPs
+ 10 Oct 26 Gym / studio (breakout) $250–500K The owner's time
+ 11 Nov 2 Law firm, boutique $1–3M Leadership and culture
+ 12 Nov 2 Remodeling / GC $1–3M Cash, debt and financing
+ 13 Nov 9 Bought the business Any Acquisition
+ 14 Nov 9 Chiropractic / PT $500K–1M Marketing and lead flow
+ 15 Nov 16 Real estate team / brokerage $1–3M Firing and standards
+ 16 Nov 16 Commercial electrical / mechanical sub $3–10M Exit and succession
+ 17 Nov 30 Specialty retail / product brand $500K–1M Tech and AI in the shop
+ 18 Nov 30 Trucking / logistics or ag services $3–10M Cash and financing
+ 19 Dec 7 Cleaning / restoration $1–3M Operations and SOPs
+ 20 Dec 7 Veterinary or optometry $1–3M Family, health and burnout
+ 21 Dec 14 IT / managed services $1–3M Recurring revenue
+ 22 Dec 14 Coffee / bakery / brewery $500K–1M Pricing and margin
+ 23 Float Agency / creative / coach $500K–1M Sales process
+ 24 Float Second-generation family business $3M+ Succession
+ Two float slots cover cancellations and Thanksgiving week. A slot can swap trades freely; it cannot break the mix rules in section 06.
+
+ Churlish OS v5 — HLP Show Bible CHURLISHMEDIA.COM · 402-819-8168
+
+ NO GURUS. REAL NUMBERS. CHURLISHMEDIA.COM

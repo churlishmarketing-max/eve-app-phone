@@ -1,0 +1,160 @@
+Churlish Media · Q4 Cutover Plan · Sept 21 – Dec 31, 2026
+ Churlish Media · Q4 Cutover Plan · Sept 21 – Dec 31, 2026
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · MISSION // 006
+
+ churlish@hq :~ $ arm cutover_q4 --recordings 24 --lock dec_18
+ > clock started sep 21 · 12 working weeks DONE
+ > base case restated 38,500 → 26,000 DONE
+ > new ideas PARKED 48H
+
+ The Q4 The Q4 The Q4
+ Cutover Plan.
+ Replaces the 90-Day Sprint Plan. Same number, same definition, new front door. Twelve working weeks, twenty-four recordings, three conditions, one lock. This is the execution cut of Master Plan v5: the math, the phases, the floor, the scoreboard, and the tripwires that fire if it drifts.
+ CHURLISH MEDIA · MASTER PLAN §05–§08 · EXECUTION CUT · STAGED CUTOVER · 24 RECORDINGS BY DEC 18 · COLLECTED BY DEC 31 · OS TERMINAL EDITION — SEPTEMBER 2026
+ week 1 of 13 — do not interrupt
+
+ // 01 · THE NUMBER · COLLECTED, NOT BOOKED
+ The math, restated down
+
+ ★ The definition that keeps it honest
+ "$150K made" still means collected cash from new sales between June 15 and December 31, 2026. The June stack of $148K remains the scoreboard and its actuals go on paper Friday, Sept 25. This plan covers only what the new front door adds in the twelve working weeks left — and the gate cut that number from $38,500 to $26,000 gross before an editor was paid.
+
+ Line Math Collected in 2026
+ Guest package 24 guests → ~14 buyer-fit → 6 sold. First 3 @ $1,500 (case-study exchange), next 3 @ $2,500. All PIF $12,000
+ Authority Engine from the chair 2 signed by Nov 1 × $3,500 × 2 months (contract value $28,000) $14,000
+ The Next Stage, founding cohort 5 PIF seats × $2,500. Upside, not base case upside $12,500
+ Sponsors · AdSense · Facebook Not sold before 12-episode proof $0
+ Q4 base case, gross $26,000
+ Less production 24 kits × $400 planning cap −$9,600
+ Q4 BASE CASE, NET $16,400
+ ▲ Stretch levers — upside, never base
+ Five founding cohort seats paid in full (+$12,500) · a third Engine from the chair (+$7,000 in-year if signed by Nov 1) · one System (+$10,000) · Tournaments and Tool Sprints from the third weekly conversation, which already live in the June stack.
+
+ // 02 · THE CLOCK · TWELVE WORKING WEEKS
+ Sept 21 → Dec 18 → Dec 31
+
+ PH·1 Stage — Sep 21 to Oct 4 BUILD THE ROOM
+ THE JOB
+Conditions on paper, invitations out, site live, first two recordings.
+ DONE WHEN
+Actuals + cap in writing · 20 invitations sent · 2 recordings banked · scheduling off Brandon.
+
+ SEP 22 > Approval sheet can be initialed. Not before.
+ SEP 25 > Incumbent actuals · production cap · first 20 invitations, with the first four chairs picked at Guest Score 12+ and full buyer-fit.
+ THIS WK > Base clients hear it from Brandon first, with an early-chair offer and on-air disclosure. Release + disclosure page to the attorney.
+ OCT 5 > Guest Coordinator runs SOP E2. Brandon stops touching the calendar.
+
+ PH·2 Record & publish — Oct 5 to Nov 15 FILL THE CHAIR
+ THE JOB
+Two recordings a week, publishing on rhythm, every fit guest debriefed inside 7 days of publish.
+ DONE WHEN
+12+ recordings · package test read out Nov 6 · 8 cohort deposits by Nov 7.
+
+ OCT 6 > First episode publishes. Weekly until 4 are banked, then Tue/Thu (~Oct 20).
+ OCT 19 > Cohort deposits open on air. $250, refundable.
+ OCT 31 > Tripwire checks: invitation reply rate, debrief take rate.
+ NOV 1 > Last day an Engine signing still collects two months in-year.
+ ALWAYS > 2 chairs + 1 straight sales conversation a week · HLP ≤12 hrs/wk · ventures frozen · new ideas park 48 hours.
+
+ PH·3 Prove & collect — Nov 16 to Dec 31 READ THE TAPE
+ THE JOB
+Deliver what got sold, collect every dollar, bank for the holidays, walk into the League with receipts.
+ DONE WHEN
+24 recordings · net chair cash ≥ $15,000 · 2027 goal ledger written from actuals.
+
+ NOV 20 > Demotion check: 16 recordings or the League re-tries the model.
+ DEC 1 > Sponsor outreach opens: 15 named targets, media kit built from real numbers.
+ DEC 12 > Cohort enrollment closes.
+ DEC 18 > League full board. The 24-recording lock lifts.
+
+ The thirteen weeks
+ Wk Dates What happens Owner
+ 1 Sep 21–27 Sign nothing before Tue Sep 22 · approval sheet initialed · base clients told first · release + disclosure page to the attorney · Fri Sep 25: incumbent actuals, production cap in writing, first 20 invitations out with the first four chairs picked for buyer-fit · one-page site build starts Brandon · Kid Flash · Blue Beetle
+ 2 Sep 28–Oct 4 One-page HLP site + application live (after Mid-Nite surgery) · first 2 recordings · Guest Coordinator named · scheduling off Brandon by Oct 5 Brandon · Lovable build
+ 3–4 Oct 5–18 Publishing starts Tue Oct 6 , weekly · first debriefs · email capture live on every episode Lois Lane · Starfire
+ 5–6 Oct 19–Nov 1 Cohort deposits open on air Oct 19 · Tue/Thu begins once 4 are banked (~Oct 20) · solo episode 1 · Oct 31 tripwire checks Brandon · EVE
+ 7–8 Nov 2–15 Nov 6 package test reads out · Nov 7 go / no-go on 8 deposits · "meet the instructors" Nov 10 · first supercut · Nov 15 package tripwire Brandon · JSA if tripped
+ 9–10 Nov 16–29 Bank episodes for Thanksgiving · media kit from real numbers · Nov 20 demotion check (16 recordings) Lois Lane · Starfire
+ 11–12 Nov 30–Dec 13 Sponsor outreach opens Dec 1, 15 named targets · cohort enrollment closes Dec 12 Perry White · Brandon
+ 13 Dec 14–20 24th recording · YPP status check · Dec 18 League full board · 2027 goal ledger proposed League · EVE
+ — Jan 12, 2027 The Next Stage, founding cohort, session 1 Brandon
+ — Feb 1, 2027 YouTube's watch-hour bar doubles for new applicants —
+ // 03 · THE FLOOR · WHAT PRODUCES THE STACK, WEEKLY
+ The activity floor
+
+ CHAIRS RECORDED / WK
+ 2
+
+ STRAIGHT SALES CONVERSATION / WK
+ 1
+
+ PUBLISH → DEBRIEF
+ 7 DAYS
+
+ PROOF ASSET / 2 WKS
+ 1
+
+ Calendar-protected like shoot days. Builds never get to push the chair or the third conversation off the calendar. Through Dec 31 that third conversation sells the fast-collecting products: Diagnostic, Tournament, Tool Sprint.
+ THE FRIDAY FIVE · V5 · WEEKLY
+ The scoreboard
+ 1 · Conversations held (floor 3: two chairs + one straight sales conversation). 2 · Debriefs held + offers out (floor 2). 3 · Dollars signed this week, chair-sourced tagged. 4 · Dollars collected vs. $150K, and chair-sourced net of production vs. the $15K line. 5 · Founder-free % of dollars delivered, with HLP hours beside it (cap 12/wk).
+
+ THE SHOW PANEL · REPORTED, NOT JUDGED
+ First 90 days
+ Recordings banked · episodes published on schedule · chairs filled by fit owners · email signups · cohort deposits · invitation reply rate. Views and subscribers are written down every Friday and argued about on Dec 18, not before. Under 1,000 subscribers the show is a meeting format with a camera.
+
+ The tripwires — pre-committed
+ Trigger Response
+ Any Friday: fewer than 2 recordings booked for next week Blue Beetle doubles sends. Brandon makes 5 personal asks that day.
+ Nov 6: zero paid packages from the first four buyer-fit debriefs (replaces the dead Oct 9 back-catalog test) JSA re-tries the package before more chairs are aimed at it.
+ Oct 31: invitation reply rate under 15% across the first 100 sends Perry White rewrites the invitation. Tournament of 5 subject lines.
+ Oct 31: fewer than 3 of the first 8 fit guests take the debrief Sales coach reviews the ask. Fix the ask, not the show.
+ Any guest answers "yes" to the wall question on the day-after survey Same-day founder call to that guest. SOP D5 audit of the last 4 episodes.
+ Nov 7: fewer than 8 cohort deposits Start moves Jan 12 → Feb 16. Keep recruiting.
+ Nov 15: fewer than 3 guest packages sold JSA on price, contents, timing. The Diagnostic returns as the post-record offer.
+ Nov 15: a search for the show name does not return the channel in the top 3 The descriptor moves into the channel name itself.
+ Nov 20: fewer than 16 recordings Automatic League re-trial.
+ Publishing slips two weeks running Publish once a week. Keep recording twice. The chair is the revenue.
+ Any base retainer shows a churn signal Same-week founder call. Guardian builds the renewal case.
+ Founder hours over ~115/mo, or HLP over 12 hrs/wk in November Delegation pass. Booking and publishing come off Brandon first.
+ Dec 31: chair-sourced cash net of production under $15,000 League re-trial in January. Service outbound restored to 50% of sends.
+ // 04 · THE CONDITIONS · PURSUE WITH CONDITIONS
+ The League's three
+
+ C1 · FRI SEPT 25 · BRANDON
+ Incumbent actuals
+ Closes and dollars by source, last 90 days. Cash collected since June 15. 2+ closes from outbound and ads → service outbound keeps 30% of sends through Oct 31. Fewer than 2 → zero now.
+
+ C2 · ~OCT 20 · LOIS LANE
+ Four in the can
+ Publish Tuesdays from Oct 6. Twice weekly only once four episodes are banked.
+
+ C3 · FRI SEPT 25 · BRANDON
+ Production cap in writing
+ $400 per kit until the real editor rate replaces it. An HLP kit never bumps a paying CRF turnaround.
+
+ // 05 · THE POINT · STATUS
+ Why this window
+
+ $ ECHO WHY_TWENTY_FOUR
+ Twenty-four recordings or it is not a test.
+ Everything that makes this plan cheap to run makes it cheap to copy. The parts nobody can copy all take calendar time: the roster, the room, the trust, the Ledger. So the defense is the calendar. Record to the line. Then read the tape on Dec 18 and decide with receipts instead of a feeling.
+
+ BASE, GROSS
+ $26K
+
+ BASE, NET
+ $16.4K
+
+ RECORDINGS
+ 24
+
+ CONVERSATIONS / WEEK
+ 3
+
+ Churlish Media · Q4 Cutover Plan · Sept 21 – Dec 31, 2026 CHURLISHMEDIA.COM · 402-819-8168
+
+ RECORD TO THE LINE. READ THE TAPE. CHURLISHMEDIA.COM

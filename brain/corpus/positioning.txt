@@ -1,0 +1,171 @@
+Churlish Media · Positioning Document · Brand Canon v2
+ Churlish Media · Positioning Document · Brand Canon v2
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · STRATEGY // 005
+
+ churlish@hq :~ $ cat positioning.lock --ten_second_test --front-door hlp
+ > loading who we are · who it's for · who the enemy is DONE
+ > corporate-speak filter ARMED
+ > editorial wall ARMED
+
+ The Positioning The Positioning The Positioning
+ Document.
+ What Churlish Media is, in words a stranger understands in ten seconds, and every claim behind it. This is the source of truth for how we describe ourselves everywhere: the site, the decks, the proposals, the show, the invitation. If copy anywhere contradicts this document, the copy is wrong.
+ CHURLISH MEDIA · BRAND CANON · V2 · ONE SIGNAL · ONE SHOW · EIGHT BRANDS UNDERNEATH · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 01 · THE ONE-LINER · UNCHANGED
+ Say this first, everywhere
+
+ $ CAT WHO_WE_ARE.TXT
+ A Midwest story studio that out-delivers agencies five times our size.
+ Churlish Media makes story-driven video and direct-response advertising for service businesses, and we are building an operating system that lets a tiny team deliver like a big one. Two rules underneath everything: we prove before we promise, and we never sound like a generic agency.
+
+ THE CATEGORY
+ Story-performance
+ Not "content creation," not "social media management." Cinema-grade story on the front end, direct-response discipline behind it. Every piece has a job; nothing goes out to fill a feed.
+
+ THE BET
+ AI-operated studio
+ The first AI-operated story studio in the Midwest. We eat our own delivery cost with AI before a competitor uses AI to eat our price. The founder directs the system that makes the work.
+
+ THE FRONT DOOR · NEW
+ A show, not a pitch
+ Owners meet us in a chair, not in an inbox. High Level Pros is where the relationship starts, and it is run so that a guest who never buys anything still leaves better off.
+
+ ▲ The show, in one line
+ High Level Pros · Midwest owners, real numbers. Owner-operators at $500K to $10M tell the owner a few years behind them the number they were stuck at, the three mistakes that kept them there, and what they did. Anti-guru by rule: nobody teaches anything they have not done with their own money in the last five years.
+
+ // 02 · WHO IT IS FOR · AND WHO IT IS NOT
+ Three avatars, both directions
+
+ ✓ THE CLIENT
+ Real craft, invisible marketing
+ Service-based operators: home services and trades, medical and dental, med spas, PT, coaches. Omaha metro first. They have the reviews and the tenure. What they do not have is separation: online they blend into everyone else in the category.
+
+ ✓ THE GUEST
+ Owner-operator, $500K–$10M
+ In the seat today, with a real stuck number and one thing they can teach in fifteen minutes. They come for the room and the respect, not exposure. About six in ten are also a client fit. That is never why they are booked.
+
+ ✓ THE LISTENER
+ Stuck at $150K–$750K
+ Working harder than ever at the same number. Wants to hear it from someone who has payroll, not someone who sells courses about payroll. The cohort is built for this owner.
+
+ ✕ NOT BUILT FOR
+ The posting-service shopper
+ Anyone shopping for content by the pound, anyone who wants likes instead of leads, anyone who needs a promise before a diagnosis. We turn down "just make us go viral." It protects every client who hired us for the opposite.
+
+ ✕ NEVER IN THE CHAIR
+ The pitch in a guest costume
+ Consultants describing someone else's business. Anyone who will not say a real number on camera. Anyone who asks what it costs to come on. Nobody pays for a chair, and nobody sells from it.
+
+ ▲ The problem we solve, in the client's words
+ "The problem isn't that you're not working hard enough. The problem is that the market doesn't know you're the best option yet. That's a marketing problem — and it has a solution." When a customer needs the service, they Google, they scroll, they ask a neighbor — and whoever shows up looking like the expert gets the call.
+
+ // 03 · THE ENEMY · POSITIONING IS A FIGHT. NAME THE OPPONENT
+ What we're against
+
+ ENEMY 01
+ Adjective authority
+ "Trusted. Established. Quality service since 1998." Authority claimed through adjectives instead of earned through proof. Our method is the inversion: lead with the customer's problem, stack real numbers, then make the offer.
+
+ ENEMY 02
+ The generic agency
+ Forty people, one of whom you met in the pitch. Retainers before diagnosis. Stock footage, boosted posts, monthly reports nobody reads. The most expensive employee you'll never fire.
+
+ ENEMY 03
+ Posting to post
+ Content volume as a strategy. Filler graphics, caption-of-the-day calendars, "consistency" doing the wrong thing consistently. Every Churlish piece has a job or it doesn't ship.
+
+ ENEMY 04
+ Coastal defaults
+ The assumption that world-class work needs a coast. A Midwest shop with a camera and an operating system out-delivers a coastal agency of forty. The chip on the shoulder is the brand.
+
+ ENEMY 05 · NEW
+ The guru economy
+ Advice from people whose only business is selling advice. Rented Lamborghinis, screenshots, "7 figures in 90 days." HLP's chair is for operators with payroll, and the numbers are said out loud.
+
+ ENEMY 06 · NEW
+ The show that is a funnel
+ Podcasts that exist to pitch the guest. It is the attack a rival will use on us the first time a guest feels sold to, so the wall is doctrine: no ask in the room, same edit for non-buyers, clients disclosed on air.
+
+ // 04 · THE METHOD · THE CLAIM WE CAN DEFEND
+ Proof before promise
+
+ The Authority Engine is the whole philosophy in one idea: authority is earned through proof, not claimed through adjectives. The default ad shape carries it. If a script does not follow this arc, it usually is not ours.
+ 01
+ Pattern interrupt
+ Stop the scroll.
+
+ »
+ 02
+ Pain
+ Name what the viewer actually feels.
+
+ »
+ 03
+ Pivot
+ Turn to the fix.
+
+ »
+ 04
+ Proof
+ A real number or result.
+
+ »
+ 05
+ Offer
+ Clear, tangible, priced.
+
+ »
+ 06
+ CTA
+ One low-friction action.
+
+ BORROWED CANON
+ The influences, named
+ Hormozi's Grand Slam Offer · Brunson's Hook → Story → Offer · Voss's mirroring and calibrated questions · the NEPQ sales framework. We borrow the best of the direct-response canon. The voice is always ours.
+
+ THE THREE PHRASES
+ The internal shorthand
+ "Proof before promise" — the sales and content doctrine. "Red is a scalpel, not a paintbrush" — the visual doctrine. "Nobody pays for a chair" — the show doctrine. If a decision contradicts any of the three, the decision is wrong.
+
+ // 05 · MESSAGE HIERARCHY · WHAT WE SAY, IN ORDER
+ The ten-second ladder
+
+ 01 The one-liner — "A Midwest story studio that out-delivers agencies five times our size." ALWAYS FIRST
+ 02 The method — "Authority is earned through proof, not claimed through adjectives." THE WHY
+ 03 The front door — "High Level Pros. Midwest owners, real numbers." For guests it is an invitation. For everyone else: "$750 Diagnostic. 48 hours." THE ASK
+ 04 The receipts — client numbers, named and dated, from the proof library. Guest numbers, said on camera. THE EVIDENCE
+ 05 The bet — the AI-operated studio story, told in public on HLP. THE FUTURE
+
+ ★ The legibility rule · v2
+ Two public faces, each with one job. Churlish Media says what we sell and leads with the one-liner. High Level Pros says who is in the chair and never sells a Churlish service on its own pages. CRF and the products get one-line tier differences, never separate identities. On anything a guest reads there is no house vocabulary: no "Authority Engine," no "debrief," no "Breakthrough Arc." EVE is branded under Churlish Media, never Dynamic Edge.
+
+ // 06 · THE VOICE · THE POSITIONING, PRONOUNCED
+ How it sounds
+
+ Direct, conversational, anti-corporate. Lead with a pattern interrupt, never polish a sentence until it is lifeless, never soften for corporate palatability. The test: if a sentence could be said by any generic agency, rewrite it. On the show the register is curious, not combative: the guest is the expert, and Brandon is the owner asking what the listener would ask.
+ ✕ BANNED — THE CORPORATE-SPEAK LIST
+ leverage synergy move the needle best-in-class cutting-edge thought leader holistic approach disrupt end-to-end
+ These words say nothing and sound like everyone. If one slips into a draft, the draft is not done. On the show, add: "crush it," "10x," "passive income," "secret."
+
+ LITMUS 01
+ Is it direct?
+ Says the thing, names the number, skips the wind-up.
+
+ LITMUS 02
+ Does it earn attention?
+ Earns it instead of demanding it. A claim worth stopping for.
+
+ LITMUS 03
+ Could anyone else say it?
+ If a generic agency — or a generic podcast — could say it, it is not ours yet.
+
+ churlish@hq :~ $ test copy.txt --against positioning.lock
+ > one-liner intact · enemy named · proof attached · wall intact · voice clean PASS
+
+ Churlish Media · Positioning Document · Brand Canon v2 CHURLISHMEDIA.COM · 402-819-8168
+
+ PROOF BEFORE PROMISE. CHURLISHMEDIA.COM

@@ -1,0 +1,283 @@
+Churlish Media · High Level Pros · The Guest Invitation Kit
+ Churlish Media · High Level Pros · The Guest Invitation Kit
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · THE SHOW // 009
+
+ churlish@hq :~ $ load guest_kit --touches 3 --pitches 0
+ > loading invitation sequence · 5 subject formulas DONE
+ > house vocabulary filter ARMED
+ > service pitch module NOT FOUND
+
+ The Guest The Guest The Guest
+ Invitation Kit.
+ Every word that reaches a guest before they buy anything: the invitation, the replies, the pre-interview, the logistics notes, the recording-day sheet, the survey, and the note that tells current clients first. Twenty invitations are due Friday, Sept 25. This is the copy they go out with.
+ CHURLISH MEDIA · THE SHOW · GUEST PIPELINE · V1 · FIRST 20 OUT BY FRI SEPT 25 · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 01 · THE RULE OF THE THREAD · BEFORE ANYTHING SENDS
+ An invitation asks for a chair. Nothing else.
+
+ RULE 01
+ Zero service pitches, ever
+ No Churlish offer, link, case study or "by the way" inside an invitation thread. One is a failure, and Watchtower checks for it daily. Owners talk. "That show is a sales funnel" costs five bookings.
+
+ RULE 02
+ Line one is about them
+ The specific thing they did: the second location, the truck count, the award, the year they doubled. Never "I came across your business." If Kid Flash cannot find the specific thing, the name is not ready to send.
+
+ RULE 03
+ Plain words, five answers
+ How long. Where. What you will ask. Who watches. What they walk away with. No house vocabulary reaches a guest: no "Authority Engine," no "debrief," no "Breakthrough Arc."
+
+ ▲ The honest answer to "who is even watching?"
+ The channel is under 1,000 subscribers. Do not dress that up and do not apologize for it. The invitation sells three true things: the room (a cinema-grade set, not a Zoom call), the short list (24 chairs this season, picked by hand, Omaha owners only), and what they leave with (the full episode, a trailer and two clips, free). Never name a guest who has not published yet. Never inflate a number.
+
+ // 02 · THE SUBJECT-LINE TOURNAMENT
+ Five lines, five formulas
+
+ Write ten, keep three. Blue Beetle rotates these evenly across the first 100 sends and logs reply rate by formula. If reply rate is under 15% at 100 sends on Oct 31, Perry White rewrites and the tournament reruns. All under 50 characters.
+ # Subject line Formula Why it might win
+ A A chair, not a pitch Pattern interrupt Kills the pitch expectation before the open.
+ B [TRADE] owners need your [NUMBER] story Specific result Their own number in the subject line. Needs a verified number.
+ C 45 minutes. Your numbers. On camera. Direct Says exactly what it is. Filters out anyone who will not share numbers.
+ D Would it be a bad idea to tell it? No-oriented question Voss. Invites a no, which gets opened.
+ E [REFERRER] said you should sit here next Social proof Referral sends only. Use only when it is true.
+ // 03 · THE THREE TOUCHES
+ Day 0, day 3, day 7. Then stop.
+
+ Signed by Brandon, sent from hello@churlishmedia.com. Outreach cap is 110 words; the nudge cap is 80.
+ T1 The invitation DAY 0 · 93 WORDS / CAP 110
+ CHANNEL
+Email, from Brandon
+ JOB
+Earn a one-word reply.
+
+ SUBJ > Rotate A–D
+ SAY > [FIRST NAME] , [THE SPECIFIC THING: "you took Ridgeline from two trucks to eleven in six years and you still answer the phone yourself."] That is the story I want on tape.
+ I host High Level Pros, an interview show for Midwest owners. Real numbers, no gurus. One owner per episode, explaining what they changed to get unstuck.
+ 45 minutes at our Omaha studio. You leave with the full episode, a trailer and two clips, free. Nobody pays to be on, and nothing gets sold in the room.
+ This season is 24 chairs, picked by hand. Want one? Reply "chair" and I will send three dates.
+ Brandon King · Host, High Level Pros · 402-819-8168
+ RULE > Line one is the only line that changes per person, and it decides the reply. The count here treats the bracket as one word: keep the real line under 20 words and the email stays inside the cap. No links in touch one.
+
+ T2 The LinkedIn touch DAY 3 · 44 WORDS / CAP 60
+ CHANNEL
+LinkedIn connection note or DM
+ JOB
+Be findable. Put a face on the email.
+
+ SAY > [FIRST NAME] , Brandon King, host of High Level Pros. I sent you a note about a chair on the show: 45 minutes, your numbers, your story, filmed in Omaha for owners a few years behind you. The question I most want to ask you: [THE QUESTION ONLY THEY CAN ANSWER, FROM THE GUEST MATRIX]
+ RULE > No second ask. The question is the value. Skip this touch if they have no LinkedIn presence.
+
+ T3 The close-out DAY 7 · 55 WORDS / CAP 80
+ CHANNEL
+Email, same thread, same subject
+ JOB
+Get a yes, a later, or a no. All three are useful.
+
+ SUBJ > (keep the thread)
+ SAY > [FIRST NAME] , have you ruled out telling the [STUCK NUMBER OR STAGE] story on camera?
+ If the timing is wrong, reply "later" and I will come back in the spring. If it is a fit, reply "chair" and I will send three dates. If it is a no, that is fine too, and I will not write again.
+ Brandon
+ RULE > This is the last touch. No fourth email, no "bumping this." A "later" goes on the 90-day list.
+
+ T4 The referral invitation ANY DAY · REPLACES T1 · 93 WORDS / CAP 110
+ CHANNEL
+Email, from Brandon
+ JOB
+Use the warmest line you will ever have.
+
+ SUBJ > E
+ SAY > [FIRST NAME] , [REFERRER] sat in the chair on High Level Pros [WHEN] , and when I asked who should sit in it next, [HE/SHE] said you. [ONE LINE ON WHY, IN THE REFERRER'S WORDS] .
+ The show is one Midwest owner per episode explaining, with real numbers, what they changed to get unstuck. 45 minutes at our Omaha studio. You leave with the full episode, a trailer and two clips, free. Nobody pays to be on, and nothing gets sold in the room.
+ Want the chair? Reply "chair" and I will send three dates.
+ Brandon King · Host, High Level Pros · 402-819-8168
+ RULE > Only after the referrer has published and only with their OK to use their name. Every guest gets asked "who should sit here next" on camera, so this list fills itself.
+
+ T5 The personal ask TRIPWIRE FRIDAYS · 36 WORDS / CAP 45
+ CHANNEL
+Text, from Brandon's phone
+ JOB
+Five of these the same day, any Friday with fewer than 2 recordings booked for next week.
+
+ SAY > [FIRST NAME] , Brandon King. I am filming a show with Omaha owners about how they got unstuck, real numbers, no gurus. I want you in a chair. 45 minutes at the studio. Can I send you dates?
+ RULE > People Brandon actually knows. Not a list. If he would not recognize them at Hy-Vee, it is not a personal ask.
+
+ // 04 · THE REPLIES
+ Yes, not this season, wrong fit
+
+ R1 They said "chair" SAME DAY · 34 WORDS / CAP 90
+ CHANNEL
+Email reply, Guest Coordinator drafts, Brandon signs
+ JOB
+Book the 15-minute pre-interview.
+
+ SUBJ > (keep the thread)
+ SAY > Good. Before we pick a recording date I do a 15-minute call so the interview is worth your morning. It is not recorded.
+ Tuesday 10:00, Wednesday 2:30 or Thursday 9:00. Which one works?
+ Brandon
+ RULE > Three real times from the calendar. If they applied through the site instead, send this same note with their application answers already read.
+
+ R2 Not this season WITHIN 3 DAYS · 71 WORDS / CAP 90
+ CHANNEL
+Email
+ JOB
+A respectful no that keeps the door open. Use only the reason that is true.
+
+ SUBJ > Your High Level Pros application
+ SAY > [FIRST NAME] , thank you for applying. Straight answer: not this season. [PICK THE TRUE ONE: "The season is 24 chairs and the [[TRADE] chair is already filled; I do not put two owners from the same trade close together." / "The show runs on real numbers on camera, and from your note that is not something you are comfortable with yet."]]
+ I would like to come back to you when the next season opens in the spring. Would that be all right?
+ Brandon
+ RULE > Score under 10 of 15 gets this note. Never ghost an applicant. They are also listeners.
+
+ R3 Wrong fit WITHIN 3 DAYS · 43 WORDS / CAP 90
+ CHANNEL
+Email
+ JOB
+Say no without wasting their time or ours.
+
+ SUBJ > Your High Level Pros application
+ SAY > [FIRST NAME] , the show has one hard rule: the guest owns the business and is in the seat today. From your note you advise owners rather than run one, so I would be wasting your morning. If that changes, the application stays open.
+ Brandon
+ RULE > Consultants, coaches without a business behind them, and anyone who wants the chair to sell something. No exceptions for friends.
+
+ // 05 · THE PRE-INTERVIEW
+ Fifteen minutes. Not recorded.
+
+ Brandon runs it. It finds the episode, clears the numbers and sets the one rule. After it, Brandon confirms the Guest Score and picks the modules: one stage module, one specialty module, three or four industry questions.
+ PI The pre-interview call 15 MIN · BRANDON
+ GOAL
+Find the stuck number, the three mistakes and the specialty.
+ DONE WHEN
+Score confirmed, numbers cleared, handoff to the Guest Coordinator sent.
+
+ OPEN > "This is not the interview. It is fifteen minutes so the interview is good. Nothing here is recorded."
+ NUMBER > "What is the number the business sat at the longest? How long were you there? Where is it now?" Vague answers get a mirror: "'A couple years'?"
+ MISTAKES > "Looking back, what were the three things keeping you at that number?" Write them down in their words. These become segment two.
+ TEACH > "What is the one thing you do better than almost anyone in your trade? Could you teach it in fifteen minutes so somebody could use it Monday?"
+ CLEAR > "Which numbers are you fine saying on camera? Revenue, margin, what you paid yourself? Anything off limits?" Nothing goes on air that was not cleared here.
+ RULE > "One rule on the show: nobody pitches. When I ask where people can find you, you get one answer." If they are a client or a sponsor: "and we say so on air."
+ NEXT > "Who is an owner you respect who should sit in this chair?" Then: " [COORDINATOR] will send dates, the address and a one-page release."
+
+ // 06 · LOGISTICS NOTES
+ Four notes from the Guest Coordinator
+
+ L1 Confirmation + release ON BOOKING · 59 WORDS / CAP 90
+ CHANNEL
+Email
+ JOB
+Date locked, paper out.
+
+ SUBJ > You are booked: High Level Pros, [DATE]
+ SAY > [FIRST NAME] , you are booked for [DAY, DATE] at [TIME] . Plan on 90 minutes at the studio for 45 minutes of recording.
+ One thing to do before then: sign the one-page release here: [LINK] . It says we can publish the episode and you can use everything we send you. We cannot record without it.
+ [COORDINATOR NAME] · High Level Pros · [PHONE]
+ RULE > No signed release, no recording. If it is not back 48 hours out, call.
+
+ L2 The prep note 72 HOURS OUT · 102 WORDS / CAP 130
+ CHANNEL
+Email
+ JOB
+No surprises on the day.
+
+ SUBJ > Thursday at the studio: what to expect
+ SAY > [FIRST NAME] , here is the whole day. Where: [STUDIO ADDRESS] , Omaha. Park [WHERE] . When: [TIME] . You will be out by [TIME + 90] .
+ What Brandon will ask: the number you were stuck at, the three mistakes that kept you there, what you did about it, what it cost, and the one thing you would teach another owner. Then the same five quick questions every guest gets.
+ Wear what you wear to meet a customer. Solid colors, no small patterns. Bring nothing. Numbers: only the ones you cleared with Brandon.
+ Afterward you get the full episode, a trailer and two short clips, free, the day it publishes.
+ RULE > Plain words only. This note is the arc without ever naming it.
+
+ L3 The two confirmations 48 HOURS · MORNING OF · 33 WORDS
+ CHANNEL
+Text
+ JOB
+Catch a cancellation while there is still time to fill the chair.
+
+ SAY > 48 hours: " [FIRST NAME] , [COORDINATOR] with High Level Pros. Still good for [DAY] at [TIME] ? Reply Y and you are set."
+ Morning of: "See you at [TIME] . [STUDIO ADDRESS] . Text this number when you park."
+ RULE > No Y by 24 hours out → call. No answer → the float guest gets the text.
+
+ L4 The reschedule ON A NO-SHOW OR CANCEL · 31 WORDS / CAP 60
+ CHANNEL
+Email or text
+ JOB
+One more date, inside 14 days.
+
+ SAY > [FIRST NAME] , sorry we missed you. Things come up. I have [DATE A] or [DATE B] open. Which one works? The season is 24 chairs, so I can hold one of those until [DAY] .
+ RULE > One reschedule. A second miss comes off the slate with a kind note, and the slot goes to the float list. A banked or solo episode covers the publish date.
+
+ // 07 · RECORDING DAY
+ Ninety minutes, on one sheet
+
+ Clock What happens Owner
+ T−30 Set check: cameras, audio, slate, lights. Release on file, or no record. Questions printed: spine + 1 stage module + 1 specialty module + 3–4 industry questions + the Ledger five. Brandon · Coordinator
+ 0:00 Arrival. Coffee. Walk the set. Small talk that is not about marketing. Brandon
+ 0:10 Mic up. Shoot the two-person thumbnail stills now, while everyone is fresh. Three expressions, both in frame. Brandon
+ 0:15 Repeat the two rules: cleared numbers only, nobody pitches. Brandon
+ 0:20 Record, 35–45 minutes. The stuck number lands inside the first 30 seconds of segment one. Brandon
+ 1:05 Pick-ups. Clean takes of the five Ledger answers. "Who should sit here next?" on camera. Brandon
+ 1:15 Thank them. Give the publish date. Walk them out. Brandon
+ Same day Footage backed up twice. Ledger answers logged. Note to Lois Lane: the hardest line (cold open) and five clip candidates with rough timecodes. Brandon · Coordinator
+ ★ Never on recording day
+ Any offer, price, package or "we should talk about your marketing."
+ "So what are you doing for marketing right now?" That question belongs to the call after the episode publishes.
+ A leave-behind, a rate card, a case study on the table.
+ Anything you would not want the guest to repeat to the next owner they have lunch with.
+
+ // 08 · THE DAY-AFTER SURVEY
+ Three questions. One of them is the wall.
+
+ # Question Why it is there
+ 1 How was the day, 1–10? What would have made it a 10? Fixes the guest experience while the season is young.
+ 2 Did any part of the day feel like a sales pitch? (Yes / No. If yes, which part?) Batman's wrong-if line. One yes in the first 12 guests goes to the League.
+ 3 Who is one owner who should sit in the chair next? Fills the referral list (invitation T4).
+ The three notes after recording day (thank-you, publish-day invitation, one nudge) live in The Debrief Call Script, section 02. The Guest Coordinator sends them; Brandon signs them.
+ // 09 · THE BASE HEARS IT FIRST
+ One note to every current client
+
+ Before any public post about the show. A founder visibly moving to a podcast can read as "he is moving on." This note closes that gap and fills early chairs with proof.
+ C1 The note to current clients THIS WEEK · BEFORE ANYTHING PUBLIC · 114 WORDS / CAP 130
+ CHANNEL
+Email or text from Brandon, then a call for the two largest accounts
+ JOB
+Reassure, then invite.
+
+ SUBJ > Something new, and you are hearing it first
+ SAY > [FIRST NAME] , you are hearing this from me before you see it anywhere else. I am putting real weight behind High Level Pros, my interview show: two recordings a week with Midwest owners, real numbers, no gurus.
+ What it changes for you: nothing. Same team, same shoot days, same deadlines. Your edits stay ahead of anything the show needs. That is in writing on my side.
+ What it adds: I want some of my own clients in the first chairs. If you sit down with me, we say on air that you are a client. That is the rule for everybody.
+ Want one of the early chairs? Reply "chair" and I will send dates.
+ Brandon
+ RULE > A client in the chair still has to clear the Guest Score. A client episode is proof, not a package prospect: no debrief, no offer.
+
+ // 10 · THE TRACKER
+ What gets logged, every guest
+
+ Block Fields
+ Who Name · business · trade · city · stage band · specialty lane · slate slot # · source (Kid Flash / referral / application / personal ask)
+ Score Story · Specialty · Numbers on record · Reach and respect · Buyer-fit (0–3 each) · total · confirmed by Brandon Y/N
+ Touches T1 date + subject letter · T2 · T3 · reply (chair / later / no / none) · reply date
+ Booking Pre-interview date · record date · release signed Y/N · client or sponsor disclosure Y/N · L2 sent · 48-hr Y · no-show count
+ After Publish date · thank-you sent · survey: score, wall answer , referral names · publish-day note sent · nudge sent
+ The call Held Y/N · cut chosen · paid Y/N · date · reason if no, in their words · referral names given
+ REPLY-RATE FLOOR · FIRST 100 SENDS · OCT 31
+ 15%
+
+ RECORDINGS BOOKED FOR NEXT WEEK · EVERY FRIDAY
+ 2
+
+ GUEST SCORE TO BOOK
+ 10 / 15
+
+ OFFERS ON A RECORDING DAY
+ 0
+
+ churlish@hq :~ $ send invitations --batch 20 --by fri_sep_25
+ > line one verified for every name REQUIRED
+ > service pitch in thread NOT FOUND
+ > item-level approval REQUIRED
+
+ Churlish Media · High Level Pros · The Guest Invitation Kit CHURLISHMEDIA.COM · 402-819-8168
+
+ A CHAIR, NOT A PITCH. CHURLISHMEDIA.COM

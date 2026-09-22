@@ -1,0 +1,180 @@
+Churlish Media · High Level Pros · Site Build Spec
+ Churlish Media · High Level Pros · Site Build Spec
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · THE SHOW // 010
+
+ churlish@hq :~ $ spec hlp_site --builder lovable --pages 1
+ > loading copy deck · 10 sections DONE
+ > house vocabulary on guest-facing copy NOT FOUND
+ > scope creep BLOCKED
+
+ The HLP The HLP The HLP
+ Site Spec.
+ The one-page High Level Pros site, ready to build in Lovable: what the page is for, every word on it, the nine-field application, the data it writes, the paste-ready build prompt, and the five gates before it goes live. One page and one form through Oct 4.
+ CHURLISH MEDIA · THE SHOW · SITE BUILD SPEC · V1 · LIVE BY OCT 4 · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 01 · THE JOB · SCOPE IS CAPPED BEFORE CRAFT STARTS
+ One page. One form. Nothing else until Oct 4.
+
+ WHAT THE PAGE IS FOR
+ Get the right owner to apply
+ It answers four questions in plain words: what the show is, why it exists, how you get on it, how you apply. A second job rides along: capture the email of an owner who is not ready for the chair.
+
+ WHAT IS NOT IN SCOPE
+ Everything else
+ No blog, no episode pages, no guest portal, no cohort checkout, no sponsor page, no Churlish service links. A full build eats the five days that belong to invitations. Week two and later.
+
+ THE STACK
+ Lovable · Supabase · Resend
+ Lovable builds the page. Applications and emails land in Supabase. Resend notifies hello@churlishmedia.com on every application. Domain points when Doctor Mid-Nite clears it.
+
+ ★ Two house laws that bind this page
+ Plain words. A guest never reads "Authority Engine," "debrief" or "Breakthrough Arc." CTA law. No "Learn more," "Sign up," "Get in touch" or "Contact us" anywhere on the page. Every button names what the person gets. And nothing on this page sells a Churlish service: the wall is public here.
+
+ // 02 · THE COPY
+ Every word on the page, in order
+
+ Use as written. Gold brackets are the only things to fill.
+ S1 · Hero
+ Element Copy · FIRST SCREEN
+ EYEBROW HIGH LEVEL PROS · MIDWEST OWNERS, REAL NUMBERS
+ H1 No gurus. Just the owner who was where you are three years ago.
+ SUB One Midwest owner per episode, explaining with real numbers what they changed to get unstuck. New episodes every Tuesday.
+ BUTTON 1 Apply for a chair · 24 this season → scrolls to the application
+ BUTTON 2 Watch the latest episode → YouTube, new tab
+ IMAGE A real still from the set, two people in frame. No stock, no illustration.
+
+ S2 · What it is
+ Element Copy · THREE BLOCKS
+ BLOCK 1 One owner. One number. Every episode starts with the number the business was stuck at, and how long it sat there.
+ BLOCK 2 Three mistakes. What kept them there, and what each one cost.
+ BLOCK 3 One thing you can use Monday. Their specialty, taught in fifteen minutes.
+
+ S3 · Why it exists
+ Element Copy · BRANDON'S WORDS
+ H2 Two steps ahead of you. Not two hundred.
+ BODY I started this show to put an end to the guru. If you own a business doing $300K, a billionaire's morning routine does nothing for you. The owner across town who was stuck at your number three years ago, and got out, can.
+ BODY So that's who sits in the chair. Owners still running the business. Real numbers, said out loud. No one who has never made payroll.
+ SIGN Brandon King, host
+
+ S4 · Who sits in the chair
+ Element Copy · THE FIVE STANDARDS
+ 1 You own it and you're in it. In the seat today. Not a consultant.
+ 2 Mid-six figures or more, and you'll say so. Real numbers on camera.
+ 3 A real stuck number. The stage, how long, and where you are now.
+ 4 One thing you can teach in fifteen minutes that another owner could use Monday.
+ 5 No pitch. When we ask where people can find you, you get one answer.
+
+ S5 · What to expect
+ Element Copy · FIVE PLAIN ANSWERS
+ HOW LONG 45 minutes of recording. 90 minutes at the studio.
+ WHERE Our studio in Omaha.
+ WHAT WE ASK The number you were stuck at, the three mistakes, what you did about it, what it cost, and the one thing you'd teach another owner.
+ WHO WATCHES Owners a few years behind you.
+ WHAT YOU LEAVE WITH The full episode, a trailer and two short clips. Free. Yours to post anywhere.
+
+ S6 · The rules
+ Element Copy · THE WALL, IN PUBLIC
+ 1 Nobody pays to be on the show. Ever.
+ 2 Nothing gets sold in the room.
+ 3 If a guest is a client or a sponsor of ours, we say so on air.
+ 4 Every guest gets the same edit and the same push.
+
+ S7 · Episodes
+ Element Copy · LATEST THREE
+ H2 Start here.
+ EMBED Three most recent long-form episodes from [YOUTUBE CHANNEL URL] . Topic-first titles as published. Lazy-load the players.
+
+ S8 · Tuesday's page
+ Element Copy · EMAIL CAPTURE
+ H2 One page. Every Tuesday.
+ BODY Every episode ends with one thing you can use Monday. We put it on a single page and email it the day the episode drops. That's the whole email.
+ FIELD Email address
+ BUTTON Send me Tuesday's page
+ AFTER Done. First page lands Tuesday.
+
+ S9 · Apply
+ Element Copy · THE APPLICATION · NINE FIELDS
+ H2 Apply for a chair.
+ SUB 24 chairs this season. Brandon reads every application. You hear back inside three business days, yes or no.
+ 1 Name · business · city
+ 2 What the business does, in one sentence
+ 3 Revenue band (select): $250–500K · $500K–1M · $1–3M · $3–10M · $10M+
+ 4 Years as owner · team size
+ 5 The number you were stuck at the longest, and for how long
+ 6 What finally moved it (three sentences)
+ 7 The one thing you could teach in fifteen minutes
+ 8 Comfortable sharing numbers on camera? (Yes · Some · No)
+ 9 Who referred you, or which episode made you apply
+ BUTTON Send my application
+ AFTER Got it. Brandon reads every one. You'll hear back inside three business days.
+
+ S10 · Footer
+ Element Copy · ONE LINE
+ LINE High Level Pros is produced by Churlish Media · Omaha, Nebraska · hello@churlishmedia.com · 402-819-8168
+ LINKS YouTube · Instagram · LinkedIn · Facebook
+
+ // 03 · THE BUILD PROMPT
+ Paste this into Lovable
+
+ Attach this PDF or the paste file with it. The prompt carries the rules; the spec carries the words.
+ Build a one-page, mobile-first marketing site for an interview show called High Level Pros.
+Single route ("/") with anchor navigation: What it is · Why · The chair · Apply.
+Do not add pages, a blog, a login, or a CMS. One page and one application form is the whole scope.
+
+COPY: use the copy in the attached spec exactly as written, section S1 through S10, in that order.
+Do not rewrite it, do not add marketing phrases, do not add testimonials, stats or logos that are
+not in the spec. If a section needs content that is not provided, leave it out.
+
+LOOK: near-black background (#0A0A0A), cream text (#EDEAE3), muted gray body (#9B968D), one accent
+red (#F11B28) used sparingly for the primary button and section numbers. Headlines in Barlow
+Condensed 900, uppercase, tight leading. Labels and small text in JetBrains Mono, letter-spaced.
+Thin 1px borders (#252525), square corners, no gradients, no glassmorphism, no emoji, no stock
+photos. Image slots take real photography supplied later; use a flat dark placeholder until then.
+
+DATA (Supabase): table `applications` (id, created_at, name, business, city, one_sentence,
+revenue_band, years_owner, team_size, stuck_number, what_moved_it, teach_15, numbers_on_camera,
+referred_by, status default 'new'). Table `subscribers` (id, created_at, email unique, source).
+Row-level security on; inserts only from the public site. Add a hidden honeypot field to both forms.
+
+EMAIL (Resend): on each application insert, send a plain-text notification with every field to
+hello@churlishmedia.com. No auto-reply beyond the on-page confirmation line.
+
+BEHAVIOUR: client-side validation with plain error text; the confirmation line replaces the form
+after submit; YouTube embeds lazy-load; every button has a visible focus state; WCAG AA contrast.
+Fire analytics events: apply_start, apply_submit, email_submit, episode_click.
+
+SEO / AI ANSWERS: title "High Level Pros · Midwest owners, real numbers". Meta description: the S1
+sub line. Add schema.org PodcastSeries and an FAQPage built from S5 (the five plain answers).
+Open Graph image slot, 1200x630.
+
+ONE SECTION IS BUILT BUT HIDDEN: "The Next Stage" (a cohort deposit block) behind a single
+boolean flag `SHOW_COHORT = false`. Placeholder heading only. It turns on Oct 19. // 04 · THE GATES
+ Before it goes live
+
+ # Gate Owner Pass line
+ 1 Doctor Mid-Nite surgery. Mandatory before any Churlish page ships. Doctor Mid-Nite Fetch the live preview. Every finding fixed or waived in writing.
+ 2 Voice + wall check. No house vocabulary, no banned CTA, no service pitch. Watchtower Zero hits.
+ 3 Form test. One real application and one real email from a phone. Guest Coordinator Row in Supabase, notification in the inbox, confirmation line on screen.
+ 4 Brother Eye baseline. Ask four assistants "what is High Level Pros?" before launch and again Nov 15. Brother Eye Logged. This is the before picture.
+ 5 Item-level approval. Brandon Initialed. Then the domain points.
+ Date Milestone
+ Mon Sep 21 – Fri Sep 25 Build in Lovable from the prompt. Real set stills dropped in.
+ Mon Sep 28 – Wed Sep 30 Gates 1–4.
+ By Sun Oct 4 Live, with the application open. Link goes into invitation replies and every episode description.
+ Mon Oct 19 SHOW_COHORT flips on. The Next Stage deposit block, $250 refundable.
+ Sun Nov 15 Tripwire read: a search for the exact show name returns the channel or this page in the top 3. If not, the descriptor moves into the channel name.
+ ▲ What to watch once it is live
+ Applications per week, by source. Application → Guest Score of 10 or higher. Email captures per episode. If visits are healthy and applications are thin, the page is the patient: it goes back to Doctor Mid-Nite, not to a redesign.
+
+ churlish@hq :~ $ ship hlp_site --scope one_page --until oct_4
+ > pages 1
+ > service links NOT FOUND
+ > mid-nite surgery REQUIRED
+ > item-level approval REQUIRED
+
+ Churlish Media · High Level Pros · Site Build Spec CHURLISHMEDIA.COM · 402-819-8168
+
+ ONE PAGE. ONE FORM. CHURLISHMEDIA.COM

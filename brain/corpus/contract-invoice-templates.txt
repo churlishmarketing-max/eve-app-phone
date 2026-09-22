@@ -1,0 +1,139 @@
+Churlish Media · Contract + Invoice Templates · V3
+ Churlish Media · Contract + Invoice Templates · V3
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · PAPERWORK // 007
+
+ churlish@hq :~ $ load templates --proposal --invoice --contract --release
+ > syncing prices against offer_sheet.lock v5 DONE
+ > authority_lite references REMOVED
+ > loading guest + cohort paper DRAFT
+
+ Contract + Invoice Contract + Invoice Contract + Invoice
+ Templates.
+ The client and guest paperwork flow, in one file: the proposal shell, the invoice template, the 12-section service agreement, and the four pieces of paper the show needs: guest release + disclosure, package agreement, case-study exchange addendum, cohort enrollment terms. Prices come from the Offer Ladder & Pricing sheet, never from memory.
+ CHURLISH MEDIA · HONEYBOOK FLOW · V3 · PROPOSAL → INVOICE → CONTRACT → RELEASE · §04–07 DRAFT FOR ATTORNEY REVIEW · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 00 · WHAT CHANGED · V3
+ From the V2 paper
+
+ UPDATE 01
+ The show needs paper
+ Three documents that did not exist: the guest release + on-air disclosure, the one-page package agreement, and the cohort enrollment terms. Without the release, no package and no paid use of footage is possible.
+
+ UPDATE 02
+ Lite is gone from every template
+ Proposal slots pull from the live ladder: Launchpad $2,500 · Engine $3,500/mo, 4-mo min · System $5,000/mo, 6-mo min. Two legacy accounts keep a grandfathered rate; it is never offered on new paper.
+
+ UPDATE 03
+ The line to Kelly is written down
+ Churlish paper covers production: filming, lead gen, commercials, testimonials, Engine, System. Strategy above that is scoped and contracted by The Crucible, on its own paper.
+
+ ▲ Read this before anything here is sent
+ Sections 04–07 are drafts for attorney review. They say what Churlish intends in plain words; they are not legal advice and have not been reviewed by counsel. The gate put the release + disclosure page on this week's list for the attorney. Send all four at once. Fill every [GOLD PLACEHOLDER] before sending; nothing ships with a bracket still in it.
+
+ // 01 · THE PROPOSAL SHELL · PAGE ONE OF THE HONEYBOOK FLOW
+ The proposal, section by section
+
+ Reads like a letter, not a brochure. It recaps their situation before it ever mentions a package. The language flexes per client; the order does not.
+ P·1 The opener LETTER
+ > > Hey [FIRST NAME] , it was great speaking with you. It's clear you've got something real with [COMPANY NAME] . The craftsmanship is there. The reputation is there. What we talked about is simply making sure the market can see what you've already built.
+ V5 > If they came through the chair: open with what you saw in their building on capture day. One specific thing. It is proof you were paying attention.
+
+ P·2 The situation THEIR PAIN, THEIR MARKET
+ > > “There are [X] [COMPETITORS] in [MARKET] . Most of them look exactly the same.” When a [CUSTOMER TYPE] needs [SERVICE] , they Google, they scroll, they ask a neighbor. Whoever shows up looking like the expert gets the call.
+ > > Land the reframe verbatim: “The problem isn't that you're not working hard enough. The problem is that the market doesn't know you're the best option yet. That's a marketing problem, and it has a solution.”
+
+ P·3 Our approach + content sample THE METHOD
+ > > The Authority Engine on three tracks: Authority Content, Organic Presence, Paid Advertising (from real footage, never stock). Then the month-one calendar, week by week, each piece with its job named.
+ V5 > Retainer clients are offered a chair on High Level Pros inside their first 90 days, disclosed on air as a client. Say so here. It is a deliverable, not a favor.
+
+ P·4 The two package slots FROM THE LADDER
+ RULE > Present exactly two adjacent rungs: the one they need and the one above it. Never three. Prices from the Offer Ladder sheet, quoted, never negotiated.
+ > > Always in writing: ad spend paid directly to the platform, $500/mo minimum, never marked up · client owns every account and asset · recommended starting spend [$RANGE] .
+
+ P·5 The case for moving + next steps THE CLOSE
+ > > Why now: reviews compound, content compounds, trust compounds. Four next steps: select a package → 60-minute kickoff → first shoot day inside two weeks → system live inside 30 days.
+ > > Sign-off: Brandon King, Founder, Churlish Media, Omaha, Nebraska · hello@churlishmedia.com · 402-819-8168 · 7528 S 128th Street, Omaha, NE 68138.
+
+ // 02 · THE INVOICE TEMPLATE · ONE LINE ITEM PER OFFER
+ The invoice, structured
+
+ Line item How it invoices Note that stays on the invoice
+ [TIER NAME] retainer Monthly, same calendar date from signature. Deliverables table inside the line. No payment, no scheduling. Ad spend separate, $500/mo min.
+ Authority Diagnostic $750, paid in full before the 48-hour clock starts. Credits toward month one of a retainer signed within 90 days.
+ Ad Creative Tournament $2,500 PIF. First three at $1,500 with the case-study exchange addendum attached. Exchange, not a discount. Addendum required.
+ 48-Hour Tool Sprint · Launchpad 50% upfront, balance on delivery. Over two build days: +$1,500 / day, stated here.
+ Guest Authority Package $2,500 PIF. Names the cut: Owner, Customer or Hiring. First three at $1,500 with the addendum. “Your episode and its promotion are not part of this invoice and never depend on it.”
+ The Next Stage · deposit $250. Refundable on request until the balance is paid. Holds one of ten seats.
+ The Next Stage · tuition $2,500 founding, less deposit. Or 3 × $950. Seat confirmed when the balance or first payment clears.
+ TOTAL (USD) [$TOTAL]
+ // 03 · THE SERVICE AGREEMENT · 12 SECTIONS · GOVERNS EVERY RETAINER
+ The retainer contract, clause by clause
+
+ Entered into as of the date of first payment, between Churlish Media (“Contractor”) and [CLIENT LEGAL NAME] (“Client”), governing the [TIER NAME] engagement. Unchanged from V2 except §1.6.
+ § Clause Terms
+ 1 Services 1.1 Monthly strategic marketing, content production and paid advertising management. 1.2 Deliverables mirror the invoice table word for word. 1.3 Minimum initial term per tier (Engine 4 months · System 6 · CRF per sheet) , then month to month. First shoot inside 14 days; live inside 30. 1.4 Ad spend paid by Client direct to the platform, $500/mo minimum, never marked up. 1.5 Fees rise 6% at each 12-month anniversary, automatically. 1.6 (new) Scope is production. Business strategy, operations and implementation work beyond it is out of scope and may be referred to The Crucible under separate agreement.
+ 2 Confidentiality Both parties protect each other's confidential information and use it only to perform this Agreement. Standard exclusions.
+ 3 Relationship Independent contractor. Contractor controls methods and scheduling and may use qualified subcontractors at its own expense.
+ 4 Intellectual property On each monthly payment, Client owns all final assets delivered that period. Contractor keeps its pre-existing IP: frameworks, methods, the Authority Engine system, brand assets. Raw footage stays with Contractor unless agreed in writing.
+ 5 Liability Damages capped at fees paid in the three months before the claim. Client indemnifies against third-party claims except Contractor's gross negligence or willful misconduct.
+ 6 Payment Due the same date each month; the period's services begin when its payment lands. 5+ business days late may pause services and incur a 10% fee.
+ 7 Termination 30 days written notice by email, effective no earlier than the end of the minimum term. Completed, paid-for assets delivered within 10 business days.
+ 8–12 Boilerplate Non-disparagement (survives) · Nebraska law, Douglas County courts · notice by email to hello@churlishmedia.com · severability · amendments in writing, no assignment except subcontractors under §3.
+ // 04 · GUEST RELEASE + ON-AIR DISCLOSURE · NEW · BLOCKS EVERYTHING ELSE
+ The page every guest signs before the cameras roll
+
+ One page, plain words. No signed release, no recording (SOP E2). DRAFT FOR ATTORNEY REVIEW.
+ # Clause Plain-words draft
+ 1 What this is You are appearing as a guest on High Level Pros, a show produced by Churlish Media. Nobody pays to be a guest and nobody is paid to be one.
+ 2 What you grant Permission to record your name, voice, image and what you say, and to edit, publish and promote it, in whole or in clips, on any platform, including paid promotion of the show, with no end date.
+ 3 What you get, free The full episode, a trailer, and two short clips, which you may post anywhere. Churlish Media keeps ownership of the recording.
+ 4 What we will not do We will not use your appearance to say you endorse Churlish Media or any sponsor. We will not run your clips as ads for Churlish services without separate written permission.
+ 5 Your numbers You decide which figures you share. Tell us before recording what is off limits. You may ask for one factual correction or one removal before the episode publishes; we will make reasonable edits.
+ 6 Disclosure If you are a client or a sponsor of Churlish Media, now or at the time of recording, that will be said on air and written in the description. Whether you ever buy anything from Churlish Media has no effect on how your episode is edited, packaged or promoted.
+ 7 Anything sold later Any paid work is a separate agreement, offered only after your episode is published.
+ 8 Signature [GUEST NAME] · [BUSINESS] · [DATE] · Brandon King, Churlish Media
+ // 05 · GUEST PACKAGE AGREEMENT · NEW
+ One page for one cut
+
+ Attached to the $2,500 invoice. DRAFT FOR ATTORNEY REVIEW.
+ # Clause Terms
+ 1 The cut [OWNER / CUSTOMER / HIRING] Cut. One cut per agreement.
+ 2 Deliverables 1 hero cut (3–5 min, Client branding) · 10 vertical shorts with captions · 1 carousel set · 1 article · 5 quote graphics. Built from the episode plus one 45-minute capture session.
+ 3 Capture session Scheduled within 10 business days of payment, on site or in studio. One reschedule with 48 hours notice.
+ 4 Delivery Within 21 days of the capture session, with a 15-minute walkthrough. One round of revisions, requested within 7 days.
+ 5 Ownership + ad license On payment, Client owns the finals and may run all of them as paid ads. Churlish keeps the raw footage and may show the work as a portfolio piece.
+ 6 Price $2,500, paid in full before the capture session is booked. Not credited toward other services.
+ 7 The wall This purchase has no effect on the Client's episode, which is already published and promoted.
+ // 06 · CASE-STUDY EXCHANGE ADDENDUM · NEW · THE ONLY LEGAL WAY A PRICE MOVES
+ Why the first three pay $1,500
+
+ Used for the first three Tournaments and the first three Guest Packages. It is an exchange with a deliverable attached, never a markdown. DRAFT FOR ATTORNEY REVIEW.
+ Client pays $1,500 in place of the list price of $2,500.
+ In exchange, Client agrees to: share the results numbers at day 45 (applicants, calls, jobs, or ad metrics) · record a filmed testimonial of up to 10 minutes · allow Churlish Media to publish both, with Client's name and business, as a case study.
+ If the testimonial is not recorded within 60 days of delivery, the $1,000 balance to list price is invoiced.
+ This addendum is offered to three clients per product. After the third, it does not exist.
+ // 07 · THE NEXT STAGE · ENROLLMENT TERMS · NEW
+ Deposit, tuition, refunds, recordings
+
+ DRAFT FOR ATTORNEY REVIEW.
+ # Clause Terms
+ 1 Deposit $250 holds one of ten seats. Refundable in full, on request, any time before the tuition balance is paid. If the cohort start date moves, every deposit holder is told the same day and may take a refund.
+ 2 Tuition Founding cohort $2,500 (deposit applied), or 3 monthly payments of $950. Seat confirmed when the balance or first payment clears.
+ 3 Refunds after enrollment Full refund of tuition through the end of week 2. None after. Payment plans are owed in full once week 3 begins.
+ 4 Recordings Sessions are recorded. Enrolled owners agree their participation may appear in recordings used for future cohorts and a self-paced version. Financial specifics shared in session are kept inside the cohort.
+ 5 No promised result This is teaching and accountability. Churlish Media does not promise a revenue outcome.
+ 6 Founding terms Founding members are asked for feedback after every session and a short filmed review at week 8. That is the exchange for the founding price, and it is written here.
+ CHURLISH MEDIA — BRANDON KING, FOUNDER · DATE
+ [CLIENT / GUEST LEGAL NAME] — AUTHORIZED SIGNER · DATE
+
+ churlish@hq :~ $ preflight --before send
+ > zero brackets remaining · prices match offer sheet · term matches tier PASS
+ > release on file before any recording REQUIRED
+ > sections 04–07 reviewed by counsel PENDING
+
+ Churlish Media · Contract + Invoice Templates · V3 CHURLISHMEDIA.COM · 402-819-8168
+
+ NO PAYMENT, NO SCHEDULING. NO RELEASE, NO RECORDING. CHURLISHMEDIA.COM

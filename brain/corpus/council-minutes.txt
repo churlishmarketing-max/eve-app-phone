@@ -1,0 +1,314 @@
+Churlish Media · Council Minutes · The Gate
+ Churlish Media · Council Minutes · The Gate
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · COUNCIL // 000
+
+ churlish@hq :~ $ gate --full-protocol --target hlp-first
+ > justice-league ...... 5 sealed filings · 5 anonymized reviews · chair OK
+ > suicide-squad ...... moves 1-4 · tribunal = full jsa OK
+ > jsa + ma hunkel ...... 2 commercial calls · FAST PASS · labeled OK
+ > youtube-council ...... 5 seats · condensed review OK
+ > league-register ...... unreachable · stage 1 not run FLAG
+ > inputs ...... 6 numbers missing FLAG
+ > result: CONDITIONAL GREEN · staged cutover · sign nothing before Tue Sept 22
+
+ The The The
+ Gate.
+ What the League, the Squad, the JSA, the Buyer and the YouTube Council actually said about going podcast-first. Full filings, anonymized reviews, rulings, and what changed because of them.
+ DOCUMENT Council Minutes · the gate on the HLP-first overhaul
+SESSION Monday, September 21, 2026 · supersedes the compressed first pass of Sept 20
+FOR Brandon King
+SET 0 of 4 · [0] The Gate [1] Operating Model v5.1 [2] Show Bible v1.1 [3] SOP Set v5 [4] Site + Omaha Ten
+CLASS Internal · ground rules honored: no client names · every finding numbered or dated · ranked lists only
+
+ // 01 · GATE RESULT
+ Conditional green. Staged, not slammed.
+
+ Every council ran at full protocol on Monday, Sept 21, 2026, except two commercial calls run as labeled Fast Passes with the Buyer seated. The plan survived. Five parts of it did not survive unchanged.
+ Council Protocol level Ruling
+ Justice League Full: 5 sealed filings, 5 anonymized peer reviews, Chair HLP-first operating model: PURSUE WITH CONDITIONS. The Chair overruled a 3–2 PURSUE NOW majority because the Incumbent Benchmark could not be computed.
+ Suicide Squad Full: all four moves The model survives. The Guest Authority Package as first written does not.
+ JSA tribunal (Squad Move 4) Full: 5 sealed filings, 5 anonymized reviews, Mister Terrific Option B: staged cutover. Chair now, outbound tapered on data, fast-collecting products stay on sale.
+ JSA + Ma Hunkel · package FAST PASS (3 seats + Buyer). Labeled. RESHAPE. Three cuts, guest picks one, new capture included.
+ JSA + Ma Hunkel · cohort FAST PASS (3 seats + Buyer). Labeled. RESHAPE. Deposits, not a waitlist. Cohort cash is upside, not base case.
+ YouTube Council 5 seats, condensed review Keep the name. Lock a descriptor. Topic-first packaging. 35–45 minutes. Weekly until 4 are banked.
+ Carried, unchallenged — Sponsors / AdSense NOT YET · Memberships and event NOT YET · Paid guest seats KILL
+ What changed from the first pass
+ Verdict downgraded. HLP-first moves from PURSUE NOW to PURSUE WITH CONDITIONS. Three conditions, all dated inside five weeks. None blocks the first action.
+ The package was aimed at the wrong audience for most guests. An HLP episode speaks to other owners. A roofer's buyers are homeowners. Reshaped into three cuts with new capture.
+ No ask in the room. The first pass had Brandon asking for the debrief while the guest was still on set. That breaks the wall. The invitation now rides with the published episode.
+ Base case restated down. Q4 chair lanes: $26,000 gross, about $16,400 net of production at the planning cap. The cohort's $12,500 is upside, not base.
+ The first action changed. Before 20 invitations go out, every guest already recorded gets the reshaped package offer. It is the cheapest test of the lane the whole plan leans on.
+ ▲ What this gate is and is not
+ One model wrote every seat in one context. "Blind" here is a writing discipline: each filing drafted sealed, mappings shuffled by the system random generator, reviews written against letters. It is not a technical guarantee. The League register was unreachable again, so no prior wrong-if lines were scored and the two-live cap is still unreconciled. Six numbers the board needed were missing (section 07). The clean-room run fixes all three. Treat this as the strongest read available today, and sign nothing before Tuesday, Sept 22: your own 48-hour parking rule applies to this overhaul too.
+
+ ★ Addendum · founder decisions made after the gate (same day)
+ The Sept 24 first action is done and dead. Peyton Hogan got the reshaped offer and does not need it. He is also the person who gave Brandon the idea for the show. Nobody else in the back catalog is a viable buyer: one churned client, one owner of a marketing company, possibly one current client.
+ The Oct 9 wrong-if has no pool to fire on. Replaced in the v5 documents by: zero paid packages from the first four buyer-fit debriefs by Nov 6 → JSA re-tries the package. The first new chairs carry the test.
+ Authority Lite does not exist. The Tournament took its slot. Two legacy accounts stay on a grandfathered rate.
+ Crucible-level work is a complete handoff to Kelly. The line is production vs. strategy: filming, lead gen, commercials and testimonials stay with Churlish.
+ Brandon keeps Engine and System and brings someone on to help fulfill. Role, date and cost are not set yet.
+ The minutes below are the record as ruled on Sept 21 and are not edited. Where they conflict with this addendum, the addendum and the v5 documents win.
+
+ // 02 · JUSTICE LEAGUE — FULL SESSION
+ Single docket: the HLP-first operating model
+
+ Constraints restated: $1M by 2030 · $5M by 2035 · Brandon out of daily operations by 2030. Register: unreachable. Stage 1 could not run. Noted, not hidden.
+ The docket, framed neutrally
+ CANDIDATE Move Churlish Media's client acquisition from Meta lead gen and cold service
+ outbound to a twice-weekly interview show (High Level Pros) whose guests are
+ owners at $500K-$10M.
+BUYERS Guests: package $2,500 · Engine $3,500/mo · System $5,000/mo
+ Listeners: 8-week cohort $2,500-$3,500 Sponsors: later
+NUMBER First-pass base case $38,500 gross collected in Q4 2026. ~$420K new revenue
+ modeled for 2027. Every rate is an untested planning assumption.
+STATE Channel under 1,000 subscribers. Founder + 2 interns + editor bench.
+ Goal ledger: +$150K collected by Dec 31, 2026; collected-to-date unknown to
+ the board. Floor of 3 sales conversations a week. Founder cap ~115 hrs/mo.
+ At least four other initiatives opened in the prior 26 days.
+UNKNOWN Incumbent channel actuals (90 days) · cost per episode kit · email list size
+ · banked watch hours · count of guests already recorded Sealed filings
+ Booster Gold · Futurist
+ Read Three dated claims. One: AI-written cold email volume is still climbing, so reply rates on service pitches keep sliding through 2027. An invitation is a different animal. It asks for nothing and offers status. Two: owner-to-owner long-form video in the Omaha metro is thin. Whoever has 24 local operators on tape by December owns the "who has been on" proof by Q1. Three: YouTube doubles the watch-hour bar for new applicants on Feb 1, 2027. After that date, ad revenue is a second-half-2027 event at best.
+ Case against The window argument cuts the other way on cash. The last 12 selling weeks of a $150K sprint is the worst time to swap engines, and show-to-client cycles commonly run a quarter or longer. And "thin" is my impression, not a count. Nobody has tallied competing Omaha owner shows.
+ Vote PURSUE NOW · wrong if invitation reply rate is under 15% across the first 100 sends by Oct 31.
+
+ Batman · Moat
+ Read Executability by joint: sourcing 95%, invitations 90%, prep 85%, packaging 80%, edit 70%, the chair 10%, the relationships 0%. The clonable part is table stakes. The moat is four things that take calendar time: the roster (every booked name raises the next yes), the room (a cinema-grade set is physical), five years of local trust, and the Ledger. After 50 guests it is the only structured record of what Omaha owners paid themselves and what their worst hire cost. Nobody can prompt that into existence.
+ Case against The moat is zero today. At episode zero anyone with a camera ties. The weak joint is reputational: in a metro where owners talk, one guest who feels sold to costs five bookings. The editorial wall is a policy on paper, and the first-pass plan breaks it on page one of the debrief by asking while the guest is still in the room.
+ Vote PURSUE NOW , one demand: no ask of any kind in the room. The debrief invitation rides with the published episode · wrong if any of the first 12 guests reports feeling pitched on a day-after survey.
+
+ Aquaman · Capital
+ Read The board was handed no incumbent actuals. Without closes and dollars by source for the last 90 days the Incumbent Benchmark cannot be computed, and that tooth is not skippable. What can be priced: the chair costs about 7 founder-hours a week. Production is the unpriced line. Eight kits a month at a planning cap of $400 is $3,200 a month, $9,600 for Q4 , a quarter of the first-pass base case before an hour of Brandon's time. If every assumption holds, that is roughly $300 per founder-hour. If the chair lanes land at half, about $170. One Engine close through any channel is a $14,000 contract on maybe six hours.
+ Case against Capital allocators underrate assets. The library and 24 warm owner relationships carry value that will not show up in Q4.
+ Vote PURSUE WITH CONDITIONS : actuals on the table, a production cap in writing, outbound not shut off until debrief data exists · wrong if chair-sourced cash, net of production, is under $15,000 collected by Dec 31.
+
+ The Atom · Systems
+ Read Essentialness delta: MORE , and worse than the first pass admitted. Twice-weekly publishing with no bank means the company's front door closes when Brandon gets the flu. Walk the plumbing. Sourcing: fleet. Invitations: fleet. Scheduling: no owner named. Pre-interview, recording, debrief, package review, cohort teaching, enrollment calls: all Brandon. Seven founder-only joints. The plan removes ad work the fleet mostly ran and adds host work nobody else can do. Mechanisms: a four-episode bank before going twice weekly; scheduling and guest logistics owned by an intern or VA by Oct 5; the 2027 producer-hire trigger tied to this lane.
+ Case against I may be over-weighting 2030. Host-led is the point. Every show this one is modeled on is host-dependent.
+ Vote PURSUE WITH CONDITIONS · wrong if Brandon's HLP hours average over 12 a week in November.
+
+ John Stewart · Asset Ladder
+ Read Score the path, not the destination. The episode is an asset only once discovery exists; under 1,000 subscribers it is inventory. The package is a productized service. The Engine is hours-for-dollars delivered by a bench. Cohort one is live teaching, which is hours; it becomes a product around cohort three, when the sessions are recorded. Sponsors are rent on the asset. So for two quarters this is hours-for-dollars with a camera on. The upgrade path is real: the Ledger becomes an annual "State of the Omaha Owner" report, cohort recordings become a self-paced product, a guest-host bench becomes the show without Brandon.
+ Case against None of that exists. "Record everything and it becomes an asset" is how founders justify a content treadmill.
+ Vote PURSUE NOW. It is the only lane in the portfolio where the work product accumulates · wrong if by episode 12 under 25% of monthly views come from videos older than 30 days.
+
+ Anonymized peer review
+ Mapping, shuffled by system RNG and revealed only here: A The Atom · B John Stewart · C Aquaman · D Batman · E Booster Gold.
+ Reviewer Strongest Most seduced What all five missed (portfolio)
+ 1 C. Only filing that priced production and refused to vote past a missing number. E. "Owners answer invitations" is a belief until 100 sends say otherwise. The editors who serve paying CRF clients now carry eight HLP kits a month. If HLP bumps a CRF turnaround, the base pays for the pivot.
+ 2 A. The flu test has no answer. B. Calls it the only accumulating lane while admitting it is inventory. Current retainer clients are owners too. They belong in early chairs, with disclosure. Retention and proof at once.
+ 3 C. E. A founder visibly pivoting to a podcast can read to current clients as "he is moving on." Tell the base first.
+ 4 D. Found a contradiction inside the plan: the wall versus the in-room ask. B. The format is portable. A second city through the existing Charlotte JV is the licensing seed the 2027 staircase calls for. Park it. Do not build it.
+ 5 A. E. The cohort and the chair draw on the same scarce input: Brandon's conversation hours in November and December.
+ Tally — strongest: C 2, A 2, D 1. Most seduced: E 3, B 2. The two conditional voters wrote the two strongest filings.
+ The Chair's ruling
+ HLP-first operating model PURSUE WITH CONDITIONS
+ Why not PURSUE NOW The vote was 3–2 for it. The Chair overrules. The Incumbent Benchmark is a mandatory tooth, it cannot be computed without numbers the board was never given, and a PURSUE NOW issued over a failed tooth is void by the League's own rules. Best reasoning wins, not the head count.
+ Condition 1 Incumbent actuals on the table by Fri Sept 25 : closes and dollars by source for the last 90 days, plus cash collected since June 15 · owner: Brandon. Pre-committed rule: if outbound and ads produced 2 or more closes in that window, service outbound keeps 30% of send volume through Oct 31. Fewer than 2, it goes to zero now.
+ Condition 2 Four episodes banked before twice-weekly publishing. Publish Tuesdays from Oct 6. Go Tue/Thu when 4 are in the can, target Oct 20 · owner: Lois Lane stages, Brandon approves.
+ Condition 3 Production cap in writing by Fri Sept 25 : $400 per recording kit as the planning cap until Brandon corrects it with the real editor rate, and an HLP kit never bumps a paying CRF client's turnaround · owner: Brandon.
+ Plan edits adopted These change the documents, not the verdict: no ask in the room · scheduling off Brandon by Oct 5 · the third weekly conversation sells fast-collecting products through Dec 31 · base clients hear about the change from Brandon first and are offered early chairs with disclosure · the Charlotte format idea goes to the parking ledger.
+ 2030 / 2035 / freedom 2030: feeds the retainer, product and education lines of the staircase; math is rough and every rate is an assumption. 2035: compounds through the roster, the Ledger and format portability. Freedom: exemption stands. Brandon hosts through Dec 31, 2028; everything but the chair off him by Mar 31, 2027.
+ First action Does not wait on the conditions. See the One Thing, section 04.
+ Demotion trigger Fewer than 16 recordings by Nov 20, or chair-sourced cash net of production under $15,000 by Dec 31 → automatic re-trial.
+
+ Capture Check: needs two or more candidates; not applicable to a single docket. The three carried verdicts (one KILL, two NOT YET) were re-read and confirmed with no new evidence. Capacity cap: this session issues zero PURSUE NOW verdicts.
+ // 03 · SUICIDE SQUAD — MOVES 1 TO 3
+ The assassination attempt
+
+ Full Protocol scale. No current client names, per ground rule 1. Every finding carries a number or a date.
+ Move 1 · The Kill Order
+ The attacker: a larger regional agency with $50,000, a frontier model, and your public pricing. The company it builds: "Omaha Owners Table." Positioning in one sentence: the show where Omaha's biggest owners talk to each other, run by the agency big enough that they already know us.
+ # Attack AI-exec Threat
+ 1 Pricing attack. Hand every guest a free clip pack the same week. Make the money on retainers. 90% HIGH
+ 2 Model attack. Roundtables: three owners per episode. Books the roster three times faster and every guest brings two peers. 85% HIGH
+ 3 Reputation attack. "That show is a sales funnel." Costs nothing the day one guest feels pitched. 100% HIGH once triggered
+ 4 Outbid for sponsors using a bigger client list 60% MEDIUM, from Q1
+ 5 Clone the format and question bank from published episodes 95% LOW. The format is not the moat
+ Segments it steals, in order: 1. professional-services owners (their buyers are owners, and they sponsor) · 2. home services above $3M (largest ad budgets) · 3. health practices.
+ THE ATTACKER'S EMAIL, written in your style and aimed at your guests
+
+Subject: You were on a podcast. Did the phone ring?
+
+[Name], saw your episode. Good conversation.
+Honest question: did it do anything?
+
+We film Omaha owners too. Difference is you get the clips free, the same
+week, and you share the table with two other owners, so the room is
+bigger than the host.
+
+No package. No "quick call" a week later.
+Tuesday or Thursday? What the attacker cannot clone: existing client relationships and five years of receipts · the set and the cinema kit · the Ledger once 25+ guests are in it · a reputation for the wall, once earned · Midwest credibility that includes a teaching post.
+ ▲ Kill Order conclusion
+ Everything that makes this plan cheap to run makes it cheap to copy. The parts that cannot be copied all take calendar time. So the defense is the calendar: 24 recordings by Dec 18 and a wall that holds. Attack 1 is the one that kills. If a rival hands out free clips, a $2,500 package of re-edits is dead on arrival. The package has to contain something a guest cannot get free: new capture aimed at their own customers. You would rather hear that from this report than from six guests saying "let me think about it."
+
+ Move 2 · The Absence Detector — ranked by money on the table
+ # Sev What is missing Money on the table
+ 1 CRIT The back catalog is un-worked. Guests already recorded have had no debrief and no offer. $3,000–$7,500 inside 14 days, plus the proof Lane 1 needs
+ 2 CRIT The package is aimed at the wrong audience for roughly 60% of the slate. Episode content speaks to owners. Trades, practices and retail sell to consumers. ~$14,000 per fit guest: the gap between a one-time sale and the Engine path
+ 3 CRIT No debrief mechanics. No script, no timer, no owner. All of Lane 1: $26,000 in Q4
+ 4 CRIT No incumbent actuals. The board ruled blind on the benchmark. Unknown, which is the problem
+ 5 MEAN No production budget number $9,600 in Q4 at the planning cap
+ 6 MEAN No deposit mechanism for the cohort. Waitlists lie. $12,500
+ 7 MEAN No guest release or disclosure page Blocks every package and every paid use of footage
+ 8 MEAN No owned-audience capture. List size unknown. $12,000–$25,000 per cohort
+ 9 MEAN Own rules not followed. Ventures frozen to Jan 1, 2027: at least four opened since Aug 26. New ideas park 48 hours: this overhaul was decided and built the same day. Three sales conversations a week: no log visible to the board. The whole plan, in week 5
+ 10 MINOR No guest no-show policy. At two a week, one cancellation is half the week. ~2 recordings a quarter
+ Move 3 · Decision Archaeology
+ Observations from the record, not psychology. Check them against your own read, keep what is true, throw out what is not.
+ Early on systems, late on selling them. The record within reach shows a 55-unit fleet, a Master Plan at version five, a Strategy OS, SOPs at V4. It shows far fewer logged sales conversations. If that is the record's fault, fix the record. If it is real, the chair is the right answer, because a recording is a conversation you cannot build your way out of.
+ Gravity: the new build. Five directions in 26 days.
+ The tell: scope words spike right before a pivot. "Complete." "Everything." "Genuinely."
+ Reliably right: pricing discipline (retired Lite when it sat in the kill zone, never discounts), brand taste, and follow-through once a fallback has a date on it.
+ Reliably optimistic: time to cash, and how many parallel projects one founder can carry.
+ ■ The one-page manual a COO would secretly keep
+ Never argue with the idea. Price it.
+ Put a date and a displaced item on everything, or it is not a decision.
+ Lead with the sting. He takes it when it carries a number.
+ Protect conversations over builds. Builds will protect themselves.
+ Approval sheets, not discussions.
+ When he says "everything," ask what stops.
+ Ship complete files. Partials get rebuilt from scratch.
+ Friday Five, or the week did not happen.
+
+ // 04 · SQUAD MOVE 4 — THE JSA TRIBUNAL
+ Full cutover, staged, or wait?
+
+ The question is built from the first three moves, as the protocol requires.
+ FRAMED QUESTION
+Speed is the only moat (Kill Order). The back catalog is un-worked, the package is
+mis-aimed for ~60% of guests, and no incumbent actuals exist (Absences 1, 2, 4).
+The record shows same-day pivots and a $150K target with 12 selling weeks left
+(Archaeology). Given that, should Churlish:
+ A) cut over to HLP-first now at full commitment
+ B) stage it: chair now, outbound tapered on data, fast-collecting products kept
+ C) hold until Jan 1, 2027 Sealed filings
+ Wildcat · The Contrarian
+ Read The cash thesis rests on one behavior nobody has observed: an owner paying for content cut from a business-advice interview. Zero have. You are about to aim 24 recordings at an unproven offer. Two more swings. Guests who say yes to a sub-1,000-subscriber show skew toward owners who want exposure, which skews small, which is not your $3M Engine buyer. And at $3M and up, the person in the chair is the owner but the buyer is often a marketing manager who was not in the room and did not feel the glow.
+ Case against The test is cheap. Refusing to move until it is proven would be its own failure.
+ Vote B , and test the package on already-recorded guests before a single new invitation claims it works.
+
+ Doctor Fate · First Principles
+ Read Wrong question. It is not "podcast or ads." It is "what is the cheapest way to get in a room with eight qualified owners a month?" Under 1,000 subscribers the show is not media. It is a meeting format with a camera. Judge it as one: cost per qualified-owner meeting against any other method. The audience is a by-product to harvest later. That changes the scoreboard. For 90 days do not measure views. Measure chairs filled by fit owners, and debriefs held. Lane 1 is the business. Lanes 2 and 3 are options you have not paid for yet.
+ Case against A meeting format that nobody watches eventually stops getting meetings. The by-product has to become real within a year.
+ Vote B.
+
+ Alan Scott · The Expansionist
+ Read Four things nobody priced. The Ledger becomes an annual report, which becomes press, which becomes the sponsor magnet. The format travels: a second city through the Charlotte JV is a licensing seed. The guest alumni become a room worth a paid annual dinner. And the biggest: for trades, clinics and restaurants the number-one constraint is hiring. An owner explaining how he runs his shop is exactly what a good tech wants to see before applying. A Hiring Cut may outsell anything aimed at customers.
+ Case against Every one of those is a new build, and the record says new builds are the gravity well.
+ Vote A. Go hard. The upside is larger than the plan says.
+
+ Stargirl · The Outsider
+ Read I assumed "High Level Pros" was about the HighLevel software. "Authority Engine," "the debrief," "the chair," "Breakthrough Arc": none of that means anything to a guest. A guest wants five answers: how long, where, what will you ask, who watches, what do I get. And the obvious question nobody asked: if almost nobody is watching yet, why would a $5M owner say yes? The invitation has to answer that in one line: the room, who else has sat there, and what they walk away with. Last one: why would a listener buy a cohort from the interviewer rather than from the guests?
+ Case against I know nothing about this market. Some of this may be obvious to the people in it.
+ Vote B. Fix the words before you scale the sends.
+
+ Hourman · The Executor
+ Read Monday through Friday, in order. Tue–Thu: call every guest already recorded with the reshaped package. Wed: release and disclosure page to the attorney. Fri: 20 invitations out, actuals and production cap on paper. The site is the risk to the week. A full multi-page build will eat the five days that belong to calls. Cap it: one page, the five standards, the application form. Everything else is week two. Does it fit the hour? Yes, if the site stays one page. No, if it does not.
+ Case against Speed without the package test just gets you to the wrong place faster.
+ Vote B.
+
+ Anonymized peer review
+ Mapping, shuffled by system RNG: A Hourman · B Alan Scott · C Stargirl · D Wildcat · E Doctor Fate.
+ Reviewer Strongest Biggest blind spot What all five missed
+ 1 E. The meeting-format reframe changes what gets measured. B. Five upsides, zero hours. At $3M+ the debrief needs a second seat for whoever actually buys marketing.
+ 2 D. A. Treats a one-page site as settled without asking where applications come from. How current clients will read the pivot.
+ 3 E. D. Assumes the test has to come before launch. It fits inside launch week. The calendar. A cohort sold between Thanksgiving and Christmas.
+ 4 C. The name collision and the jargon cost nothing to fix, and nobody inside could see them. B. A guest no-show policy.
+ 5 E. B. What a listener does between episode one and a $2,500 cohort. There is no middle step but a free one-pager.
+ Tally — strongest: E 3, D 1, C 1. Blind spot: B 3, A 1, D 1.
+ Mister Terrific rules
+ Where the Society agrees
+ Stage it. Test the package on already-recorded guests this week. For 90 days, judge the show on chairs filled by fit owners and debriefs held, not on views.
+ Where the Society clashes
+ Wildcat: the offer is unproven, so slow down. Hourman and Alan Scott: move. Ruling: the test costs three days and fits inside launch week. Run both. Alan Scott's four expansions are real and all four go to the parking ledger, except the Hiring Cut, which is a variant of something already being built.
+ Blind spots the Society caught
+ The name collides with the HighLevel CRM · guest-facing pages are written in house vocabulary · buyer and owner are different people above $3M · base clients hearing about the pivot secondhand · a holiday enrollment window · no middle step for listeners (accepted for now: the Diagnostic serves done-for-you, and paid community stays parked by your own 300-member rule).
+ The recommendation
+ Option B, staged cutover. Allocation: two chairs plus one straight sales conversation every week; the straight conversation sells fast-collecting products (Diagnostic, Tournament, Tool Sprint) through Dec 31. Floor: 16 recordings by Nov 20. Caps: site at one page plus application through Oct 4 · enrollment calls at 3 a week · production at $400 a kit until corrected. Pre-committed fallback: chair-sourced cash net of production under $15,000 by Dec 31 → League re-trial in January with service outbound restored to 50% of send volume.
+ Wrong if
+ Fewer than 1 paid package from the already-recorded guests by Oct 9 means the package, as shaped, is not what guests buy.
+ ▲ The one thing to do first
+ Call every guest already recorded, Peyton Hogan first, with the reshaped package by Thursday, Sept 24. Skip anyone who is already a client; they are proof, not prospects. Invitations still go Friday.
+
+ // 05 · JSA FAST PASS × 2 — THE BUYER SEATED
+ Would a real wallet open?
+
+ FAST PASS: Ma Hunkel, Wildcat, Hourman, Mister Terrific. Three seats plus the Buyer, no peer-review round. Labeled as the rules require. The clean-room run does both at full protocol.
+ Call 1 · Guest Authority Package, $2,500
+ Ma Hunkel · as a $2M HVAC owner
+ Read I liked doing the show. Now you want $2,500 for clips of me telling other business owners how I grew? My customers are homeowners with a dead furnace. What I would pay for: video that gets me techs, and video that makes a homeowner pick me over the other three trucks. I am comparing you to my nephew with an iPhone, the $500-a-month social girl, and doing nothing. The moment I close the tab: the word "authority." I do not know what that buys me. Put me in my shop, ask me what my customers ask me, and show me one other contractor it worked for.
+ Case against As a CPA-firm owner I read it the opposite way. My clients are owners. Clips of me talking shop with owners is exactly right. Same package, different buyer.
+ Vote RESHAPE. 48-hour test: send the reshaped one-pager to every already-recorded guest. One paid yes from five or more asks.
+
+ Wildcat: charging $2,500 for re-edits of footage that already exists will feel like being billed for your own interview. It needs net-new capture to hold the price. Hourman: the capture cannot happen on recording day without breaking the wall. Make it a separate 45-minute session after purchase, on site or in studio. That also puts Churlish in their building, which is where the Engine conversation starts.
+ Mister Terrific · package RESHAPE
+ The shape Three cuts, same price, guest picks one. Owner Cut for guests whose buyers are owners (CPA, law, banking, B2B). Customer Cut for guests who sell to consumers (trades, practices, retail). Hiring Cut for guests whose constraint is people (trades, clinics, restaurants).
+ What is inside Hero cut from the episode + a 45-minute capture session after purchase, aimed at that cut's audience + 10 shorts + carousel + article + quote graphics + ad license.
+ Free to every guest The episode, the trailer, and 2 shorts to post. That answers the free-clip-pack attack and draws the paid line clearly: the package is new capture aimed at their own market.
+ Cost Delivery-cost target moves from 30% to 40% of price. Confirm against real editor and shooter rates.
+ Wrong if No paid yes from the already-recorded guests by Oct 9.
+
+ Call 2 · The Next Stage cohort, $2,500 founding
+ Ma Hunkel · as a $300K owner
+ Read Who is Brandon? A podcast host with under a thousand subscribers wants $2,500. What I believe in: the four owners teaching. Those I would pay to sit across from. A small room of people at my size. Something finished at the end. I am comparing this to a Chamber program, a $97 course, a peer group at $500 to $1,000 a month, and free advising from the SBDC. The moment I close the tab: "founding cohort," which I read as "untested." What flips me: a small refundable deposit, a free night where I meet the instructors, and knowing exactly what I walk out with.
+ Case against If I had already watched ten episodes I would trust him more than this. The show may do the selling if it has time to.
+ Vote RESHAPE. 48-hour test: ten personal messages to owners at that stage with a $250 refundable deposit link. Two deposits.
+
+ Wildcat: the enrollment window runs through Thanksgiving and into Christmas, the worst owner-attention weeks of the year. Count none of it in Q4. Hourman: a Jan 12 start is reachable only through personal asks, not through an audience that does not exist yet.
+ Mister Terrific · cohort RESHAPE
+ The shape The instructors become the headline: "taught by four owners who did it, plus the authority system from the studio that films them." Deposits of $250, refundable, open Oct 19 and replace the waitlist. A free "meet the instructors" session on Nov 10 opens enrollment.
+ Go / no-go 8 deposits by Nov 7. Under 8, the start moves from Jan 12 to Feb 16 automatically.
+ Cash Cohort cash leaves the Q4 base case. It is upside.
+ Wrong if Fewer than 2 deposits from the first 10 personal asks.
+
+ // 06 · YOUTUBE COUNCIL
+ Name, cadence, packaging direction
+
+ Channel-strategy mode. Five seats, condensed review. The room judges and sets direction; finished titles come from hlp-youtube-package. No vidIQ pull was run, so The Algorithm argues from distribution logic, not channel data.
+ Seat Filing
+ The Packager Guest names carry no click at this size. The title has to sell the number jump and the trade; the thumbnail text carries the jump, the title carries the three mistakes. Two people in frame is fine. The show name is irrelevant to the click.
+ The Retention Architect Forty-five to sixty minutes from an unknown guest is a big ask. The stuck number has to land inside 30 seconds and Mistake #1 by minute three. "The business in 30 seconds" is a slow start; biography moves later. Target 35–45 minutes for the first 12.
+ The Algorithm Under 1,000 subscribers, browse and suggested will not feed interview episodes. Discovery comes from Shorts and from search-shaped mid-form ("how to hire HVAC techs"). Expect long-form episodes to draw tens to low hundreds of views for a quarter. That is normal, and Lane 1 does not need views. Publishing twice a week does not double growth. "High Level Pros" sits next to the HighLevel CRM in search. Not fatal; nobody searches a small show by name. Check it.
+ The Cold Viewer "High Level Pros." Pros at what? It reads like a software user group or a sports academy. The tagline does the work the name does not. Put "Real owners. Real numbers." on the banner and in the first line of About.
+ The Channel Strategist A channel named for the show, not the host, is sponsor-ready and host-exit-ready, which the 2030 constraint requires. The older "channel = Brandon King" decision served a solo-content strategy this overhaul replaces. Solo episodes live inside HLP as a labeled format.
+ Condensed review: strongest, The Algorithm, for saying out loud that the first quarter of view counts will look like failure and is not. Blind spot, The Packager: optimizing a click nobody is positioned to make yet.
+ Chairman · YouTube Council KEEP + FIX
+ Name Keep High Level Pros as show and channel. Lock the descriptor: "High Level Pros · Midwest owners, real numbers."
+ Packaging Topic-first. Number jump + trade + three mistakes. Guest name in the description, not the title.
+ Length and cadence 35–45 minutes for the first 12. Weekly until four are banked, then Tue/Thu.
+ Scoreboard First 90 days: chairs filled by fit owners, debriefs held, email signups. Views are reported, not judged.
+ Wrong if A YouTube search for the exact show name does not return the channel in the top 3 by Nov 15 → the descriptor moves into the channel name itself.
+ Change first Re-package the Hogan episode topic-first and send it through hlp-youtube-package before it publishes.
+
+ // 07 · FOR THE REGISTER
+ What gets scored next time
+
+ Save league-register.md into the justice-league skill folder. The next session opens by scoring these lines, which is the step this session could not run.
+ Date due Line Owner
+ Sep 24 Reshaped package offered to every already-recorded guest Brandon
+ Sep 25 Incumbent actuals + production cap on paper · 20 invitations sent Brandon · Blue Beetle
+ Oct 5 Scheduling and guest logistics off Brandon Intern / VA
+ Oct 9 Wrong-if: fewer than 1 paid package from the back catalog JSA re-trial
+ Oct 20 4 episodes banked → Tue/Thu begins Lois Lane
+ Oct 31 Wrong-if: invitation reply rate under 15% on first 100 Perry White
+ Nov 7 Go / no-go: 8 cohort deposits Brandon
+ Nov 15 Wrong-if: show-name search does not return the channel top 3 YouTube Council
+ Nov 20 Demotion: fewer than 16 recordings League
+ Nov 30 Wrong-if: HLP hours average over 12 a week in November EVE
+ Dec 18 Full-board League session · 24-recording lock lifts League
+ Dec 31 Demotion: chair-sourced cash net of production under $15,000 League
+ Six numbers the clean-room run needs from you
+ Cash collected since June 15 toward the $150K.
+ Closes and dollars by source, last 90 days: Meta, cold outbound, referral, other.
+ Real cost per episode kit, and per 45-minute capture session.
+ Email list size.
+ Exact subscribers and banked public watch hours (Studio → Earn).
+ How many guests are already recorded, and how many of those are already clients.
+
+ Churlish Media · Council Minutes · The Gate CHURLISHMEDIA.COM · 402-819-8168
+
+ RULED, THEN BUILT. CHURLISHMEDIA.COM
