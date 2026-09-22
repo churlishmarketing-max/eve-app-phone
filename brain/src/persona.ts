@@ -6,15 +6,52 @@ import { pictureIntakeOn } from "./intake.js";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const promptsDir = path.join(here, "..", "prompts");
 
-// Layer 1: Character Bible verbatim. Layer 2: doctrine digest.
-// Both static — loaded once so the prompt prefix stays byte-identical
-// across requests (prompt-cache friendly).
+// Layer 1: Character Bible verbatim. Layer 2: doctrine digest. Layer 2b: the
+// operating picture. All static — loaded once so the prompt prefix stays
+// byte-identical across requests (prompt-cache friendly).
 const characterBible = readFileSync(
   path.join(promptsDir, "character-bible.md"),
   "utf8",
 );
 const doctrineDigest = readFileSync(
   path.join(promptsDir, "doctrine-digest.md"),
+  "utf8",
+);
+
+// ---------------------------------------------------------------------------
+// LAYER 2b — THE OPERATING PICTURE. BUSINESS FACT, NOT DOCTRINE.
+//
+// Sept 21, 2026: Churlish moved its front door to High Level Pros and the
+// councils ruled a staged cutover. Nothing in the two layers above knew it —
+// grep them for "High Level Pros", "Guest Authority" or "Kelly" and every one
+// returned nothing — so asked what the offer ladder is she answered from a June
+// picture, and the name closest to hand was Authority Lite, which is RETIRED and
+// must never be quoted.
+//
+// WHY A THIRD FILE AND NOT MORE DIGEST. The digest governs JUDGMENT — how she
+// decides, what she escalates, what she refuses. This is a different kind of
+// sentence: the price of the Diagnostic, the name of the person Crucible work
+// goes to, the fact that an offer is retired. Facts go stale on their own
+// schedule and get replaced wholesale; doctrine is amended line by line after an
+// audit. Mixing them means every business change edits the file the audits live
+// in. The file states its own precedence at the top: the digest still owns HOW
+// she decides, this owns WHAT is the case.
+//
+// WHY THE SYSTEM PROMPT AND NOT THE CONTEXT PACK. The pack (context.ts) rides in
+// the USER turn on purpose, so the cached prefix survives — anything put there is
+// paid in full on every single turn. The pack is also where every line needs a
+// PACK_SOURCES verdict about whose words it carries, and these are King's own
+// standing facts: not volatile, not third-party. A static layer is paid once per
+// cache write and read cheap after. The pack is for what changed since the last
+// turn, and none of this changed.
+//
+// WHAT IS DELIBERATELY NOT IN IT: the dated action list and the milestone table.
+// A prompt carrying a stale date quotes last Friday's deadline with total
+// confidence a week later. Those live in the tracker; the file says so, and says
+// she does not have them.
+// ---------------------------------------------------------------------------
+const operatingPicture = readFileSync(
+  path.join(promptsDir, "operating-picture.md"),
   "utf8",
 );
 
@@ -67,6 +104,11 @@ export const staticSystemPrompt = [
   characterBible,
   "\n---\n",
   withPictureDoctrine(doctrineDigest),
+  // LAST, so the newest facts are the last thing she reads before his words —
+  // and because the picture file's own opening paragraph declares its
+  // precedence over anything above it that disagrees about a fact.
+  "\n---\n",
+  operatingPicture,
 ].join("\n");
 
 // Layer 3 (the context pack) lives in context.ts — full Phase-2 assembly:

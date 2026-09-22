@@ -1,10 +1,12 @@
 {
-  "generatedAt": "2026-09-02T01:34:49.146Z",
+  "generatedAt": "2026-09-22T12:49:45.290Z",
   "generator": "scripts/sync-skills.mjs",
   "sources": [
     "C:/Users/mrkin/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/cae82843-359e-4be7-8cdb-7e9039f69fb3/fb4f662d-e133-4c51-97b4-17c756ca0e45/skills",
     "C:/Users/mrkin/.claude/skills"
   ],
+  "overridesDir": "skills-overrides",
+  "overrideFiles": 14,
   "maxBytesPerSkill": 409600,
   "pinned": [
     "blue-beetle",
@@ -38,9 +40,12 @@
         "references/cta-standards.md",
         "references/diagnostic-matrices.md"
       ],
-      "bytes": 20589,
+      "bytes": 20582,
       "skipped": [],
       "trimmed": [],
+      "overrides": [
+        "references/cta-standards.md"
+      ],
       "why": "diagnoses pasted ad numbers → prescription; the optional .docx packaging stays workspace"
     },
     {
@@ -67,6 +72,7 @@
       "bytes": 23816,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "writes ad scripts/hooks from a brief; pure copy"
     },
     {
@@ -95,6 +101,7 @@
       "bytes": 22829,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "Phase 2 (analyze → plan → brand → mockup) is text from a pasted transcript; Remotion build + Premiere placement stay workspace",
       "note": "planning phases only"
     },
@@ -125,6 +132,7 @@
       "bytes": 85074,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "fiction/RP/worldbuilding writer; text references only"
     },
     {
@@ -148,9 +156,12 @@
         "references/active-avatars.md",
         "references/avatar-template.md"
       ],
-      "bytes": 19993,
+      "bytes": 21476,
       "skipped": [],
       "trimmed": [],
+      "overrides": [
+        "references/active-avatars.md"
+      ],
       "why": "serves avatar profiles from its text references; builds new ones from pasted material"
     },
     {
@@ -172,9 +183,12 @@
       "files": [
         "SKILL.md"
       ],
-      "bytes": 4155,
+      "bytes": 4233,
       "skipped": [],
       "trimmed": [],
+      "overrides": [
+        "SKILL.md"
+      ],
       "why": "drafts outreach sequences and reply routing; the worker holds no send tools so nothing goes out",
       "note": "drafts only — Smartlead/LinkedIn/Calendar stay workspace"
     },
@@ -204,6 +218,7 @@
       "bytes": 29195,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "rewrites a request into a model-tuned prompt; text only"
     },
     {
@@ -229,6 +244,7 @@
       "bytes": 9919,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "AEO query battery + visibility report; needs web search, which workers have"
     },
     {
@@ -253,6 +269,7 @@
       "bytes": 6249,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "scores a draft against pasted performance data; text in, score out",
       "note": "pattern files cannot be saved from the brain — the score is the deliverable"
     },
@@ -280,6 +297,7 @@
       "bytes": 14950,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "voice/style rules as a review pass over pasted copy; reference text only"
     },
     {
@@ -309,6 +327,7 @@
         "scripts/build_report.js"
       ],
       "trimmed": [],
+      "overrides": [],
       "why": "scores a pasted sales-call transcript → chat report; scripts/build_report.js (the .docx) is skipped"
     },
     {
@@ -335,6 +354,7 @@
       "bytes": 20085,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "monthly calendar as a markdown table; .xlsx/.docx packaging stays workspace"
     },
     {
@@ -359,6 +379,7 @@
       "bytes": 7998,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "fetches the live page (WebFetch) and writes the Bleed Report"
     },
     {
@@ -383,6 +404,7 @@
       "bytes": 5231,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "writes editor/VA briefs from a description"
     },
     {
@@ -408,6 +430,7 @@
       "bytes": 14489,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "writes nurture/follow-up sequences; copy only"
     },
     {
@@ -431,9 +454,12 @@
         "references/proven-calls.md",
         "references/reasoning-patterns.md"
       ],
-      "bytes": 18596,
+      "bytes": 18818,
       "skipped": [],
       "trimmed": [],
+      "overrides": [
+        "references/proven-calls.md"
+      ],
       "why": "the operator-mode reasoning doctrine applied to a pasted problem; text only"
     },
     {
@@ -455,9 +481,12 @@
       "files": [
         "SKILL.md"
       ],
-      "bytes": 6499,
+      "bytes": 6864,
       "skipped": [],
       "trimmed": [],
+      "overrides": [
+        "SKILL.md"
+      ],
       "why": "renewal/churn shield report from pasted account facts; text only",
       "note": "needs the account facts in the task — no CRM read from the brain"
     },
@@ -488,6 +517,7 @@
         "assets/HLP-Content-Engine-v3.pdf"
       ],
       "trimmed": [],
+      "overrides": [],
       "why": "HLP transcript → clip sheet; the workflow is in SKILL.md, the .docx/.pdf assets are skipped"
     },
     {
@@ -515,6 +545,7 @@
       "bytes": 19107,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "episode transcript → title/description/thumbnail package"
     },
     {
@@ -539,6 +570,7 @@
       "bytes": 5087,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "scope + line items as inline text; .docx packaging stays workspace"
     },
     {
@@ -563,6 +595,7 @@
       "bytes": 5658,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "7-day news sweep per client; needs web search, which workers have"
     },
     {
@@ -588,6 +621,7 @@
       "bytes": 6608,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "messy notes → filed minutes; pure text, template is a text reference"
     },
     {
@@ -609,9 +643,12 @@
       "files": [
         "SKILL.md"
       ],
-      "bytes": 2956,
+      "bytes": 3057,
       "skipped": [],
       "trimmed": [],
+      "overrides": [
+        "SKILL.md"
+      ],
       "why": "prospect research/qualification/tiering as a text list via web search",
       "note": "Apollo + email verification are not on the brain — unverified rows must be flagged [NEEDS: verify]"
     },
@@ -637,6 +674,7 @@
       "bytes": 7281,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "forges a client voice file from pasted raw material; text out"
     },
     {
@@ -666,11 +704,18 @@
         "templates/exec-summary-outline.md",
         "templates/master-plan-outline.md"
       ],
-      "bytes": 85909,
+      "bytes": 87583,
       "skipped": [
         "scripts/build_master_plan.py"
       ],
       "trimmed": [],
+      "overrides": [
+        "SKILL.md",
+        "references/brain-dump-parser.md",
+        "references/churlish-formula.md",
+        "references/pricing-architectures.md",
+        "references/section-templates.md"
+      ],
       "why": "structures a brain-dump into the 10-section plan as markdown; the python triple-output (HTML/PDF/DOCX) packaging stays workspace",
       "note": "markdown deliverable, no HTML/PDF/DOCX"
     },
@@ -696,6 +741,7 @@
       "bytes": 6929,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "review-only code review of PASTED code; fixed checklist, text findings",
       "note": "no repo access from the brain — paste the code in the task"
     },
@@ -723,6 +769,7 @@
       "bytes": 44052,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "writes one-off/high-stakes emails as drafts; the worker holds no send tools"
     },
     {
@@ -747,9 +794,14 @@
         "references/pricing-engine.md",
         "references/proposal-architecture.md"
       ],
-      "bytes": 29230,
+      "bytes": 30953,
       "skipped": [],
       "trimmed": [],
+      "overrides": [
+        "references/industry-angles.md",
+        "references/pricing-engine.md",
+        "references/proposal-architecture.md"
+      ],
       "why": "proposal content (tiers, pricing, pain language) as markdown; the .docx build via the docx skill stays workspace"
     },
     {
@@ -774,6 +826,7 @@
       "bytes": 7410,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "transcript → short-form clips + ad creative as text; nothing is rendered"
     },
     {
@@ -801,6 +854,7 @@
       "bytes": 27856,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "client file: RLS/Woodaddy copy, metadata, strategy; text references only"
     },
     {
@@ -826,6 +880,7 @@
       "bytes": 29259,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "social post drafting, calendar, captions, image prompts as text",
       "note": "Canva design + publishing stay workspace; drafts land in approvals"
     },
@@ -853,6 +908,7 @@
       "bytes": 16282,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "strategy docs/gameplans/KPI trackers as markdown; .docx/.xlsx packaging stays workspace"
     },
     {
@@ -877,6 +933,7 @@
       "bytes": 5866,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "transcript → clip opportunities; text only"
     },
     {
@@ -901,6 +958,7 @@
       "bytes": 11263,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "TrueNorth transcript → clip sheet; text only"
     },
     {
@@ -925,6 +983,7 @@
       "bytes": 3359,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "grades a PASTED build/output against its fleet-health checklist",
       "note": "cannot walk agent folders from the brain — paste what it should inspect"
     },
@@ -952,6 +1011,7 @@
         "references/report-template.html"
       ],
       "trimmed": [],
+      "overrides": [],
       "why": "5-seat war room + chairman verdict as markdown; the .html report template is skipped"
     },
     {
@@ -977,6 +1037,7 @@
       "bytes": 11714,
       "skipped": [],
       "trimmed": [],
+      "overrides": [],
       "why": "titles/descriptions/tags/chapters from a description or transcript"
     }
   ],
@@ -1004,6 +1065,10 @@
     {
       "key": "cyborg",
       "reason": "builds live Meta campaign objects through the Meta Ads MCP, which the brain does not hold"
+    },
+    {
+      "key": "docs",
+      "reason": "a shim over the host's docs connector (its whole body is 'follow the docs connector's instructions'); the brain holds no docs tools and there is no doctrine to run"
     },
     {
       "key": "docx",
@@ -1034,6 +1099,14 @@
       "reason": "already a registry WORKER row (code) — not double-registered"
     },
     {
+      "key": "kyle-rayner",
+      "reason": "renders motion graphics through the Higgsfield MCP (image/video batches, cost preflight, item-level approval gallery), which the brain does not hold; the deliverable is a render, not text"
+    },
+    {
+      "key": "lois-lane",
+      "reason": "weekly HLP publish kit through vidIQ, the local browser (player scrubbing + frame capture), Drive staging and a Canva copy, none of which the brain holds; the text pieces already run as hlp-clip-finder and hlp-youtube-package"
+    },
+    {
       "key": "mcp-builder",
       "reason": "builds MCP servers (python/node scripts, evaluation harness); code, not text"
     },
@@ -1060,6 +1133,10 @@
     {
       "key": "second-brain",
       "reason": "filesystem census (ls ~/.claude/skills) + OS roster sync writes; fleet_roster already answers the read side"
+    },
+    {
+      "key": "setup-claude",
+      "reason": "guided plugin install/connector flow inside the Claude app (role picker, plugin and connector widgets, try-a-skill cards); a host onboarding tour, not a Churlish job"
     },
     {
       "key": "setup-cowork",
