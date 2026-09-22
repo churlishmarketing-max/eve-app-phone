@@ -10,7 +10,7 @@ import { useMemo } from "react";
 import type { EveState } from "@shared/contract";
 import type { ChatView } from "../deck/types";
 import FleetPane from "./FleetPane";
-import { jobsView } from "./jobs";
+import { jobsView } from "@shared/core/jobs";
 import { usePins } from "./usePins";
 
 export interface FleetScreenProps {

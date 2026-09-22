@@ -30,7 +30,7 @@
 import type { EveState, Health } from "@shared/contract";
 import { APP_VERSION, clockStr } from "../deck/format";
 import { ENT, type EveMode } from "../deck/types";
-import { DASH, memoryCell } from "./counters";
+import { DASH, memoryCell } from "@shared/core/counters";
 
 const BARS = 28;
 /** THE CORE's stagger, 0.055s a bar. Motion only — killed by app.css's law. */

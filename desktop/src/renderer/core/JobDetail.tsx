@@ -33,7 +33,7 @@
 import { useEffect, useState } from "react";
 import type { JobRow, PendingConfirm } from "@shared/contract";
 import ConfirmCard from "../confirm/ConfirmCard";
-import { DASH } from "./counters";
+import { DASH } from "@shared/core/counters";
 import {
   costLabel,
   elapsed,
@@ -44,7 +44,7 @@ import {
   statusTone,
   statusWord,
   unitOf,
-} from "./jobs";
+} from "@shared/core/jobs";
 import type { CoreLogEntry } from "./useCoreLog";
 
 export interface JobDetailProps {

@@ -38,8 +38,8 @@
 //
 // AND THE LOAD BAR STAYS DELETED. Still no progress field on the wire.
 
-import type { EveState, FleetUnitRow } from "@shared/contract";
-import { agentCode, clockStr } from "../deck/format";
+import type { EveState, FleetUnitRow } from "../contract";
+import { agentCode, clockStr } from "./format";
 import { normStatus, unitOf, type JobsView } from "./jobs";
 import { NO_PINS, isPinned, type PinOverrides } from "./pins";
 

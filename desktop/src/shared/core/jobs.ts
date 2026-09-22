@@ -15,9 +15,27 @@
 // Built against CONTRACT-v0.1.md §1 / §3. Nothing here invents a field: a
 // missing unit is null (never "eve", never "?"), a missing cost is null.
 
-import type { EveState, JobResult, JobRow, PendingConfirm } from "@shared/contract";
-import type { ChatView, SeenJobFrame } from "../deck/types";
-import { pad2 } from "../deck/format";
+import type { EveState, JobFrame, JobResult, JobRow, PendingConfirm } from "../contract";
+import { pad2 } from "./format";
+
+/** A `job` SSE frame plus the local clock at arrival.
+ *  MOVED here from renderer/deck/types.ts when this module left the deck;
+ *  deck/types.ts re-exports it, so nothing on the deck side changed. */
+export interface SeenJobFrame {
+  frame: JobFrame;
+  /** ISO, local clock, stamped in the reducer. */
+  at: string;
+  /** Monotonic per window — the feed keys on it. */
+  seq: number;
+}
+
+/** The one thing `pendingConfirmsOf` reads off a chat view. The deck's own
+ *  `Pick<ChatView, "messages">` satisfies this structurally, so the desktop
+ *  call sites are unchanged; naming the shape here is what lets the job truth
+ *  live outside the deck. */
+export interface ChatMessages {
+  messages: { confirms?: PendingConfirm[] }[];
+}
 
 /** The five statuses v0.1 emits, in ladder order. Anything else is rendered raw. */
 export const STATUS_LADDER = ["queued", "running", "in_approvals", "done", "failed"] as const;
@@ -195,7 +213,7 @@ export function confirmFor(job: JobRow, confirms: PendingConfirm[]): PendingConf
 
 /** Every pending card this window knows about — the poll's list and the ones
  *  that arrived on a frame — deduped by id. Same union App.tsx builds. */
-export function pendingConfirmsOf(state: EveState, chat: Pick<ChatView, "messages">): PendingConfirm[] {
+export function pendingConfirmsOf(state: EveState, chat: ChatMessages): PendingConfirm[] {
   const seen = new Set<string>();
   const out: PendingConfirm[] = [];
   const all = [...chat.messages.flatMap((m) => m.confirms ?? []), ...(state.online ? state.pendingConfirms ?? [] : [])];

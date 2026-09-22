@@ -15,7 +15,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { EveState } from "@shared/contract";
 import type { ChatView, CorePrefill, EveMode } from "../deck/types";
 import CorePane from "./CorePane";
-import { confirmFor, jobsView, pendingConfirmsOf } from "./jobs";
+import { confirmFor, jobsView, pendingConfirmsOf } from "@shared/core/jobs";
 import { eventsFor, useCoreLog } from "./useCoreLog";
 import { useHealth } from "./useHealth";
 import { usePins } from "./usePins";

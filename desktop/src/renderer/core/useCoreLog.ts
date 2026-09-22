@@ -41,7 +41,7 @@ import { useEffect, useRef, useState } from "react";
 import type { EveState } from "@shared/contract";
 import type { ChatView, SeenJobFrame } from "../deck/types";
 import { pad2 } from "../deck/format";
-import { jobCounts, normStatus, statusWord, unitOf, type JobsView } from "./jobs";
+import { jobCounts, normStatus, statusWord, unitOf, type JobsView } from "@shared/core/jobs";
 
 export type LogTone = "ok" | "warn" | "red" | "dim";
 

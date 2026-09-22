@@ -27,9 +27,9 @@
 
 import type { EveState } from "@shared/contract";
 import { clockStr } from "../deck/format";
-import { fleetView, sourceWord, type FleetUnit, type FleetView } from "./fleet";
-import type { JobsView } from "./jobs";
-import { NO_PINS, type PinOverrides } from "./pins";
+import { fleetView, sourceWord, type FleetUnit, type FleetView } from "@shared/core/fleet";
+import type { JobsView } from "@shared/core/jobs";
+import { NO_PINS, type PinOverrides } from "@shared/core/pins";
 
 export function dotClass(d: FleetUnit["dot"]): string {
   if (d === "live") return "fleetdot live";

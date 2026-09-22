@@ -1,46 +1,236 @@
-import { BRAIN_URL, BRAIN_TOKEN } from "./config";
+import { BRAIN_URL } from "./config";
+import { brainToken } from "./tokenStore";
+
+// ---- THE WIRE TYPES COME FROM THE SHARED CONTRACT (S1, 2026-09-06) ----
+//
+// This file used to declare its own EveState/PendingConfirm/job row. That copy
+// predated the dispatcher: its `jobs[]` was `{id, agent?, title, status}` with
+// no unit, no tier, no result and no confirm linkage, so the phone could not
+// have rendered a dispatched job even if it had been handed one. The types now
+// come from desktop/src/shared/contract.ts — the same file the desktop reads —
+// and are re-exported here so every existing importer of "./eveApi" is
+// unchanged. The BODY (/vitals) types below stay local: the contract's copy of
+// them is measurably looser than this screen needs.
+import type {
+  ConnectorStatus,
+  EveState,
+  FleetBlock,
+  FleetUnitRow,
+  JobFrame,
+  JobRow,
+  PendingConfirm,
+  VoiceList,
+} from "@shared/contract";
+
+export type { ConnectorStatus, EveState, FleetBlock, FleetUnitRow, JobFrame, JobRow, PendingConfirm, VoiceList };
 
 // ---- live state for Today/Ops (Phase 2–3; 05 §4) ----
 
-export interface PendingConfirm {
-  id: string;
-  kind: string;
-  summary: string;
-  payload: Record<string, unknown>;
-  hash: string;
-  createdAt: string;
-  expiresAt: string;
+/**
+ * WHAT THE POLL ACTUALLY LEARNED. Three facts, not one:
+ *   state      — the body, or the offline shell
+ *   fetchedAt  — when it landed (the jobs merge needs it: a `job` frame older
+ *                than the poll is history the poll already knows about)
+ *   error      — WHY it is a shell, in words. `{online:false}` alone cannot
+ *                tell a dead brain from a refused token from a 500 on /state,
+ *                and those are three different things for him to do about.
+ */
+export interface StateRead {
+  state: EveState;
+  fetchedAt: string;
+  error: string | null;
 }
 
-export interface ConnectorStatus {
-  key: string;
-  name: string;
-  connected: boolean;
-  detail: string;
+function linkFailure(status: number): string {
+  if (status === 401) return "unauthorized — her brain refused this token";
+  if (status === 404) return "her brain has no /state route — it is older than this app";
+  if (status >= 500) return `her brain answered ${status} on /state — the route failed, not the link`;
+  return `her brain answered ${status} on /state`;
 }
 
-export interface EveState {
-  online: boolean;
-  latestBrief?: { text: string; at: string } | null;
-  todaysThree?: { id: string; title: string; detail?: string; priority: number; due_at?: string }[];
-  floor?: { count: number; goal: number };
-  attentionItems?: { id: string; kind: string; message: string; nudge_level: number; ref?: any; created_at: string }[];
-  clients?: { id: string; name: string; cadence_days: number; days_quiet: number | null }[];
-  jobs?: { id: string; agent?: string; title: string; status: string }[];
-  routines?: { id: string; name: string; streak: number; last_done_on?: string }[];
-  pendingConfirms?: PendingConfirm[];
-  connectors?: ConnectorStatus[];
-}
-
-export async function fetchState(): Promise<EveState> {
+export async function fetchState(): Promise<StateRead> {
+  const fetchedAt = new Date().toISOString();
   try {
     const res = await fetch(`${BRAIN_URL}/state`, {
-      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { Authorization: `Bearer ${brainToken()}` },
     });
-    if (!res.ok) return { online: false };
-    return (await res.json()) as EveState;
+    if (!res.ok) return { state: { online: false }, fetchedAt, error: linkFailure(res.status) };
+    const state = (await res.json()) as EveState;
+    // THE THIRD FAILURE, and the one that reads most like the first. A brain
+    // whose Supabase is gone ANSWERS — 200, with the degraded three-key return
+    // {online:false, pendingConfirms, connectors}. Saying "unreachable" there
+    // would be false: she is reachable and her memory is not. Measured against
+    // the real brain on a scratch .env, 2026-09-06.
+    return {
+      state,
+      fetchedAt,
+      error: state.online
+        ? null
+        : "her brain answered, but its memory spine is down — nothing below was measured",
+    };
+  } catch (err) {
+    return {
+      state: { online: false },
+      fetchedAt,
+      error: `no answer from her brain — ${err instanceof Error ? err.message : "network error"}`,
+    };
+  }
+}
+
+// ---- PAIRING (P1, 2026-09-06): prove the token before keeping it ----
+//
+// A token is only stored if HER BRAIN ANSWERS 200 TO IT. Not a shape check,
+// not a length check, not a guess — one real GET /state carrying the candidate
+// in an Authorization header, exactly the way every other call in this file
+// carries it. If /state accepts it, every route in this file will.
+//
+// THE CANDIDATE IS PASSED IN, never read from the store. Nothing is written
+// until this returns ok, so a failed paste leaves the device untouched.
+//
+// THREE OUTCOMES, THREE DIFFERENT WORDS — this is the whole point of the
+// check. Measured against the production brain, 2026-09-06: a wrong token
+// answers 401 {"error":"unauthorized"}; an unreachable brain throws in fetch
+// before any status exists. Collapsing those into "pairing failed" would tell
+// him to re-copy a token that was fine, or to check his signal when the token
+// was wrong.
+export type PairFailure = "unauthorized" | "unreachable" | "brain_error";
+
+export type PairCheck =
+  | { ok: true }
+  | { ok: false; kind: PairFailure; say: string; detail: string };
+
+export async function verifyBrainToken(candidate: string): Promise<PairCheck> {
+  const token = candidate.trim();
+  if (!token) {
+    return {
+      ok: false,
+      kind: "unauthorized",
+      say: "Nothing pasted yet.",
+      detail: "the field is empty",
+    };
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${BRAIN_URL}/state`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (err) {
+    // No status. The socket never got an answer: DNS, no signal, the brain
+    // asleep. Says nothing about whether the token is right.
+    return {
+      ok: false,
+      kind: "unreachable",
+      say: "Couldn't reach her brain. Nothing was checked — this says nothing about the token.",
+      detail: err instanceof Error ? err.message : "network error",
+    };
+  }
+  if (res.ok) return { ok: true };
+  if (res.status === 401 || res.status === 403) {
+    return {
+      ok: false,
+      kind: "unauthorized",
+      say: "That token isn't hers. Her brain answered and refused it.",
+      detail: `she reached her brain — it replied ${res.status}`,
+    };
+  }
+  // Reached her, authenticated or not, and something else broke: a 500, a 404
+  // from a brain older than this app. Not his token's fault either way.
+  return {
+    ok: false,
+    kind: "brain_error",
+    say: `Her brain answered ${res.status}. That's her end, not your token.`,
+    detail: linkFailure(res.status),
+  };
+}
+
+// ---- THE DISPATCHER (CONTRACT-v0.1 §4) — send a unit from his pocket ----
+//
+// POST /dispatch answers 200 with an acceptance or **422 with a full refusal
+// body**. A client that treats non-2xx as an error string throws away `say`
+// and `runnable` — the two fields the refusal exists to deliver — so this
+// reads the body on both paths and only invents a shape when the socket itself
+// failed. There is no default unit and no substitution: an unknown unit is a
+// spoken refusal naming alternatives, and it is HER sentence that is shown.
+
+export interface DispatchAccepted {
+  ok: true;
+  jobId: string;
+  unit: string;
+  name: string;
+  status: string;
+  tier?: "green" | "red";
+  confirmId?: string;
+  say: string;
+}
+
+export interface DispatchRefusal {
+  ok: false;
+  code: "unit_unknown" | "unit_not_runnable" | "missing_input" | "spine_offline" | "run_failed" | "no_answer";
+  unit: string;
+  name?: string;
+  badge?: string;
+  say: string;
+  runnable: { key: string; name: string; does: string }[];
+}
+
+export type DispatchOutcome = DispatchAccepted | DispatchRefusal;
+
+export async function dispatchUnit(input: {
+  task: string;
+  unit: string;
+  why?: string;
+  client?: string;
+}): Promise<DispatchOutcome> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/dispatch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
+      body: JSON.stringify({
+        task: input.task,
+        unit: input.unit,
+        ...(input.why ? { why: input.why } : {}),
+        ...(input.client ? { client: input.client } : {}),
+      }),
+    });
+    const body = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    if (body && typeof body.ok === "boolean") return body as unknown as DispatchOutcome;
+    // 400 (empty task / no unit) and 500 answer {error}, not the refusal shape.
+    return {
+      ok: false,
+      code: "run_failed",
+      unit: input.unit,
+      say:
+        typeof body?.error === "string"
+          ? body.error
+          : res.status === 401
+            ? "unauthorized — her brain refused this token."
+            : `her brain answered ${res.status} on /dispatch.`,
+      runnable: [],
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      code: "no_answer",
+      unit: input.unit,
+      say: `no answer from her brain — ${err instanceof Error ? err.message : "network error"}`,
+      runnable: [],
+    };
+  }
+}
+
+// The full card by id. /state WITHHOLDS payload.moves on file_batch cards
+// (replacing it with a literal sentence), so this is the only way to read one
+// whole — and the phone still must never claim to know a move list it was
+// handed a placeholder for.
+export async function fetchConfirm(id: string): Promise<PendingConfirm | null> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/confirm/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${brainToken()}` },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as PendingConfirm;
   } catch {
-    return { online: false };
+    return null;
   }
 }
 
@@ -53,6 +243,12 @@ export interface StreamHandlers {
   onToken?: (text: string) => void;
   onTool?: (name: string) => void;
   onConfirm?: (confirm: PendingConfirm) => void; // RED-tier confirm cards (02 §6)
+  // `event: job` — the dispatcher's fast path (CONTRACT-v0.1 §3). Best effort:
+  // a transition the brain makes after the stream closes reaches this client
+  // through the next /state poll, never through a frame. The frame arrives
+  // BARE at the top level, not wrapped — the desktop's {type:"job", job}
+  // envelope is its own IPC shape and is not what comes off this socket.
+  onJob?: (job: JobFrame) => void;
   onDone?: (info: { conversationId: string; fullText: string }) => void;
   onError?: (message: string) => void;
 }
@@ -77,7 +273,7 @@ export async function resolveConfirm(
   try {
     const res = await fetch(`${BRAIN_URL}/confirm`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ id, hash, approve }),
     });
     return (await res.json()) as ConfirmResolution;
@@ -93,7 +289,7 @@ export async function forwardSms(msg: { address: string; body: string; dateMs: n
   try {
     await fetch(`${BRAIN_URL}/senses/sms`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(msg),
     });
   } catch {
@@ -110,7 +306,7 @@ export async function forwardNotification(n: {
   try {
     await fetch(`${BRAIN_URL}/senses/notification`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(n),
     });
   } catch {
@@ -123,7 +319,7 @@ export async function reportSmsSent(to: string, body: string): Promise<void> {
   try {
     await fetch(`${BRAIN_URL}/senses/sms-sent`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ to, body }),
     });
   } catch {
@@ -140,7 +336,7 @@ export async function actOnAttention(
   try {
     const res = await fetch(`${BRAIN_URL}/attention/${id}/action`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ action }),
     });
     return (await res.json()) as { ok: boolean; outcome?: string; error?: string };
@@ -202,7 +398,7 @@ export type VitalsWrite = { ok: boolean; error?: string };
 export async function fetchVitals(days = 7): Promise<Vitals> {
   try {
     const res = await fetch(`${BRAIN_URL}/vitals?days=${days}`, {
-      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { Authorization: `Bearer ${brainToken()}` },
     });
     if (!res.ok) return { online: false };
     return (await res.json()) as Vitals;
@@ -221,7 +417,7 @@ export async function logCheckin(patch: {
   try {
     const res = await fetch(`${BRAIN_URL}/checkin`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(patch),
     });
     return (await res.json()) as VitalsWrite;
@@ -234,7 +430,7 @@ export async function tickRoutine(id: string, onDate?: string): Promise<VitalsWr
   try {
     const res = await fetch(`${BRAIN_URL}/routine/${id}/tick`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(onDate ? { onDate } : {}),
     });
     return (await res.json()) as VitalsWrite;
@@ -247,7 +443,7 @@ export async function untickRoutine(id: string, onDate?: string): Promise<Vitals
   try {
     const res = await fetch(`${BRAIN_URL}/routine/${id}/untick`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(onDate ? { onDate } : {}),
     });
     return (await res.json()) as VitalsWrite;
@@ -260,7 +456,7 @@ export async function createRoutine(name: string): Promise<VitalsWrite> {
   try {
     const res = await fetch(`${BRAIN_URL}/routine`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ name }),
     });
     return (await res.json()) as VitalsWrite;
@@ -280,7 +476,7 @@ export async function runJob(
   try {
     const res = await fetch(`${BRAIN_URL}/job`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ job, force }),
     });
     return (await res.json()) as { ok: boolean; reason?: string; error?: string };
@@ -297,7 +493,7 @@ export async function transcribeAudio(
   try {
     const res = await fetch(`${BRAIN_URL}/voice/transcribe`, {
       method: "POST",
-      headers: { "Content-Type": blob.type || "audio/webm", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": blob.type || "audio/webm", Authorization: `Bearer ${brainToken()}` },
       body: blob,
     });
     return (await res.json()) as { ok: boolean; transcript?: string; error?: string };
@@ -330,7 +526,7 @@ export async function postWear(file: string): Promise<void> {
   try {
     await fetch(`${BRAIN_URL}/wardrobe/wear`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ file }),
     });
   } catch {
@@ -344,14 +540,36 @@ export function wardrobeImgUrl(look: WardrobeLook): string {
   return /^https?:\/\//i.test(look.url) ? look.url : `${BRAIN_URL}${look.url}`;
 }
 
+// WHICH VOICE SHE IS ACTUALLY IN. The array is ElevenLabs' own order, not a
+// ranking — voices[0] is a guess — so the name is resolved from
+// `configuredVoiceId` or not printed at all. An ABSENT configuredVoiceId means
+// the brain in front of us predates the field: it cannot say which voice is
+// live and it will IGNORE a voiceId on /voice/speak. That absence is the
+// capability flag, and this screen says so in words instead of naming a voice
+// it did not measure. (The phone shipped the literal "VOICE: LARA".)
+export async function fetchVoices(): Promise<VoiceList> {
+  try {
+    const res = await fetch(`${BRAIN_URL}/voice/voices`, {
+      headers: { Authorization: `Bearer ${brainToken()}` },
+    });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    return (await res.json()) as VoiceList;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network error" };
+  }
+}
+
 // Returns an object URL for the spoken reply, or null when voice-out isn't
 // wired (503) — callers degrade to text silently.
-export async function speakText(text: string): Promise<string | null> {
+// `voiceId` overrides the brain's configured voice for THIS utterance only;
+// the brain rejects anything that is not exactly 20 alphanumerics with a 400,
+// so it is only ever sent when the brain itself named it.
+export async function speakText(text: string, voiceId?: string): Promise<string | null> {
   try {
     const res = await fetch(`${BRAIN_URL}/voice/speak`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
-      body: JSON.stringify({ text }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
+      body: JSON.stringify(voiceId ? { text, voiceId } : { text }),
     });
     if (!res.ok) return null;
     const blob = await res.blob();
@@ -374,7 +592,7 @@ export async function streamChat(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${BRAIN_TOKEN}`,
+        Authorization: `Bearer ${brainToken()}`,
       },
       body: JSON.stringify({ message, conversationId, surface }),
       signal,
@@ -439,6 +657,9 @@ function dispatchFrame(frame: string, h: StreamHandlers): void {
       break;
     case "confirm_request":
       h.onConfirm?.(payload);
+      break;
+    case "job":
+      if (payload && typeof payload.id === "string") h.onJob?.(payload as JobFrame);
       break;
     case "done":
       h.onDone?.(payload);

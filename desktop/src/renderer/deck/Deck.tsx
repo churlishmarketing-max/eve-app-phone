@@ -19,7 +19,7 @@ import BriefScreen from "../brief/BriefScreen";
 import CoreScreen from "../core/CoreScreen";
 // F4 — the SAME union App.tsx and the CORE build, not a second one written
 // here: the cards on this thread's frames plus the ones the poll reports.
-import { pendingConfirmsOf } from "../core/jobs";
+import { pendingConfirmsOf } from "@shared/core/jobs";
 import FleetScreen from "../core/FleetScreen";
 import type { NavDest } from "./NavStrip";
 import type { ChatView, CorePrefill, DeckView, EveMode, WardrobeView } from "./types";

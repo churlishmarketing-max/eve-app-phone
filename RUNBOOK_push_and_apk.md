@@ -59,13 +59,41 @@ This machine has **no Android toolchain** — Android Studio installs the whole 
 **Step 0 — Install Android Studio** Hedgehog 2023.1.1 or newer. In its SDK Manager,
 install **SDK Platform 34**. That's the entire toolchain — no separate JDK.
 
-**Step 1 — Add the Android platform + Firebase config**
+> ## ⚠ HAZARD — `npx cap add android` IS A ONE-TIME, ALREADY-DONE STEP. NEVER RUN IT AGAIN.
+>
+> `app/android/` is **gitignored** (`.gitignore` line 19). The real, customised Android
+> platform therefore exists on disk ONLY at `C:\dev\eve\app\android` and is in **no**
+> commit — a fresh clone or a `git worktree` gets **nothing** there. If you then run
+> `npx cap add android` to "fix" the missing directory, Capacitor silently writes a
+> **blank template** over it and you lose, with no error:
+>
+> - permissions `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`, `READ_SMS`, `RECEIVE_SMS`,
+>   `SEND_SMS` (only `INTERNET` survives) — his microphone and SMS senses die
+> - six native classes — `AudioFocusPlugin`, `SmsReaderPlugin`, `SmsSenderPlugin`,
+>   `NotificationListenerPlugin`, `EveNotificationListenerService`, `SmsReceiver` —
+>   and `MainActivity` reverts to a bare `BridgeActivity`, so every plugin that
+>   `app/src/native/*` calls is UNREGISTERED
+> - `app/android/app/google-services.json` — without it push cannot register, and push
+>   is the only way she reaches him with the app closed
+>
+> This already happened once (the rejected `eve-0.8.0` build, 2026-09-06). **The correct
+> move in a worktree/clone is to COPY the platform out of `C:\dev\eve\app\android`**
+> (never write *into* production), then build in place.
+>
+> `npx cap sync android` **is** safe and required — it refreshes `assets/public` and the
+> plugin list without touching the manifest, `java/`, or `google-services.json`.
+> Verified 2026-09-06: after a sync, the manifest and `google-services.json` were
+> byte-identical to production's and all six classes were still there.
+
+**Step 1 — The Android platform + Firebase config** *(the `cap add` below was run ONCE,
+in July 2026. Read the hazard above before you type it again — you almost certainly
+want the copy-out route, not this.)*
 ```
 cd C:\dev\eve\app
 npm run build
-npx cap add android          # scaffolds app/android once
+npx cap add android          # ⚠ ONE TIME ONLY — see HAZARD above
 # copy Firebase ARTIFACT #1 to: app/android/app/google-services.json
-npx cap sync android         # copies dist/ + wires native plugins
+npx cap sync android         # copies dist/ + wires native plugins — always safe
 ```
 After `cap add android`, confirm the google-services plugin is wired (Capacitor's
 template usually does it). In `android/build.gradle` there should be a
