@@ -587,4 +587,70 @@ export const CSS = `
   letter-spacing:.12em; text-transform:uppercase; line-height:1.4; text-align:center;
   border-radius:5px; padding:8px 11px; color:rgba(240,237,232,.62);
   border:1px dashed rgba(240,237,232,.3); }
+/* ============================================================
+   PAIRING + THE KEY CARD (2026-09-06). His token stopped
+   shipping inside the bundle; this is the screen where he hands
+   it over once, and the WIRE card where he rotates or erases it.
+
+   COLOUR LAW, HELD: no --red anywhere below. Red is the RED
+   confirm tier and the live mic, and a mistyped token is
+   neither. A pairing failure wears --gold — the same colour
+   .linkbar already uses for "her brain refused this token"
+   under the status bar. Teal is the accent, as everywhere else.
+   Every value here is a token or a value already in this file.
+   ============================================================ */
+
+.pairscr{ position:relative; z-index:2; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  display:flex; flex-direction:column; align-items:center;
+  padding:calc(26px + env(safe-area-inset-top)) 18px calc(26px + env(safe-area-inset-bottom)); }
+.pairwm{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:44px; letter-spacing:.14em;
+  line-height:1; margin-top:4px; color:var(--cream); }
+.pairws{ margin-top:6px; font-size:8.5px; letter-spacing:.28em; color:rgba(240,237,232,.4); text-align:center; }
+.pairbox{ width:100%; max-width:420px; margin-top:24px; background:var(--panel); border:1px solid var(--hair);
+  border-radius:12px; padding:16px;
+  box-shadow:inset 0 1px 0 rgba(240,237,232,.04), inset 0 0 26px rgba(28,185,200,.04), 0 10px 26px rgba(0,0,0,.35); }
+.pairh{ margin:12px 0 0; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:34px;
+  line-height:1; letter-spacing:.01em; color:var(--cream); }
+.pairlede{ margin:9px 0 0; font-size:13.5px; line-height:1.5; color:var(--dim); text-wrap:pretty; }
+.pairmig{ margin-top:12px; font-size:8.5px; letter-spacing:.1em; line-height:1.7; color:var(--gold);
+  border:1px dashed rgba(201,165,74,.4); border-radius:6px; padding:9px 10px; }
+.pairlab{ margin-top:16px; font-size:8.5px; letter-spacing:.22em; color:rgba(28,185,200,.85); }
+.pairurl{ margin-top:5px; font-size:10px; letter-spacing:.02em; line-height:1.4; color:rgba(240,237,232,.5);
+  word-break:break-all; }
+.pairin{ width:100%; margin-top:6px; background:var(--panel2); border:1px solid var(--hair2); border-radius:8px;
+  padding:13px 12px; color:var(--cream); font-family:'IBM Plex Mono',monospace; font-size:14px; letter-spacing:.18em;
+  caret-color:var(--tealHi); outline:none; }
+.pairin:focus{ border-color:rgba(28,185,200,.55); }
+.pairin::placeholder{ color:rgba(240,237,232,.28); letter-spacing:.06em; }
+.pairchars{ margin-top:7px; font-size:8.5px; letter-spacing:.16em; color:rgba(240,237,232,.4); }
+.pairerr{ margin-top:12px; display:block; border:1px solid rgba(201,165,74,.45); border-radius:8px;
+  background:rgba(201,165,74,.06); padding:11px 12px; }
+.pairerr .k{ display:block; font-size:9px; letter-spacing:.24em; color:var(--gold); }
+.pairerr .s{ display:block; margin-top:6px; font-family:Barlow,sans-serif; font-size:13px; letter-spacing:0;
+  line-height:1.45; color:var(--cream); }
+.pairerr .d{ display:block; margin-top:6px; font-size:8.5px; letter-spacing:.1em; line-height:1.5;
+  color:rgba(240,237,232,.5); }
+.pairbtn{ width:100%; margin-top:16px; cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:11px;
+  letter-spacing:.26em; color:var(--tealHi); background:rgba(28,185,200,.07);
+  border:1px solid rgba(28,185,200,.45); border-radius:8px; padding:14px 20px; }
+.pairbtn:disabled{ opacity:.4; cursor:default; }
+.pairback{ width:100%; margin-top:9px; cursor:pointer; font-size:9px; letter-spacing:.2em;
+  color:rgba(240,237,232,.5); background:none; border:1px solid rgba(240,237,232,.14); border-radius:8px;
+  padding:12px 20px; }
+.pairfoot{ margin-top:16px; font-size:8.5px; letter-spacing:.1em; line-height:1.7;
+  color:rgba(240,237,232,.28); }
+
+/* the key card on WIRE — masked confirmation, rotate, erase */
+.keycard .hd{ font-size:9px; letter-spacing:.22em; color:rgba(28,185,200,.85); }
+.keyrow{ display:flex; align-items:baseline; gap:10px; margin-top:11px; }
+.keyrow .k{ flex:none; width:76px; font-size:8.5px; letter-spacing:.16em; color:rgba(240,237,232,.4); }
+.keyrow .v{ flex:1; min-width:0; font-size:9.5px; letter-spacing:.12em; line-height:1.5;
+  color:rgba(240,237,232,.62); }
+.keyrow .v.on{ color:var(--tealHi); }
+.keyrow .v.brainurl{ letter-spacing:.02em; word-break:break-all; }
+.keybtns{ display:flex; gap:8px; margin-top:15px; }
+.keyb{ flex:1; cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.16em;
+  color:var(--ice); background:rgba(28,185,200,.05); border:1px solid rgba(28,185,200,.28);
+  border-radius:6px; padding:11px 9px; }
+.keyb.out{ color:var(--gold); background:rgba(201,165,74,.05); border-color:rgba(201,165,74,.35); }
 `;

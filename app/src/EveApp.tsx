@@ -56,6 +56,10 @@ import { agentCode } from "@shared/core/format";
 import { fleetView, kindsLine, sourceWord, type FleetUnit } from "@shared/core/fleet";
 import { DASH, dispatchRows } from "@shared/core/counters";
 import { APP_VERSION } from "./version";
+import { BRAIN_URL } from "./config";
+// The key card on WIRE (P4). tokenFingerprint is the ONLY read this file
+// gets — "present, N chars" and never the value itself.
+import { clearToken, tokenFingerprint } from "./tokenStore";
 import { initPush } from "./push";
 import {
   smsSupported,
@@ -184,7 +188,7 @@ function payloadText(v: unknown): string {
 /* ---- the entity: rings, core, ripples, thinking arc, speaking bars ----
    Lives on the boot screen and as the Talk plate's empty-closet fallback;
    her portrait carries the plate everywhere else. */
-function EveEntity({ mode }: { mode: EveMode }) {
+export function EveEntity({ mode }: { mode: EveMode }) {
   const alert = mode === "alert";
   const zone = 200;
   const core = 116;
@@ -224,7 +228,9 @@ function EveEntity({ mode }: { mode: EveMode }) {
   );
 }
 
-export default function EveApp() {
+export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedout" | "rotate") => void }) {
+  // Masked, never the value. Read at render; sign-out unmounts this tree.
+  const keyPrint = tokenFingerprint();
   const [booted, setBooted] = useState(false);
   const [bootLeaving, setBootLeaving] = useState(false);
   const [tab, setTab] = useState<Tab>("today");
@@ -1956,6 +1962,53 @@ export default function EveApp() {
                     ANDROID BUILD ONLY — THE BROWSER HAS NO SMS OR NOTIFICATION ACCESS
                   </div>
                 )}
+              </div>
+
+              {/* THE KEY (P4, 2026-09-06). It lives on the WIRE tab because
+                  this is the tab about what she is connected to, and it ends
+                  with "keys stay in your vault" — this is that vault.
+
+                  IT NEVER PRINTS THE TOKEN. "PRESENT · N CHARS" is the whole
+                  of what this screen is allowed to know (tokenFingerprint);
+                  there is no accessor that would let it print more.
+
+                  RE-PAIR does NOT clear first: he lands on the pairing screen
+                  with the working token still stored and a way back, so a
+                  rotation he abandons halfway doesn't lock him out. SIGN OUT
+                  erases immediately — removeItem, not a blanked field. */}
+              <div className="card keycard" style={{ marginTop: 14 }}>
+                <div className="hd mono">HER BRAIN — THE ONE KEY</div>
+                <div className="keyrow">
+                  <span className="k mono">TOKEN</span>
+                  <span className={`v mono${keyPrint.present ? " on" : ""}`}>
+                    {keyPrint.present ? `PRESENT · ${keyPrint.chars} CHARS` : "NONE STORED"}
+                  </span>
+                </div>
+                <div className="keyrow">
+                  <span className="k mono">STORED IN</span>
+                  <span className="v mono">THIS PHONE ONLY — NOT IN THE APP FILE</span>
+                </div>
+                <div className="keyrow">
+                  <span className="k mono">BRAIN</span>
+                  <span className="v mono brainurl">{BRAIN_URL}</span>
+                </div>
+                <div className="keybtns">
+                  <button className="keyb hit44" onClick={() => onSignedOut("rotate")}>
+                    [ RE-PAIR ]
+                  </button>
+                  <button
+                    className="keyb out hit44"
+                    onClick={async () => {
+                      await clearToken();
+                      onSignedOut("signedout");
+                    }}
+                  >
+                    [ SIGN OUT ]
+                  </button>
+                </div>
+                <div className="caphint mono">
+                  SIGN OUT ERASES IT FROM THIS PHONE. SHE STOPS ANSWERING UNTIL YOU PAIR AGAIN.
+                </div>
               </div>
 
               <div className="card rules" style={{ marginTop: 14 }}>

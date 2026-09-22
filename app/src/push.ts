@@ -1,7 +1,8 @@
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 import type { Channel } from "@capacitor/push-notifications";
-import { BRAIN_URL, BRAIN_TOKEN } from "./config";
+import { BRAIN_URL } from "./config";
+import { brainToken } from "./tokenStore";
 
 // EVE's three independently-tunable Android channels (04_PROACTIVE_ENGINE §5).
 // importance: 5=MAX/heads-up, 3=DEFAULT(sound), 2=LOW(silent). visibility: 1=PUBLIC, 0=PRIVATE.
@@ -30,7 +31,7 @@ export async function initPush(onDeeplink: (link: string) => void): Promise<void
   await PushNotifications.addListener("registration", (t) => {
     fetch(`${BRAIN_URL}/register-push`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ token: t.value, platform: "android" }),
     }).catch((e) => console.warn("register-push failed", e));
   });

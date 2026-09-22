@@ -1,4 +1,5 @@
-import { BRAIN_URL, BRAIN_TOKEN } from "./config";
+import { BRAIN_URL } from "./config";
+import { brainToken } from "./tokenStore";
 
 // ---- THE WIRE TYPES COME FROM THE SHARED CONTRACT (S1, 2026-09-06) ----
 //
@@ -51,7 +52,7 @@ export async function fetchState(): Promise<StateRead> {
   const fetchedAt = new Date().toISOString();
   try {
     const res = await fetch(`${BRAIN_URL}/state`, {
-      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { Authorization: `Bearer ${brainToken()}` },
     });
     if (!res.ok) return { state: { online: false }, fetchedAt, error: linkFailure(res.status) };
     const state = (await res.json()) as EveState;
@@ -74,6 +75,72 @@ export async function fetchState(): Promise<StateRead> {
       error: `no answer from her brain — ${err instanceof Error ? err.message : "network error"}`,
     };
   }
+}
+
+// ---- PAIRING (P1, 2026-09-06): prove the token before keeping it ----
+//
+// A token is only stored if HER BRAIN ANSWERS 200 TO IT. Not a shape check,
+// not a length check, not a guess — one real GET /state carrying the candidate
+// in an Authorization header, exactly the way every other call in this file
+// carries it. If /state accepts it, every route in this file will.
+//
+// THE CANDIDATE IS PASSED IN, never read from the store. Nothing is written
+// until this returns ok, so a failed paste leaves the device untouched.
+//
+// THREE OUTCOMES, THREE DIFFERENT WORDS — this is the whole point of the
+// check. Measured against the production brain, 2026-09-06: a wrong token
+// answers 401 {"error":"unauthorized"}; an unreachable brain throws in fetch
+// before any status exists. Collapsing those into "pairing failed" would tell
+// him to re-copy a token that was fine, or to check his signal when the token
+// was wrong.
+export type PairFailure = "unauthorized" | "unreachable" | "brain_error";
+
+export type PairCheck =
+  | { ok: true }
+  | { ok: false; kind: PairFailure; say: string; detail: string };
+
+export async function verifyBrainToken(candidate: string): Promise<PairCheck> {
+  const token = candidate.trim();
+  if (!token) {
+    return {
+      ok: false,
+      kind: "unauthorized",
+      say: "Nothing pasted yet.",
+      detail: "the field is empty",
+    };
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${BRAIN_URL}/state`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (err) {
+    // No status. The socket never got an answer: DNS, no signal, the brain
+    // asleep. Says nothing about whether the token is right.
+    return {
+      ok: false,
+      kind: "unreachable",
+      say: "Couldn't reach her brain. Nothing was checked — this says nothing about the token.",
+      detail: err instanceof Error ? err.message : "network error",
+    };
+  }
+  if (res.ok) return { ok: true };
+  if (res.status === 401 || res.status === 403) {
+    return {
+      ok: false,
+      kind: "unauthorized",
+      say: "That token isn't hers. Her brain answered and refused it.",
+      detail: `she reached her brain — it replied ${res.status}`,
+    };
+  }
+  // Reached her, authenticated or not, and something else broke: a 500, a 404
+  // from a brain older than this app. Not his token's fault either way.
+  return {
+    ok: false,
+    kind: "brain_error",
+    say: `Her brain answered ${res.status}. That's her end, not your token.`,
+    detail: linkFailure(res.status),
+  };
 }
 
 // ---- THE DISPATCHER (CONTRACT-v0.1 §4) — send a unit from his pocket ----
@@ -117,7 +184,7 @@ export async function dispatchUnit(input: {
   try {
     const res = await fetch(`${BRAIN_URL}/dispatch`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({
         task: input.task,
         unit: input.unit,
@@ -158,7 +225,7 @@ export async function dispatchUnit(input: {
 export async function fetchConfirm(id: string): Promise<PendingConfirm | null> {
   try {
     const res = await fetch(`${BRAIN_URL}/confirm/${encodeURIComponent(id)}`, {
-      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { Authorization: `Bearer ${brainToken()}` },
     });
     if (!res.ok) return null;
     return (await res.json()) as PendingConfirm;
@@ -206,7 +273,7 @@ export async function resolveConfirm(
   try {
     const res = await fetch(`${BRAIN_URL}/confirm`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ id, hash, approve }),
     });
     return (await res.json()) as ConfirmResolution;
@@ -222,7 +289,7 @@ export async function forwardSms(msg: { address: string; body: string; dateMs: n
   try {
     await fetch(`${BRAIN_URL}/senses/sms`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(msg),
     });
   } catch {
@@ -239,7 +306,7 @@ export async function forwardNotification(n: {
   try {
     await fetch(`${BRAIN_URL}/senses/notification`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(n),
     });
   } catch {
@@ -252,7 +319,7 @@ export async function reportSmsSent(to: string, body: string): Promise<void> {
   try {
     await fetch(`${BRAIN_URL}/senses/sms-sent`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ to, body }),
     });
   } catch {
@@ -269,7 +336,7 @@ export async function actOnAttention(
   try {
     const res = await fetch(`${BRAIN_URL}/attention/${id}/action`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ action }),
     });
     return (await res.json()) as { ok: boolean; outcome?: string; error?: string };
@@ -331,7 +398,7 @@ export type VitalsWrite = { ok: boolean; error?: string };
 export async function fetchVitals(days = 7): Promise<Vitals> {
   try {
     const res = await fetch(`${BRAIN_URL}/vitals?days=${days}`, {
-      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { Authorization: `Bearer ${brainToken()}` },
     });
     if (!res.ok) return { online: false };
     return (await res.json()) as Vitals;
@@ -350,7 +417,7 @@ export async function logCheckin(patch: {
   try {
     const res = await fetch(`${BRAIN_URL}/checkin`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(patch),
     });
     return (await res.json()) as VitalsWrite;
@@ -363,7 +430,7 @@ export async function tickRoutine(id: string, onDate?: string): Promise<VitalsWr
   try {
     const res = await fetch(`${BRAIN_URL}/routine/${id}/tick`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(onDate ? { onDate } : {}),
     });
     return (await res.json()) as VitalsWrite;
@@ -376,7 +443,7 @@ export async function untickRoutine(id: string, onDate?: string): Promise<Vitals
   try {
     const res = await fetch(`${BRAIN_URL}/routine/${id}/untick`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(onDate ? { onDate } : {}),
     });
     return (await res.json()) as VitalsWrite;
@@ -389,7 +456,7 @@ export async function createRoutine(name: string): Promise<VitalsWrite> {
   try {
     const res = await fetch(`${BRAIN_URL}/routine`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ name }),
     });
     return (await res.json()) as VitalsWrite;
@@ -409,7 +476,7 @@ export async function runJob(
   try {
     const res = await fetch(`${BRAIN_URL}/job`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ job, force }),
     });
     return (await res.json()) as { ok: boolean; reason?: string; error?: string };
@@ -426,7 +493,7 @@ export async function transcribeAudio(
   try {
     const res = await fetch(`${BRAIN_URL}/voice/transcribe`, {
       method: "POST",
-      headers: { "Content-Type": blob.type || "audio/webm", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": blob.type || "audio/webm", Authorization: `Bearer ${brainToken()}` },
       body: blob,
     });
     return (await res.json()) as { ok: boolean; transcript?: string; error?: string };
@@ -459,7 +526,7 @@ export async function postWear(file: string): Promise<void> {
   try {
     await fetch(`${BRAIN_URL}/wardrobe/wear`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify({ file }),
     });
   } catch {
@@ -483,7 +550,7 @@ export function wardrobeImgUrl(look: WardrobeLook): string {
 export async function fetchVoices(): Promise<VoiceList> {
   try {
     const res = await fetch(`${BRAIN_URL}/voice/voices`, {
-      headers: { Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { Authorization: `Bearer ${brainToken()}` },
     });
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
     return (await res.json()) as VoiceList;
@@ -501,7 +568,7 @@ export async function speakText(text: string, voiceId?: string): Promise<string 
   try {
     const res = await fetch(`${BRAIN_URL}/voice/speak`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${BRAIN_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
       body: JSON.stringify(voiceId ? { text, voiceId } : { text }),
     });
     if (!res.ok) return null;
@@ -525,7 +592,7 @@ export async function streamChat(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${BRAIN_TOKEN}`,
+        Authorization: `Bearer ${brainToken()}`,
       },
       body: JSON.stringify({ message, conversationId, surface }),
       signal,
