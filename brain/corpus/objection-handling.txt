@@ -1,0 +1,154 @@
+Churlish Media · OS Sales Script Pt 2 · Objection Handling
+ Churlish Media · OS Sales Script Pt 2 · Objection Handling
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · SALES // 002
+
+ churlish@hq :~ $ load objections --all 16 --discounts disabled
+ > scanning for the real lock behind each one DONE
+ > loading invitation · debrief · enrollment rooms DONE
+ > discount generator OFF
+
+ Objection Objection Objection
+ Handling.
+ The sixteen you will actually hear across four rooms, and the answers that do not improvise a discount. The core move never changes: do not argue the surface objection. Every hesitation is one of three real locks: money, timing, or “will it be different this time.” Find the lock, answer the lock, re-attempt the close.
+ CHURLISH MEDIA · OS SALES SCRIPT · PART 2 · V5 · SIXTEEN OBJECTIONS, ZERO DISCOUNTS · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 01 · THE DOCTRINE · BEFORE ANY ANSWER
+ Three locks, one move
+
+ LOCK A
+ Money
+ “Can't afford it” usually means “can't see the return yet.” Answer with their own consequence math, never with a lower price.
+
+ LOCK B
+ Timing
+ “Not right now” means the cost of waiting has not been priced. Put a number on the delay.
+
+ LOCK C
+ “Will it be different”
+ The most common lock in disguise. They have been burned; they are asking for proof, not persuasion. Answer with receipts.
+
+ ★ The standing order
+ Never invent a discount. Founder pricing is a case-study exchange with a deliverable attached, framed that way in writing. If a price moves, scope moves with it. The moment you cut price under pressure, you have taught the client that pressure works, and every renewal gets harder.
+
+ Pattern for every objection: what they say → which lock it really is → the answer, verbatim → the re-close. Label first, answer second, close third. V5 adds the rooms that did not exist in July: the invitation, the debrief, and the cohort enrollment call. Sixteen objections, zero discounts.
+ // 02 · THE SEVEN · DOOR B
+ The Diagnostic call — in order of frequency
+
+ 01 “$750 for a report?” LOCK: MONEY
+ WHAT IT REALLY IS
+They are pricing a PDF, not a diagnosis. Value framing is missing, not budget.
+ VOSS MOVE
+Calibrated question. Make them price the alternative.
+
+ SAY > “Fair. A price without knowing what's broken is how you overpay. Every agency you've talked to quoted you before diagnosing you. How'd that go?”
+ THEN > “You told me a closed job is worth $______. If the report finds even one leak, it pays for itself the first month, and you keep it whether you ever hire us or not.”
+ CLOSE > “Card now, or invoice today?”
+
+ 02 “I need to think about it” LOCK: HIDDEN
+ WHAT IT REALLY IS
+A polite exit. It is the curtain in front of one of the three locks.
+ VOSS MOVE
+Name the three reasons out loud; ask which is closest.
+
+ SAY > “Totally fine. In my experience ‘think about it’ is one of three things: the money, the timing, or whether this'll actually be different from the last thing you tried. Which one's closest?”
+ THEN > Whichever they pick, jump to that script. If “none,” take it at face value once and set a specific follow-up: “Thursday, 10am, I'll call you.” Never “sometime next week.”
+ CLOSE > “Is it a bad idea to at least know what's broken while you think about the bigger stuff?”
+
+ 03 “We tried an agency before. It didn't work.” LOCK: DIFFERENT
+ WHAT IT REALLY IS
+A scar, not a wall. Burned buyers buy proof.
+ VOSS MOVE
+Label the burn, then flip it into qualification.
+
+ SAY > “Good. You know what bad looks like.” Pause. “It sounds like they took a retainer before they could tell you what was actually broken.”
+ THEN > “That's why our first step is $750 and not $3,500 a month. If we're wrong about your business, you're out one report, not a contract.”
+ CLOSE > “What would you need to see in that report to know this time's different?” Then: “Card now, or invoice today?”
+
+ 04 “It's just you?” LOCK: DIFFERENT
+ WHAT IT REALLY IS
+A capacity worry wearing a headcount costume. And in V5 there is a second version: “aren't you busy with the podcast?”
+ VOSS MOVE
+Reframe headcount as output; answer the fear underneath.
+
+ SAY > “You get six-person output and one person who answers the phone. The fleet runs the pipeline, the editing bench runs production, a delivery producer runs your month, and I run your account.”
+ SHOW > If it's the show they're worried about: “The show is two mornings a week. It's also where I hear, every week, what's working for other owners in this town. You get that.”
+ CLOSE > “The Diagnostic will show you exactly how the machine works on your business. Card now, or invoice today?”
+
+ 05 “We can't afford it right now” LOCK: MONEY
+ WHAT IT REALLY IS
+Either a real budget wall (rare, and disqualifying) or an ROI question in a trench coat.
+ VOSS MOVE
+Label, then let their own consequence math answer.
+
+ SAY > “It seems like the budget's tight and another marketing bill is the last thing you want.” Wait for the “that's right.”
+ THEN > “That's the situation where guessing is most expensive. The Diagnostic is $750, once. It exists so the tight budget goes to the right fix instead of another swing in the dark.”
+ RULE > If it is genuinely a can't, disqualify with respect: “Then don't buy this. Fix the cash first; here's the one free thing I'd do in your spot.” That exit builds the referral network.
+
+ 06 “I need to talk to my wife / partner” LOCK: TIMING
+ WHAT IT REALLY IS
+Sometimes real governance, sometimes a soft exit. Never argue with the marriage.
+ VOSS MOVE
+No-oriented question + arm them for the second conversation.
+
+ SAY > “Of course. Would it be unfair to ask: if it were only your call, is this a yes?” If no, you found the real lock.
+ THEN > “Then let me make that conversation easy. I'll send the sample and a one-paragraph summary of what we found today. When are you two talking?”
+ CLOSE > Book the follow-up on the calendar before hanging up, same week.
+
+ 07 “We're slammed. Call me after the season” LOCK: TIMING
+ WHAT IT REALLY IS
+Busy-season logic that quietly costs them the slow season.
+ VOSS MOVE
+Calibrated question. Make the delay do the math.
+
+ SAY > “That's exactly why now. When the season ends, what fills the calendar?” Pause. “The businesses that eat in the slow months planted when they were busy.”
+ THEN > “The Diagnostic costs you 48 hours of my time, not yours. We diagnose while you work.”
+ CLOSE > “Is it a bad idea to have the plan ready before the phones slow down? Card now, or invoice today?”
+
+ // 03 · THE TWO · DOOR A, STEP ZERO
+ The invitation — before anyone is a guest
+
+ These come back as replies to Blue Beetle's sequence or in the pre-interview. Nothing is being sold, so there is no close. The only job is an honest answer.
+ They say What it really is The answer
+ “How many people actually watch this?” A fair question, and the one the invitation should have answered already. “Not many yet, and I won't pretend otherwise. What you get is the room, the footage, and your story told properly: a full episode, a trailer, and two shorts that are yours to post. The people who've sat in the chair are [names] .” Never inflate a number.
+ “Is this a sales pitch?” They have been invited onto a “podcast” before and got a webinar. “No. Nobody pays to be on, nothing is offered before or on the day, and your episode gets the same push whether or not we ever talk again. If you want to know what I do, ask me after it's live.” Then make sure it is true.
+ // 04 · THE FOUR · DOOR A
+ The debrief — the $2,500 cut
+
+ Short form lives in Part 3. Same locks, same standing order.
+ They say Lock Answer, then re-close
+ “I already have the clips.” MONEY “You do, and they are yours. Those are about my audience. This is 45 minutes of new footage about yours. Which is louder right now, customers or hiring?”
+ “$2,500 for social content?” MONEY “Fair. You told me one good tech is worth $______ a year. This is the video he watches before he applies. Card now, or invoice today?”
+ “My nephew / our social person can cut it.” DIFFERENT “Good. Send them the free kit today. The cut is the part they can't make: you on camera, in your shop, answering what your customers ask, shot and lit properly.”
+ “So the show was a sales funnel.” DIFFERENT “It would be if your episode depended on this call. It doesn't. It's live, it's promoted, and it stays that way. Most guests never buy anything. Would you rather I hadn't offered?”
+ // 05 · THE THREE · DOOR C
+ The enrollment call — The Next Stage
+
+ The buyer is an owner at $150K–$750K who has watched the show. The Buyer seat told us what they are comparing this to: a Chamber program, a $97 course, a peer group at $500–$1,000 a month, and free SBDC advising.
+ They say Lock Answer, then re-close
+ “Who are you to teach this?” DIFFERENT “I'm not the headline. Four owners who made the jump you're trying to make are teaching it; you've watched them. I teach the part I do for a living: getting the market to see you. Come meet them free on Nov 10 and decide after. ”
+ “Founding cohort means untested.” DIFFERENT “It does. That's why the seat is held with $250 that comes straight back if you change your mind, and why founding is $2,500 and the next one is $3,500. You're not paying less because it's worth less; you're paying less because you're helping me build it, and that's in writing.”
+ “I can get this free from the SBDC / a $97 course.” MONEY “You can get information free. What you can't get is ten owners at your size in a room for eight weeks with a deadline every Tuesday. When did a course last make you ship something?” Then: “Deposit today holds the seat.”
+ // 06 · AFTER THE ANSWER · MECHANICS
+ Re-close, log, or release
+
+ IF YES
+ Re-close clean
+ Back to the alternative close. Get the email, log the deal the second they say yes. Done when payment is taken or the invoice is sent.
+
+ IF STALLED
+ One more lock
+ Two objections is a conversation; three is a pattern. On the third, name it: “I'm getting the sense this is a no wearing a maybe. It's fine if it is. Which is it?”
+
+ IF NO
+ Release warm
+ No chasing. A guest who says no stays a guest: same edit, same promotion. Log the objection word for word; that language is next quarter's ad copy.
+
+ churlish@hq :~ $ post_call --objection logged --language verbatim
+ > objection addressed · close re-attempted · outcome logged DONE
+
+ Churlish Media · OS Sales Script Pt 2 · Objection Handling CHURLISHMEDIA.COM · 402-819-8168
+
+ FIND THE LOCK. NEVER THE DISCOUNT. CHURLISHMEDIA.COM

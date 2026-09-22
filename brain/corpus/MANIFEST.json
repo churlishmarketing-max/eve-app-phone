@@ -1,0 +1,1498 @@
+{
+  "generatedAt": "2026-09-21T22:09:17.013Z",
+  "generator": "scripts/sync-corpus.mjs",
+  "source": "C:\\dev\\eve-corpus\\brain\\corpus",
+  "set": "Churlish OS v5 — Sept 21 2026 High Level Pros pivot",
+  "maxReadChars": 8000,
+  "indexLine": "His OS v5 documents (Sept 21), on the shelf — look up, never recall: corpus_read a §, corpus_search a passage. Cite the document + §; if they don't cover it, say so. Ad Templates · Book of SOPs V5 (35 procedures, A1–E10) · Company Handbook V5 · Contract + Invoice Templates · Council Minutes — The Gate (the Sept 21 verdicts) · Debrief Call Script (post-episode) · Diagnostic Call Script · HLP Guest Invitation Kit · Guest Package One-Pager (the $2,500 cut) · Master Plan V5 · Objection Handling · Offer Ladder + Pricing · Positioning Document · Q4 Cutover Plan (the quarter) · HLP Show Bible · HLP Site Build Spec · START HERE (read first).",
+  "indexChars": 641,
+  "docs": [
+    {
+      "key": "ad-templates",
+      "title": "Ad Templates",
+      "aliases": [
+        "ad templates",
+        "the ad templates",
+        "ads"
+      ],
+      "short": "",
+      "purpose": "What ads are for in v5, the six-beat DNA, script templates by length, show templates, the hook library, the CTA law, and the scoreboard a finished ad answers to.",
+      "file": "ad-templates.txt",
+      "sourceName": "Churlish_Ad_Templates_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 10488,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 857,
+          "chars": 857
+        },
+        {
+          "ref": "00",
+          "heading": "WHAT ADS ARE FOR NOW · V5 · CHURLISH'S OWN SPEND",
+          "start": 857,
+          "end": 2119,
+          "chars": 1262
+        },
+        {
+          "ref": "01",
+          "heading": "THE DNA · SIX BEATS, FIXED ORDER",
+          "start": 2119,
+          "end": 2731,
+          "chars": 612
+        },
+        {
+          "ref": "02",
+          "heading": "SCRIPT TEMPLATES · BY LENGTH",
+          "start": 2731,
+          "end": 4315,
+          "chars": 1584
+        },
+        {
+          "ref": "03",
+          "heading": "SHOW TEMPLATES · NEW",
+          "start": 4315,
+          "end": 6326,
+          "chars": 2011
+        },
+        {
+          "ref": "04",
+          "heading": "THE HOOK LIBRARY · 8 FORMULAS",
+          "start": 6326,
+          "end": 8049,
+          "chars": 1723
+        },
+        {
+          "ref": "05",
+          "heading": "CTA LAW · ENFORCED ON EVERY AD, EVERY CLIENT, NO EXCEPTIONS",
+          "start": 8049,
+          "end": 9631,
+          "chars": 1582
+        },
+        {
+          "ref": "06",
+          "heading": "THE SCOREBOARD · WHAT THE FINISHED AD ANSWERS TO",
+          "start": 9631,
+          "end": 10488,
+          "chars": 857
+        }
+      ]
+    },
+    {
+      "key": "book-of-sops",
+      "title": "Book of SOPs V5",
+      "aliases": [
+        "sops",
+        "book of sops",
+        "the sops",
+        "sop"
+      ],
+      "short": "35 procedures, A1–E10",
+      "purpose": "The 35 standing procedures in five parts (sales, product delivery, retainer delivery, operations, the show), each with its owner, when it fires, its tools, and its done-when.",
+      "file": "book-of-sops.txt",
+      "sourceName": "Churlish_Media_Book_of_SOPs_v5.txt",
+      "sectioning": "sops",
+      "chars": 32165,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 2461,
+          "chars": 2461
+        },
+        {
+          "ref": "A1",
+          "heading": "Guest & lead research KID FLASH · AGENT",
+          "group": "Part A · SALES & PIPELINE · TWO DOORS: THE CHAIR AND THE DIAGNOSTIC",
+          "start": 2461,
+          "end": 3720,
+          "chars": 1259
+        },
+        {
+          "ref": "A2",
+          "heading": "The invitation sequence BLUE BEETLE · AGENT",
+          "group": "Part A · SALES & PIPELINE · TWO DOORS: THE CHAIR AND THE DIAGNOSTIC",
+          "start": 3720,
+          "end": 4918,
+          "chars": 1198
+        },
+        {
+          "ref": "A3",
+          "heading": "The Diagnostic sales call BRANDON",
+          "group": "Part A · SALES & PIPELINE · TWO DOORS: THE CHAIR AND THE DIAGNOSTIC",
+          "start": 4918,
+          "end": 5891,
+          "chars": 973
+        },
+        {
+          "ref": "A4",
+          "heading": "Objection handling BRANDON",
+          "group": "Part A · SALES & PIPELINE · TWO DOORS: THE CHAIR AND THE DIAGNOSTIC",
+          "start": 5891,
+          "end": 6716,
+          "chars": 825
+        },
+        {
+          "ref": "A5",
+          "heading": "Proposal & close BRANDON",
+          "group": "Part A · SALES & PIPELINE · TWO DOORS: THE CHAIR AND THE DIAGNOSTIC",
+          "start": 6716,
+          "end": 7696,
+          "chars": 980
+        },
+        {
+          "ref": "A6",
+          "heading": "Pipeline management BRANDON · WATCHTOWER ASSISTS",
+          "group": "Part A · SALES & PIPELINE · TWO DOORS: THE CHAIR AND THE DIAGNOSTIC",
+          "start": 7696,
+          "end": 8483,
+          "chars": 787
+        },
+        {
+          "ref": "A7",
+          "heading": "The debrief call NEW BRANDON",
+          "group": "Part A · SALES & PIPELINE · TWO DOORS: THE CHAIR AND THE DIAGNOSTIC",
+          "start": 8483,
+          "end": 9561,
+          "chars": 1078
+        },
+        {
+          "ref": "B1",
+          "heading": "Authority Diagnostic delivery BRANDON + AGENTS FOR PULLS",
+          "group": "Part B · PRODUCT DELIVERY · FIXED SCOPE, FAST DELIVERY",
+          "start": 9561,
+          "end": 10277,
+          "chars": 716
+        },
+        {
+          "ref": "B2",
+          "heading": "Ad Creative Tournament delivery BRANDON + RED ROBIN",
+          "group": "Part B · PRODUCT DELIVERY · FIXED SCOPE, FAST DELIVERY",
+          "start": 10277,
+          "end": 11015,
+          "chars": 738
+        },
+        {
+          "ref": "B3",
+          "heading": "48-Hour Tool Sprint delivery BRANDON",
+          "group": "Part B · PRODUCT DELIVERY · FIXED SCOPE, FAST DELIVERY",
+          "start": 11015,
+          "end": 11617,
+          "chars": 602
+        },
+        {
+          "ref": "B4",
+          "heading": "Guest Authority Package delivery NEW DELIVERY PRODUCER · BRANDON SHOOTS UNTIL THE SEAT IS FILLED",
+          "group": "Part B · PRODUCT DELIVERY · FIXED SCOPE, FAST DELIVERY",
+          "start": 11617,
+          "end": 12929,
+          "chars": 1312
+        },
+        {
+          "ref": "B5",
+          "heading": "Authority Launchpad delivery NEW BRANDON + DELIVERY PRODUCER",
+          "group": "Part B · PRODUCT DELIVERY · FIXED SCOPE, FAST DELIVERY",
+          "start": 12929,
+          "end": 13892,
+          "chars": 963
+        },
+        {
+          "ref": "C1",
+          "heading": "Client onboarding BRANDON",
+          "group": "Part C · RETAINER DELIVERY · THE BASE PAYS FOR THE PIVOT. PROTECT IT",
+          "start": 13892,
+          "end": 14628,
+          "chars": 736
+        },
+        {
+          "ref": "C2",
+          "heading": "Shoot day / production BRANDON → DELIVERY PRODUCER",
+          "group": "Part C · RETAINER DELIVERY · THE BASE PAYS FOR THE PIVOT. PROTECT IT",
+          "start": 14628,
+          "end": 15231,
+          "chars": 603
+        },
+        {
+          "ref": "C3",
+          "heading": "Content production & editing RED ROBIN / ALFRED / CRF + EDITORS",
+          "group": "Part C · RETAINER DELIVERY · THE BASE PAYS FOR THE PIVOT. PROTECT IT",
+          "start": 15231,
+          "end": 15929,
+          "chars": 698
+        },
+        {
+          "ref": "C4",
+          "heading": "Ad management & reporting BRANDON · CYBORG BUILDS",
+          "group": "Part C · RETAINER DELIVERY · THE BASE PAYS FOR THE PIVOT. PROTECT IT",
+          "start": 15929,
+          "end": 16554,
+          "chars": 625
+        },
+        {
+          "ref": "C5",
+          "heading": "Monthly client reporting DELIVERY PRODUCER · WATCHTOWER ASSISTS",
+          "group": "Part C · RETAINER DELIVERY · THE BASE PAYS FOR THE PIVOT. PROTECT IT",
+          "start": 16554,
+          "end": 17125,
+          "chars": 571
+        },
+        {
+          "ref": "C6",
+          "heading": "Renewal & expansion BRANDON · GUARDIAN BUILDS THE CASE",
+          "group": "Part C · RETAINER DELIVERY · THE BASE PAYS FOR THE PIVOT. PROTECT IT",
+          "start": 17125,
+          "end": 18007,
+          "chars": 882
+        },
+        {
+          "ref": "D1",
+          "heading": "The agent fleet daily loop EVE · ORCHESTRATION",
+          "group": "Part D · OPERATIONS & STANDARDS · WHAT KEEPS IT HONEST",
+          "start": 18007,
+          "end": 18724,
+          "chars": 717
+        },
+        {
+          "ref": "D2",
+          "heading": "Watchtower fleet health check WATCHTOWER · AGENT",
+          "group": "Part D · OPERATIONS & STANDARDS · WHAT KEEPS IT HONEST",
+          "start": 18724,
+          "end": 19251,
+          "chars": 527
+        },
+        {
+          "ref": "D3",
+          "heading": "Weekly founder cadence (Friday Five, V5) BRANDON",
+          "group": "Part D · OPERATIONS & STANDARDS · WHAT KEEPS IT HONEST",
+          "start": 19251,
+          "end": 19961,
+          "chars": 710
+        },
+        {
+          "ref": "D4",
+          "heading": "Brand & voice QA BRANDON / WATCHTOWER",
+          "group": "Part D · OPERATIONS & STANDARDS · WHAT KEEPS IT HONEST",
+          "start": 19961,
+          "end": 20701,
+          "chars": 740
+        },
+        {
+          "ref": "D5",
+          "heading": "The wall audit NEW WATCHTOWER · BRANDON SIGNS",
+          "group": "Part D · OPERATIONS & STANDARDS · WHAT KEEPS IT HONEST",
+          "start": 20701,
+          "end": 21531,
+          "chars": 830
+        },
+        {
+          "ref": "D6",
+          "heading": "The parking ledger & the 24-recording lock NEW BRANDON · EVE KEEPS THE LEDGER",
+          "group": "Part D · OPERATIONS & STANDARDS · WHAT KEEPS IT HONEST",
+          "start": 21531,
+          "end": 22293,
+          "chars": 762
+        },
+        {
+          "ref": "D7",
+          "heading": "The two seats NEW BRANDON HIRES · EVE DRAFTS THE ADS",
+          "group": "Part D · OPERATIONS & STANDARDS · WHAT KEEPS IT HONEST",
+          "start": 22293,
+          "end": 23581,
+          "chars": 1288
+        },
+        {
+          "ref": "E1",
+          "heading": "The pre-interview NEW BRANDON → GUEST COORDINATOR BOOKS",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 23581,
+          "end": 24377,
+          "chars": 796
+        },
+        {
+          "ref": "E2",
+          "heading": "Guest logistics & the no-show policy NEW GUEST COORDINATOR",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 24377,
+          "end": 25201,
+          "chars": 824
+        },
+        {
+          "ref": "E3",
+          "heading": "Recording day NEW BRANDON",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 25201,
+          "end": 26010,
+          "chars": 809
+        },
+        {
+          "ref": "E4",
+          "heading": "The publish kit NEW LOIS LANE STAGES · EDITORS CUT · BRANDON APPROVES",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 26010,
+          "end": 27035,
+          "chars": 1025
+        },
+        {
+          "ref": "E5",
+          "heading": "The share kit & the three notes NEW GUEST COORDINATOR SENDS · BRANDON SIGNS",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 27035,
+          "end": 27819,
+          "chars": 784
+        },
+        {
+          "ref": "E6",
+          "heading": "Email capture & the weekly email NEW STARFIRE · PERRY WHITE WRITES",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 27819,
+          "end": 28612,
+          "chars": 793
+        },
+        {
+          "ref": "E7",
+          "heading": "Cohort enrollment NEW BRANDON",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 28612,
+          "end": 29409,
+          "chars": 797
+        },
+        {
+          "ref": "E8",
+          "heading": "Cohort delivery NEW BRANDON + FOUR GUEST INSTRUCTORS",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 29409,
+          "end": 30130,
+          "chars": 721
+        },
+        {
+          "ref": "E9",
+          "heading": "Clip amplification NEW CYBORG BUILDS · AD-DIAGNOSTIC JUDGES",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 30130,
+          "end": 30835,
+          "chars": 705
+        },
+        {
+          "ref": "E10",
+          "heading": "The sponsor lane NEW PARKED",
+          "group": "Part E · THE SHOW · NEW IN V5",
+          "start": 30835,
+          "end": 32165,
+          "chars": 1330
+        }
+      ]
+    },
+    {
+      "key": "company-handbook",
+      "title": "Company Handbook V5",
+      "aliases": [
+        "handbook",
+        "company handbook",
+        "the handbook"
+      ],
+      "short": "",
+      "purpose": "The operating handbook — the method, the front door, structure, brands, the offer sheet, sales, the show, the machine, people, the scoreboard, the lock, and 2027–2030.",
+      "file": "company-handbook.txt",
+      "sourceName": "Churlish_Media_Company_Handbook_v5.txt",
+      "sectioning": "numbered",
+      "chars": 26733,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 704,
+          "chars": 704
+        },
+        {
+          "ref": "01",
+          "heading": "THE BASICS · READ THIS FIRST",
+          "start": 704,
+          "end": 2449,
+          "chars": 1745
+        },
+        {
+          "ref": "02",
+          "heading": "THE METHOD",
+          "start": 2449,
+          "end": 3452,
+          "chars": 1003
+        },
+        {
+          "ref": "03",
+          "heading": "THE FRONT DOOR",
+          "start": 3452,
+          "end": 5600,
+          "chars": 2148
+        },
+        {
+          "ref": "04",
+          "heading": "STRUCTURE",
+          "start": 5600,
+          "end": 6581,
+          "chars": 981
+        },
+        {
+          "ref": "05",
+          "heading": "THE BRANDS",
+          "start": 6581,
+          "end": 7687,
+          "chars": 1106
+        },
+        {
+          "ref": "06",
+          "heading": "OFFER SHEET",
+          "start": 7687,
+          "end": 13494,
+          "chars": 5807
+        },
+        {
+          "ref": "07",
+          "heading": "SALES",
+          "start": 13494,
+          "end": 14738,
+          "chars": 1244
+        },
+        {
+          "ref": "08",
+          "heading": "THE SHOW",
+          "start": 14738,
+          "end": 16523,
+          "chars": 1785
+        },
+        {
+          "ref": "09",
+          "heading": "THE MACHINE",
+          "start": 16523,
+          "end": 18096,
+          "chars": 1573
+        },
+        {
+          "ref": "10",
+          "heading": "PEOPLE",
+          "start": 18096,
+          "end": 19630,
+          "chars": 1534
+        },
+        {
+          "ref": "11",
+          "heading": "THE SCOREBOARD",
+          "start": 19630,
+          "end": 20840,
+          "chars": 1210
+        },
+        {
+          "ref": "12",
+          "heading": "2026",
+          "start": 20840,
+          "end": 23286,
+          "chars": 2446
+        },
+        {
+          "ref": "13",
+          "heading": "THE LOCK",
+          "start": 23286,
+          "end": 25219,
+          "chars": 1933
+        },
+        {
+          "ref": "14",
+          "heading": "2027–2030",
+          "start": 25219,
+          "end": 25818,
+          "chars": 599
+        },
+        {
+          "ref": "15",
+          "heading": "YOUR START",
+          "start": 25818,
+          "end": 26733,
+          "chars": 915
+        }
+      ]
+    },
+    {
+      "key": "contract-invoice-templates",
+      "title": "Contract + Invoice Templates",
+      "aliases": [
+        "contracts",
+        "contract templates",
+        "invoice templates",
+        "contract and invoice templates",
+        "the contracts"
+      ],
+      "short": "",
+      "purpose": "The paperwork shells — proposal, invoice, the 12-section service agreement, the guest release and on-air disclosure, the guest package agreement, the case-study addendum, and cohort enrollment terms.",
+      "file": "contract-invoice-templates.txt",
+      "sourceName": "Churlish_Contract_Invoice_Templates_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 12899,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 933,
+          "chars": 933
+        },
+        {
+          "ref": "00",
+          "heading": "WHAT CHANGED · V3",
+          "start": 933,
+          "end": 2092,
+          "chars": 1159
+        },
+        {
+          "ref": "01",
+          "heading": "THE PROPOSAL SHELL · PAGE ONE OF THE HONEYBOOK FLOW",
+          "start": 2092,
+          "end": 4444,
+          "chars": 2352
+        },
+        {
+          "ref": "02",
+          "heading": "THE INVOICE TEMPLATE · ONE LINE ITEM PER OFFER",
+          "start": 4444,
+          "end": 5608,
+          "chars": 1164
+        },
+        {
+          "ref": "03",
+          "heading": "THE SERVICE AGREEMENT · 12 SECTIONS · GOVERNS EVERY RETAINER",
+          "start": 5608,
+          "end": 7814,
+          "chars": 2206
+        },
+        {
+          "ref": "04",
+          "heading": "GUEST RELEASE + ON-AIR DISCLOSURE · NEW · BLOCKS EVERYTHING ELSE",
+          "start": 7814,
+          "end": 9451,
+          "chars": 1637
+        },
+        {
+          "ref": "05",
+          "heading": "GUEST PACKAGE AGREEMENT · NEW",
+          "start": 9451,
+          "end": 10490,
+          "chars": 1039
+        },
+        {
+          "ref": "06",
+          "heading": "CASE-STUDY EXCHANGE ADDENDUM · NEW · THE ONLY LEGAL WAY A PRICE MOVES",
+          "start": 10490,
+          "end": 11277,
+          "chars": 787
+        },
+        {
+          "ref": "07",
+          "heading": "THE NEXT STAGE · ENROLLMENT TERMS · NEW",
+          "start": 11277,
+          "end": 12899,
+          "chars": 1622
+        }
+      ]
+    },
+    {
+      "key": "council-minutes",
+      "title": "Council Minutes — The Gate",
+      "aliases": [
+        "council minutes",
+        "the gate",
+        "the minutes",
+        "minutes"
+      ],
+      "short": "the Sept 21 verdicts",
+      "purpose": "The Sept 21 gate record — the result, the Justice League session, the Suicide Squad moves, the JSA tribunal and fast passes, the YouTube Council, and what went on the register.",
+      "file": "council-minutes.txt",
+      "sourceName": "Churlish_Council_Minutes_The_Gate_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 35484,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 1239,
+          "chars": 1239
+        },
+        {
+          "ref": "01",
+          "heading": "GATE RESULT",
+          "start": 1239,
+          "end": 5190,
+          "chars": 3951
+        },
+        {
+          "ref": "02",
+          "heading": "JUSTICE LEAGUE — FULL SESSION",
+          "start": 5190,
+          "end": 14809,
+          "chars": 9619
+        },
+        {
+          "ref": "03",
+          "heading": "SUICIDE SQUAD — MOVES 1 TO 3",
+          "start": 14809,
+          "end": 20012,
+          "chars": 5203
+        },
+        {
+          "ref": "04",
+          "heading": "SQUAD MOVE 4 — THE JSA TRIBUNAL",
+          "start": 20012,
+          "end": 26944,
+          "chars": 6932
+        },
+        {
+          "ref": "05",
+          "heading": "JSA FAST PASS × 2 — THE BUYER SEATED",
+          "start": 26944,
+          "end": 31099,
+          "chars": 4155
+        },
+        {
+          "ref": "06",
+          "heading": "YOUTUBE COUNCIL",
+          "start": 31099,
+          "end": 33900,
+          "chars": 2801
+        },
+        {
+          "ref": "07",
+          "heading": "FOR THE REGISTER",
+          "start": 33900,
+          "end": 35484,
+          "chars": 1584
+        }
+      ]
+    },
+    {
+      "key": "debrief-call-script",
+      "title": "Debrief Call Script",
+      "aliases": [
+        "debrief script",
+        "debrief call script",
+        "the debrief call",
+        "debrief"
+      ],
+      "short": "post-episode",
+      "purpose": "The call after a guest's episode is live — the frame, the runway, the six-step spine, the three cuts being sold, the four objections, and the handoff.",
+      "file": "debrief-call-script.txt",
+      "sourceName": "Churlish_Debrief_Call_Script_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 12001,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 862,
+          "chars": 862
+        },
+        {
+          "ref": "01",
+          "heading": "THE FRAME · BEFORE YOU DIAL",
+          "start": 862,
+          "end": 1987,
+          "chars": 1125
+        },
+        {
+          "ref": "02",
+          "heading": "BEFORE THE CALL · THE RUNWAY",
+          "start": 1987,
+          "end": 3990,
+          "chars": 2003
+        },
+        {
+          "ref": "03",
+          "heading": "THE SPINE · SIX STEPS, IN ORDER",
+          "start": 3990,
+          "end": 8399,
+          "chars": 4409
+        },
+        {
+          "ref": "04",
+          "heading": "THE THREE CUTS · WHAT YOU ARE SELLING",
+          "start": 8399,
+          "end": 9569,
+          "chars": 1170
+        },
+        {
+          "ref": "05",
+          "heading": "THE FOUR YOU WILL HEAR · MONEY · TIMING · WILL IT BE DIFFERENT",
+          "start": 9569,
+          "end": 10987,
+          "chars": 1418
+        },
+        {
+          "ref": "06",
+          "heading": "AFTER THE CUT · THE HANDOFF",
+          "start": 10987,
+          "end": 12001,
+          "chars": 1014
+        }
+      ]
+    },
+    {
+      "key": "diagnostic-call-script",
+      "title": "Diagnostic Call Script",
+      "aliases": [
+        "diagnostic script",
+        "diagnostic call script",
+        "the diagnostic call",
+        "diagnostic"
+      ],
+      "short": "",
+      "purpose": "The Diagnostic sales call — where it sits in v5, the frame before dialling, the six-step spine, and the toolbelt.",
+      "file": "diagnostic-call-script.txt",
+      "sourceName": "Churlish_Diagnostic_Call_Script_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 8299,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 843,
+          "chars": 843
+        },
+        {
+          "ref": "00",
+          "heading": "WHERE THIS CALL LIVES NOW · V5",
+          "start": 843,
+          "end": 1619,
+          "chars": 776
+        },
+        {
+          "ref": "01",
+          "heading": "THE FRAME · BEFORE YOU DIAL",
+          "start": 1619,
+          "end": 2472,
+          "chars": 853
+        },
+        {
+          "ref": "02",
+          "heading": "THE SPINE · SIX STEPS, IN ORDER",
+          "start": 2472,
+          "end": 6843,
+          "chars": 4371
+        },
+        {
+          "ref": "03",
+          "heading": "THE TOOLBELT · ON ONE PAGE",
+          "start": 6843,
+          "end": 8299,
+          "chars": 1456
+        }
+      ]
+    },
+    {
+      "key": "guest-invitation-kit",
+      "title": "HLP Guest Invitation Kit",
+      "aliases": [
+        "invitation kit",
+        "guest invitation kit",
+        "the invitation kit",
+        "invitation sequence"
+      ],
+      "short": "",
+      "purpose": "Everything between a name on a list and a recorded episode — the rule of the thread, subject lines, the three touches, the replies, the pre-interview, logistics, recording day, and the tracker.",
+      "file": "guest-invitation-kit.txt",
+      "sourceName": "Churlish_HLP_Guest_Invitation_Kit_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 16875,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 819,
+          "chars": 819
+        },
+        {
+          "ref": "01",
+          "heading": "THE RULE OF THE THREAD · BEFORE ANYTHING SENDS",
+          "start": 819,
+          "end": 2069,
+          "chars": 1250
+        },
+        {
+          "ref": "02",
+          "heading": "THE SUBJECT-LINE TOURNAMENT",
+          "start": 2069,
+          "end": 2945,
+          "chars": 876
+        },
+        {
+          "ref": "03",
+          "heading": "THE THREE TOUCHES",
+          "start": 2945,
+          "end": 6593,
+          "chars": 3648
+        },
+        {
+          "ref": "04",
+          "heading": "THE REPLIES",
+          "start": 6593,
+          "end": 8466,
+          "chars": 1873
+        },
+        {
+          "ref": "05",
+          "heading": "THE PRE-INTERVIEW",
+          "start": 8466,
+          "end": 9977,
+          "chars": 1511
+        },
+        {
+          "ref": "06",
+          "heading": "LOGISTICS NOTES",
+          "start": 9977,
+          "end": 12351,
+          "chars": 2374
+        },
+        {
+          "ref": "07",
+          "heading": "RECORDING DAY",
+          "start": 12351,
+          "end": 13723,
+          "chars": 1372
+        },
+        {
+          "ref": "08",
+          "heading": "THE DAY-AFTER SURVEY",
+          "start": 13723,
+          "end": 14372,
+          "chars": 649
+        },
+        {
+          "ref": "09",
+          "heading": "THE BASE HEARS IT FIRST",
+          "start": 14372,
+          "end": 15614,
+          "chars": 1242
+        },
+        {
+          "ref": "10",
+          "heading": "THE TRACKER",
+          "start": 15614,
+          "end": 16875,
+          "chars": 1261
+        }
+      ]
+    },
+    {
+      "key": "guest-package-one-pager",
+      "title": "Guest Package One-Pager",
+      "aliases": [
+        "guest package",
+        "one-pager",
+        "guest package one-pager",
+        "the package"
+      ],
+      "short": "the $2,500 cut",
+      "purpose": "The guest-facing page for the paid package — pick the louder problem, what you get, how it goes, and the price.",
+      "file": "guest-package-one-pager.txt",
+      "sourceName": "Churlish_Guest_Package_One-Pager_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 3276,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 589,
+          "chars": 589
+        },
+        {
+          "ref": "01",
+          "heading": "PICK THE LOUDER PROBLEM",
+          "start": 589,
+          "end": 1317,
+          "chars": 728
+        },
+        {
+          "ref": "02",
+          "heading": "WHAT YOU GET",
+          "start": 1317,
+          "end": 1945,
+          "chars": 628
+        },
+        {
+          "ref": "03",
+          "heading": "HOW IT GOES",
+          "start": 1945,
+          "end": 2290,
+          "chars": 345
+        },
+        {
+          "ref": "04",
+          "heading": "THE PRICE",
+          "start": 2290,
+          "end": 3276,
+          "chars": 986
+        }
+      ]
+    },
+    {
+      "key": "master-plan",
+      "title": "Master Plan V5",
+      "aliases": [
+        "master plan",
+        "master plan v5",
+        "the plan",
+        "the master plan"
+      ],
+      "short": "",
+      "purpose": "The company plan through 2030 — thesis, model, pricing, the ladder from stranger to $30K account, revenue, KPIs, ranked gaps, the Sept 21 → Dec 18 roadmap, and the RED-tier approval sheet.",
+      "file": "master-plan.txt",
+      "sourceName": "Churlish_Media_Master_Plan_2026-2030_v5.txt",
+      "sectioning": "numbered",
+      "chars": 26995,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 902,
+          "chars": 902
+        },
+        {
+          "ref": "00",
+          "heading": "WHAT CHANGED · FROM THE JUNE 12 PLAN",
+          "start": 902,
+          "end": 1766,
+          "chars": 864
+        },
+        {
+          "ref": "01",
+          "heading": "THESIS · THE WHOLE GAME",
+          "start": 1766,
+          "end": 2762,
+          "chars": 996
+        },
+        {
+          "ref": "02",
+          "heading": "MODEL · ONE SHOW · TWO FUNNELS · THREE LANES",
+          "start": 2762,
+          "end": 5558,
+          "chars": 2796
+        },
+        {
+          "ref": "03",
+          "heading": "PRICING · TWO NEW RUNGS INSTALLED",
+          "start": 5558,
+          "end": 7288,
+          "chars": 1730
+        },
+        {
+          "ref": "04",
+          "heading": "LADDER · HOW A STRANGER BECOMES A $30K ACCOUNT",
+          "start": 7288,
+          "end": 8806,
+          "chars": 1518
+        },
+        {
+          "ref": "05",
+          "heading": "REVENUE · COLLECTED, NOT BOOKED",
+          "start": 8806,
+          "end": 10960,
+          "chars": 2154
+        },
+        {
+          "ref": "06",
+          "heading": "KPIS · ONE SCOREBOARD, EVERY FRIDAY",
+          "start": 10960,
+          "end": 13713,
+          "chars": 2753
+        },
+        {
+          "ref": "07",
+          "heading": "GAPS · RANKED BY MONEY",
+          "start": 13713,
+          "end": 15989,
+          "chars": 2276
+        },
+        {
+          "ref": "08",
+          "heading": "ROADMAP · SEPT 21 → DEC 18 → $1M",
+          "start": 15989,
+          "end": 18546,
+          "chars": 2557
+        },
+        {
+          "ref": "09",
+          "heading": "ENDGAME · DECEMBER 31, 2030",
+          "start": 18546,
+          "end": 18919,
+          "chars": 373
+        },
+        {
+          "ref": "10",
+          "heading": "NOTES · THE QUESTIONS SOMEONE WILL ASK",
+          "start": 18919,
+          "end": 20536,
+          "chars": 1617
+        },
+        {
+          "ref": "11",
+          "heading": "OFFER SHEET · ONE PLACE",
+          "start": 20536,
+          "end": 25194,
+          "chars": 4658
+        },
+        {
+          "ref": "12",
+          "heading": "APPROVAL SHEET · RED TIER",
+          "start": 25194,
+          "end": 26995,
+          "chars": 1801
+        }
+      ]
+    },
+    {
+      "key": "objection-handling",
+      "title": "Objection Handling",
+      "aliases": [
+        "objection handling",
+        "objections",
+        "the objections"
+      ],
+      "short": "",
+      "purpose": "The doctrine and the scripted answers — seven for the Diagnostic, two for the invitation, four for the debrief, three for the cohort, and the mechanics after the answer.",
+      "file": "objection-handling.txt",
+      "sourceName": "Churlish_Objection_Handling_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 10426,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 860,
+          "chars": 860
+        },
+        {
+          "ref": "01",
+          "heading": "THE DOCTRINE · BEFORE ANY ANSWER",
+          "start": 860,
+          "end": 1932,
+          "chars": 1072
+        },
+        {
+          "ref": "02",
+          "heading": "THE SEVEN · DOOR B",
+          "start": 1932,
+          "end": 6439,
+          "chars": 4507
+        },
+        {
+          "ref": "03",
+          "heading": "THE TWO · DOOR A, STEP ZERO",
+          "start": 6439,
+          "end": 7400,
+          "chars": 961
+        },
+        {
+          "ref": "04",
+          "heading": "THE FOUR · DOOR A",
+          "start": 7400,
+          "end": 8360,
+          "chars": 960
+        },
+        {
+          "ref": "05",
+          "heading": "THE THREE · DOOR C",
+          "start": 8360,
+          "end": 9553,
+          "chars": 1193
+        },
+        {
+          "ref": "06",
+          "heading": "AFTER THE ANSWER · MECHANICS",
+          "start": 9553,
+          "end": 10426,
+          "chars": 873
+        }
+      ]
+    },
+    {
+      "key": "offer-ladder",
+      "title": "Offer Ladder + Pricing",
+      "aliases": [
+        "offer ladder",
+        "the ladder",
+        "pricing",
+        "offer sheet"
+      ],
+      "short": "",
+      "purpose": "The offer ladder and price sheet by pillar — how a stranger becomes a $30K account, what each rung costs, and the non-negotiable pricing rules.",
+      "file": "offer-ladder.txt",
+      "sourceName": "Churlish_Offer_Ladder_Pricing_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 9172,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 840,
+          "chars": 840
+        },
+        {
+          "ref": "00",
+          "heading": "WHAT CHANGED · V5",
+          "start": 840,
+          "end": 1398,
+          "chars": 558
+        },
+        {
+          "ref": "01",
+          "heading": "THE LADDER · HOW A STRANGER BECOMES A $30K ACCOUNT",
+          "start": 1398,
+          "end": 3058,
+          "chars": 1660
+        },
+        {
+          "ref": "02",
+          "heading": "THE SHEET · BY PILLAR",
+          "start": 3058,
+          "end": 7764,
+          "chars": 4706
+        },
+        {
+          "ref": "03",
+          "heading": "STANDING RULES · THE NON-NEGOTIABLES",
+          "start": 7764,
+          "end": 9172,
+          "chars": 1408
+        }
+      ]
+    },
+    {
+      "key": "positioning",
+      "title": "Positioning Document",
+      "aliases": [
+        "positioning",
+        "the positioning doc",
+        "positioning document"
+      ],
+      "short": "",
+      "purpose": "Who Churlish is for and who it is not, the enemy it names, the method claim it can defend, the message hierarchy, and the voice.",
+      "file": "positioning.txt",
+      "sourceName": "Churlish_Positioning_Document_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 8986,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 841,
+          "chars": 841
+        },
+        {
+          "ref": "01",
+          "heading": "THE ONE-LINER · UNCHANGED",
+          "start": 841,
+          "end": 2287,
+          "chars": 1446
+        },
+        {
+          "ref": "02",
+          "heading": "WHO IT IS FOR · AND WHO IT IS NOT",
+          "start": 2287,
+          "end": 4021,
+          "chars": 1734
+        },
+        {
+          "ref": "03",
+          "heading": "THE ENEMY · POSITIONING IS A FIGHT. NAME THE OPPONENT",
+          "start": 4021,
+          "end": 5490,
+          "chars": 1469
+        },
+        {
+          "ref": "04",
+          "heading": "THE METHOD · THE CLAIM WE CAN DEFEND",
+          "start": 5490,
+          "end": 6552,
+          "chars": 1062
+        },
+        {
+          "ref": "05",
+          "heading": "MESSAGE HIERARCHY · WHAT WE SAY, IN ORDER",
+          "start": 6552,
+          "end": 7660,
+          "chars": 1108
+        },
+        {
+          "ref": "06",
+          "heading": "THE VOICE · THE POSITIONING, PRONOUNCED",
+          "start": 7660,
+          "end": 8986,
+          "chars": 1326
+        }
+      ]
+    },
+    {
+      "key": "q4-cutover-plan",
+      "title": "Q4 Cutover Plan",
+      "aliases": [
+        "q4 cutover",
+        "cutover plan",
+        "q4 plan",
+        "the cutover"
+      ],
+      "short": "the quarter",
+      "purpose": "The quarter, week by week — the collected-cash number, the twelve-week clock, the weekly floor, the gate's conditions, and how status is reported.",
+      "file": "q4-cutover-plan.txt",
+      "sourceName": "Churlish_Q4_Cutover_Plan_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 9577,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 872,
+          "chars": 872
+        },
+        {
+          "ref": "01",
+          "heading": "THE NUMBER · COLLECTED, NOT BOOKED",
+          "start": 872,
+          "end": 2156,
+          "chars": 1284
+        },
+        {
+          "ref": "02",
+          "heading": "THE CLOCK · TWELVE WORKING WEEKS",
+          "start": 2156,
+          "end": 5586,
+          "chars": 3430
+        },
+        {
+          "ref": "03",
+          "heading": "THE FLOOR · WHAT PRODUCES THE STACK, WEEKLY",
+          "start": 5586,
+          "end": 8353,
+          "chars": 2767
+        },
+        {
+          "ref": "04",
+          "heading": "THE CONDITIONS · PURSUE WITH CONDITIONS",
+          "start": 8353,
+          "end": 8938,
+          "chars": 585
+        },
+        {
+          "ref": "05",
+          "heading": "THE POINT · STATUS",
+          "start": 8938,
+          "end": 9577,
+          "chars": 639
+        }
+      ]
+    },
+    {
+      "key": "show-bible",
+      "title": "HLP Show Bible",
+      "aliases": [
+        "show bible",
+        "the show bible",
+        "hlp show bible",
+        "bible"
+      ],
+      "short": "",
+      "purpose": "The show's source of truth — premise, the two audiences, the messaging system, the format, how a guest gets on, the guest matrix and mix rules, the question bank, the master video list, and the Q4 slate.",
+      "file": "show-bible.txt",
+      "sourceName": "Churlish_HLP_Show_Bible_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 37307,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 1025,
+          "chars": 1025
+        },
+        {
+          "ref": "01",
+          "heading": "THE PREMISE",
+          "start": 1025,
+          "end": 3200,
+          "chars": 2175
+        },
+        {
+          "ref": "02",
+          "heading": "TWO AUDIENCES",
+          "start": 3200,
+          "end": 4558,
+          "chars": 1358
+        },
+        {
+          "ref": "03",
+          "heading": "THE MESSAGING SYSTEM",
+          "start": 4558,
+          "end": 7353,
+          "chars": 2795
+        },
+        {
+          "ref": "04",
+          "heading": "THE FORMAT",
+          "start": 7353,
+          "end": 10298,
+          "chars": 2945
+        },
+        {
+          "ref": "05",
+          "heading": "GETTING ON THE SHOW",
+          "start": 10298,
+          "end": 13227,
+          "chars": 2929
+        },
+        {
+          "ref": "06",
+          "heading": "THE GUEST MATRIX",
+          "start": 13227,
+          "end": 19674,
+          "chars": 6447
+        },
+        {
+          "ref": "07",
+          "heading": "THE QUESTION BANK",
+          "start": 19674,
+          "end": 30930,
+          "chars": 11256
+        },
+        {
+          "ref": "08",
+          "heading": "THE MASTER VIDEO LIST",
+          "start": 30930,
+          "end": 35239,
+          "chars": 4309
+        },
+        {
+          "ref": "09",
+          "heading": "THE Q4 SLATE",
+          "start": 35239,
+          "end": 37307,
+          "chars": 2068
+        }
+      ]
+    },
+    {
+      "key": "site-build-spec",
+      "title": "HLP Site Build Spec",
+      "aliases": [
+        "site build spec",
+        "site spec",
+        "the site spec",
+        "build spec"
+      ],
+      "short": "",
+      "purpose": "The capped scope, the exact copy, and the build prompt for the one-page High Level Pros site.",
+      "file": "site-build-spec.txt",
+      "sourceName": "Churlish_HLP_Site_Build_Spec_OS_Terminal.txt",
+      "sectioning": "numbered",
+      "chars": 10029,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 737,
+          "chars": 737
+        },
+        {
+          "ref": "01",
+          "heading": "THE JOB · SCOPE IS CAPPED BEFORE CRAFT STARTS",
+          "start": 737,
+          "end": 1870,
+          "chars": 1133
+        },
+        {
+          "ref": "02",
+          "heading": "THE COPY",
+          "start": 1870,
+          "end": 5869,
+          "chars": 3999
+        },
+        {
+          "ref": "03",
+          "heading": "THE BUILD PROMPT",
+          "start": 5869,
+          "end": 10029,
+          "chars": 4160
+        }
+      ]
+    },
+    {
+      "key": "start-here",
+      "title": "START HERE",
+      "aliases": [
+        "start here",
+        "the start here",
+        "index",
+        "000"
+      ],
+      "short": "read first",
+      "purpose": "The cover sheet for the whole v5 set: what to read in what order, what the Sept 21 gate changed, and what is still Brandon's to decide.",
+      "file": "start-here.txt",
+      "sourceName": "Churlish_OS_v5_000_START_HERE.txt",
+      "sectioning": "numbered",
+      "chars": 6917,
+      "sections": [
+        {
+          "ref": "head",
+          "heading": "MASTHEAD",
+          "start": 0,
+          "end": 741,
+          "chars": 741
+        },
+        {
+          "ref": "01",
+          "heading": "THE STING FIRST · READ THIS BEFORE THE INDEX",
+          "start": 741,
+          "end": 1377,
+          "chars": 636
+        },
+        {
+          "ref": "02",
+          "heading": "TODAY, 9:00 AM",
+          "start": 1377,
+          "end": 2501,
+          "chars": 1124
+        },
+        {
+          "ref": "03",
+          "heading": "THE SET",
+          "start": 2501,
+          "end": 4428,
+          "chars": 1927
+        },
+        {
+          "ref": "04",
+          "heading": "WHAT CHANGED AFTER THE GATE",
+          "start": 4428,
+          "end": 5336,
+          "chars": 908
+        },
+        {
+          "ref": "05",
+          "heading": "STILL YOURS TO DECIDE",
+          "start": 5336,
+          "end": 6917,
+          "chars": 1581
+        }
+      ]
+    }
+  ],
+  "skipped": []
+}

@@ -1,0 +1,181 @@
+Churlish Media · OS Sales Script Pt 3 · The Debrief Call
+ Churlish Media · OS Sales Script Pt 3 · The Debrief Call
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · SALES // 003
+
+ churlish@hq :~ $ run debrief_call --spine nepq --tools voss --wall on
+ > loading six-step structure DONE
+ > checking episode is live and promoted DONE
+ > in-room ask module NOT FOUND
+
+ The Debrief The Debrief The Debrief
+ Call Script.
+ One job: turn a guest whose episode is already live into a paid $2,500 cut . Not the Engine. Not a retainer. The cut puts you in their building, and the building sells the retainer later, better than you can. NEPQ spine, Voss handwork, six steps, twenty minutes. The wall is part of the script, not a disclaimer on it.
+ CHURLISH MEDIA · OS SALES SCRIPT · PART 3 · STATUS: NEW · UNPROVEN UNTIL THE FIRST FOUR CHAIRS · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 01 · THE FRAME · BEFORE YOU DIAL
+ The posture of the call
+
+ RULE 01
+ The wall comes first
+ Nothing was asked in the room. Nothing was asked on recording day. This call exists because their episode is already live and already promoted. Say it out loud in sentence one: the episode gets the same push whether or not they ever buy. If you cannot say that honestly, do not make the call.
+
+ RULE 02
+ Sell one cut , nothing else
+ The only yes you collect today is $2,500 for one cut. Not the Engine. Not a retainer. The capture session puts you in their building for 45 minutes, and that is where the Engine conversation starts on its own. A $2,500 yes today beats a maybe on $14,000.
+
+ RULE 03
+ They pick the problem
+ Owners, customers, or hiring. You do not choose the cut. They name the louder problem and the cut names itself. They talk 70%. If you are describing deliverables before minute 14, you are pitching.
+
+ ★ The one-line job description
+ Find out what they want the episode to do for them, let them name the louder problem, and take payment for the one cut that answers it. Everything below serves that sentence.
+
+ // 02 · BEFORE THE CALL · THE RUNWAY
+ Three notes, zero asks until the third
+
+ The call is earned by what happens between the recording and the invitation. Guest Coordinator sends; Brandon signs. Copy is in plain words on purpose: no house vocabulary ever reaches a guest.
+ N1 Day-after thank-you DAY +1 · NO ASK
+ CHANNEL
+Text or email, from Brandon
+ JOB
+Close the loop. Set the publish date. Send the 3-question survey.
+
+ SAY > " [FIRST NAME] , thank you for yesterday. The part about [SPECIFIC MOMENT] is going to help somebody. Your episode publishes [DATE] . I will send it to you the minute it is up, with a trailer and two short clips that are yours to post. One favor: three quick questions about the day, takes a minute: [SURVEY LINK] ."
+ RULE > No offer, no "by the way," no link to anything Churlish sells. The survey includes the wall question: did any part of the day feel like a sales pitch?
+
+ N2 Publish-day note PUBLISH DAY · THE INVITATION
+ CHANNEL
+Email from Brandon + text heads-up
+ JOB
+Deliver the free share kit. Invite the twenty minutes.
+
+ SAY > "Your episode is live: [LINK] . Attached: the trailer and two shorts, cut and captioned. They are yours. Post them anywhere, no strings. One more thing. I would like to show you what we could build from this for your market, not mine. Twenty minutes. Would Thursday at 10 or Friday at 2 be a bad time?"
+ RULE > The kit ships whether or not they ever answer. The invitation is one paragraph, one ask, two times offered.
+
+ N3 The nudge PUBLISH +3 DAYS · ONCE
+ CHANNEL
+Text
+ JOB
+One nudge. Then stop.
+
+ SAY > "The episode is at [VIEWS / COMMENTS / ONE REAL REACTION] . Still glad to walk you through what it could do for [COMPANY] . If the timing is wrong, no problem at all. It stays up and keeps getting pushed either way."
+ RULE > No reply after N3 → log "no debrief," move to alumni list. Never a fourth touch about the package. They still get the supercut mention, the anniversary re-share, and the "who should sit here next" ask.
+
+ // 03 · THE SPINE · SIX STEPS, IN ORDER
+ The call, step by step
+
+ Same bones as the Diagnostic call: NEPQ spine, Voss handwork. Twenty minutes. Say the bolded lines as written until they are muscle memory, then make them yours. The order is the persuasion.
+ 01 Open / disarm 0–2 MIN
+ NEPQ STAGE
+Connect. Lower the guard before anything else
+ VOSS TOOL
+Tone + a no-oriented question
+
+ SAY > "Before anything: your episode stays exactly where it is and gets the same push whether or not we ever do business. Would it be a bad idea to spend twenty minutes on what it could do for you?"
+ THEN > Stop talking. Their first sentence tells you whether they came curious, polite, or guarded.
+ WHY > The fear in the room is "this show was a funnel." Killing it in sentence one buys you an honest twenty minutes. It also has to be true.
+
+ 02 The reaction 2–6 MIN
+ NEPQ STAGE
+Situation. What has the episode done so far
+ VOSS TOOL
+Mirrors. Repeat their last 1–3 words as a question
+
+ ASK > "How did it feel watching it back?" and "What have people said since it went up?"
+ ASK > "When people see it, what would you want it to do for you?" This is the whole call. Write down their exact words.
+ LOG > Who reacted (owners, customers, staff, family), what they said, and the phrase the guest uses for what they want. That phrase goes on the invoice line.
+
+ 03 The louder problem 6–11 MIN
+ NEPQ STAGE
+Problem awareness. They name it, not you
+ VOSS TOOL
+Labels. "It sounds like…" / "It seems like…"
+
+ ASK > "Right now, what is the louder problem: getting in front of other owners, getting customers to pick you over the other three trucks, or getting good people to apply?" Then silence.
+ LABEL > "It sounds like the work is there and the right people to do it are not." Hunt for "that's right." ("You're right" means you pushed. Back off.)
+ DIG > "How long has it been like that?" and "What have you already tried?" Surfaces the nephew with the iPhone, the $500-a-month social contractor, the Indeed spend.
+ $3M+ > "Who else on your team should be in this conversation?" Above $3M the owner sat in the chair but a marketing or ops lead often buys. Get them on this call or the next one. Never sell to the glow alone.
+
+ 04 Price it 11–14 MIN
+ NEPQ STAGE
+Consequence. The problem in their math
+ VOSS TOOL
+Calibrated questions. "How" and "what," never "why"
+
+ ASK > "What is one [GOOD TECH / NEW CLIENT / CLOSED JOB] actually worth to you in a year?"
+ ASK > "If that stays the same through spring, what does it cost?" Do the arithmetic out loud, with their numbers.
+ RULE > Their numbers, their words, your arithmetic. If the gap does not clear $2,500 by an order of magnitude, say so and end warm. That honesty is the brand, and it is what they will repeat to the next owner you invite.
+
+ 05 Present one cut 14–18 MIN
+ NEPQ STAGE
+Solution awareness. The fix, priced and scoped
+ VOSS TOOL
+Proof before promise. Say plainly what proof exists
+
+ SAY > "Here is what I would build. It is the [CUSTOMER / OWNER / HIRING] cut. $2,500, paid up front. We come to you for 45 minutes and film you answering what [YOUR CUSTOMERS / OTHER OWNERS / A GOOD TECH] actually ask. From that and your episode you get a hero video, ten shorts with captions, a carousel, a written article, five quote graphics, and the license to run every piece as an ad. It is yours whether or not we ever work together again."
+ PROOF > Until three are delivered there are no results to show, so none are shown. Say it: "You would be one of the first three. That is why those three are $1,500, in exchange for a filmed case study and permission to publish your numbers." A case-study exchange with a deliverable attached, in writing. Never a discount.
+ FRAME > "The clips I already sent are free and they are about my audience. This is new footage about yours."
+
+ 06 Commit 18–20 MIN
+ NEPQ STAGE
+Commitment. One small decision, made now
+ VOSS TOOL
+Alternative close. Two yeses, no maybe
+
+ SAY > "Card now, or invoice today?"
+ THEN > Book the 45-minute capture session before the call ends, inside 14 days. Confirm the best email for the invoice and the one-page agreement.
+ LOG > Pipeline stage → "Package Sold." Invoice out the same hour. Done when payment is taken or the invoice is sent. Nothing else counts.
+ ALWAYS > Yes or no, end with: "Who is one owner you would want to hear in that chair?" Every guest leaves one name. That is how the roster compounds.
+
+ // 04 · THE THREE CUTS · WHAT YOU ARE SELLING
+ Same price. They pick.
+
+ Cut For guests whose… The 45-minute capture is aimed at Typical guest
+ Owner Cut buyers are other owners The questions owners ask before they hire you CPA · law · banking · insurance · B2B services
+ Customer Cut buyers are consumers The questions a customer asks while deciding between you and three others Trades · practices · med spas · retail
+ Hiring Cut constraint is people What a good tech, hygienist or line cook wants to see before applying Trades · clinics · restaurants
+ Every cut includes Spec
+ Hero cut 3–5 minutes, their branding, from the episode + the capture
+ Capture session 45 minutes after purchase, on site or in studio. Never on recording day
+ Short-form 10 vertical shorts, 9:16, burned-in captions
+ Carousel · article · graphics 1 carousel set · 1 article written to be found by search and AI answers · 5 quote graphics
+ Ad license Every piece cleared to run as paid ads. They own the finals
+ Delivery 21 days from the capture session · 15-minute walkthrough on delivery
+ Free to every guest, buyer or not The full episode, the trailer, and 2 shorts. Shipped on publish day
+ // 05 · THE FOUR YOU WILL HEAR · MONEY · TIMING · WILL IT BE DIFFERENT
+ Package objections, short form
+
+ Full doctrine lives in OS Sales Script Part 2. Same three locks, same standing order: never invent a discount.
+ They say Lock Answer, then re-close
+ "I already have the clips." MONEY "You do, and they are yours. Those are about my audience. This is 45 minutes of new footage about yours. Which is louder right now, customers or hiring?"
+ "$2,500 for social content?" MONEY "Fair. You told me one good tech is worth $ [X] a year. This is the video he watches before he applies. Card now, or invoice today?"
+ "My nephew / our social person can cut it." DIFFERENT "Good. Send them the free kit today. The cut is the part they cannot make: you on camera, in your shop, answering what your customers ask, shot and lit properly."
+ "So the show was a sales funnel." DIFFERENT "It would be if your episode depended on this call. It does not. It is live, it is promoted, and it stays that way. Most guests never buy anything. Would you rather I had not offered?"
+ ▲ What this call is never
+ Not a retainer pitch (Rule 02). Not a favor owed for the airtime: say so if they hint at it. Not a negotiation: $2,500, or $1,500 as a written case-study exchange for the first three only. Not repeated: one call, one nudge, then they are alumni. A guest who never buys gets the same edit, the same packaging, the same promotion.
+
+ // 06 · AFTER THE CUT · THE HANDOFF
+ Where the Engine conversation lives
+
+ DAY 0
+ Capture session
+ You are in their building with a camera. Look at what the Diagnostic would look at: the lead path, the follow-up, the hiring page. Take notes. Say nothing yet.
+
+ DAY 21
+ Delivery walkthrough
+ 15 minutes. Show the pieces, then one line: "This is what one session made. Would it be ridiculous to look at what this looks like every month?" A yes routes to SOP A5 with your capture-day notes as the spine.
+
+ DAY 45
+ The receipt
+ Ask for the number: applicants, calls, jobs. With permission it becomes the proof asset the next guest sees. A case-study exchange guest owes the filmed testimonial here.
+
+ churlish@hq :~ $ log_call --outcome package_sold
+ > invoice sent · capture booked · one referral name logged DONE
+ > episode promotion unchanged by outcome ENFORCED
+
+ Churlish Media · OS Sales Script Pt 3 · The Debrief Call CHURLISHMEDIA.COM · 402-819-8168
+
+ THE EPISODE NEVER DEPENDS ON THE CALL. CHURLISHMEDIA.COM

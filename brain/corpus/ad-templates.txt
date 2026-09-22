@@ -1,0 +1,238 @@
+Churlish Media · Ad Templates · Script Factory Reference
+ Churlish Media · Ad Templates · Script Factory Reference
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · CREATIVE // 004
+
+ churlish@hq :~ $ load ad_factory --formula call_out --cta_guard on
+ > loading hook library · 8 formulas DONE
+ > cold lead gen for churlish services OFF
+ > scanning for banned CTAs CLEAN
+
+ The Ad The Ad The Ad
+ Templates.
+ How every Churlish ad gets built, regardless of client or platform. The DNA is the call-out formula: six beats in a fixed order. V5 adds what changed for Churlish's own spend: Meta has three jobs now, and the show supplies the hook and the proof. The formula, four script lengths, three show templates, eight hooks, the CTA law, the scoreboard.
+ CHURLISH MEDIA · AD SCRIPT FACTORY · REFERENCE EDITION · V5 · STATUS: LIVE · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ // 00 · WHAT ADS ARE FOR NOW · V5 · CHURLISH'S OWN SPEND
+ Meta has three jobs
+
+ Cold lead generation for Churlish services is off. Client campaigns are untouched: this section governs Churlish's own spend only. $500/mo floor, item-level approval before anything goes live, the diagnostic law decides scale or kill.
+ JOB 01
+ Amplify what already won
+ A clip earns spend only after it beats the channel organically. Starting rule until Cassandra Cain has tape to read: top 2 of the last 10 shorts by 3-second hold and shares. Money follows proof, never the other way round.
+
+ JOB 02
+ Fill the cohort , warm only
+ Episode viewers and the email list. Runs only while a deposit or enrollment window is open (Oct 19 → Nov 7, then Nov 10 → start). One CTA: the refundable $250 seat.
+
+ JOB 03
+ Package proof, retargeted
+ Once a Guest Package case study exists (day-45 receipt, with the exchange addendum signed), show it to people who watched that guest's episode. Owners in the guest's trade first.
+
+ ★ What never runs
+ No ad recruits guests: the chair is filled by personal invitation. No ad uses a guest's clip to sell Churlish services without separate written permission (release §4). No cold traffic to the cohort. No ad without a concrete offer behind the CTA.
+
+ // 01 · THE DNA · SIX BEATS, FIXED ORDER
+ The call-out formula
+
+ The sequence never changes; the sections compress or expand with format length. For 15s and statics, beats 2–4 compress into a single move. If a script does not follow this arc, it usually is not ours.
+ 01
+ Hook
+ Pattern interrupt. 1–3s. If it is deletable, rewrite it.
+
+ »
+ 02
+ Call-out
+ Name the pain with specific numbers, in their words.
+
+ »
+ 03
+ Pivot
+ Blame the status quo, never the viewer.
+
+ »
+ 04
+ Proof
+ Real numbers, names, timelines.
+
+ »
+ 05
+ Offer
+ Exactly what they get and what it costs.
+
+ »
+ 06
+ CTA
+ One action. One. Not three.
+
+ // 02 · SCRIPT TEMPLATES · BY LENGTH
+ Four formats, one arc
+
+ :15 15-second script 35–45 WORDS
+ PLATFORMS
+IG/FB Reels · YouTube Shorts · TikTok
+ RULE
+The hook must work with sound OFF. Every sentence speakable in one breath.
+
+ 01 > [HOOK — on-screen text] One bold sentence. 3 seconds.
+ 02 > [PAIN + PIVOT] 1–2 sentences. 5 seconds.
+ 03 > [PROOF + OFFER] One sentence: specific result, then what they get. 4 seconds.
+ 04 > [CTA — text + voiceover] One action. 3 seconds.
+
+ :30 30-second script — the workhorse 70–90 WORDS
+ PLATFORMS
+Meta feed · YouTube pre-roll · CTV
+ RULE
+The call-out carries at least one specific number: a dollar amount, a percentage, or a timeframe.
+
+ 01 > [HOOK] 1–2 sentences · 3–5s.
+ 02 > [CALL-OUT] 2–3 sentences · 8–10s.
+ 03 > [PROOF] 1–2 sentences · 5–7s.
+ 04 > [OFFER + CTA] 2 sentences · 8–10s.
+
+ :60 60-second script 140–170 WORDS
+ PLATFORMS
+Meta · YouTube · CTV · long-form social
+ RULE
+Math-breakdown technique in the call-out: walk their actual numbers until they feel the gap.
+
+ 01 > [HOOK] 3–5s.
+ 02 > [CALL-OUT] 4–6 sentences · 15–20s.
+ 03 > [PIVOT] 5–7s.
+ 04 > [PROOF] a specific case study · 10–12s.
+ 05 > [OFFER] 8–10s.
+ 06 > [CTA] 5s.
+
+ :90+ 90-second to 2-minute — VSL-style 200–300 WORDS
+ PLATFORMS
+YouTube mid-roll · long-form social · landing page
+ RULE
+The story open earns the length.
+
+ 01 > [HOOK] 5s.
+ 02 > [STORY OPEN] personal or client story · 15–20s.
+ 03 > [CALL-OUT] pain with data · 20–30s.
+ 04 > [PIVOT] 10–15s.
+ 05 > [PROOF] before/after and timeline · 15–20s.
+ 06 > [OFFER + CTA] one action; close the loop the hook opened.
+
+ // 03 · SHOW TEMPLATES · NEW
+ Three ads the show makes possible
+
+ New in V5. Each is the call-out arc wearing different clothes: the guest supplies the hook and the proof, so the ad never has to claim anything.
+ S·1 The clip amplifier JOB 01 · 20–45s
+ PLATFORMS
+Reels · Shorts · Meta feed
+ RULE
+Do not rewrite a clip that already won. Add one text hook and one end card. Nothing else.
+
+ 01 > [HOOK — text over the first frame] The number jump + the trade: “$400K to $2.1M. Roofing. Here's mistake #1.”
+ 02 > [THE CLIP] Untouched. The guest is the call-out, the pivot and the proof.
+ 03 > [END CARD] “Full episode + the one-page breakdown.” One link.
+ 04 > [CTA] “Get the one-page breakdown of this episode, free.”
+
+ S·2 The cohort filler JOB 02 · 30–60s
+ PLATFORMS
+Meta, warm audiences only
+ RULE
+The instructors are the headline, not Brandon. Use their faces and their numbers.
+
+ 01 > [HOOK] If/then conditional: “If you've been stuck between $300K and $500K for two years, this is who got out.”
+ 02 > [CALL-OUT] The stage, in their words, from the episodes.
+ 03 > [PROOF] Four owners, four number jumps, five seconds each.
+ 04 > [OFFER] Eight weeks. Ten seats. Taught by them. Starts [DATE] .
+ 05 > [CTA] “Hold a seat with $250. It comes straight back if you change your mind.”
+
+ S·3 The package proof JOB 03 · 30s
+ PLATFORMS
+Meta retargeting: viewers of that guest's episode
+ RULE
+Runs only with a day-45 receipt and a signed exchange addendum.
+
+ 01 > [HOOK] Specific result: “ [GUEST] needed two techs. [N] applied in three weeks.”
+ 02 > [PIVOT] “It was one 45-minute shoot in his shop.”
+ 03 > [PROOF] Ten seconds of the actual cut.
+ 04 > [OFFER + CTA] “See exactly what one session made for [GUEST] .” Link to the case study, never to a booking page.
+
+ ▲ Production standard — every script ships as
+ A 9:16 , a 1:1 , and a 6-second cutdown for retargeting, plus three opening-frame variants so the ad keeps testing as it scales. Runners-up stay on the bench and rotate in when frequency climbs past 2.5.
+
+ // 04 · THE HOOK LIBRARY · 8 FORMULAS
+ Eight ways to stop a thumb
+
+ If the hook fails, nothing else matters.
+ # Formula Structure Example
+ 01 Direct callout “You're [specific thing] and [uncomfortable consequence].” “You've got 47 five-star reviews and you're still competing on price.”
+ 02 Uncomfortable truth “[Thing everyone believes] is [costing them].” “Your marketing agency is the most expensive employee you'll never fire.”
+ 03 Specific result “[Number]. [Short context].” “47 leads in 21 days. Here's exactly what we did.”
+ 04 Provocative question One they cannot scroll past. Never yes/no. “How many customers did you lose this month because they couldn't find you?”
+ 05 “Stop doing this” “Stop [thing that's hurting them].” “Stop competing on price. You're better than that.”
+ 06 If/then conditional “If you're [situation], [what's actually happening].” “If your best channel is word of mouth, you don't have marketing. You have luck.”
+ 07 Pattern interrupt A visual break the feed does not expect. Pair with another formula. White text on black, nothing else: “Your agency won't tell you this.”
+ 08 Social proof stack “[Name] did [result]. [Name] did [result]. Here's what they have in common.” On the show this writes itself: three guests, three jumps, one mistake they shared.
+ THE WRITING RULES
+ Write 10, keep 3
+ Specificity beats cleverness. The hook's only job is to earn the next 5 seconds. Read it out loud; if you stumble, the viewer scrolls. Never open with the brand name.
+
+ A / B DISCIPLINE
+ One formula per variant
+ Build 3–5 variants from different formulas for the same offer and avatar, and label each with its formula, so the scoreboard tells you which trigger wins, not just which sentence.
+
+ // 05 · CTA LAW · ENFORCED ON EVERY AD, EVERY CLIENT, NO EXCEPTIONS
+ The CTA standards
+
+ PROPERTY 1
+ Benefit- led
+ Names what they GET, not what they do.
+
+ PROPERTY 2
+ Urgency- loaded
+ A reason to act now: scarcity, deadline, qualification.
+
+ PROPERTY 3
+ Qualifier- baked
+ Implies who it is for; filters bad-fit clicks.
+
+ PROPERTY 4
+ Effort- light
+ Sounds easy and valuable, not like work.
+
+ ★ Banned — these never ship, even if the client signed off
+ Book a call with me Schedule a call Learn more Click here Click here to book Want to chat? Let's talk Hop on a call Call me to learn more Get in touch Contact us today Sign up
+ They frame the CTA as work for the prospect, carry zero benefit signal, no urgency, no qualifier. Auto-replace with an approved pattern and explain the swap.
+
+ Door The one approved CTA
+ Client ads (call-out) Approved patterns from the V4 table, unchanged: “Let's map out your game plan — grab a free call today.” · “See exactly how [specific result] happens.”
+ The show, every episode “Get the one-page breakdown of this episode, free.” The same CTA every episode. One link, one place.
+ The cohort “Hold a seat with $250. It comes straight back if you change your mind.”
+ Package proof “See exactly what one session made for [GUEST] .”
+ Diagnostic (Door B) “Find out exactly what's broken and what it's costing you. $750, 48 hours.”
+ ▲ Hard rules
+ One CTA per ad , never two. The CTA must match a concrete offer. It appears at the end AND in the headline/copy, phrased differently. Test 2–3 CTA variants per campaign, all from the approved patterns.
+
+ // 06 · THE SCOREBOARD · WHAT THE FINISHED AD ANSWERS TO
+ Read pairs, not singles
+
+ SWEET SPOT · HTL EFFICIENCY
+ 40–49%
+
+ VIDEO HOOK RATE TARGET
+ ~18%
+
+ FREQUENCY → AUTO REFRESH
+ 3.0+
+
+ VERDICTS: SCALE · TWEAK · REFRESH · KILL
+ 4
+
+ A high hook rate with low Hook-to-Lead Efficiency is traffic without conversions. Always read metrics in pairs (Hook Rate × HTL Efficiency, Link CTR × CTR-All). Healthy hook rate and CTR with a bad opt-in rate means the page is the patient: send it to Doctor Mid-Nite, not back to the edit.
+ churlish@hq :~ $ ship_ad --qc final
+ > hook earns 3s · pain in avatar language · proof specific PASS
+ > one CTA · no banned phrases · inside the three jobs PASS
+ > item-level approval REQUIRED
+
+ Churlish Media · Ad Templates · Script Factory Reference CHURLISHMEDIA.COM · 402-819-8168
+
+ THE DATA PICKS THE WINNER. CHURLISHMEDIA.COM

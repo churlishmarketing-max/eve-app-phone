@@ -10,6 +10,7 @@ import { renderDeskCensus, renderDeskAbsence, sanitiseTo, type DeskPack, type De
 import { readTodayShape, renderTodayShape } from "./mail.js";
 import { googleSource } from "./google.js";
 import { fleetLine } from "./registry.js";
+import { corpusIndexLine } from "./corpus.js";
 
 // Context assembly (03 §4). Layers 1–2 (bible + doctrine) are static in the
 // system prompt; this builds layers 3–6 fresh per exchange: today snapshot,
@@ -100,6 +101,7 @@ export const PACK_SOURCES = [
   { id: "calendar", handling: "omit-or-taint", why: "event titles, locations and descriptions are written by anyone who can send him an invite (H1)" },
   { id: "os_board", handling: "clean", why: "os.ts:95-99 builds this line from NUMBERS plus the OS's own week label — no client name, note, or free prose reaches it. Client-authored OS text arrives through os_board / os_clients, which latch" },
   { id: "fleet", handling: "clean", why: "names and badges out of our own generated registry manifest" },
+  { id: "corpus", handling: "clean", why: "the TITLES of his own seventeen OS v5 documents, out of our own generated corpus/MANIFEST.json — the same shape as the fleet line and for the same reason. No document TEXT reaches the pack: the prose arrives only through the corpus_read / corpus_search TOOL RESULTS, each one wrapped in corpus.ts's constant quotation frame. He wrote the documents, so there is no third-party prose here to begin with" },
   { id: "promises", handling: "carried-ungated", why: "memory_entries where kind=promise. THE VERDICT WORD WAS WRONG (W4) and is corrected here: `write-gated` claimed every writer was closed while distill.ts wrote this table nightly holding no latch. Two of the three writers ARE gated — save_note and save_memory are latched per turn and locked per conversation — and the third, distill.ts, now quarantines any conversation that read third-party text (W3). What keeps this OFF `write-gated` is the READ end: rows written BEFORE sql/007 carry no taint record of their source conversation, and context.ts recalls them unfiltered. The write door is shut; the shelf still holds what was put on it" },
   { id: "replay", handling: "taint", why: "V1/JD — the fourth door. messages.content replayed verbatim, which includes HER OWN summary of hostile mail read in an earlier turn. Enveloped, and any replayed row latches this turn" },
   { id: "recall", handling: "carried-ungated", why: "memory_entries, injected under 'trust these over guesses' — the highest-trust region she has. Same three writers as promises, same corrected verdict: the in-turn writers are latched and locked, distill.ts is quarantined (W3), and the residual that keeps the word off `write-gated` is the same one — pre-007 rows carry no source-conversation taint and are recalled unfiltered. Closing that is a READ-side filter over memory_entries.source_conversation and it is NOT in this pass" },
@@ -641,6 +643,13 @@ export async function buildPackLines(
     // (OS off, or the first snapshot hasn't landed; os_board covers that once).
     ...(() => { const b = boardSnapshot(); return b ? L("os_board", b) : []; })(),
     ...(fleet ? L("fleet", fleet) : []),
+    // THE REFERENCE SHELF (corpus.ts §"HOW THIS TEXT IS FRAMED"). Titles only —
+    // 194 tokens measured with count_tokens on 2026-09-21 — because the
+    // seventeen documents behind it are ~70,000 tokens and cannot ride a turn.
+    // This line's whole job is that she KNOWS WHAT EXISTS and reaches for
+    // corpus_read instead of remembering. Null (shelf failed to load) → omitted,
+    // and corpus_read says so out loud if she calls it anyway.
+    ...(() => { const c = corpusIndexLine(); return c ? L("corpus", c) : []; })(),
     ...loops,
     ...turns,
     // TAGGED `replay`, WHICH IS THE STRICTEST TAG AVAILABLE, AND DELIBERATELY

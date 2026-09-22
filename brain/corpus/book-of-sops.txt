@@ -1,0 +1,677 @@
+Churlish Media · The Book of SOPs · V5
+ Churlish Media · The Book of SOPs · V5
+
+ CHURLISH / OS TERMINAL
+
+ CORE ONLINE · OPERATIONS // 019
+
+ churlish@hq :~ $ ls /churlish/sops --count --edition v5
+ > 35 procedures found across 5 parts OK
+ > 16 marked NEW · draft until run three times FLAG
+ > verifying founder-free delivery paths DONE
+
+ The Book The Book The Book
+ of SOPs.
+ The procedures that run the studio when Brandon is not the one running them. Thirty-five standard operating procedures across five parts: sales, product delivery, retainer delivery, operations, and the show. Every one names an owner, a trigger, the steps, and the line that says it is done. Run it, do not read it.
+ CHURLISH MEDIA · OPERATIONS BIBLE · V5 · HLP-FIRST, STAGED · SUPERSEDES V4 · JULY 2026 · OS TERMINAL EDITION — SEPTEMBER 2026
+
+ ■ How to use this book
+ Every SOP is one self-contained block: who owns it, when it fires, the exact steps, the tools, and the one sentence that tells you it is finished. When a procedure changes, change it here. The master rule above all of them: if a step can run without the founder, build it so it does. V5 adds the show. The chair is the one job that stays Brandon's through 2028; everything around the chair is written so somebody else can run it.
+
+ PART A
+ Sales & pipeline
+ Two doors now: the chair and the Diagnostic. How a stranger becomes a guest, and how a guest or a referral becomes a client.
+
+ PART B
+ Product delivery
+ Diagnostic, Tournament, Tool Sprint, Launchpad, and the new Guest Package.
+
+ PART C
+ Retainer delivery
+ How the monthly work gets done, every month, on voice. Now with a delivery seat that is not Brandon.
+
+ PART D
+ Operations & standards
+ The fleet, the cadence, the gates, the wall audit, the parking ledger, the two seats.
+
+ PART E
+ The show
+ High Level Pros from pre-interview to publish kit to cohort. Ten procedures. New in V5.
+
+ ▲ What changed from V4
+ V4 had 19 procedures and one front door (cold outreach to a $750 Diagnostic). V5 has 35 and two doors. Kid Flash and Blue Beetle now source and invite guests first; service outreach runs only at the volume the Sept 25 actuals rule allows. The single biggest absence the Squad found, the debrief, is now SOP A7. Every SOP marked NEW is a draft until it has run three times; after the third run, rewrite it from what actually happened.
+
+ // PART A · SALES & PIPELINE · TWO DOORS: THE CHAIR AND THE DIAGNOSTIC
+ How a stranger becomes a paying client
+
+ A1 Guest & lead research KID FLASH · AGENT
+ PURPOSE
+Build two clean, verified lists: guest candidates for the chair, and service prospects at whatever volume the Sept 25 rule allows.
+ WHEN IT FIRES
+Every morning, automatically. Or whenever next week shows fewer than 2 recordings booked.
+
+ TOOLS
+Apollo · OS Pipeline · the Show Bible guest matrix
+ DONE WHEN
+A scored guest list and a tiered prospect list are queued and logged.
+
+ 01 > Pull owner-operators at $500K–$10M , Omaha metro first, across the 7 categories and 58 owner types in the Show Bible.
+ 02 > Verify each: real active business, owner name + direct email, the stage jump they could speak to, one specific thing they did that is worth an episode.
+ 03 > Score every candidate on the 15-point Guest Score . Book at 10 or higher. Buyer-fit is 3 of the 15 points and never more.
+ 04 > The first four chairs are the package test. Pick them for buyer-fit on purpose: owners who sell to consumers or have a hiring problem, with a marketing budget, who are not already clients.
+ 05 > Honor the mix rules: no more than 2 of the same category in any 4-week window; at least 1 in 4 guests above $3M.
+ 06 > Dedupe against the pipeline, past outreach, current clients. Hand the scored list to Blue Beetle.
+
+ A2 The invitation sequence BLUE BEETLE · AGENT
+ PURPOSE
+Turn Kid Flash's guest list into booked pre-interviews. An invitation asks for nothing and offers status. It is not a pitch.
+ WHEN IT FIRES
+Daily, on the scored list. First 20 out by Fri Sept 25.
+
+ TOOLS
+Email · LinkedIn · Calendar · the Guest Invitation Kit
+ DONE WHEN
+Replies routed; pre-interviews on the calendar; reply rate logged.
+
+ 01 > Personalize line one with the specific thing they did. Never “I came across your business.”
+ 02 > Run the 3-touch sequence from the Invitation Kit: email day 0, LinkedIn day 3, email day 7. Then stop.
+ 03 > Answer the five things a guest needs to know in plain words: how long, where, what you will ask, who watches, what they walk away with. No house vocabulary.
+ 04 > Route replies: yes → book the 15-minute pre-interview; not now → re-invite in 90 days; no → close out warmly.
+ 05 > Zero service pitches inside an invitation thread. Service outreach is a separate list at the Sept 25 volume (30% of sends through Oct 31 if the actuals show 2+ closes from outbound and ads; zero if fewer).
+ 06 > Log reply rate weekly. Under 15% across the first 100 sends by Oct 31 fires the rewrite tripwire.
+
+ A3 The Diagnostic sales call BRANDON
+ PURPOSE
+Convert a booked call into a paid $750 Diagnostic. Door B: referrals, inbound, and the third conversation of the week.
+ WHEN IT FIRES
+A booked discovery call that did not come through the chair.
+
+ TOOLS
+OS Sales Script Pt 1 · Pipeline · HoneyBook
+ DONE WHEN
+Payment taken or invoice sent; deal at “Diagnostic Sold.”
+
+ 01 > Open / disarm: “I'm not here to pitch you a retainer.” Let them talk first.
+ 02 > Situation: map lead-to-customer path, volume, spend, what happens to non-buyers.
+ 03 > Problem awareness: “Where do you think it's breaking?” Make them name it.
+ 04 > Consequence: “If nothing changes in 6–12 months?” and “What is one closed job worth?”
+ 05 > Present the Diagnostic: $750, 48 hrs, scored teardown, 3 ranked fixes, theirs to keep. Send the sample on the call.
+ 06 > Commit: “Card now or invoice today?” Through Dec 31 this conversation also sells the fast-collecting products: Tournament and Tool Sprint.
+
+ A4 Objection handling BRANDON
+ PURPOSE
+Turn the real objection into a yes without improvising a discount.
+ WHEN IT FIRES
+Any hesitation on any sales call, debrief or enrollment call.
+
+ TOOLS
+OS Sales Script Pt 2 (eleven objections, three locks)
+ DONE WHEN
+The objection is addressed and the close is re-attempted.
+
+ 01 > Do not argue the surface objection. Find the real lock: money, timing, or “will it be different.”
+ 02 > Label first, answer second, close third. A second objection is normal; it is usually the real one.
+ 03 > On the third objection, name it: “I'm getting the sense this is a no wearing a maybe. Which is it?”
+ 04 > Never invent a discount. Founder pricing is a case-study exchange with a deliverable attached, in writing.
+ 05 > Log the objection word for word. That language is next quarter's ad copy.
+
+ A5 Proposal & close BRANDON
+ PURPOSE
+Convert a delivered Diagnostic, or a delivered Guest Package, into a retainer or product sale.
+ WHEN IT FIRES
+Diagnostic walkthrough done, or a package capture session finished.
+
+ TOOLS
+HoneyBook · the Diagnostic report or the capture notes · Pipeline
+ DONE WHEN
+Contract signed + first invoice paid, or closed-lost with a reason.
+
+ 01 > Use the three ranked fixes (Diagnostic) or what you saw in their building (capture session) as the spine.
+ 02 > Recommend one path. Present exactly two adjacent rungs, never three.
+ 03 > Price from the Offer Ladder sheet. The $750 Diagnostic credits toward month one. The package does not credit; it is a finished product.
+ 04 > Send same day via HoneyBook; contract + first invoice attached. Engine 4-month minimum, System 6-month.
+ 05 > If the work they need is strategy above production, it is Kelly's. Make the introduction the same day.
+ 06 > Follow up on a set cadence until signed or a clear no.
+
+ A6 Pipeline management BRANDON · WATCHTOWER ASSISTS
+ PURPOSE
+Keep an accurate, current view of every deal and every chair.
+ WHEN IT FIRES
+Continuous; reviewed every Friday.
+
+ TOOLS
+OS Pipeline + Command dashboard
+ DONE WHEN
+Pipeline reflects reality and the Friday Five is logged.
+
+ 01 > Every guest enters Pipeline at “Invited” and moves: Pre-interview → Recorded → Published → Debrief held → Package / Engine / Alumni.
+ 02 > Tag every dollar by door: chair-sourced , Diagnostic door, cohort, base expansion.
+ 03 > Track chair-sourced cash net of production against the $15,000 Dec 31 line.
+ 04 > Any Friday with fewer than 2 recordings booked for next week: Blue Beetle doubles sends and Brandon makes 5 personal asks that day.
+ 05 > Log the 3 conversations a week. No log, no week.
+
+ A7 The debrief call NEW BRANDON
+ PURPOSE
+Turn a guest whose episode is already live into a paid $2,500 cut. Where Lane 1 lives.
+ WHEN IT FIRES
+A guest accepts the publish-day invitation (SOP E5).
+
+ TOOLS
+OS Sales Script Pt 3 · the three-cut one-pager · HoneyBook
+ DONE WHEN
+Payment taken or invoice sent and the capture session booked; or a clean no, logged, with promotion unchanged.
+
+ 01 > Sentence one is the wall: the episode gets the same push whether or not you ever do business.
+ 02 > Reaction → the louder problem (owners, customers, or hiring) → what it is costing → the three cuts → commit.
+ 03 > They pick the cut. You never choose it for them. Above $3M, ask who else on their team should be in the conversation.
+ 04 > “Card now or invoice today?” Book the 45-minute capture session before the call ends.
+ 05 > Ask for one referral name for the chair, whatever the outcome.
+ 06 > Log verbatim. Zero paid packages from the first four buyer-fit debriefs by Nov 6 fires the JSA re-trial.
+
+ // PART B · PRODUCT DELIVERY · FIXED SCOPE, FAST DELIVERY
+ The paid products
+
+ B1 Authority Diagnostic delivery BRANDON + AGENTS FOR PULLS
+ PURPOSE
+Deliver the scored teardown within 48 hours.
+ WHEN IT FIRES
+Diagnostic paid + intake received.
+
+ TOOLS
+The sample report as template · Field Manual benchmarks · Doctor Mid-Nite for the page
+ DONE WHEN
+Report delivered within 48 hrs; walkthrough booked or done.
+
+ 01 > Mark Pipeline “Diagnostic Sold → In Production.” Start the 48-hour clock.
+ 02 > Pull the funnel: site, ads, social, lead path, follow-up.
+ 03 > Score authority; read the ad account against benchmark.
+ 04 > Write the report: snapshot, the numbers, the gap, the ranked fixes with dollars, the projection.
+ 05 > Deliver the PDF + a 15-minute walkthrough; recommend the next rung.
+
+ B2 Ad Creative Tournament delivery BRANDON + RED ROBIN
+ PURPOSE
+Build and test a bracket; hand over the champion + bench.
+ WHEN IT FIRES
+Tournament paid ($2,500 PIF; first 3 at $1,500 as a written case-study exchange).
+
+ TOOLS
+Cinema kit · Meta · the Tournament sample as template
+ DONE WHEN
+Champion + bench delivered with the scorecard.
+
+ 01 > Intake the best customer language + current ads.
+ 02 > Build five distinct angles: a complete hook / script / CTA each, not five tweaks.
+ 03 > Shoot in one session; cut 9:16 + 1:1, captioned; load as separate ad sets.
+ 04 > Run on equal budget for the test window; score hook / hold / CTR / CPL.
+ 05 > Deliver the champion in every format + two runners-up on the bench + the one-page read.
+
+ B3 48-Hour Tool Sprint delivery BRANDON
+ PURPOSE
+Build a working internal tool in two days.
+ WHEN IT FIRES
+Tool Sprint booked + 50% upfront.
+
+ TOOLS
+Claude Code / the build stack · the scope one-pager
+ DONE WHEN
+Tool delivered, trained, balance collected.
+
+ 01 > Interview: find the spreadsheet or group text they actually live in.
+ 02 > Spec the tool in one page; confirm scope in writing before building.
+ 03 > Build the working tool in two days.
+ 04 > Write the plain-English handoff guide.
+ 05 > Deliver + a 30-minute training; collect the balance. Over two days → +$1,500 / day, stated upfront.
+
+ B4 Guest Authority Package delivery NEW DELIVERY PRODUCER · BRANDON SHOOTS UNTIL THE SEAT IS FILLED
+ PURPOSE
+Deliver one cut, built for the audience the guest picked, from their episode plus one new capture session.
+ WHEN IT FIRES
+Package paid in full ($2,500).
+
+ TOOLS
+Cinema kit · editor-brief generator · clip finder · voice guard
+ DONE WHEN
+Every piece delivered, ad license confirmed in writing, proof asset requested.
+
+ 01 > Confirm the cut in writing: Owner, Customer, or Hiring. One cut per package.
+ 02 > Book the 45-minute capture session inside 10 business days, on site or in studio. Never on recording day.
+ 03 > Shoot to the cut: Customer Cut answers what their customers ask; Hiring Cut shows the shop, the team, a day; Owner Cut goes deeper on the method.
+ 04 > Deliver inside 21 days of the capture session , with a 15-minute walkthrough: 1 hero cut (3–5 min, their branding) · 10 vertical shorts, captions burned in · 1 carousel set · 1 article built for search and AI answers · 5 quote graphics · written license to run all of it as paid ads.
+ 05 > Hold delivery cost at or under 40% of price ($1,000) . Log the real number on every unit; it is one of the six missing numbers.
+ 06 > While you are in their building, look. What you see there is the spine of the Engine conversation (SOP A5).
+
+ B5 Authority Launchpad delivery NEW BRANDON + DELIVERY PRODUCER
+ PURPOSE
+A 30-day on-ramp that ends with a working first month and a clear Engine or System recommendation.
+ WHEN IT FIRES
+Launchpad paid ($2,500 one-time, 50% upfront).
+
+ TOOLS
+HoneyBook · content-calendar engine · cinema kit
+ DONE WHEN
+Day-30 review held; Engine / System proposal sent or a clean off-ramp.
+
+ 01 > Week 1: kickoff, avatar, offer check, one shoot day booked.
+ 02 > Week 2: shoot. Hero piece + short-form raw in one block.
+ 03 > Week 3: edit, publish the first pieces, launch one call-out ad.
+ 04 > Week 4: read the numbers with them. Recommend one rung.
+ 05 > Capture a proof asset before the review call ends.
+
+ // PART C · RETAINER DELIVERY · THE BASE PAYS FOR THE PIVOT. PROTECT IT
+ Every month, on voice
+
+ Engine and System stay with Churlish. Brandon keeps the account; the Delivery Producer seat (SOP D7) takes the monthly machine. Strategy above production routes to Kelly.
+ C1 Client onboarding BRANDON
+ PURPOSE
+Start any retainer so the client knows exactly what happens next.
+ WHEN IT FIRES
+Retainer signed.
+
+ TOOLS
+HoneyBook · content-calendar engine · Martian Manhunter for the voice file
+ DONE WHEN
+Kickoff done, shoot booked, voice file forged, day-30 check-in on the calendar.
+
+ 01 > Contract + first invoice via HoneyBook before any work. No payment, no scheduling.
+ 02 > Kickoff call: goals, brand assets, access, the one 90-day win.
+ 03 > Forge the client voice file before the first copy deliverable ships.
+ 04 > Set the first shoot day + the content calendar in week one.
+ 05 > Offer them a chair on HLP inside the first 90 days, disclosed on air as a client.
+ 06 > Book the day-30 check-in now.
+
+ C2 Shoot day / production BRANDON → DELIVERY PRODUCER
+ PURPOSE
+Capture a month of story-driven footage in one session.
+ WHEN IT FIRES
+A booked shoot day.
+
+ TOOLS
+Sony cinema kit · the editor-brief generator
+ DONE WHEN
+Footage captured, backed up, briefed into editing.
+
+ 01 > Pre-pro: shot list + the month's content plan + talking points sent ahead.
+ 02 > Shoot hero video + the short-form raw in one block.
+ 03 > Capture proof on location: results, testimonials, the founder's story.
+ 04 > Back up footage same day; log into the editing queue.
+ 05 > Hand to Red Robin / Alfred / CRF with the brief.
+
+ C3 Content production & editing RED ROBIN / ALFRED / CRF + EDITORS
+ PURPOSE
+Turn one shoot into a month of on-voice content.
+ WHEN IT FIRES
+Footage in the editing queue.
+
+ TOOLS
+Editor-brief generator · clip-finder skills · voice guard
+ DONE WHEN
+The month's content is delivered on cadence and on voice.
+
+ 01 > Red Robin multiplies raw into short-form cuts + ad variants.
+ 02 > Alfred storyboards and edits the long-form pieces.
+ 03 > Every on-screen line passes the voice gate (SOP D4) before it ships.
+ 04 > Queue order is fixed: paying CRF turnarounds, then retainer deliverables, then HLP kits. An HLP kit never bumps a paying client.
+ 05 > CRF handles overflow / standalone editing volume.
+
+ C4 Ad management & reporting BRANDON · CYBORG BUILDS
+ PURPOSE
+Run the paid spend behind the creative.
+ WHEN IT FIRES
+Active retainer with ad management.
+
+ TOOLS
+Meta · the ad-diagnostic engine
+ DONE WHEN
+Spend is managed weekly and reported monthly.
+
+ 01 > Launch the creative against the right audiences; spend billed separately ($500 / mo min, never marked up).
+ 02 > Test, scale winners, kill losers; refresh is automatic at frequency 3+.
+ 03 > Run the ad-diagnostic checks weekly. Read metrics in pairs, never singles.
+ 04 > Refresh creative before fatigue; rotate the bench.
+ 05 > Report the numbers monthly (SOP C5).
+
+ C5 Monthly client reporting DELIVERY PRODUCER · WATCHTOWER ASSISTS
+ PURPOSE
+Show the client the number, not the activity.
+ WHEN IT FIRES
+Monthly, per retainer.
+
+ TOOLS
+The OS · the performance-report format
+ DONE WHEN
+Report sent, call held, proof captured.
+
+ 01 > Pull the month's results: leads, CPL, dollars where trackable.
+ 02 > Frame against the goal, not against “posts shipped.”
+ 03 > Name what worked, what is next, and the one decision needed.
+ 04 > Send the report + book or confirm the monthly call.
+ 05 > Capture any win as a proof asset for the receipts.
+
+ C6 Renewal & expansion BRANDON · GUARDIAN BUILDS THE CASE
+ PURPOSE
+Protect the base. The pivot can read as “he's moving on.” Do not let it.
+ WHEN IT FIRES
+Day 60 of any retainer; or any account quiet 14 days.
+
+ TOOLS
+The OS · the reporting history · Guardian
+ DONE WHEN
+Renewed or expanded, or a clean off-ramp with proof captured.
+
+ 01 > This week: every base client hears about HLP-first from Brandon, directly, before they see it online.
+ 02 > Day 60: expansion conversation. Show results, name the next tier.
+ 03 > Day 75: renewal motion. Re-sign before the term lapses.
+ 04 > Any account quiet 14 days → renewal-playbook call that week.
+ 05 > Two legacy accounts stay on the grandfathered Lite rate. It is never quoted to anyone else.
+ 06 > Churn budget: ≤ 1 account per quarter.
+
+ // PART D · OPERATIONS & STANDARDS · WHAT KEEPS IT HONEST
+ The fleet, the cadence, the gates
+
+ D1 The agent fleet daily loop EVE · ORCHESTRATION
+ PURPOSE
+Run the guest pipeline and the content machine without Brandon's hands on it.
+ WHEN IT FIRES
+Daily, automatically.
+
+ TOOLS
+The full fleet + the OS
+ DONE WHEN
+The loop completes and Watchtower signs off.
+
+ 01 > Kid Flash scores guest candidates and tiers prospects.
+ 02 > Blue Beetle sends invitations and books pre-interviews.
+ 03 > Lois Lane stages the publish kit for the latest recording. Stage only; nothing publishes without item-level approval.
+ 04 > Red Robin cuts clips; Starfire queues them; Iris West files fresh angles Monday.
+ 05 > Watchtower verifies the run. Brandon's manual jobs: sit in the chair, hold the conversations, approve the work.
+
+ D2 Watchtower fleet health check WATCHTOWER · AGENT
+ PURPOSE
+Catch failures, stalls and off-brand drift before they cost money.
+ WHEN IT FIRES
+Daily at midday.
+
+ TOOLS
+The OS Agent Fleet module
+ DONE WHEN
+Fleet health logged and any issue escalated.
+
+ 01 > Confirm every agent ran and produced output.
+ 02 > Inspect output for quality + on-brand voice.
+ 03 > Check the invitation thread for any service pitch. One is a failure.
+ 04 > Flag failures / stalls / drift; escalate to Brandon.
+ 05 > Nothing broken ships unflagged.
+
+ D3 Weekly founder cadence (Friday Five, V5) BRANDON
+ PURPOSE
+Run the business on five numbers, then close the laptop.
+ WHEN IT FIRES
+Every Friday.
+
+ TOOLS
+The OS Command dashboard
+ DONE WHEN
+The five are logged, the show panel is written down, next week's chairs are booked.
+
+ 01 > Conversations held (floor 3: two chairs + one straight sales conversation).
+ 02 > Debriefs held + offers out (floor 2).
+ 03 > Dollars signed, chair-sourced tagged.
+ 04 > Dollars collected vs. $150K, and chair-sourced net of production vs. the $15K line.
+ 05 > Founder-free % of delivered dollars, with HLP hours beside it (cap 12 / wk).
+ 06 > Then the show panel (reported, not judged), the tripwires, and the parking ledger.
+
+ D4 Brand & voice QA BRANDON / WATCHTOWER
+ PURPOSE
+Nothing ships that could appear in any agency's deck unchanged.
+ WHEN IT FIRES
+Before any client-facing or guest-facing asset goes out.
+
+ TOOLS
+Field Manual voice section · the voice guard
+ DONE WHEN
+The asset passes all six and ships.
+
+ 01 > Run the litmus: is it direct, does it earn attention, could anyone else say it?
+ 02 > Scan for banned words. Cut them.
+ 03 > Check proof is real. No fabricated testimonials or numbers.
+ 04 > Check the visual: one red per print composition, teal as the workhorse. The OS terminal skin is the digital exception.
+ 05 > Guest-facing pages carry no house vocabulary: no “Authority Engine,” no “debrief,” no “Breakthrough Arc.”
+ 06 > Only then, ship.
+
+ D5 The wall audit NEW WATCHTOWER · BRANDON SIGNS
+ PURPOSE
+Prove the editorial wall is holding. One guest who feels sold to costs five bookings.
+ WHEN IT FIRES
+Monthly; and the same day any guest answers “yes” to the wall question.
+
+ TOOLS
+Day-after survey · Pipeline · the episode log
+ DONE WHEN
+Audit logged; any breach answered with a same-day founder call.
+
+ 01 > Pull the last 4 episodes. For each: was anything offered before, during, or on the day of recording? It should be no, every time.
+ 02 > Compare the edit and promotion of buyers against non-buyers: publish slot, clips cut, posts scheduled. They should match.
+ 03 > Confirm every client and sponsor guest was disclosed on air.
+ 04 > Confirm nobody paid for a chair. Ever.
+ 05 > Any breach: same-day call from Brandon to that guest, and the fix goes in this book.
+
+ D6 The parking ledger & the 24-recording lock NEW BRANDON · EVE KEEPS THE LEDGER
+ PURPOSE
+Stop the new build from eating the quarter.
+ WHEN IT FIRES
+Any new idea, offer, format change or venture, the moment it shows up.
+
+ TOOLS
+The parking ledger in the OS
+ DONE WHEN
+The idea is parked with a date, or it is live with a named thing it displaced.
+
+ 01 > Write it in the ledger. One line. Date it.
+ 02 > It waits 48 hours. No building, no pricing, no telling anyone.
+ 03 > To leave the ledger it must name what it displaces : which hours, which offer, which build.
+ 04 > No change to show format, offer ladder, or channel strategy before the Dec 18 League full board , except by a tripwire that fired.
+ 05 > When the word “everything” shows up, ask what stops.
+
+ D7 The two seats NEW BRANDON HIRES · EVE DRAFTS THE ADS
+ PURPOSE
+Take the two jobs off Brandon that the plan cannot survive him keeping.
+ WHEN IT FIRES
+Guest Coordinator: now, seated by Oct 5. Delivery Producer: the day the first new Engine signs, or Nov 1, whichever is first.
+
+ TOOLS
+The Seat Cards · the intern bench · the editor bench
+ DONE WHEN
+Both seats have a name, a weekly hour count, and a 30-day scorecard.
+
+ 01 > Guest Coordinator (intern or VA, ~6 hrs / wk): scheduling, confirmations, releases, prep notes, the three notes, the no-show policy. Runs SOPs E2 and E5.
+ 02 > Delivery Producer (contract, part-time to start): monthly retainer machine, package delivery, client reporting. Runs SOPs B4, C2–C5.
+ 03 > Write the seat before you fill it. A hire into an unwritten role buys a salary and a training project.
+ 04 > Revenue covers the seat before it is filled: one Engine covers a part-time producer.
+ 05 > 30-day scorecard for each. If the seat is not taking hours off Brandon by day 30, change the person or the seat.
+
+ // PART E · THE SHOW · NEW IN V5
+ High Level Pros, chair to cohort
+
+ Under 1,000 subscribers the show is a meeting format with a camera. Run it like one: chairs filled by fit owners, debriefs held, emails captured. Views are reported, not judged.
+ E1 The pre-interview NEW BRANDON → GUEST COORDINATOR BOOKS
+ PURPOSE
+Fifteen minutes that find the episode before the cameras do.
+ WHEN IT FIRES
+A guest says yes to the invitation.
+
+ TOOLS
+Show Bible pre-interview questions · Calendar
+ DONE WHEN
+The stuck number, the three mistakes, and the specialty module are written in the prep note.
+
+ 01 > Get the stuck number, how long they sat there, and the number now.
+ 02 > Get the three mistakes in their words. If they cannot name three, they are not ready for the chair yet.
+ 03 > Pick the stage module and the specialty module from the question bank.
+ 04 > Ask which numbers are off limits. Respect it on the day.
+ 05 > Tell them plainly what they walk away with, free: the full episode, a trailer, two shorts.
+ 06 > No offer. Not a hint of one.
+
+ E2 Guest logistics & the no-show policy NEW GUEST COORDINATOR
+ PURPOSE
+Get the right person into the right chair on time, with paper signed.
+ WHEN IT FIRES
+Pre-interview done.
+
+ TOOLS
+Calendar · the release + disclosure page · the prep note template
+ DONE WHEN
+Guest confirmed twice, release on file before record, prep note sent.
+
+ 01 > Book the slot: 90 minutes on site for 45 minutes of recording.
+ 02 > Send the release + disclosure page with the confirmation. No signed release, no recording.
+ 03 > Send the prep note 72 hours out: address, parking, what to wear, the arc in plain words.
+ 04 > Confirm at 48 hours and the morning of.
+ 05 > A no-show gets one reschedule inside 14 days. A second one comes off the slate.
+ 06 > Keep one banked episode or one solo episode ready so a no-show never costs a publish slot.
+
+ E3 Recording day NEW BRANDON
+ PURPOSE
+Record one episode in the Breakthrough Arc, 35–45 minutes, and capture the Ledger.
+ WHEN IT FIRES
+A confirmed guest, release on file.
+
+ TOOLS
+The set · cinema kit · the question bank · the Owner's Ledger 5
+ DONE WHEN
+Footage backed up, Ledger answers logged, nothing offered.
+
+ 01 > The stuck number lands inside the first 30 seconds of segment one. Mistake #1 by minute three.
+ 02 > Run the seven segments. Each one is a clip franchise; say the segment names on air.
+ 03 > Ask the Owner's Ledger 5 the same way every time. The Ledger is the moat.
+ 04 > One CTA for the listener, the same one every episode.
+ 05 > Nothing is asked of the guest in the room. Not the debrief, not a referral, nothing.
+ 06 > Back up same day. Hand to Lois Lane with the timestamped notes.
+
+ E4 The publish kit NEW LOIS LANE STAGES · EDITORS CUT · BRANDON APPROVES
+ PURPOSE
+Twelve published pieces from every recording, at or under the cap.
+ WHEN IT FIRES
+Footage backed up from a recording.
+
+ TOOLS
+hlp-clip-finder · hlp-youtube-package · Cassandra Cain · the Approval Inbox
+ DONE WHEN
+Kit staged in Drive behind an approval sheet; published on schedule after item-level approval.
+
+ 01 > Trailer + shorts + mid-form via the clip finder. Topic-first packaging: number jump + trade + three mistakes. Guest name in the description.
+ 02 > Title, description, thumbnail line and prompt via the YouTube package skill. Descriptor locked: “High Level Pros · Midwest owners, real numbers.”
+ 03 > Carousel + article built for search and AI answers.
+ 04 > Cap: $400 a kit. Log the real cost. An HLP kit never bumps a paying CRF turnaround.
+ 05 > Publish Tuesdays from Oct 6. Tue / Thu begins when 4 are banked.
+ 06 > If publishing slips two weeks running: publish once a week, keep recording twice. The chair is the revenue.
+
+ E5 The share kit & the three notes NEW GUEST COORDINATOR SENDS · BRANDON SIGNS
+ PURPOSE
+Give every guest something worth posting, then earn the debrief.
+ WHEN IT FIRES
+Recording finished.
+
+ TOOLS
+The Debrief Call Script §02 · the 3-question survey
+ DONE WHEN
+All three notes sent on schedule; survey logged; debrief booked or the guest moved to alumni.
+
+ 01 > Day after: thank-you, publish date, 3-question survey. No ask.
+ 02 > Publish day: the free share kit (episode, trailer, 2 shorts) and the invitation: twenty minutes on what it could do in their own market.
+ 03 > Publish + 5 days: one nudge. Then stop.
+ 04 > Any “yes” on the wall question fires SOP D5 the same day.
+ 05 > No reply after the nudge: log “no debrief,” move to alumni. Never a fourth touch about the package.
+
+ E6 Email capture & the weekly email NEW STARFIRE · PERRY WHITE WRITES
+ PURPOSE
+Turn listeners into a list. The list fills the cohort.
+ WHEN IT FIRES
+Every episode; one email a week.
+
+ TOOLS
+The one-page site · the email platform · the free one-pager per episode
+ DONE WHEN
+Signup link live on every episode; weekly email sent; list size logged Friday.
+
+ 01 > Every episode ships with one free one-pager: the three mistakes and the fix, in the guest's words.
+ 02 > One link, the same place every time: description line one, pinned comment, end card.
+ 03 > One email a week: this week's episode, one idea, one ask.
+ 04 > Log list size every Friday. It is one of the six missing numbers.
+ 05 > 1,000 subscribers on the list is one of the two triggers for memberships and the event. Not before.
+
+ E7 Cohort enrollment NEW BRANDON
+ PURPOSE
+Fill ten seats in The Next Stage with deposits, not a waitlist.
+ WHEN IT FIRES
+Deposits open on air Oct 19.
+
+ TOOLS
+HoneyBook / Stripe · the Cohort Enrollment Kit
+ DONE WHEN
+8 deposits by Nov 7 → go. Under 8 → start moves to Feb 16 automatically.
+
+ 01 > $250 refundable deposit holds a seat. Waitlists lie.
+ 02 > First ten asks are personal messages to owners at $150K–$750K. Fewer than 2 deposits from those ten means the offer needs the JSA.
+ 03 > Nov 10: free “meet the instructors” session. Enrollment opens that night.
+ 04 > Enrollment calls capped at 3 a week. They share hours with the chair.
+ 05 > $2,500 founding, or 3 × $950. Seat is confirmed when the balance or first payment clears.
+ 06 > Meta runs warm only: episode viewers and the list.
+
+ E8 Cohort delivery NEW BRANDON + FOUR GUEST INSTRUCTORS
+ PURPOSE
+Eight weeks. Ten seats. Everybody ships.
+ WHEN IT FIRES
+Jan 12, 2027 (or Feb 16).
+
+ TOOLS
+The cohort syllabus (rebuilt from the Inner Circle) · the recording setup
+ DONE WHEN
+All ten finish with the thing they came to build; every session recorded.
+
+ 01 > One live session a week, 90 minutes. One owner-instructor leads four of the eight.
+ 02 > Every session ends with one thing due before the next.
+ 03 > Record everything. Cohort three turns these into the self-paced product.
+ 04 > Week 8: each owner shows what they shipped. Capture proof on the spot.
+ 05 > After week 8: alumni-only coaching ($500 / mo, cap 3) or done-for-you (Launchpad / Engine).
+
+ E9 Clip amplification NEW CYBORG BUILDS · AD-DIAGNOSTIC JUDGES
+ PURPOSE
+Put money only behind what already works. Meta has three jobs now.
+ WHEN IT FIRES
+A clip clears its organic benchmark; or a cohort window opens; or a package case study publishes.
+
+ TOOLS
+Meta · Cyborg · the ad-diagnostic engine
+ DONE WHEN
+Spend stays inside the three jobs and the $500 / mo floor.
+
+ 01 > Job 1: amplify clips that already won organically.
+ 02 > Job 2: fill the cohort, warm audiences only.
+ 03 > Job 3: retarget episode viewers with package proof.
+ 04 > Cold lead generation for Churlish services is off.
+ 05 > Scale / tweak / refresh / kill per the diagnostic law. Item-level approval before anything goes live.
+
+ E10 The sponsor lane NEW PARKED
+ PURPOSE
+Sell disclosed sponsor seats once the show has earned them.
+ WHEN IT FIRES
+ NOT YET. Trigger: 12 consecutive on-schedule episodes + a media kit with real numbers, or Jan 15, 2027. Outreach opens Dec 1.
+
+ TOOLS
+The drafted rate card (Master Plan v5)
+ DONE WHEN
+Parked until the trigger fires.
+
+ 01 > Do not pitch a sponsor before the trigger. A media kit with no numbers is a favor, not a sale.
+ 02 > When it fires: presenting $1,500 / mo, segment $750 / mo, live event $2,000, quarterly commitments.
+ 03 > Every sponsor is disclosed on air. A sponsor never buys a chair.
+ 04 > AdSense is planned at $0. The watch-hour bar doubles for new applicants on Feb 1, 2027.
+
+ $ WHOAMI — THE WHOLE POINT
+ A business that only works A business that only works A business that only works
+ when you work when you work when you work is a job.
+ This book is how it stops being one. The fleet runs the loop, the coordinator runs the calendar, the producer runs the month, the gates catch what is off. Brandon's job shrinks to the three things only he can do for now: sit in the chair, hold the conversation, approve the work. Keep writing down the rest until that is true on every line.
+
+ Churlish Media · The Book of SOPs · V5 CHURLISHMEDIA.COM · 402-819-8168
+
+ FOUNDER-FREE DELIVERY. CHURLISHMEDIA.COM
