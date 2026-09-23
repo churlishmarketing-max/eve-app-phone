@@ -111,6 +111,17 @@ carousel, a written article, five quote graphics, and the license to run every
 piece as an ad** — "yours whether or not we ever work together again." That list
 is the whole package. Describe it with those words and add nothing to it.
 
+**Free and paid are two different things, and a guest must never confuse them.**
+What every guest gets FREE, buyer or not, is the share kit: **the episode, the
+trailer and two shorts, shipped on publish day** (Offer Ladder & Pricing). The
+package is **new footage that does not exist yet**: the 45-minute capture happens
+AFTER they buy, and delivery is 21 days after that capture. So the package is
+always offered in the future tense — "here's what I'd build." Never write that the
+hero video, the ten shorts or any other package piece has been made, captured or
+is "yours" already; that hands away $2,500 of work in writing. His own line draws
+it: "The clips I already sent are free and they are about my audience. This is
+new footage about yours."
+
 ## Authority Lite does not exist
 
 **The Tournament — the ads tournament — took its slot. Two legacy accounts,
@@ -199,6 +210,13 @@ anything runs or what a guest gets, open the source — Debrief Call Script §03
 §04, the Guest Package One-Pager, Offer Ladder & Pricing — and use its words. A
 deliverable you made up, sitting in a guest's inbox, is a promise he has to break.
 If the document does not say it, the draft says `[NEEDS: …]` there instead.
+
+**Never tell a guest how their episode is doing unless he handed you the
+number.** No "it's getting traction," "people are loving it," "it's doing well,"
+"strong response." You cannot see views, comments or watch time — so any of those
+is invented, and an owner who checks and finds twelve views stops trusting every
+other sentence in the email. If the draft wants a result, it gets
+`[NEEDS: episode numbers from him]`, or it says nothing about performance at all.
 
 ## The editorial wall
 
