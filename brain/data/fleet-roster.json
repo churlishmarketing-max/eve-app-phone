@@ -103,9 +103,9 @@
     "division": "fleet",
     "key": "kid-flash",
     "name": "Kid Flash",
-    "alias": "Lead Research",
-    "job": "Sources, qualifies, tiers, verifies prospect lists via Apollo. Feeds Blue Beetle; keeps the funnel floor fed.",
-    "triggers": "\"run Kid Flash\" · list sourcing",
+    "alias": "Research · V5",
+    "job": "Lane 1 (first): HLP guest sourcing — scored owners, verified line one, first-four flag. Lane 2: prospect lists at the Sept 25 rule volume.",
+    "triggers": "\"run Kid Flash\" · \"find guests\" · list sourcing",
     "schedule": "Daily · morning",
     "loc": "WS"
   },
@@ -113,10 +113,50 @@
     "division": "fleet",
     "key": "blue-beetle",
     "name": "Blue Beetle",
-    "alias": "Brand Outreach",
-    "job": "Multi-touch email + LinkedIn outreach, routes replies, books 15-min calls (Authority Spark + service side).",
-    "triggers": "\"run Blue Beetle\" · outreach · booking",
+    "alias": "Outreach · V5",
+    "job": "Lane 1 (first): HLP guest invitations, 3 touches then stop, books the pre-interview, zero pitches in the thread. Lane 2: sales outreach at rule volume. Lane 3: sponsors from Dec 1.",
+    "triggers": "\"run Blue Beetle\" · \"send the invitations\" · outreach",
     "schedule": "Daily",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "jimmy-olsen",
+    "name": "Jimmy Olsen",
+    "alias": "The Guest Desk · NEW Sept 21, 2026",
+    "job": "Every HLP guest from booked chair to alumni: tracker, release, prep, confirmations, no-show policy, survey + wall question, N1–N3, share-kit handoff, referrals. Pairs with the human Guest Coordinator.",
+    "triggers": "\"run Jimmy\" · \"guest status\" · any HLP application",
+    "schedule": "Daily · 7:00 AM",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "nightwing",
+    "name": "Nightwing",
+    "alias": "Show Director · chair created Sept 21, 2026",
+    "job": "Second directors-bench seat. Owns the HLP lane; one approval batch a week. **Seated when 4 episodes are banked (~Oct 20); status mode until then.**",
+    "triggers": "\"Nightwing\" · \"run the show\" · \"show status\"",
+    "schedule": "Weekly",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "raven",
+    "name": "Raven",
+    "alias": "Cohort Director · chair created Sept 21, 2026",
+    "job": "The Next Stage cohort. **Seated only on 8 deposits by Nov 7;** pre-seat mode counts deposits and routes the window.",
+    "triggers": "\"Raven\" · \"the cohort\" · \"deposits\"",
+    "schedule": "On trigger",
+    "loc": "WS"
+  },
+  {
+    "division": "fleet",
+    "key": "lucius-fox",
+    "name": "Lucius Fox",
+    "alias": "Sponsor Desk · stub, Sept 21, 2026",
+    "job": "Logs sponsor applications, builds the Dec 1 target list; media kit and outreach from Dec 1. Sponsors NOT YET by ruling.",
+    "triggers": "\"sponsor\" · \"media kit\" · any sponsor application",
+    "schedule": "Seats Dec 1",
     "loc": "WS"
   },
   {
@@ -186,16 +226,6 @@
     "alias": "Answer Engine Visibility",
     "job": "Makes the client THE answer when someone asks ChatGPT/Claude/Perplexity for \"best X in [city].\" Delivery skill + productized service line.",
     "triggers": "AEO/GEO mentions · \"run Brother Eye\"",
-    "schedule": "On demand",
-    "loc": "WS"
-  },
-  {
-    "division": "fleet",
-    "key": "perry-white",
-    "name": "Perry White",
-    "alias": "Editor-in-Chief · The Email Desk",
-    "job": "Master writer for every one-off / high-stakes email — inbox replies, inbound lead responses, post-call follow-ups, ghosted-proposal revivals, reactivations, price objections, collections, renewals, referral asks, and Documented-register escalation letters (Meta/BBB). Owns the Desk Law: the 11-gate standard every fleet email passes before it ships. Lois Lane works his newsroom.",
-    "triggers": "\"Perry White\" · \"run Perry\" · \"take this to the desk\" · \"reply to this\" · any pasted email needing an answer",
     "schedule": "On demand",
     "loc": "WS"
   },
@@ -278,6 +308,16 @@
     "triggers": "\"run the leak sweep\"",
     "schedule": "Periodic",
     "loc": "CC"
+  },
+  {
+    "division": "production",
+    "key": "perry-white",
+    "name": "Perry White",
+    "alias": "Editor-in-Chief · The Email Desk",
+    "job": "Every one-off or high-stakes email: lead replies, follow-ups, revivals, objections, bad news, collections, escalations. Owns the Desk Law: 11 gates + the five-register dial (Call-out/Counsel/Steel/Documented/Hearth) governing ALL fleet copy. Hearth register mandatory on grief/loss/private hardship.",
+    "triggers": "\"run Perry\" · \"write an email\" · \"reply to this\" · \"they ghosted\" · any pasted email needing an answer · \"set the register\"",
+    "schedule": "On demand",
+    "loc": "WS"
   },
   {
     "division": "production",
@@ -431,6 +471,26 @@
   },
   {
     "division": "systems",
+    "key": "big-barda",
+    "name": "Big Barda",
+    "alias": "The Usage Warden",
+    "job": "Enforces the Fable Loop: the expensive seat plans, specs, and judges — never grinds. Routes grinding to cheap seats in parallel; runs the pre-flight before build days and the leak audit on demand. EVE routes work; Barda routes compute.",
+    "triggers": "\"run Barda\" · \"Barda check\" · \"usage check\" · \"conserve tokens\" · \"route this work\" · before any multi-deliverable build day",
+    "schedule": "Standing (auto on Fable 5)",
+    "loc": "WS"
+  },
+  {
+    "division": "systems",
+    "key": "brainiac",
+    "name": "Brainiac",
+    "alias": "The Prompt Engine · Collector of Worlds",
+    "job": "Bottles every Claude model's behavioral profile; rewrites any request into the style + params that seat responds best to at the fewest tokens (inverse-scaffolding law). Barda picks the seat; Brainiac writes the prompt. Runs the self-update protocol on any unknown model.",
+    "triggers": "\"run Brainiac\" · \"bottle this\" · \"optimize this prompt\" · \"rewrite this for [model]\" · any worker prompt before it ships · any new Claude model",
+    "schedule": "Standing (pairs with Barda)",
+    "loc": "WS"
+  },
+  {
+    "division": "systems",
     "key": "verification-loop",
     "name": "Verification Loop",
     "alias": "Ship With Receipts",
@@ -467,16 +527,6 @@
     "job": "Publishing war room for MindCTRL Studios releases.",
     "triggers": "MindCTRL release decisions",
     "schedule": null,
-    "loc": "CC"
-  },
-  {
-    "division": "systems",
-    "key": "big-barda",
-    "name": "Big Barda",
-    "alias": "Usage Warden",
-    "job": "Fable Loop enforcement, model-seat routing, session pre-flight, waste audits. One law: the most expensive seat does the least work. Lives at ~/.claude/commands/barda.md; companions: opus-/sonnet-/haiku-executor agents + /fable (the boss).",
-    "triggers": "\"/barda\" · \"Barda check\" · \"usage check\"",
-    "schedule": "On demand · pre-flight before any build day",
     "loc": "CC"
   },
   {

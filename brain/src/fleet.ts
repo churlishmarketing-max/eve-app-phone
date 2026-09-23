@@ -14,8 +14,9 @@ import path from "node:path";
 // by scripts/build-fleet-roster.mjs) matched on key — so routing detail
 // survives while membership stays the OS's call. A unit the OS carries that EVE
 // has no local brief for still appears (name/division/loc); she just says she
-// doesn't hold its full brief. If the OS is unreachable, she falls back to the
-// bundled snapshot and labels it as cached.
+// doesn't hold its full brief. If the OS is unreachable — or answers with an
+// EMPTY roster — she falls back to the bundled snapshot and labels it, saying
+// which of the two happened (see chooseView).
 
 export interface FleetUnit {
   division: string;
@@ -34,6 +35,10 @@ export interface RosterView {
   live: boolean; // true = read from the OS just now; false = bundled fallback
   at: number; // when this view was built (ms)
   osCount: number | null; // count the OS reported (null when unreachable)
+  // WHY this view is what it is — so nothing downstream has to guess, and the
+  // tool can say which of two very different things happened. "os-empty" is
+  // the OS answering ok with zero units; "os-unreachable" is no answer at all.
+  why: "live" | "os-empty" | "os-unreachable";
 }
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -65,7 +70,7 @@ export function fleetReadReady(): boolean {
   return !!osSecret();
 }
 
-interface OsRow {
+export interface OsRow {
   key: string;
   name: string;
   division: string;
@@ -130,12 +135,33 @@ let refreshing: Promise<RosterView> | null = null;
 const LIVE_TTL_MS = 5 * 60_000; // the fleet changes rarely; 5-min freshness is plenty
 const MISS_TTL_MS = 30_000; // after an OS miss, retry soon rather than sit on the fallback
 
-async function build(): Promise<RosterView> {
-  const osRows = await fetchOsRoster();
-  if (osRows) {
-    return { units: merge(osRows), live: true, at: Date.now(), osCount: osRows.length };
+// AN EMPTY ROSTER IS A FAULT, NOT A FACT (2026-09-22). On the night of Sept 22
+// the OS answered the roster read with ok:true and zero units, and because an
+// answer was treated as authoritative, EVE's fleet went to zero: "who's in the
+// fleet?" got "nobody" while fifty-six units existed. An operation with no
+// units is not a state the business can be in, so zero rows is handled like no
+// answer: the saved roster serves, labelled as saved (live:false, why:"os-empty"),
+// and the OS is retried on the short miss TTL. A NON-empty OS answer still wins
+// outright — that is the sync he asked for. The warning is logged once per
+// empty streak, not every 30-second retry.
+let warnedEmpty = false;
+export function chooseView(osRows: OsRow[] | null, saved: FleetUnit[], now = Date.now()): RosterView {
+  if (osRows && osRows.length > 0) {
+    warnedEmpty = false;
+    return { units: merge(osRows), live: true, at: now, osCount: osRows.length, why: "live" };
   }
-  return { units: bundled(), live: false, at: Date.now(), osCount: null };
+  if (osRows) {
+    if (!warnedEmpty) {
+      warnedEmpty = true;
+      console.warn(`[fleet] the OS answered with an EMPTY roster — serving the saved roster (${saved.length} units) until it answers with units`);
+    }
+    return { units: saved, live: false, at: now, osCount: 0, why: "os-empty" };
+  }
+  return { units: saved, live: false, at: now, osCount: null, why: "os-unreachable" };
+}
+
+async function build(): Promise<RosterView> {
+  return chooseView(await fetchOsRoster(), bundled());
 }
 
 // The live-and-in-sync fleet view. Serves the cache within its TTL; otherwise
@@ -167,6 +193,6 @@ export async function warmFleet(): Promise<void> {
 
 // Cheap read (no refresh) — lets /health report whether the live view has landed
 // and whether it came from the OS.
-export function fleetViewStatus(): { ready: boolean; live: boolean; count: number } {
-  return { ready: !!view, live: !!view?.live, count: view?.units.length ?? 0 };
+export function fleetViewStatus(): { ready: boolean; live: boolean; count: number; why: RosterView["why"] | null; osCount: number | null } {
+  return { ready: !!view, live: !!view?.live, count: view?.units.length ?? 0, why: view?.why ?? null, osCount: view?.osCount ?? null };
 }

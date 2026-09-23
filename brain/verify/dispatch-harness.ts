@@ -428,7 +428,10 @@ async function main() {
     const rosterKeys = new Set((await fleetRoster()).units.map((u) => u.key));
     const offRoster = REGISTRY.filter((c) => !rosterKeys.has(c.key));
     ok("S1", f.dispatchable === 5 + ms.units && f.dispatchable === REGISTRY.length, `dispatchable = ${f.dispatchable} (5 code + ${ms.units} skills)`);
-    ok("S2", rosterKeys.size === 51 && f.registered === 51 + offRoster.length && f.units.length === f.registered && f.units.filter((u) => u.roster).length === 51, `registered = ${f.registered} (51 roster + ${offRoster.length} brain-only: ${offRoster.map((c) => c.key).join(", ")}); source=${f.source}`);
+    // The roster size is COUNTED from the saved roster file, not typed in: the
+    // literal 51 broke the day the second-brain roster grew to 56 (Sept 22).
+    const SAVED_ROSTER_N = (JSON.parse(readFileSync(path.join(brainDir, "data", "fleet-roster.json"), "utf8")) as unknown[]).length;
+    ok("S2", SAVED_ROSTER_N > 0 && rosterKeys.size === SAVED_ROSTER_N && f.registered === SAVED_ROSTER_N + offRoster.length && f.units.length === f.registered && f.units.filter((u) => u.roster).length === SAVED_ROSTER_N, `registered = ${f.registered} (${SAVED_ROSTER_N} roster + ${offRoster.length} brain-only: ${offRoster.map((c) => c.key).join(", ")}); source=${f.source}`);
     const badges = Object.fromEntries(f.units.map((u) => [u.key, u.badge]));
     ok("S3", badges.pennyworth === "RUNNABLE" && badges.jsa === "RUNNABLE" && badges.research === "RUNNABLE" && badges["perry-white"] === "RUNNABLE" && badges.starfire === "RUNNABLE" && badges.eve === "WORKSPACE_ONLY" && badges.cyborg === "WORKSPACE_ONLY", `badges: pennyworth=${badges.pennyworth} jsa=${badges.jsa} perry-white=${badges["perry-white"]} starfire=${badges.starfire} eve=${badges.eve} cyborg=${badges.cyborg}`);
     const ws = f.units.filter((u) => u.badge === "WORKSPACE_ONLY").length;
@@ -443,9 +446,17 @@ async function main() {
     const sf = f.units.find((u) => u.key === "starfire")!;
     const cy = f.units.find((u) => u.key === "cyborg")!;
     const jo = f.units.find((u) => u.key === "jimmy-olsen")!;
+    // The off-roster example is whichever brain skill the roster does NOT carry —
+    // chosen from the data, so a roster change cannot silently empty the check.
+    const offKey = offRoster.find((c) => c.key !== "research")?.key;
+    const off = offKey ? f.units.find((u) => u.key === offKey) : undefined;
     ok("S9", sf.kind === "skill" && sf.pinned === true && sf.tier === "yellow" && sf.division === "fleet" && sf.triggers.length > 0 && sf.triggers.length <= 80, `starfire: kind=${sf.kind} pinned=${sf.pinned} tier=${sf.tier} division=${sf.division} triggers="${sf.triggers}"`);
     ok("S10", cy.kind === null && cy.pinned === false && !("tier" in cy) && cy.triggers.length > 0, `cyborg (WORKSPACE_ONLY): kind=null pinned=false no tier, triggers="${cy.triggers}"`);
-    ok("S11", jo.kind === "skill" && jo.roster === false && jo.division === "brain-skills" && jo.loc === "BRAIN" && jo.pinned, `jimmy-olsen (not a roster row): roster=false division=${jo.division} loc=${jo.loc} pinned=${jo.pinned}`);
+    // S11 used to use jimmy-olsen as its off-roster brain skill. Since the Sept 22
+    // roster, Jimmy Olsen IS a roster row (the HLP guest desk), so the two halves
+    // of what S11 proved are now two checks.
+    ok("S11", !!off && off.kind === "skill" && off.roster === false && off.division === "brain-skills" && off.loc === "BRAIN", `${offKey} (not a roster row): roster=false division=${off?.division} loc=${off?.loc} — a bundled skill the roster does not carry still registers, labelled as brain-only`);
+    ok("S11b", jo.kind === "skill" && jo.roster === true && jo.division === "fleet" && jo.pinned, `jimmy-olsen (a roster row since Sept 22): roster=${jo.roster} division=${jo.division} loc=${jo.loc} pinned=${jo.pinned} — a skill that IS on the roster takes the roster's division`);
     ok("S12", f.pinned === 9 && f.units.filter((u) => u.pinned).map((u) => u.key).sort().join(",") === "blue-beetle,jimmy-olsen,kid-flash,pennyworth,perry-white,red-robin,research,starfire,watchtower", `pinned = ${f.pinned}: ${f.units.filter((u) => u.pinned).map((u) => u.key).sort().join(", ")}`);
     ok("S13", f.kinds.worker === 4 && f.kinds.tool === 1 && f.kinds.skill === ms.units && f.units.every((u) => typeof u.triggers === "string" && u.triggers.length <= 80), `kinds = ${JSON.stringify(f.kinds)}; every triggers ≤ 80 chars`);
   }

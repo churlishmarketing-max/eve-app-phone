@@ -954,7 +954,7 @@ export function buildConnectorServer(
           "them. GREEN — read-only.",
         { filter: z.string().optional().describe("Optional: a name, job word, or division to narrow the list") },
         async ({ filter }) => {
-          const { units, live, osCount } = await fleetRoster();
+          const { units, live, osCount, why } = await fleetRoster();
           if (!units.length) return text("Fleet roster not loaded.", true);
           const q = (filter ?? "").trim().toLowerCase();
           const rows = q
@@ -977,9 +977,13 @@ export function buildConnectorServer(
                 .join("\n"),
             )
             .join("\n");
+          // Two different fallbacks, said as two different things: an OS that
+          // answered with nothing is not an OS that didn't answer.
           const header = live
             ? `Fleet — live from the Churlish OS (${osCount} units)`
-            : "Fleet — cached copy (the OS was unreachable, so this may be behind the board)";
+            : why === "os-empty"
+              ? `Fleet — EVE's saved roster (${units.length} units): the OS answered with an empty roster, so this is the last saved list, not the live board`
+              : "Fleet — cached copy (the OS was unreachable, so this may be behind the board)";
           return text(`${header}${q ? `, ${rows.length} match "${filter}"` : ""}:\n${out}`);
         },
         { annotations: { readOnlyHint: true } },
