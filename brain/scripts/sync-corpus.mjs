@@ -345,14 +345,57 @@ if (missing.length) {
   process.exit(2);
 }
 
+// ---- rulings -----------------------------------------------------------------
+//
+// HIS LATER DECISIONS OVER THE RECORD. The corpus is his documents as written, and
+// nothing here edits them to taste. But when two of his documents disagree and he
+// RULES between them, EVE must not keep citing the losing line as current. So a
+// ruling is applied at ingest — the same idea as skills-overrides: the correction
+// lives in the repo, survives every re-extraction, and is visible IN the passage
+// she cites ("[RULED …]"), so a citation never hides that the print said otherwise.
+//
+// Each entry is exact text. Applying is idempotent: a document that already carries
+// the ruled text (an in-place rebuild) is left alone; one that carries the original
+// line gets it replaced; one that carries NEITHER aborts the sync (exit 3), because
+// a ruling that no longer matches the record is a ruling someone has to re-read.
+const RULINGS = [
+  {
+    doc: "book-of-sops",
+    ruledAt: "2026-09-23",
+    why: "SOP E5 printed +5 days; the Debrief Call Script N3 printed +3. Brandon ruled +3.",
+    find: "03 > Publish + 5 days: one nudge. Then stop.",
+    replace:
+      "03 > Publish + 3 days: one nudge. Then stop. [RULED Sept 23, 2026 by Brandon: the nudge goes at publish + 3 days, matching the Debrief Call Script N3. This SOP originally printed + 5 days.]",
+  },
+];
+
+function applyRulings(key, text) {
+  const applied = [];
+  for (const r of RULINGS.filter((x) => x.doc === key)) {
+    if (text.includes(r.replace)) applied.push({ ...r, state: "already applied" });
+    else if (text.includes(r.find)) {
+      text = text.replace(r.find, r.replace);
+      applied.push({ ...r, state: "applied" });
+    } else {
+      console.error(`[sync-corpus] RULING NO LONGER MATCHES the record in ${key} (ruled ${r.ruledAt}): neither the original nor the ruled line is present. Re-read it: ${r.why}`);
+      process.exit(3);
+    }
+  }
+  return { text, applied };
+}
+
 // ---- build ------------------------------------------------------------------
 
 const docs = [];
 const report = [];
 const leftovers = [];
+const rulingsApplied = [];
 for (const { file, sourceName, doc } of found.sort((a, b) => a.doc.key.localeCompare(b.doc.key))) {
-  const { text, leftover } = normalise(readFileSync(path.join(scanDir, file), "utf8"));
+  const norm = normalise(readFileSync(path.join(scanDir, file), "utf8"));
+  const { leftover } = norm;
   if (leftover.length) leftovers.push(`${doc.key}: ${leftover.join(" ")}`);
+  const { text, applied } = applyRulings(doc.key, norm.text);
+  for (const a of applied) rulingsApplied.push({ doc: a.doc, ruledAt: a.ruledAt, why: a.why, state: a.state });
   const sections = sectionsFor(doc.key, text, doc.sectioning);
   if (!DRY) {
     mkdirSync(OUT, { recursive: true });
@@ -398,6 +441,8 @@ const manifest = {
   indexChars: indexLine.length,
   docs,
   skipped: Object.entries(SKIP).map(([file, reason]) => ({ file, reason })),
+  // His rulings over the record, and whether each one landed (see RULINGS).
+  rulings: rulingsApplied,
 };
 
 if (!DRY) {

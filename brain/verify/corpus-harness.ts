@@ -374,6 +374,21 @@ async function main() {
   ok("C5.5", /REFRESH \(Dec 18 is a scheduled revision point\)/.test(SYNC_SRC), "SOURCE: the refresh procedure is written down at the top of the script he will run, not in a report he will not have");
   ok("C5.6", /undecoded entities still present/.test(SYNC_SRC), "…and a re-extraction that leaves new HTML entities behind WARNS by name instead of quoting `&#x27;` at him");
 
+  // C6 — HIS RULINGS OVER THE RECORD. When two of his documents disagree and he
+  // rules, the losing line must not keep being cited as current — and the passage
+  // must SAY it was ruled, so a citation never hides what the print said.
+  show.push("\n=== C6 — his rulings over the record ===");
+  const e5 = oneSec(sops, "E5");
+  const e5Text = e5 ? corpus.readSection(sops, e5) : "";
+  ok("C6.1", /Publish \+ 3 days: one nudge/.test(e5Text) && !/Publish \+ 5 days: one nudge/.test(e5Text), `SOP E5 now reads the nudge at publish + 3 days (ruled Sept 23), and the + 5 line is gone from what she reads`);
+  ok("C6.2", /\[RULED Sept 23, 2026 by Brandon/.test(e5Text) && /originally printed \+ 5 days/.test(e5Text), "…and the passage says it was RULED and what the SOP originally printed — a citation never launders a correction");
+  const dc = oneDoc("debrief call script")!;
+  const n3 = corpus.readSection(dc, dc.sections.find((s) => /BEFORE THE CALL/.test(s.heading)) ?? dc.sections[1]);
+  ok("C6.3", /PUBLISH \+3 DAYS/.test(n3), "the Debrief Call Script N3 already says + 3 — the two documents now agree");
+  const rulings = (MANIFEST as unknown as { rulings?: Array<{ doc: string; ruledAt: string; state: string }> }).rulings ?? [];
+  ok("C6.4", rulings.some((r) => r.doc === "book-of-sops" && r.ruledAt === "2026-09-23" && /applied/.test(r.state)), `SOURCE: the manifest records the ruling and that it landed (${rulings.map((r) => `${r.doc} ${r.ruledAt} ${r.state}`).join("; ") || "none"})`);
+  ok("C6.5", /RULING NO LONGER MATCHES/.test(SYNC_SRC) && /process\.exit\(3\)/.test(SYNC_SRC), "SOURCE: a ruling whose line is gone from the record ABORTS the sync (exit 3) instead of silently not applying");
+
   console.log(show.join("\n"));
   console.log(`\n${pass} passed, ${fail} failed`);
   if (fail) process.exitCode = 1;

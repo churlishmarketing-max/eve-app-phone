@@ -411,6 +411,11 @@ The Organic Authority Engine carries the same four months as Engine. The offer
 sheets' "4-month min" is the ruling, not a default. The six-month minimum belongs
 to System, not to Engine.
 
+**The guest nudge is RULED: publish + 3 days, once, then stop.** Brandon ruled it
+Sept 23, 2026, between two documents that disagreed — the Debrief Call Script's N3
+said three days, SOP E5 printed five. The SOP on the shelf now carries the ruling
+in its own line. Say three days and stop; never offer five as an option.
+
 Also open, and the default is all you have:
 
 - **Delivery Producer cost** — nothing in the plan. `NEEDS NUMBER`.

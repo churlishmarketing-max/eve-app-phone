@@ -578,7 +578,7 @@ All three notes sent on schedule; survey logged; debrief booked or the guest mov
 
  01 > Day after: thank-you, publish date, 3-question survey. No ask.
  02 > Publish day: the free share kit (episode, trailer, 2 shorts) and the invitation: twenty minutes on what it could do in their own market.
- 03 > Publish + 5 days: one nudge. Then stop.
+ 03 > Publish + 3 days: one nudge. Then stop. [RULED Sept 23, 2026 by Brandon: the nudge goes at publish + 3 days, matching the Debrief Call Script N3. This SOP originally printed + 5 days.]
  04 > Any “yes” on the wall question fires SOP D5 the same day.
  05 > No reply after the nudge: log “no debrief,” move to alumni. Never a fourth touch about the package.
 

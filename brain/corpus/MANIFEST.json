@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-21T22:09:17.013Z",
+  "generatedAt": "2026-09-23T06:02:38.479Z",
   "generator": "scripts/sync-corpus.mjs",
-  "source": "C:\\dev\\eve-corpus\\brain\\corpus",
+  "source": "C:\\dev\\eve\\brain\\corpus",
   "set": "Churlish OS v5 — Sept 21 2026 High Level Pros pivot",
   "maxReadChars": 8000,
   "indexLine": "His OS v5 documents (Sept 21), on the shelf — look up, never recall: corpus_read a §, corpus_search a passage. Cite the document + §; if they don't cover it, say so. Ad Templates · Book of SOPs V5 (35 procedures, A1–E10) · Company Handbook V5 · Contract + Invoice Templates · Council Minutes — The Gate (the Sept 21 verdicts) · Debrief Call Script (post-episode) · Diagnostic Call Script · HLP Guest Invitation Kit · Guest Package One-Pager (the $2,500 cut) · Master Plan V5 · Objection Handling · Offer Ladder + Pricing · Positioning Document · Q4 Cutover Plan (the quarter) · HLP Show Bible · HLP Site Build Spec · START HERE (read first).",
@@ -94,7 +94,7 @@
       "file": "book-of-sops.txt",
       "sourceName": "Churlish_Media_Book_of_SOPs_v5.txt",
       "sectioning": "sops",
-      "chars": 32165,
+      "chars": 32310,
       "sections": [
         {
           "ref": "head",
@@ -340,47 +340,47 @@
           "heading": "The share kit & the three notes NEW GUEST COORDINATOR SENDS · BRANDON SIGNS",
           "group": "Part E · THE SHOW · NEW IN V5",
           "start": 27035,
-          "end": 27819,
-          "chars": 784
+          "end": 27964,
+          "chars": 929
         },
         {
           "ref": "E6",
           "heading": "Email capture & the weekly email NEW STARFIRE · PERRY WHITE WRITES",
           "group": "Part E · THE SHOW · NEW IN V5",
-          "start": 27819,
-          "end": 28612,
+          "start": 27964,
+          "end": 28757,
           "chars": 793
         },
         {
           "ref": "E7",
           "heading": "Cohort enrollment NEW BRANDON",
           "group": "Part E · THE SHOW · NEW IN V5",
-          "start": 28612,
-          "end": 29409,
+          "start": 28757,
+          "end": 29554,
           "chars": 797
         },
         {
           "ref": "E8",
           "heading": "Cohort delivery NEW BRANDON + FOUR GUEST INSTRUCTORS",
           "group": "Part E · THE SHOW · NEW IN V5",
-          "start": 29409,
-          "end": 30130,
+          "start": 29554,
+          "end": 30275,
           "chars": 721
         },
         {
           "ref": "E9",
           "heading": "Clip amplification NEW CYBORG BUILDS · AD-DIAGNOSTIC JUDGES",
           "group": "Part E · THE SHOW · NEW IN V5",
-          "start": 30130,
-          "end": 30835,
+          "start": 30275,
+          "end": 30980,
           "chars": 705
         },
         {
           "ref": "E10",
           "heading": "The sponsor lane NEW PARKED",
           "group": "Part E · THE SHOW · NEW IN V5",
-          "start": 30835,
-          "end": 32165,
+          "start": 30980,
+          "end": 32310,
           "chars": 1330
         }
       ]
@@ -1494,5 +1494,13 @@
       ]
     }
   ],
-  "skipped": []
+  "skipped": [],
+  "rulings": [
+    {
+      "doc": "book-of-sops",
+      "ruledAt": "2026-09-23",
+      "why": "SOP E5 printed +5 days; the Debrief Call Script N3 printed +3. Brandon ruled +3.",
+      "state": "already applied"
+    }
+  ]
 }
