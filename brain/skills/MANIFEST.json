@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-22T18:13:33.706Z",
+  "generatedAt": "2026-09-23T05:37:43.437Z",
   "generator": "scripts/sync-skills.mjs",
   "sources": [
     "C:/Users/mrkin/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/cae82843-359e-4be7-8cdb-7e9039f69fb3/fb4f662d-e133-4c51-97b4-17c756ca0e45/skills",
     "C:/Users/mrkin/.claude/skills"
   ],
   "overridesDir": "skills-overrides",
-  "overrideFiles": 14,
+  "overrideFiles": 13,
   "maxBytesPerSkill": 409600,
   "pinned": [
     "blue-beetle",
@@ -40,7 +40,7 @@
         "references/cta-standards.md",
         "references/diagnostic-matrices.md"
       ],
-      "bytes": 20582,
+      "bytes": 20694,
       "skipped": [],
       "trimmed": [],
       "overrides": [
@@ -167,8 +167,8 @@
     {
       "key": "blue-beetle",
       "name": "Blue Beetle",
-      "role": "Blue Beetle — brand outreach engine for Brandon King's Churlish Media.",
-      "triggers": "\"run Blue Beetle\" · outreach · booking",
+      "role": "Blue Beetle — outreach engine for Brandon King's Churlish Media.",
+      "triggers": "\"run Blue Beetle\" · \"send the invitations\" · outreach",
       "division": "fleet",
       "kind": "skill",
       "tier": "yellow",
@@ -181,14 +181,13 @@
       "source": "plugin",
       "sourceDir": "blue-beetle",
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "references/invitation-kit.md"
       ],
-      "bytes": 4233,
+      "bytes": 15759,
       "skipped": [],
       "trimmed": [],
-      "overrides": [
-        "SKILL.md"
-      ],
+      "overrides": [],
       "why": "drafts outreach sequences and reply routing; the worker holds no send tools so nothing goes out",
       "note": "drafts only — Smartlead/LinkedIn/Calendar stay workspace"
     },
@@ -196,8 +195,8 @@
       "key": "brainiac",
       "name": "Brainiac",
       "role": "Brainiac — the prompt engine for Brandon King's Churlish Media fleet.",
-      "triggers": "\"run Brainiac\" · \"Brainiac this\" · \"bottle this\"",
-      "division": null,
+      "triggers": "\"run Brainiac\" · \"bottle this\" · \"optimize this prompt\"",
+      "division": "systems",
       "kind": "skill",
       "tier": "yellow",
       "cost": {
@@ -481,7 +480,7 @@
       "files": [
         "SKILL.md"
       ],
-      "bytes": 6703,
+      "bytes": 7760,
       "skipped": [],
       "trimmed": [],
       "overrides": [
@@ -567,10 +566,12 @@
       "files": [
         "SKILL.md"
       ],
-      "bytes": 5087,
+      "bytes": 6689,
       "skipped": [],
       "trimmed": [],
-      "overrides": [],
+      "overrides": [
+        "SKILL.md"
+      ],
       "why": "scope + line items as inline text; .docx packaging stays workspace"
     },
     {
@@ -601,9 +602,9 @@
     {
       "key": "jimmy-olsen",
       "name": "Jimmy Olsen",
-      "role": "Jimmy Olsen — the minutes desk for Brandon King's Churlish Media.",
-      "triggers": "\"run Jimmy\" · \"Jimmy this\" · \"file this\"",
-      "division": null,
+      "role": "Jimmy Olsen — the High Level Pros guest desk for Brandon King's Churlish Media.",
+      "triggers": "\"run Jimmy\" · \"guest status\" · any HLP application",
+      "division": "fleet",
       "kind": "skill",
       "tier": "yellow",
       "cost": {
@@ -612,23 +613,24 @@
         "minutes": 10
       },
       "pinned": true,
-      "source": "user",
+      "source": "plugin",
       "sourceDir": "jimmy-olsen",
       "files": [
         "SKILL.md",
-        "references/template.md"
+        "references/guest-kit.md"
       ],
-      "bytes": 6608,
+      "bytes": 19473,
       "skipped": [],
       "trimmed": [],
       "overrides": [],
-      "why": "messy notes → filed minutes; pure text, template is a text reference"
+      "why": "HLP guest desk (rewritten Sept 21 from the minutes desk): tracker reads, touch timing and send-ready guest notes as text; the guest kit is a text reference and the worker holds no send tools",
+      "note": "no Calendar/Gmail/Sheets/Supabase from the brain — paste the tracker rows; notes are drafts for the Coordinator"
     },
     {
       "key": "kid-flash",
       "name": "Kid Flash",
-      "role": "Kid Flash — lead research engine for Brandon King's Churlish Media.",
-      "triggers": "\"run Kid Flash\" · list sourcing",
+      "role": "Kid Flash — research engine for Brandon King's Churlish Media.",
+      "triggers": "\"run Kid Flash\" · \"find guests\" · list sourcing",
       "division": "fleet",
       "kind": "skill",
       "tier": "yellow",
@@ -643,14 +645,38 @@
       "files": [
         "SKILL.md"
       ],
-      "bytes": 3057,
+      "bytes": 7265,
       "skipped": [],
       "trimmed": [],
-      "overrides": [
-        "SKILL.md"
-      ],
+      "overrides": [],
       "why": "prospect research/qualification/tiering as a text list via web search",
       "note": "Apollo + email verification are not on the brain — unverified rows must be flagged [NEEDS: verify]"
+    },
+    {
+      "key": "lucius-fox",
+      "name": "Lucius Fox",
+      "role": "Lucius Fox — the High Level Pros sponsor desk for Brandon King's Churlish Media.",
+      "triggers": "\"sponsor\" · \"media kit\" · any sponsor application",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "lucius-fox",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 4291,
+      "skipped": [],
+      "trimmed": [],
+      "overrides": [],
+      "why": "HLP sponsor desk; SKILL.md only, text in/text out. A stub by its own seat rule: sponsors are NOT YET, outreach opens Dec 1, 2026 — until then it logs applications, drafts first-look replies through Perry White and builds the 15-target list, and the doctrine itself refuses prices and early sales",
+      "note": "no sponsor_applications table read from the brain — paste the rows; the draft rate card is internal and never quoted"
     },
     {
       "key": "martian-manhunter",
@@ -704,7 +730,7 @@
         "templates/exec-summary-outline.md",
         "templates/master-plan-outline.md"
       ],
-      "bytes": 86967,
+      "bytes": 88250,
       "skipped": [
         "scripts/build_master_plan.py"
       ],
@@ -746,11 +772,37 @@
       "note": "no repo access from the brain — paste the code in the task"
     },
     {
+      "key": "nightwing",
+      "name": "Nightwing",
+      "role": "Nightwing — Show Director for High Level Pros at Brandon King's Churlish Media; second seat on EVE's directors bench after Starfire.",
+      "triggers": "\"Nightwing\" · \"run the show\" · \"show status\"",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "nightwing",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 6344,
+      "skipped": [],
+      "trimmed": [],
+      "overrides": [],
+      "why": "HLP Show Director, second seat on EVE's directors bench after Starfire; SKILL.md only, text in/text out. Its own seat rule gates it: seated at four banked episodes (~Oct 20, 2026), status reads only until then, and its seat check says which mode it is in",
+      "note": "cannot read the guest tracker or the roster from the brain — paste them; nothing publishes without Brandon's item-level approval"
+    },
+    {
       "key": "perry-white",
       "name": "Perry White",
       "role": "Perry White — Editor-in-Chief of the email desk for Brandon King's Churlish Media.",
-      "triggers": "\"Perry White\" · \"run Perry\" · \"take this to the desk\" · \"reply to this\"",
-      "division": "fleet",
+      "triggers": "\"run Perry\" · \"write an email\" · \"reply to this\" · \"they ghosted\"",
+      "division": "production",
       "kind": "skill",
       "tier": "yellow",
       "cost": {
@@ -794,7 +846,7 @@
         "references/pricing-engine.md",
         "references/proposal-architecture.md"
       ],
-      "bytes": 30585,
+      "bytes": 30817,
       "skipped": [],
       "trimmed": [],
       "overrides": [
@@ -803,6 +855,32 @@
         "references/proposal-architecture.md"
       ],
       "why": "proposal content (tiers, pricing, pain language) as markdown; the .docx build via the docx skill stays workspace"
+    },
+    {
+      "key": "raven",
+      "name": "Raven",
+      "role": "Raven — Cohort Director for The Next Stage, the High Level Pros 8-week cohort at Brandon King's Churlish Media.",
+      "triggers": "\"Raven\" · \"the cohort\" · \"deposits\"",
+      "division": "fleet",
+      "kind": "skill",
+      "tier": "yellow",
+      "cost": {
+        "maxTurns": 16,
+        "maxBudgetUsd": 1.5,
+        "minutes": 10
+      },
+      "pinned": false,
+      "source": "plugin",
+      "sourceDir": "raven",
+      "files": [
+        "SKILL.md"
+      ],
+      "bytes": 4253,
+      "skipped": [],
+      "trimmed": [],
+      "overrides": [],
+      "why": "Cohort Director for The Next Stage; SKILL.md only, text in/text out. Seated only on 8 refundable deposits by Nov 7, 2026 — before that its doctrine keeps it in pre-seat mode (count deposits, report the gap, route the deposit window)",
+      "note": "needs the deposit count in the task — no payments read from the brain; pricing, refunds and dates stay Brandon's"
     },
     {
       "key": "red-robin",
@@ -980,7 +1058,7 @@
       "files": [
         "SKILL.md"
       ],
-      "bytes": 3359,
+      "bytes": 5283,
       "skipped": [],
       "trimmed": [],
       "overrides": [],

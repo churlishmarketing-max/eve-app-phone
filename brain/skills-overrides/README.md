@@ -104,17 +104,25 @@ All rulings below date from the Sept 21, 2026 pivot (Crucible-level strategy
 work is Kelly Bromley's lane; Authority Lite is retired), the Sept 22 dead-fact
 sweep, and Brandon's Sept 22 rulings (Engine is 4 months, System is 6; the
 grandfathered Lite rate exists only for Transparency and GE Outdoors, everyone
-else moved to the Launchpad or the Tournament at $2,500). All 14 upstream
+else moved to the Launchpad or the Tournament at $2,500). All 13 upstream
 originals are in the plugin cache and still carry the dead facts.
+
+Re-review, Sept 23, 2026: Brandon's Sept 22 14:21 CT upstream update rewrote
+`blue-beetle/SKILL.md`, `kid-flash/SKILL.md` and `guardian/SKILL.md` (V5,
+HLP-first). The new blue-beetle and kid-flash carry none of the dead facts, so
+their overrides were retired and his newer doctrine flows. The guardian
+override was rebuilt from the new upstream with one correction (below). The
+same update rewrote `invoice-scoper/SKILL.md` (not previously overridden) with
+the same "4-vs-6 still open" line, so it gained a one-line override. The other
+overridden upstream files were unchanged (mtimes before Sept 22).
 
 | Override (roster key / path) | Ruling it carries |
 |---|---|
 | `ad-diagnostic-engine/references/cta-standards.md` | No approved CTA with a "call" as the ask ("grab a free call", "book your free call", "apply for a quick call", "15-min fix call", "15-min call" replaced). |
 | `avatar-bible-loader/references/active-avatars.md` | The Crucible avatar is Kelly's lane; survives as an ICP for recognising the owner, never an offer to sell, scope or price. Revenue X-Ray, Crucible Core and Performance Partnership are dead. |
-| `blue-beetle/SKILL.md` | Service-track ICP is `[NEEDS: …]` — the Crucible avatars retired to Kelly; Brandon names the replacement. |
 | `fable-mind/references/proven-calls.md` | The Tournament ($2,500) took Lite's slot; the Launchpad is a separate rung and did not replace Lite. |
-| `guardian/SKILL.md` | Lite's grandfathered rate is `NEEDS NUMBER` and belongs to Transparency and GE Outdoors only; the Engine row carries the 4-month term and its clock (Day 75 / Day 85). |
-| `kid-flash/SKILL.md` | Same service-track ICP `[NEEDS: …]` as blue-beetle. |
+| `guardian/SKILL.md` | Rebuilt Sept 23 from the V5 (Sept 22) upstream. One correction only: the V5 "Pricing facts" line's "the 4-vs-6 question is still open and settled only by Brandon" now reads that the 4-month Engine minimum was ruled final by Brandon on Sept 22 (System is 6) and the question is closed. Everything else is his upstream text. |
+| `invoice-scoper/SKILL.md` | Added Sept 23 from the V5 (Sept 22) upstream. One correction only: the V5 line "Engine minimum term: 4 months (June lock; 4-vs-6 still open for Brandon)" now reads that the 4-month term was ruled final by Brandon on Sept 22 (System is 6) and the question is closed. Everything else is his upstream text. |
 | `master-plan-formula/SKILL.md` | "3 months on lite tier" → "3 months on entry tier" (Lite is not a tier name). |
 | `master-plan-formula/references/brain-dump-parser.md` | Same: "entry tier", not "lite". |
 | `master-plan-formula/references/churlish-formula.md` | No performance partnership / revenue share as a Churlish rung; the AE example runs at the 4-month Engine term (3 × $3,500 × 4 = $42,000; total $179,500, stated as short of the $200K target rather than fudged). |
