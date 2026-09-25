@@ -14,7 +14,7 @@ import { runPulseSweep } from "./pulse.js";
 import { runCapture } from "./capture.js";
 import { buildState } from "./state.js";
 import { backfillEmbeddings } from "./memory.js";
-import { startSchedulers } from "./schedule.js";
+import { startSchedulers, schedulersGate } from "./schedule.js";
 import { resolveConfirm, getPending } from "./confirm.js";
 import { deskFromBody, deskRefusalFromBody } from "./desk.js";
 import { imageFromBody } from "./image.js";
@@ -842,5 +842,12 @@ console.log(intakeBanner());
 
 app.listen(PORT, () => {
   console.log(`EVE brain listening on :${PORT}`);
-  startSchedulers();
+  // startClock() is armed inside startSchedulers(), so one gate holds both.
+  const gate = schedulersGate();
+  if (gate.on) {
+    console.log(`[schedulers] ON — ${gate.why}`);
+    startSchedulers();
+  } else {
+    console.log(`[schedulers] OFF — ${gate.why}. No crons, no unit clock on this brain.`);
+  }
 });

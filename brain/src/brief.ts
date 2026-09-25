@@ -28,6 +28,7 @@ import { floorView } from "./floor.js";
 import { recentJobsQuery, shapeJob } from "./dispatch.js";
 import { triageMail, readTodayShape } from "./mail.js";
 import * as google from "./google.js";
+import { osSweep, ready as osReady } from "./os.js";
 import type { MailSource } from "./google.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
@@ -162,6 +163,16 @@ export async function collectBriefInput(now = new Date(), source: MailSource | n
     note("overnight", "Her spine did not answer, so her own log is unreadable. She is not claiming a quiet night.");
     note("slipping", "Her spine did not answer — no client, promise or job was checked.");
     note("shape", "Her spine did not answer — no task or floor figure was read.");
+  }
+
+  // One House Step 4: the OS sweep line. Independent of her spine — it is the
+  // OS's own Ledger. Not wired → no line; a failed read is said, not hidden.
+  if (osReady()) {
+    try {
+      input.osSweep = await osSweep();
+    } catch (e) {
+      note("shape", `The OS sweep would not read: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   // Mail and calendar. triageMail / readTodayShape never throw: a failure comes

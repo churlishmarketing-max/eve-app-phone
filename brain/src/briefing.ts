@@ -176,6 +176,7 @@ export const RECOMMEND = Object.freeze({
   event: "On the calendar. Nothing to decide.",
   free_block: "A real hole in the day. Put the hardest thing here.",
   floor: "The week's floor. Real conversations, not drafts.",
+  os_sweep: "Open the OS's Today page and clear what needs you there, one item at a time.",
   // Overnight — a record of finished work asks nothing of him.
   record: "Nothing needed. This is the receipt.",
 } as const);
@@ -296,6 +297,11 @@ export interface BriefInput {
   mail: MailDigest | null;
   shape: TodayShape | null;
   floor: { count: number; goal: number } | null;
+  /**
+   * One House Step 4: the OS's GET /api/eve/sweep. Absent when the OS line
+   * isn't wired (no line printed); a failed read goes to `blind` instead.
+   */
+  osSweep?: { ran_at: string | null; needs_you: number | null } | null;
   /** Per-source read failures, in his words. Never swallowed. */
   blind: { section: BriefSectionKey; say: string }[];
 }
@@ -599,6 +605,8 @@ export function buildShapeSection(input: BriefInput): BriefSection {
     );
   }
 
+  if (input.osSweep) items.push(osSweepItem(input.osSweep, input.now));
+
   return {
     key: "shape",
     title: "TODAY'S SHAPE",
@@ -606,6 +614,25 @@ export function buildShapeSection(input: BriefInput): BriefSection {
     empty: "The day is open. Nothing on the calendar, nothing due — the hours are yours to spend.",
     blind,
   };
+}
+
+/**
+ * "OS sweep: ran 06:31" when the OS's daily sweep left a Ledger line today
+ * (his day, EVE_TZ, 24-hour clock), else "OS sweep pending". The count is the
+ * OS's own open needs-you Ledger lines, as /api/eve/sweep answered it.
+ */
+export function osSweepLine(sweep: { ran_at: string | null; needs_you: number | null }, now: Date): string {
+  const at = sweep.ran_at ? new Date(Date.parse(sweep.ran_at)) : null;
+  if (!at || Number.isNaN(at.getTime()) || localDay(at) !== localDay(now)) return "OS sweep pending";
+  const hm = at.toLocaleTimeString("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false });
+  const n = sweep.needs_you;
+  return n == null ? `OS sweep: ran ${hm}` : `OS sweep: ran ${hm} — ${n} open item${n === 1 ? "" : "s"} need${n === 1 ? "s" : ""} you in the OS`;
+}
+
+function osSweepItem(sweep: { ran_at: string | null; needs_you: number | null }, now: Date): BriefItem {
+  const text = osSweepLine(sweep, now);
+  const quiet = text === "OS sweep pending" || sweep.needs_you === 0;
+  return ledgerItem("sh-os-sweep", text, quiet ? "record" : "os_sweep", "os.api/eve/sweep", quiet ? "dim" : "acc");
 }
 
 // ---------------------------------------------------------------------------

@@ -58,6 +58,32 @@ export async function osTool(
   }
 }
 
+// ---- the OS sweep, for the 07:00 brief (One House Step 4) ----
+// GET /api/eve/sweep on the OS (bearer = this same token) answers
+// { ok, ran_at: ISO | null, needs_you: number | null }: when the newest
+// house.sweep / house.sweep_ran Ledger line was written, and how many open
+// needs-you Ledger lines the OS holds. No token throws OsNotConnectedError
+// like osTool; an unreachable OS throws its reason.
+export interface OsSweep {
+  ran_at: string | null;
+  needs_you: number | null;
+}
+
+export async function osSweep(): Promise<OsSweep> {
+  const token = process.env.CHURLISH_OS_TOKEN;
+  if (!token) throw new OsNotConnectedError();
+  const r = await fetch(`${OS_URL}/api/eve/sweep`, {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const j = (await r.json().catch(() => ({}))) as { ok?: boolean; ran_at?: unknown; needs_you?: unknown; error?: string };
+  if (!r.ok || !j.ok) throw new Error(j.error || `OS answered ${r.status}`);
+  return {
+    ran_at: typeof j.ran_at === "string" ? j.ran_at : null,
+    needs_you: typeof j.needs_you === "number" && Number.isFinite(j.needs_you) ? j.needs_you : null,
+  };
+}
+
 // ---- ambient board snapshot (the "seamless OS" path) ----
 // The board question was her slowest turn: she had to emit an os_board tool
 // call, wait for the Railway→Vercel→Supabase round-trip, THEN answer — two LLM

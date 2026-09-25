@@ -33,6 +33,18 @@ export function isQuietHours(d: Date): boolean {
   return afterStart || beforeEnd;
 }
 
+// ONE HOUSE B2.4 — "never drive the live brain". The crons (07:00 brief,
+// 17:30 close-out, pulse, the unit clock …) run only on the hosted brain, or
+// where someone deliberately sets EVE_SCHEDULERS=on. A laptop boot of this
+// repo serves /chat and /state but never fires a job on its own. The
+// Railway marker is the same kind of free-in-the-cloud signal push.ts's send
+// wall uses. Returned with its reason so the boot log can say which.
+export function schedulersGate(env: NodeJS.ProcessEnv = process.env): { on: boolean; why: string } {
+  if (env.EVE_SCHEDULERS === "on") return { on: true, why: "EVE_SCHEDULERS=on" };
+  if (env.RAILWAY_ENVIRONMENT) return { on: true, why: "hosted (RAILWAY_ENVIRONMENT set)" };
+  return { on: false, why: "no RAILWAY_ENVIRONMENT, EVE_SCHEDULERS is not on" };
+}
+
 export function startSchedulers(): void {
   cron.schedule(
     "0 7 * * *",

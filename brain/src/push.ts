@@ -55,6 +55,29 @@ export async function getLatestToken(): Promise<string | null> {
   }
 }
 
+// ONE HOUSE STEP 4 — "her alerts open OS pages". Every push whose kind has a
+// home in Churlish OS carries `data.link`, the absolute OS URL a tap should
+// open: the brief and the close-out open /today, an attention item opens
+// /inbox. Keyed on `kind` in this ONE table so a call site can't drift. It
+// rides BESIDE `deeplink` (the app's in-app route, eve://…), which is unchanged:
+// app/src/push.ts reads `n.link ?? n.data.deeplink`, and FCM puts data keys in
+// `n.data`, never in `n.link`, so today's app routes exactly as before and a
+// later app build can open `data.link` instead.
+const OS_URL = (process.env.CHURLISH_OS_URL || "https://churlishos.app").replace(/\/+$/, "");
+const OS_PAGE_BY_KIND: Record<string, "/today" | "/inbox"> = {
+  brief: "/today",
+  closeout: "/today",
+  tripwire: "/inbox",
+  silent_client: "/inbox",
+  approval: "/inbox",
+  routine_risk: "/inbox",
+};
+
+export function osLinkFor(kind: string): string | null {
+  const page = OS_PAGE_BY_KIND[kind];
+  return page ? `${OS_URL}${page}` : null;
+}
+
 export type PushChannel = "brief" | "nudge" | "tripwire";
 export interface PushData {
   kind: string;
@@ -108,13 +131,14 @@ export function isPushAllowed(): { allowed: boolean; why: string } {
 // Current API is FCM HTTP v1 via the Admin SDK (legacy HTTP API shut down 2024).
 export async function sendPush(token: string, opts: SendPushArgs): Promise<string> {
   const { title, body, channelId, data } = opts;
+  const link = osLinkFor(data.kind);
   const gate = isPushAllowed();
   if (!gate.allowed) {
     // Dev runs stay fully observable: the exact notification is printed instead
     // of delivered. The return is the same shape a real send gives (the message
     // id) but EMPTY, so `!!id` stays false and no caller can read a blocked
     // push as a sent one.
-    console.log(`[push] BLOCKED (dev) would have sent: ${title} | ${body} | ${data.deeplink}`);
+    console.log(`[push] BLOCKED (dev) would have sent: ${title} | ${body} | ${data.deeplink}${link ? ` | ${link}` : ""}`);
     return "";
   }
   const message: Message = {
@@ -129,6 +153,7 @@ export async function sendPush(token: string, opts: SendPushArgs): Promise<strin
       kind: data.kind,
       attention_id: data.attention_id,
       deeplink: data.deeplink,
+      ...(link ? { link } : {}),
     },
   };
   try {
