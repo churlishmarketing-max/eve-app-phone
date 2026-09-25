@@ -1063,7 +1063,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
   );
   const greeting =
     (now.getHours() < 5 ? "Late shift, " : now.getHours() < 12 ? "Morning, " : now.getHours() < 18 ? "Afternoon, " : "Evening, ") +
-    "Brandon.";
+    "King."; // her character bible §2: she calls him King
 
   // ---- ops slicing ----
   // L3 · ABSENT IS NOT ZERO, AND AN EMPTY LIST IS NOT A CLEAR ONE.
