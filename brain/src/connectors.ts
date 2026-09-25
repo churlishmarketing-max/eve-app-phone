@@ -6,6 +6,8 @@ import { recentTexts, recentNotifications } from "./senses.js";
 import * as google from "./google.js";
 import * as os from "./os.js";
 import { fleetRoster } from "./fleet.js";
+import { voiceConnector, voiceCapabilityConnector } from "./voice-relay.js";
+import { elevenLabsAvailable, ttsReady } from "./voice.js";
 import { dispatchUnit, type JobEmit } from "./dispatch.js";
 import { dispatchUnitDescription } from "./registry.js";
 import * as corpus from "./corpus.js";
@@ -62,8 +64,31 @@ export function getConnectorStatus(): ConnectorStatus[] {
     { key: "churlish_os", name: "Churlish OS", connected: os.ready(), detail: os.statusDetail() },
     { key: "notebook", name: "Notebook (Discord)", connected: notesReady(), detail: notesStatusDetail() },
     { key: "deepgram", name: "Deepgram (voice in)", connected: !!process.env.DEEPGRAM_API_KEY, detail: process.env.DEEPGRAM_API_KEY ? "key set" : "DEEPGRAM_API_KEY not set" },
-    { key: "elevenlabs", name: "ElevenLabs (voice out)", connected: !!process.env.ELEVENLABS_API_KEY, detail: process.env.ELEVENLABS_API_KEY ? "key set" : "ELEVENLABS_API_KEY not set" },
+    // Connected only when ElevenLabs will actually SPEAK: key set AND the
+    // EVE_TTS_ELEVENLABS switch not off. The old phone build keys voice-out
+    // off this row alone; with the switch thrown it must not try (the brain
+    // would refuse it anyway), and the detail says which of the two is why.
+    {
+      key: "elevenlabs",
+      name: "ElevenLabs (voice out)",
+      connected: elevenLabsAvailable(),
+      detail: !ttsReady() ? "ELEVENLABS_API_KEY not set" : elevenLabsAvailable() ? "key set" : "key set, but switched off (EVE_TTS_ELEVENLABS=off)",
+    },
+    // Voice out as it actually is: Voicebox on his PC via EVE desktop (the
+    // relay), or the ElevenLabs fallback, or neither — said in words. The
+    // "elevenlabs" row above keeps its key and shape; old phone builds read it.
+    voiceConnector(),
   ];
+}
+
+/** The connector list as the UNAUTHENTICATED /health shows it: identical,
+ *  except the "voice" row is the capability form (voiceCapabilityConnector) —
+ *  the live one would tell anyone when his PC is on. /state (bearer-gated)
+ *  keeps getConnectorStatus(), and that is the surface both clients' speak
+ *  gates read: desktop useVoiceTurn via window.eve.state.get(), the phone's
+ *  EveApp via fetchState(). */
+export function getHealthConnectorStatus(): ConnectorStatus[] {
+  return getConnectorStatus().map((c) => (c.key === "voice" ? voiceCapabilityConnector() : c));
 }
 
 function text(s: string, isError = false) {

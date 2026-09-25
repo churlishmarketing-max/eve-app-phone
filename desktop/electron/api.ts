@@ -45,6 +45,8 @@ import type {
 import { attributionSuspect, destinationCheck } from "../src/shared/destination-check.js";
 import { filterHandoffNames } from "../src/shared/handoff.js";
 import * as fx from "../src/shared/fixtures.js";
+// The worker's render cap is the ceiling for speak's backstop (see SPEAK_TIMEOUT_MS).
+import { GENERATE_TIMEOUT_MS } from "./voice-worker.js";
 
 // ---------------------------------------------------------------------------
 // THE HANDOFF'S ONE DEPENDENCY, INJECTED (main.ts wires it to desk/index-store).
@@ -104,7 +106,19 @@ interface JsonOpts {
   body?: unknown;
   auth?: boolean;
   raw?: { buf: ArrayBuffer | Uint8Array; contentType: string };
+  /** Extra request headers, laid over the ones above (e.g. VOICE_ACCEPT). */
+  headers?: Record<string, string>;
 }
+
+/**
+ * THE VOICE RELAY OPT-IN. The brain serves her Voicebox voice (a WAV) on POST
+ * /voice/speak and GET /voice/voices only to a client that sends this — every
+ * other client keeps ElevenLabs' mp3 while ELEVENLABS_API_KEY is set on
+ * Railway (voice-relay.ts acceptsVoicebox/relayServes). This build plays the
+ * WAV (SpeakAudio.mime), so it opts in on BOTH calls: the voice it is SHOWN
+ * must be the voice it will HEAR. Without it the relay is built and never used.
+ */
+const VOICE_ACCEPT: Record<string, string> = { "X-EVE-Voice-Accept": "voicebox" };
 
 /**
  * The single JSON door. Returns null on ANY failure (network, timeout,
@@ -127,6 +141,7 @@ async function callJson<T>(path: string, opts: JsonOpts = {}): Promise<{ data: T
     } else {
       init.headers = headers(false, auth);
     }
+    if (opts.headers) init.headers = { ...(init.headers as Record<string, string>), ...opts.headers };
     const res = await fetch(`${brainUrl()}${path}`, init);
     if (!res.ok) {
       // 401 is the one status worth naming out loud: it is nearly always a
@@ -228,7 +243,7 @@ export async function getWardrobe(): Promise<Wardrobe> {
 
 export async function getVoices(): Promise<VoiceList> {
   if (isMock()) return fx.mockVoices();
-  const r = await callJson<VoiceList>("/voice/voices");
+  const r = await callJson<VoiceList>("/voice/voices", { headers: VOICE_ACCEPT });
   if ("error" in r) return { ok: false, error: r.error };
   return r.data;
 }
@@ -414,12 +429,62 @@ export async function postTranscribe(buf: ArrayBuffer, mime = "audio/webm"): Pro
   return r.data;
 }
 
-/** ElevenLabs voice ids are 20 alphanumeric chars — the brain rejects anything
- *  else with a 400, so a malformed id never costs a round trip. */
-const VOICE_ID_RE = /^[A-Za-z0-9]{20}$/;
+/** ElevenLabs voice ids are 20 alphanumeric chars; Voicebox profile ids are
+ *  UUIDs. The brain rejects anything else with a 400, so a malformed id never
+ *  costs a round trip. */
+const VOICE_ID_RE = /^(?:[A-Za-z0-9]{20}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
 /**
- * text -> mp3 bytes, OR the honest reason there are none.
+ * Speech gets its own clock. Her voice is rendered on HIS PC now (Voicebox via
+ * the desktop's relay, voice-worker.ts) and the brain waits for it — the CPU
+ * build took 81s for one six-second line. 10s would call every one of those a
+ * timeout while the audio was still on its way.
+ *
+ * THIS IS A BACKSTOP, NOT THE CLOCK. The brain's EVE_VOICE_RELAY_TIMEOUT_MS is
+ * the clock (default 90s): it answers 504 with a sentence when a render runs
+ * long. It used to be a flat 100s here, which quietly capped that knob — raise
+ * the brain past ~100s for the CPU build and this window gave up first, with a
+ * vaguer sentence than the brain's. So it is pinned to the one limit the brain
+ * cannot outwait anyway: the worker abandons any render at
+ * GENERATE_TIMEOUT_MS and reports /fail, and the brain answers at once. The
+ * extra 30s is for the WAV's trip up to the brain and back down to here.
+ * Waiting this long costs nothing on a barge-in: cancelSpeak aborts it.
+ */
+const SPEAK_TIMEOUT_MS = GENERATE_TIMEOUT_MS + 30_000;
+
+/**
+ * Speaks still waiting on the brain, by the key main.ts gives each one (its
+ * window + the window's own speak id). Same shape as `inflight` for /chat.
+ */
+const speakInflight = new Map<string, AbortController>();
+
+/** The brain's relay refusals (contract v1). Each carries a sentence for him. */
+const RELAY_REASONS = new Set([
+  "voice-offline",
+  "voicebox-down",
+  "no-profile",
+  "voicebox-failed",
+  "timeout",
+  "busy",
+  "bad-request",
+]);
+
+/** `{reason, error}` off a brain error body, when that is what it is. */
+function relayRefusal(detail: string): { reason: string; error: string } | null {
+  try {
+    const j = JSON.parse(detail) as { reason?: unknown; error?: unknown };
+    if (typeof j.reason === "string" && RELAY_REASONS.has(j.reason) && typeof j.error === "string" && j.error.trim()) {
+      return { reason: j.reason, error: j.error.trim() };
+    }
+  } catch {
+    /* not JSON — an older brain's plain text, handled below as before */
+  }
+  return null;
+}
+
+/**
+ * text -> audio bytes (WAV from Voicebox via the relay, mp3 from ElevenLabs)
+ * plus their real `mime`, OR the honest reason there are none.
  *
  * THIS FUNCTION USED TO RETURN `ArrayBuffer | null` AND THAT WAS THE BUG.
  * A 401, a 503, a ten-second timeout, a dead socket and an empty 200 all
@@ -436,20 +501,73 @@ const VOICE_ID_RE = /^[A-Za-z0-9]{20}$/;
  * is sent only when it is well formed; a brain that predates the field ignores
  * it, so the renderer must have already checked VoiceList.configuredVoiceId
  * before it claims that a preview is real — see contract.ts.
+ *
+ * `speakKey` (optional) registers the request so abortSpeak(speakKey) can end
+ * it. Aborting closes the socket, and the brain drops a job its worker has not
+ * claimed yet (voice-relay.ts `res.on("close")`) — a line nobody will hear is
+ * not rendered ahead of the one he just asked for.
  */
-export async function postSpeak(text: string, voiceId?: string): Promise<SpeakAudio> {
-  if (isMock()) return { ok: true, audio: fx.mockSpeakAudio() };
+export async function postSpeak(text: string, voiceId?: string, speakKey?: string): Promise<SpeakAudio> {
+  if (isMock()) return { ok: true, audio: fx.mockSpeakAudio(), mime: "audio/mpeg" };
   if (!text.trim()) return { ok: false, failure: "no-text", error: "there was nothing to say" };
   const override = voiceId && VOICE_ID_RE.test(voiceId) ? voiceId : undefined;
+  const cancel = new AbortController();
+  if (speakKey) {
+    speakInflight.get(speakKey)?.abort(); // a reused key replaces, never doubles
+    speakInflight.set(speakKey, cancel);
+  }
+  try {
+    return await speakRequest(text, override, cancel.signal);
+  } finally {
+    if (speakKey && speakInflight.get(speakKey) === cancel) speakInflight.delete(speakKey);
+  }
+}
+
+/** Abandon one speak by its key. False = nothing by that key was in flight. */
+export function abortSpeak(speakKey: string): boolean {
+  const c = speakInflight.get(speakKey);
+  if (!c) return false;
+  c.abort();
+  speakInflight.delete(speakKey);
+  return true;
+}
+
+/**
+ * BARGE-IN ACROSS WINDOWS. Abandon every speak still waiting on the brain,
+ * whichever window started it; returns how many there were. The deck and
+ * Summon are separate BrowserWindows, and abortSpeak's key is window-scoped on
+ * purpose — so a barge-in in Summon used to leave the deck's line rendering,
+ * and it played over his next question a minute later. Each aborted speak
+ * resolves as CANCELLED (failure "cancelled"): nothing plays. Called when the
+ * push-to-talk hotkey starts a voice turn (main.ts) and when any window's turn
+ * starts (eve:voice:speak-cancel-all).
+ */
+export function abortAllSpeak(): number {
+  const all = [...speakInflight.values()];
+  speakInflight.clear();
+  for (const c of all) c.abort();
+  return all.length;
+}
+
+const CANCELLED: SpeakAudio = {
+  ok: false,
+  failure: "cancelled",
+  error: "the line was abandoned before her voice arrived (barge-in or a newer line)",
+};
+
+async function speakRequest(text: string, override: string | undefined, cancel: AbortSignal): Promise<SpeakAudio> {
   let res: Response;
   try {
     res = await fetch(`${brainUrl()}/voice/speak`, {
       method: "POST",
-      headers: headers(true),
+      headers: { ...headers(true), ...VOICE_ACCEPT },
       body: JSON.stringify({ text: text.slice(0, 4000), ...(override ? { voiceId: override } : {}) }),
-      signal: AbortSignal.timeout(JSON_TIMEOUT_MS),
+      signal: AbortSignal.any([cancel, AbortSignal.timeout(SPEAK_TIMEOUT_MS)]),
     });
   } catch (err) {
+    // Asked to stop is not "the brain is slow". Checked first: an abort we
+    // caused must never be reported as a timeout.
+    if (cancel.aborted) return CANCELLED;
     // TimeoutError is what AbortSignal.timeout throws; anything else is the
     // socket. Two different problems, two different sentences.
     const name = err instanceof Error ? err.name : "";
@@ -457,7 +575,7 @@ export async function postSpeak(text: string, voiceId?: string): Promise<SpeakAu
       return {
         ok: false,
         failure: "timeout",
-        error: `her brain did not answer within ${Math.round(JSON_TIMEOUT_MS / 1000)}s`,
+        error: `her brain did not answer within ${Math.round(SPEAK_TIMEOUT_MS / 1000)}s`,
       };
     }
     return {
@@ -470,12 +588,16 @@ export async function postSpeak(text: string, voiceId?: string): Promise<SpeakAu
   if (!res.ok) {
     // The brain's own words are small, useful, and not a secret. A header is
     // never read here and the token is never echoed.
-    let detail = "";
+    // Read whole (bounded) BEFORE trimming: a relay refusal is JSON, and its
+    // sentence can run past 300 chars once Voicebox's own error is inside it —
+    // cut first and the JSON no longer parses.
+    let raw = "";
     try {
-      detail = (await res.text()).slice(0, 300).replace(/\s+/g, " ").trim();
+      raw = (await res.text()).slice(0, 4000);
     } catch {
-      detail = "";
+      raw = "";
     }
+    const detail = raw.slice(0, 300).replace(/\s+/g, " ").trim();
     const tail = detail ? ` — ${detail}` : "";
     if (res.status === 401 || res.status === 403) {
       return {
@@ -483,6 +605,22 @@ export async function postSpeak(text: string, voiceId?: string): Promise<SpeakAu
         status: res.status,
         failure: "unauthorized",
         error: `her brain refused this desktop's token (HTTP ${res.status})${tail}`,
+      };
+    }
+    // THE RELAY'S OWN WORDS (contract v1: {reason, error}). The brain already
+    // wrote a sentence he can act on — "Open Voicebox.", "switch it to the GPU"
+    // — so it travels untouched. It is deliberately NOT filed as "not-wired":
+    // playback.ts answers not-wired with "Set ELEVENLABS_API_KEY", which is the
+    // wrong remedy when the fault is Voicebox or a closed desktop. A render
+    // that ran out of time is "timeout"; every other reason is "brain-error",
+    // whose remedy is the sentence itself.
+    const refusal = relayRefusal(raw);
+    if (refusal) {
+      return {
+        ok: false,
+        status: res.status,
+        failure: refusal.reason === "timeout" ? "timeout" : "brain-error",
+        error: refusal.error,
       };
     }
     if (res.status === 503) {
@@ -501,7 +639,14 @@ export async function postSpeak(text: string, voiceId?: string): Promise<SpeakAu
     };
   }
 
-  const audio = await res.arrayBuffer();
+  let audio: ArrayBuffer;
+  try {
+    audio = await res.arrayBuffer();
+  } catch (err) {
+    // A cancel that lands while the body is still arriving.
+    if (cancel.aborted) return CANCELLED;
+    throw err;
+  }
   if (audio.byteLength === 0) {
     return {
       ok: false,
@@ -510,7 +655,25 @@ export async function postSpeak(text: string, voiceId?: string): Promise<SpeakAu
       error: "her brain answered HTTP 200 with an empty body — no audio was generated",
     };
   }
-  return { ok: true, status: res.status, audio };
+  // The REAL type, so the <audio> element is told the truth: audio/wav when
+  // Voicebox spoke, audio/mpeg when ElevenLabs did. A brain older than the
+  // relay only ever sent ElevenLabs mp3, so that is the fallback.
+  const ct = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+  const mime = /^audio\/[a-z0-9.+-]+$/.test(ct) ? ct : "audio/mpeg";
+  // WHO SPOKE, AND WHETHER HIS PICK WAS HONOURED — the brain's own headers,
+  // passed up so the rail can correct itself instead of naming a voice she
+  // did not use. Only the two values the contract defines are believed.
+  const who = (res.headers.get("x-eve-voice") ?? "").trim().toLowerCase();
+  const voice = who === "voicebox" || who === "elevenlabs" ? who : undefined;
+  const overrideIgnored = (res.headers.get("x-eve-voice-override") ?? "").trim().toLowerCase() === "ignored";
+  return {
+    ok: true,
+    status: res.status,
+    audio,
+    mime,
+    ...(voice ? { voice } : {}),
+    ...(overrideIgnored ? { overrideIgnored: true } : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------

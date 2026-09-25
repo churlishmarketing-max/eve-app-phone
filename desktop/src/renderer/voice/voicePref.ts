@@ -1,8 +1,8 @@
 // owner: stream V (her voice)
 //
-// HIS PICK, AND THE LAST THING SHE ACTUALLY SAID.
+// HIS PICK, THE LAST THING SHE ACTUALLY SAID, AND WHO ACTUALLY SAID IT.
 //
-// Two small pieces of renderer-local state, kept in localStorage for the same
+// Small pieces of renderer-local state, kept in localStorage for the same
 // reason playback.ts keeps the output device there (OUTPUT_DEVICE_KEY): the
 // deck, summon and flyout windows are one origin, so a pick made in settings is
 // already true in the other windows, and electron/config.ts belongs to another
@@ -19,8 +19,9 @@ export const SELECTED_VOICE_KEY = "eve.voiceId";
 /** The last line the brain actually generated and she actually spoke. */
 export const LAST_SPOKEN_KEY = "eve.voice.lastSpoken";
 
-/** Same shape the brain validates against (voice.ts VOICE_ID_RE). */
-export const VOICE_ID_RE = /^[A-Za-z0-9]{20}$/;
+/** Same shape the brain validates against (voice.ts VOICE_ID_RE): an ElevenLabs
+ *  id (20 alphanumerics) OR a Voicebox profile id (a UUID). */
+export const VOICE_ID_RE = /^(?:[A-Za-z0-9]{20}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
 const CHANGED = "eve:voicepref";
 const MAX_REMEMBERED = 240;
@@ -72,6 +73,44 @@ export function rememberSpokenLine(text: string): void {
 
 export function lastSpokenLine(): string | null {
   return read(LAST_SPOKEN_KEY);
+}
+
+/**
+ * WHO LAST ACTUALLY SPOKE, and whether the pick sent with that line was
+ * honoured — off the brain's X-EVE-Voice / X-EVE-Voice-Override headers
+ * (SpeakAudio.voice / overrideIgnored). Kept here beside his pick for the same
+ * reason the pick is: the deck, Summon and flyout are one origin, so a line
+ * spoken in Summon corrects the deck's rail through the storage event. A
+ * measurement, not a setting: nothing is ever sent to the brain from it.
+ */
+export const SERVED_VOICE_KEY = "eve.voice.served";
+
+export interface ServedVoice {
+  provider: "voicebox" | "elevenlabs";
+  /** The voiceId the line went out with; null = none (her configured voice). */
+  pick: string | null;
+  /** The brain said that pick was NOT honoured and spoke her configured voice. */
+  ignored: boolean;
+}
+
+export function rememberServedVoice(s: ServedVoice): void {
+  const next = JSON.stringify({ provider: s.provider, pick: s.pick, ignored: s.ignored });
+  // Unchanged = no write, no change event: this runs on every line she speaks.
+  if (read(SERVED_VOICE_KEY) === next) return;
+  write(SERVED_VOICE_KEY, next);
+}
+
+export function lastServedVoice(): ServedVoice | null {
+  const raw = read(SERVED_VOICE_KEY);
+  if (!raw) return null;
+  try {
+    const j = JSON.parse(raw) as { provider?: unknown; pick?: unknown; ignored?: unknown };
+    if (j.provider !== "voicebox" && j.provider !== "elevenlabs") return null;
+    const pick = typeof j.pick === "string" && VOICE_ID_RE.test(j.pick) ? j.pick : null;
+    return { provider: j.provider, pick, ignored: j.ignored === true };
+  } catch {
+    return null; // a torn value is no measurement at all
+  }
 }
 
 /** Subscribe to pick changes — this window's writes AND the other windows'. */

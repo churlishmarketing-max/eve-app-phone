@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChatFrame, ChatImage, ChatLock, HandoffOffer, PictureFrame, PendingConfirm } from "@shared/contract";
 import type { ChatView, DeckMsg, EveMode, SeenJobFrame } from "../deck/types";
+import { bargeIn } from "../voice/playback";
 
 /** Job frames kept per window. The feed caps lower; this is the reducer's ceiling. */
 const JOB_FRAME_CAP = 200;
@@ -256,6 +257,14 @@ export function useChat(): ChatApi {
     busy.current = true;
     setErrNote(null);
     setToolNote(null);
+
+    // BARGE-IN FROM THE COMPOSER (round 4). A typed follow-up silences any line
+    // of hers still pending — playing, rendering on Voicebox, or not yet asked
+    // for — exactly as pressing the mic does (playback.bargeIn). Without it an
+    // old WAV landed seconds later and played over the answer to what he typed.
+    // Only HIS sends: a hidden seed (the boot greeting) is ours, not a follow-up,
+    // and must not cut her off mid-sentence in this or any other window.
+    if (!opts?.hidden) bargeIn();
 
     // F3 · A HIDDEN SEND IS NOT HIS WORDS, AND THIS LINE USED TO SAY IT WAS.
     // It was unconditional, and App.tsx seeds a hidden GREETING_SEED turn on

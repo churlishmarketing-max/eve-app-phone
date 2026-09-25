@@ -21,7 +21,8 @@ import { brainUrl, isHarness, isMock, isSmoke, readConfig, windowsHidden, writeC
 import { isQuietHours } from "./quiet.js";
 import { lastState, pollOnce, startPoll, stopPoll } from "./poll.js";
 import { startWardrobeSync, stopWardrobeSync, syncOnce, findWardrobeDir, wardrobeSyncState, _resetWardrobeSyncForTests } from "./wardrobe-sync.js";
-import { setToken, tokenSet } from "./secrets.js";
+import { getToken, setToken, tokenSet } from "./secrets.js";
+import { startVoiceWorker, stopVoiceWorker } from "./voice-worker.js";
 import { createTray, describeMenu as describeTrayMenu, destroyTray, refreshMenu as refreshTrayMenu, setTrayState, wireDeskKill } from "./tray.js";
 import {
   BG,
@@ -151,6 +152,34 @@ app.on("will-quit", () => {
 });
 
 // ---------------------------------------------------------------------------
+// HER VOICE RELAY (voice-worker.ts). Her brain on Railway cannot reach Voicebox
+// on this PC, so this process carries the lines: it long-polls the brain, renders
+// on local Voicebox, posts the WAV back. Outbound only; no port is opened.
+//
+// Same two sources api.ts uses — config.ts brainUrl() and the secrets.ts token
+// that authHeader() wraps — so the relay can never be linked to a different
+// brain, or with a different token, than every other call this app makes.
+//
+// Inert under EVE_MOCK and every harness (smoke, shots, e2e, wardrobe E2E): a
+// robot launch must not claim to be her voice on the live brain, and must not
+// touch Voicebox. Stopped at before-quit so an in-flight poll or render is
+// aborted before the windows start closing.
+// ---------------------------------------------------------------------------
+
+function startVoiceRelay(): void {
+  if (isHarness() || isMock() || !tokenSet()) return;
+  startVoiceWorker({
+    brainUrl,
+    token: getToken,
+    log: (line) => console.log(`[voice-worker] ${line}`),
+    voiceboxUrl: process.env.EVE_VOICEBOX_URL,
+    worker: `eve-desktop ${APP_VERSION}`,
+  });
+}
+
+app.on("before-quit", () => stopVoiceWorker());
+
+// ---------------------------------------------------------------------------
 // PUSH-TO-TALK — and the exact limitation, stated plainly.
 //
 // Electron's globalShortcut fires ONCE on key-down. There is NO key-up event
@@ -178,6 +207,12 @@ function emitPtt(): void {
   const cfg = readConfig();
   const surface: PttEvent["surface"] = deckFocused() ? "deck" : "summon";
   const payload: PttEvent = { phase: pttDown ? "down" : "up", mode: cfg.pttMode, surface };
+
+  // A VOICE TURN IS STARTING: every line still waiting on the brain is
+  // abandoned, in EVERY window, before either window hears the press. The
+  // turn goes to one surface; the stale line may belong to the other one, and
+  // that window's own barge-in never runs.
+  if (payload.phase === "down") api.abortAllSpeak();
 
   // Hotkey pressed while the deck is NOT focused -> bring up Summon and talk
   // into it from whatever app King is in.
@@ -353,6 +388,12 @@ function registerIpc(): void {
       const hotkeyChanged = typeof rest.hotkey === "string" && rest.hotkey !== readConfig().hotkey;
       writeConfig(rest);
       if (hotkeyChanged) registerHotkey();
+      // A token linked (or replaced) here starts the voice relay — or cuts its
+      // five-minute 401 park short. A cleared token stops it.
+      if (typeof token === "string") {
+        if (token) startVoiceRelay();
+        else stopVoiceWorker();
+      }
       return { ok: true, config: configView() };
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
@@ -502,9 +543,22 @@ function registerIpc(): void {
   ipcMain.handle(IPC.voiceTranscribe, (_e, a: { buf: ArrayBuffer; mime?: string }) =>
     api.postTranscribe(a.buf, a.mime),
   );
-  ipcMain.handle(IPC.voiceSpeak, (_e, a: { text: string; voiceId?: string }) =>
-    api.postSpeak(a?.text ?? "", a?.voiceId),
+  // A speak's key is its WINDOW plus the id that window gave it, so one window
+  // can only ever abandon its own line. A malformed id just means "not
+  // cancellable" — the speak itself still runs.
+  const speakKey = (senderId: number, speakId: unknown): string | undefined =>
+    typeof speakId === "string" && /^[A-Za-z0-9-]{1,64}$/.test(speakId) ? `${senderId}:${speakId}` : undefined;
+  ipcMain.handle(IPC.voiceSpeak, (e, a: { text: string; voiceId?: string; speakId?: string }) =>
+    api.postSpeak(a?.text ?? "", a?.voiceId, speakKey(e.sender.id, a?.speakId)),
   );
+  ipcMain.handle(IPC.voiceSpeakCancel, (e, speakId: unknown) => {
+    const key = speakKey(e.sender.id, speakId);
+    return { ok: key ? api.abortSpeak(key) : false };
+  });
+  // The one DELIBERATE exception to "a window can only abandon its own line":
+  // a turn starting in any window is a barge-in on her everywhere. It takes
+  // no argument, so it can only ever silence her — never start or steer a line.
+  ipcMain.handle(IPC.voiceSpeakCancelAll, () => ({ ok: true, cancelled: api.abortAllSpeak() }));
   ipcMain.handle(IPC.voices, () => api.getVoices());
 
   // VOICE RELAY. The renderer's voice bus is per-window; this is how a mode or
@@ -818,6 +872,8 @@ app.whenReady().then(() => {
   // HER CLOSET, SYNCED. Returns immediately — the first pass is on a timer, so
   // a slow disk or a dead brain can never delay a launch. It only ever ADDS.
   startWardrobeSync();
+  // HER VOICE, CARRIED. Returns immediately; only runs with a linked token.
+  startVoiceRelay();
 
   console.log(
     `[eve] desktop ${APP_VERSION} · ${isDev ? "dev" : "packaged"} · brain ${brainUrl()} · ` +

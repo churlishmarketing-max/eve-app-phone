@@ -9,14 +9,28 @@
 // that rail is a claim about her; a claim you cannot resolve is a lie. So:
 //
 //   * the name comes from the id the brain names as configured, or
-//   * from his saved override IF the brain proved it honours overrides, or
-//   * it is null and the rail prints "—".
+//   * from his saved pick IF the brain proved it honours picks AND the voice
+//     speaking right now can honour this one (see pickHonoured), or
+//   * it is null and the rail prints "—" (or names the missing profile).
 //
 // There is no third branch, and no guess.
+//
+// THE ANSWER CAN CHANGE UNDER HER (fix round 3). The provider flips at runtime
+// — Voicebox via EVE desktop's relay, ElevenLabs, or none — and this hook used
+// to ask once and freeze on the first answer that named a voice. It now asks
+// again whenever the brain's "voice" connector changes, and whenever a line
+// comes back spoken by a different provider than the list it holds.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { VoiceList } from "@shared/contract";
-import { onVoicePrefChange, selectedVoiceId, setSelectedVoiceId } from "./voicePref";
+import type { ConnectorStatus, VoiceList } from "@shared/contract";
+import { VOICE_CONNECTOR_SETTLE_MS, voiceConnectorKey } from "@shared/core/voice";
+import {
+  lastServedVoice,
+  onVoicePrefChange,
+  selectedVoiceId,
+  setSelectedVoiceId,
+  type ServedVoice,
+} from "./voicePref";
 
 export interface VoiceOption {
   id: string;
@@ -32,8 +46,9 @@ export interface VoiceIdentity {
   configuredVoiceId: string | null;
   /**
    * Does the brain in front of us honour a per-utterance `voiceId`? Detected,
-   * never assumed: it is exactly "did GET /voice/voices carry configuredVoiceId",
-   * which only the redeployed brain does.
+   * never assumed: GET /voice/voices carried configuredVoiceId (only the
+   * redeployed brain does), or it named a Voicebox profile it could not find
+   * (only the relay brain does — and it still speaks a picked profile).
    */
   overrideSupported: boolean;
   /** His saved pick (may exist while unsupported — then it is NOT in effect). */
@@ -44,6 +59,16 @@ export interface VoiceIdentity {
   effectiveName: string | null;
   /** True when effectiveId is his pick rather than the brain's default. */
   usingOverride: boolean;
+  /** Whose list this is. null = the brain did not say (older than the relay) or no answer. */
+  provider: "voicebox" | "elevenlabs" | null;
+  /**
+   * The Voicebox profile NAME her brain looks for and his Voicebox does not
+   * have — {ok:true, configuredVoiceId:null, configuredVoiceName:"X"}. That is
+   * a missing profile on this PC, NOT an old brain, and is said as such.
+   */
+  missingProfile: string | null;
+  /** His saved pick is on file, but the voice speaking now cannot (or did not) honour it. */
+  pickIgnored: boolean;
   reload(): void;
   /** Persist a pick (null clears it). Caller must respect overrideSupported. */
   select(id: string | null): void;
@@ -56,18 +81,78 @@ export interface VoiceIdentity {
 //     only a redeploy changes that answer, and every attempt costs a real
 //     ElevenLabs voices.search on the brain's key, so it backs off hard and
 //     gives up. The picker's REFRESH is the manual way back.
+// A MISSING VOICEBOX PROFILE is neither: the relay answers from memory (free)
+// and the answer changes the moment he creates or renames the profile, so it
+// is re-asked on the failed-call cadence and never parked for ten minutes.
 const RETRY_FAILED_MS = 60_000;
 const RETRY_OLD_BRAIN_MS = 600_000;
 const RETRY_OLD_BRAIN_MAX = 6;
+
+/**
+ * Can the voice speaking now honour his saved pick? KEYED ON THE PROVIDER,
+ * because a pick belongs to one: a Voicebox profile id means nothing to
+ * ElevenLabs, an ElevenLabs id means nothing to Voicebox, and the brain
+ * ignores either across that line (X-EVE-Voice-Override: ignored) and speaks
+ * her configured voice — while the rail went on naming the pick.
+ *   voicebox   — the pick must be one of the profiles his Voicebox reported;
+ *   elevenlabs — the pick must be an ElevenLabs id (20 alphanumerics);
+ *   not said   — an older brain: as before, trusted once it proved overrides.
+ * Whatever the shape says, a line that came back "ignored" for this very pick
+ * from this very provider is the last word, until a later line says otherwise.
+ */
+export function pickHonoured(
+  provider: VoiceIdentity["provider"],
+  pick: string,
+  voices: VoiceOption[],
+  served: ServedVoice | null,
+): boolean {
+  const p = pick.toLowerCase();
+  if (served && served.provider === provider && served.ignored && served.pick?.toLowerCase() === p) return false;
+  if (provider === "voicebox") return voices.some((v) => v.id.toLowerCase() === p);
+  if (provider === "elevenlabs") return /^[A-Za-z0-9]{20}$/.test(pick);
+  return true;
+}
+
+/** Everything the rail and the picker print, from one answer. Pure. */
+export function resolveIdentity(
+  list: VoiceList | null,
+  selectedId: string | null,
+  served: ServedVoice | null,
+): Omit<VoiceIdentity, "loading" | "error" | "selectedId" | "reload" | "select"> {
+  const voices = list?.voices ?? [];
+  const provider = list?.provider ?? null;
+  const configuredVoiceId = list?.configuredVoiceId ?? null;
+  const named = typeof list?.configuredVoiceName === "string" ? list.configuredVoiceName.trim() : "";
+  const missingProfile = list?.ok && !configuredVoiceId && named ? named : null;
+  const overrideSupported = !!configuredVoiceId || !!missingProfile;
+  const pickOk = overrideSupported && !!selectedId && pickHonoured(provider, selectedId, voices, served);
+  const usingOverride = pickOk && selectedId !== configuredVoiceId;
+  const effectiveId = (pickOk ? selectedId : null) ?? configuredVoiceId;
+  const match = effectiveId ? voices.find((v) => v.id === effectiveId) : undefined;
+  return {
+    voices,
+    configuredVoiceId,
+    overrideSupported,
+    effectiveId: effectiveId ?? null,
+    effectiveName: match?.name ?? null,
+    usingOverride,
+    provider,
+    missingProfile,
+    pickIgnored: overrideSupported && !!selectedId && !pickOk,
+  };
+}
 
 export function useVoiceIdentity(): VoiceIdentity {
   const [list, setList] = useState<VoiceList | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState<string | null>(null);
   const [selectedId, setSelected] = useState<string | null>(() => selectedVoiceId());
+  const [served, setServed] = useState<ServedVoice | null>(() => lastServedVoice());
   const [tick, setTick] = useState(0);
   const [oldBrainTries, setOldBrainTries] = useState(0);
   const alive = useRef(true);
+  const listRef = useRef<VoiceList | null>(null);
+  listRef.current = list;
 
   useEffect(() => {
     alive.current = true;
@@ -77,8 +162,16 @@ export function useVoiceIdentity(): VoiceIdentity {
   }, []);
 
   // His pick can change in ANOTHER window (settings lives in the deck, the
-  // summon panel speaks) — follow it rather than caching it once.
-  useEffect(() => onVoicePrefChange(() => setSelected(selectedVoiceId())), []);
+  // summon panel speaks) — follow it rather than caching it once. The same
+  // event carries "who last actually spoke" (voicePref SERVED_VOICE_KEY).
+  useEffect(
+    () =>
+      onVoicePrefChange(() => {
+        setSelected(selectedVoiceId());
+        setServed(lastServedVoice());
+      }),
+    [],
+  );
 
   useEffect(() => {
     let dead = false;
@@ -110,10 +203,56 @@ export function useVoiceIdentity(): VoiceIdentity {
     setTick((t) => t + 1);
   }, []);
 
+  // THE CONNECTOR WATCH. Her brain's "voice" connector rides the same /state
+  // push the rest of the deck reads; when its connected flag or its detail
+  // changes (provider flip, Voicebox up/down, profile found/lost), the list
+  // is asked for again — once the change has held VOICE_CONNECTOR_SETTLE_MS, so a
+  // flapping connector costs one question, not one per flap. The first
+  // reading only records: the mount-time fetch above already answers it.
+  useEffect(() => {
+    let seenKey: string | null | undefined;
+    let settle: number | null = null;
+    const seen = (connectors: ConnectorStatus[] | undefined): void => {
+      const key = voiceConnectorKey(connectors);
+      const prev = seenKey;
+      seenKey = key;
+      if (prev === undefined || prev === key) return;
+      if (settle !== null) window.clearTimeout(settle);
+      settle = window.setTimeout(() => {
+        settle = null;
+        if (!alive.current) return;
+        setOldBrainTries(0);
+        setTick((n) => n + 1);
+      }, VOICE_CONNECTOR_SETTLE_MS);
+    };
+    void window.eve.state.get().then(
+      (u) => seen(u.state.connectors),
+      () => undefined, // a dead bridge: the retry cadence below still runs
+    );
+    const unsub = window.eve.onStateUpdate((u) => seen(u.state.connectors));
+    return () => {
+      if (settle !== null) window.clearTimeout(settle);
+      unsub();
+    };
+  }, []);
+
+  // A line just came back from a DIFFERENT provider than the list on hand:
+  // the voice flipped between /state polls. Ask again now. Keyed on the
+  // measurement only (the list is read through a ref), so a list that still
+  // disagrees afterwards is asked once, not in a loop.
+  useEffect(() => {
+    const p = listRef.current?.provider;
+    if (!served || !p || served.provider === p) return;
+    setOldBrainTries(0);
+    setTick((n) => n + 1);
+  }, [served]);
+
   // Keep trying quietly while there is nothing true to show; stop the moment
-  // the brain answers with a configured voice.
+  // the brain answers with a configured voice (a later change on the voice
+  // connector, or a line from another provider, asks again — see above).
   const resolved = !!list?.configuredVoiceId;
-  const oldBrain = !!list && !list.configuredVoiceId;
+  const missing = !!list && !list.configuredVoiceId && !!list.configuredVoiceName?.trim();
+  const oldBrain = !!list && !list.configuredVoiceId && !missing;
   useEffect(() => {
     if (resolved) return;
     if (oldBrain && oldBrainTries >= RETRY_OLD_BRAIN_MAX) return;
@@ -130,25 +269,15 @@ export function useVoiceIdentity(): VoiceIdentity {
     setSelected(id);
   }, []);
 
-  return useMemo<VoiceIdentity>(() => {
-    const voices = list?.voices ?? [];
-    const configuredVoiceId = list?.configuredVoiceId ?? null;
-    const overrideSupported = !!configuredVoiceId;
-    const usingOverride = overrideSupported && !!selectedId && selectedId !== configuredVoiceId;
-    const effectiveId = (overrideSupported && selectedId) || configuredVoiceId;
-    const match = effectiveId ? voices.find((v) => v.id === effectiveId) : undefined;
-    return {
+  return useMemo<VoiceIdentity>(
+    () => ({
       loading,
       error: failed,
-      voices,
-      configuredVoiceId,
-      overrideSupported,
       selectedId,
-      effectiveId: effectiveId ?? null,
-      effectiveName: match?.name ?? null,
-      usingOverride,
+      ...resolveIdentity(list, selectedId, served),
       reload,
       select,
-    };
-  }, [failed, list, loading, reload, select, selectedId]);
+    }),
+    [failed, list, loading, reload, select, selectedId, served],
+  );
 }

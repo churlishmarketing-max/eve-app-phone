@@ -53,8 +53,39 @@ export function configuredVoiceId(): string {
  *  silently swapped for the default. */
 const VOICE_ID_RE = /^[A-Za-z0-9]{20}$/;
 
-export function isVoiceId(v: unknown): v is string {
+/** Voicebox profile ids are UUIDs (8-4-4-4-12 hex). Case-insensitive, because
+ *  a UUID is the same id in either case and a client that upper-cases it has
+ *  not asked for a different voice. */
+const PROFILE_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** An id ElevenLabs can speak in. */
+export function isElevenLabsVoiceId(v: unknown): v is string {
   return typeof v === "string" && VOICE_ID_RE.test(v);
+}
+
+/** An id Voicebox can speak in (voice-relay.ts). */
+export function isVoiceboxProfileId(v: unknown): v is string {
+  return typeof v === "string" && PROFILE_ID_RE.test(v);
+}
+
+/** Either provider's id shape — what POST /voice/speak accepts as `voiceId`.
+ *  Her voice now has TWO homes (Voicebox on his PC via the relay, ElevenLabs as
+ *  the fallback), and /voice/voices hands back whichever one is live, so the
+ *  id a client sends back can be either shape. Junk is still a 400. */
+export function isVoiceId(v: unknown): v is string {
+  return isElevenLabsVoiceId(v) || isVoiceboxProfileId(v);
+}
+
+/** Is the ElevenLabs FALLBACK usable? The key has to be set AND the switch not
+ *  thrown: EVE_TTS_ELEVENLABS=off turns the fallback off without deleting the
+ *  key, so "Voicebox or nothing" is a config line, not a key rotation.
+ *  ttsReady() above stays the raw key check. The "elevenlabs" connector reads
+ *  THIS (old phone builds key voice-out off that row, so with the switch off
+ *  it must say not connected); ttsReady only picks its detail line. */
+export function elevenLabsAvailable(): boolean {
+  const sw = process.env.EVE_TTS_ELEVENLABS;
+  if (typeof sw === "string" && sw.trim().toLowerCase() === "off") return false;
+  return ttsReady();
 }
 
 export async function transcribe(audio: Buffer, contentType: string): Promise<{ ok: boolean; transcript?: string; error?: string }> {
@@ -94,7 +125,10 @@ export async function speakToResponse(
   }
   if (!el) el = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
   try {
-    const speakAs = isVoiceId(overrideVoiceId) ? overrideVoiceId : voiceId();
+    // ElevenLabs-shaped ids only. isVoiceId() now also admits a Voicebox UUID,
+    // and ElevenLabs cannot speak in one — the route marks that override as
+    // ignored (X-EVE-Voice-Override) rather than paying for a 404 here.
+    const speakAs = isElevenLabsVoiceId(overrideVoiceId) ? overrideVoiceId : voiceId();
     const stream = await el.textToSpeech.stream(speakAs, {
       text,
       modelId: "eleven_flash_v2_5",

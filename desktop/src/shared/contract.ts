@@ -515,10 +515,42 @@ export interface Transcript {
 export interface SpeakAudio {
   ok: boolean;
   audio?: ArrayBuffer;
+  /**
+   * The audio's REAL Content-Type, present with `audio`: "audio/wav" when
+   * Voicebox rendered it (the desktop relay), "audio/mpeg" when ElevenLabs did.
+   * Absent = a main process older than the relay; treat as audio/mpeg.
+   */
+  mime?: string;
   /** The brain's HTTP status, when it answered at all. */
   status?: number;
-  failure?: "no-text" | "unauthorized" | "not-wired" | "brain-error" | "timeout" | "network" | "empty-body";
+  /**
+   * "cancelled" = the window abandoned this line (barge-in, or a newer line
+   * replaced it) and main aborted the request. Not a fault; nobody hears it.
+   */
+  failure?:
+    | "no-text"
+    | "unauthorized"
+    | "not-wired"
+    | "brain-error"
+    | "timeout"
+    | "network"
+    | "empty-body"
+    | "cancelled";
   error?: string;
+  /**
+   * WHO ACTUALLY SPOKE, off the brain's X-EVE-Voice header (voice relay
+   * contract v1): "voicebox" or "elevenlabs". Present only with `audio`.
+   * ABSENT = a brain older than the header, or a value this build does not
+   * know — never guessed.
+   */
+  voice?: "voicebox" | "elevenlabs";
+  /**
+   * True when the brain says the `voiceId` this line was sent with was NOT
+   * honoured (X-EVE-Voice-Override: ignored) — an ElevenLabs id Voicebox
+   * cannot speak in, or a profile his Voicebox does not have — and she spoke
+   * in her configured voice instead. The rail must not keep naming the pick.
+   */
+  overrideIgnored?: boolean;
 }
 
 /**
@@ -582,6 +614,20 @@ export interface VoiceList {
    * and the UI must say so in words instead of pretending a pick took.
    */
   configuredVoiceId?: string;
+  /**
+   * WHICH BACKEND ANSWERED (voice relay contract v1, 2026-09-24). "voicebox"
+   * when the Voicebox relay served this list, "elevenlabs" when it fell back,
+   * null when neither is wired. ABSENT = a brain older than the relay: it only
+   * ever spoke through ElevenLabs and never labeled which one.
+   */
+  provider?: "voicebox" | "elevenlabs" | null;
+  /**
+   * The resolved voice's NAME, when the brain already worked it out (the relay
+   * resolves EVE_VOICE_PROFILE against the worker's reported profiles and
+   * returns the match's name directly). ABSENT means a caller still has to
+   * look the name up in `voices` by `configuredVoiceId`, same as before.
+   */
+  configuredVoiceName?: string;
   error?: string;
 }
 
@@ -834,6 +880,14 @@ export const IPC = {
   wardrobeSyncState: "eve:wardrobe:syncstate",
   voiceTranscribe: "eve:voice:transcribe",
   voiceSpeak: "eve:voice:speak",
+  // Abandons ONE in-flight speak by the id its window gave it. A relay render
+  // can take 30-90s; without this a barge-in left the request running and the
+  // brain holding a job nobody would hear.
+  voiceSpeakCancel: "eve:voice:speak-cancel",
+  // Abandons EVERY in-flight speak, whichever window started it. The deck and
+  // Summon are separate windows: a barge-in in one used to cancel only its own
+  // pending line, and the other's stale line played over his next question.
+  voiceSpeakCancelAll: "eve:voice:speak-cancel-all",
   voices: "eve:voice:voices",
   voiceRelay: "eve:voice:relay",
   winMinimize: "eve:win:minimize",
@@ -953,8 +1007,26 @@ export interface EveBridge {
      *
      * Returns a SpeakAudio, never a bare `ArrayBuffer | null` — see SpeakAudio
      * for why that null was the bug and not the design.
+     *
+     * `speakId` (optional) names this request so cancelSpeak can abandon it.
+     * A main older than the field ignores it.
      */
-    speak(text: string, voiceId?: string): Promise<SpeakAudio>;
+    speak(text: string, voiceId?: string, speakId?: string): Promise<SpeakAudio>;
+    /**
+     * Abandon the speak this window started under `speakId`: main aborts the
+     * request, and the brain drops the job if the worker has not claimed it.
+     * `ok:false` = nothing by that id was in flight. A main older than this
+     * channel REJECTS ("No handler registered") — callers treat it as best effort.
+     */
+    cancelSpeak(speakId: string): Promise<{ ok: boolean }>;
+    /**
+     * BARGE-IN ACROSS WINDOWS. Abandon every speak still waiting on the brain
+     * — this window's and every other window's. Each one resolves as a
+     * SpeakAudio with failure "cancelled" and plays nothing. `cancelled` is how
+     * many were in flight. A main older than this channel REJECTS ("No handler
+     * registered") — callers treat it as best effort.
+     */
+    cancelAllSpeak(): Promise<{ ok: boolean; cancelled: number }>;
   };
   voices(): Promise<VoiceList>;
   win: {

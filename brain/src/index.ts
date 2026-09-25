@@ -23,20 +23,16 @@ import { carriedFromBody } from "./carried.js";
 import { probePictureTaintSchema, pictureTaintReady } from "./taint.js";
 import { probeDurableOriginSchema, durableOriginReady } from "./durable.js";
 import { addText, addNotification } from "./senses.js";
-import { getConnectorStatus } from "./connectors.js";
+import { getHealthConnectorStatus } from "./connectors.js";
 import { runDispatch, probeDispatchSchema, dispatchReady, settleJobFromConfirm } from "./dispatch.js";
 import { runFloorCheck, runCloseout, runWeekPreview, fireTripwire, runRoutineRiskCheck } from "./proactive.js";
 import { tickRoutine, untickRoutine, createRoutine, archiveRoutine, actOnAttention, type AttentionAction } from "./ops.js";
 import { buildVitals, saveCheckin, checkinRangeError, rememberCheckinNote } from "./vitals.js";
-import {
-  transcribe,
-  speakToResponse,
-  listVoices,
-  sttReady,
-  ttsReady,
-  configuredVoiceId,
-  isVoiceId,
-} from "./voice.js";
+import { transcribe, sttReady } from "./voice.js";
+// Voice OUT lives in voice-relay.ts now: Voicebox on his PC via EVE desktop,
+// ElevenLabs as the fallback. /voice/speak and /voice/voices are mounted from
+// there, below the bearer middleware.
+import { mountVoiceRoutes, voiceOutReady } from "./voice-relay.js";
 import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from "./wardrobe.js";
 import { MAX_LOOK_BYTES, addLook, bucketManifest } from "./wardrobe-add.js";
 import { warmBoard, boardSnapshotReady } from "./os.js";
@@ -108,7 +104,9 @@ app.use((err: unknown, _req: express.Request, res: express.Response, next: expre
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  // X-EVE-Voice-Accept: the voice relay's opt-in (voice-relay.ts) — without it
+  // here the WebView's preflight would refuse the phone's /voice/speak outright.
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-EVE-Voice-Accept");
   res.setHeader("Access-Control-Max-Age", "86400");
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
@@ -193,7 +191,12 @@ app.get("/health", (_req, res) => {
     // `why` names the matched marker (a KEY name) and never its value.
     pushAllowed: isPushAllowed(),
     memoryReady: isDbReady(),
-    voiceReady: { stt: sttReady(), tts: ttsReady() },
+    // tts = this brain HAS a voice out: the ElevenLabs fallback is available,
+    // or EVE desktop's voice worker has polled at least once since boot. A
+    // capability, NOT "is his PC on right now" — this route is unauthenticated,
+    // so a live relay flag here would tell anyone when his PC is on
+    // (voiceOutReady in voice-relay.ts).
+    voiceReady: { stt: sttReady(), tts: voiceOutReady() },
     osBoardWarm: boardSnapshotReady(),
     // { ready, live, count } — live:true = read from the OS; count = roster rows.
     // v0.2 adds the registry side (counts only, never a name): dispatchable =
@@ -239,7 +242,11 @@ app.get("/health", (_req, res) => {
     //                  go true either; it has no work to do until the door
     //                  opens.
     durableOriginReady: durableOriginReady(),
-    connectors: getConnectorStatus(),
+    // Every row as /state has it EXCEPT "voice": the live one says "seen 0s
+    // ago", which on this unauthenticated route is "is his PC on" for anyone.
+    // Here it is the capability form (getHealthConnectorStatus); the live row
+    // stays behind the bearer on /state, where both clients' speak gates read.
+    connectors: getHealthConnectorStatus(),
     // Stamped by BOTH the /job route and the in-process crons (review C9/C24).
     lastDistillation: getStamp("distill"),
     lastBrief: getStamp("brief") ?? lastBrief,
@@ -399,29 +406,12 @@ app.post(
   },
 );
 
-// Voice out: text → streamed mp3 in EVE's voice (starts playing on first chunk).
-app.post("/voice/speak", async (req, res) => {
-  // `voiceId` is OPTIONAL and additive: absent => the configured voice, exactly
-  // as before. Validated strictly (20 alphanumerics) so a malformed id is a 400
-  // here instead of a paid round trip to ElevenLabs, and is never quietly
-  // swapped for the default — a caller that asks for a voice and gets a
-  // different one back is the kind of lie this whole surface exists to avoid.
-  const { text, voiceId } = req.body ?? {};
-  if (typeof text !== "string" || !text.trim()) {
-    return res.status(400).json({ error: "text (string) is required" });
-  }
-  if (voiceId !== undefined && !isVoiceId(voiceId)) {
-    return res.status(400).json({ error: "voiceId must be 20 alphanumeric characters" });
-  }
-  await speakToResponse(text.slice(0, 4000), res, voiceId);
-});
-
-// `configuredVoiceId` is what the desktop rail reads to print her REAL voice
-// name instead of guessing at voices[0]. Additive: the list payload is
-// unchanged, this is one more field beside it.
-app.get("/voice/voices", async (_req, res) => {
-  res.json({ ...(await listVoices()), configuredVoiceId: configuredVoiceId() });
-});
+// Voice out: POST /voice/speak, GET /voice/voices, and the relay EVE desktop
+// long-polls (POST /voice/relay/poll, /voice/relay/result/:id,
+// /voice/relay/fail/:id). All of it sits BELOW the bearer middleware above —
+// nothing is exempt, the relay least of all (a stranger who could poll would
+// be handed every line she says). See voice-relay.ts.
+mountVoiceRoutes(app);
 
 // Her wardrobe (05 §5): King's approved renders live in the Supabase Storage
 // "wardrobe" bucket and are served straight off its CDN — the APK stays light,

@@ -49,12 +49,20 @@ export function rememberConversation(id: string): void {
   }
 }
 
-/** ElevenLabs is key "11" on the wire (fixtures + brain connectors.ts). */
+/**
+ * Can she speak at all? Connector "voice" is the brain's answer since the
+ * Voicebox relay (relay online OR ElevenLabs available); "elevenlabs" (key "11"
+ * on the wire in fixtures + brain connectors.ts) is still read so an older
+ * brain keeps working.
+ */
 export function ttsConnected(connectors: ConnectorStatus[] | undefined): boolean {
   return (connectors ?? []).some(
     (c) =>
       c.connected &&
-      (c.key === "11" || c.key.toLowerCase() === "elevenlabs" || /eleven\s*labs/i.test(c.name ?? "")),
+      (c.key.toLowerCase() === "voice" ||
+        c.key === "11" ||
+        c.key.toLowerCase() === "elevenlabs" ||
+        /eleven\s*labs/i.test(c.name ?? "")),
   );
 }
 
@@ -128,6 +136,20 @@ export function useVoiceTurn(opts: VoiceTurnOptions = {}): VoiceTurn {
   const noteTimer = useRef<number | null>(null);
   /** Set when a turn was just auto-started; swallows the PTT echo of the same press. */
   const suppressPttUntil = useRef(0);
+  /**
+   * Bumped whenever a new turn begins (mic opened, message sent). finishTurn
+   * holds the value it started with and stops touching the phase once it
+   * moves: her voice can take a minute to render, and by the time that old
+   * turn winds up he may already be recording the next one. Setting "idle"
+   * then would show idle over a live mic.
+   */
+  const turnRef = useRef(0);
+  /**
+   * playback.bargeIns() when this turn was sent. The deck composer cannot bump
+   * turnRef, so a typed send moves that count instead; a turn that sees it
+   * moved does not start speaking (finishTurn).
+   */
+  const bargeInsAtSend = useRef(0);
 
   const patch = useCallback((p: Partial<VoiceTurnState>) => {
     setState((s) => ({ ...s, ...p }));
@@ -164,6 +186,8 @@ export function useVoiceTurn(opts: VoiceTurnOptions = {}): VoiceTurn {
 
   const finishTurn = useCallback(
     async (convId: string, fullText: string) => {
+      const turn = turnRef.current;
+      const superseded = (): boolean => turnRef.current !== turn;
       chatIdRef.current = null;
       if (convId) rememberConversation(convId);
 
@@ -183,6 +207,15 @@ export function useVoiceTurn(opts: VoiceTurnOptions = {}): VoiceTurn {
         connectors = upd.state.connectors;
       } catch {
         // Cannot prove she is allowed to speak -> she does not speak.
+        if (!superseded()) goIdle();
+        return;
+      }
+      if (superseded()) return; // a new turn began while we asked; it owns the phase
+      // HE TYPED A FOLLOW-UP in the deck composer after this turn was sent
+      // (while she was still streaming it, or while we asked above). This reply
+      // is not spoken: it would render and play over the answer to what he
+      // typed. The typed turn is useChat's, not ours, so this one goes idle.
+      if (playback.bargeIns() !== bargeInsAtSend.current) {
         goIdle();
         return;
       }
@@ -199,6 +232,9 @@ export function useVoiceTurn(opts: VoiceTurnOptions = {}): VoiceTurn {
 
       patch({ phase: "speaking" });
       const spoke = await playback.speak(fullText); // emits speaking -> idle itself
+      // Barged in on mid-render or mid-line: the new turn owns the phase now,
+      // and "stopped" is not a failure to report.
+      if (superseded()) return;
       patch({ phase: "idle" });
 
       // NO MORE SILENT FAILURE (2026-09-01). Her reply is on screen either way
@@ -270,6 +306,8 @@ export function useVoiceTurn(opts: VoiceTurnOptions = {}): VoiceTurn {
     async (text: string, viaVoice: boolean) => {
       const message = text.trim();
       if (!message) return;
+      turnRef.current += 1;
+      bargeInsAtSend.current = playback.bargeIns();
       viaVoiceRef.current = viaVoice;
       sawConfirmRef.current = false;
       replyRef.current = "";
@@ -346,7 +384,12 @@ export function useVoiceTurn(opts: VoiceTurnOptions = {}): VoiceTurn {
 
   const start = useCallback(async () => {
     if (recorderRef.current || startingRef.current) return;
+    turnRef.current += 1; // the turn she may still be finishing is no longer the current one
     playback.stop(); // BARGE-IN before anything else
+    // ...and in the OTHER window too. stop() only reaches this window's pending
+    // line; a reply still rendering for the deck (or Summon) would otherwise
+    // play over the question he is about to ask. Best effort, never awaited.
+    playback.cancelAllRenders();
     startingRef.current = true;
     pendingStopRef.current = false;
     try {

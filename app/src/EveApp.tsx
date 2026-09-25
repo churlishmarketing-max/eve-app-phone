@@ -23,10 +23,12 @@ import {
   dispatchUnit,
   fetchConfirm,
   fetchVoices,
+  type ConnectorStatus,
   type DispatchOutcome,
   type EveState,
   type JobRow,
   type PendingConfirm,
+  type SpeakOutcome,
   type Vitals,
   type VitalsHabit,
   type VoiceList,
@@ -55,6 +57,7 @@ import {
 import { agentCode } from "@shared/core/format";
 import { fleetView, kindsLine, sourceWord, type FleetUnit } from "@shared/core/fleet";
 import { DASH, dispatchRows } from "@shared/core/counters";
+import { VOICE_CONNECTOR_SETTLE_MS, voiceConnectorKey } from "@shared/core/voice";
 import { APP_VERSION } from "./version";
 import { BRAIN_URL } from "./config";
 // The key card on WIRE (P4). tokenFingerprint is the ONLY read this file
@@ -183,6 +186,41 @@ function payloadText(v: unknown): string {
   } catch {
     return String(v);
   }
+}
+
+// A connector's detail sentence, cut to what fits beside the mic (.vline sits
+// in one narrow grid column). The brain's voice sentences put the part he can
+// act on LAST — "…right now — EVE desktop is closed or offline.", "…isn't
+// answering (…). Open Voicebox." — so the header keeps the last sentence, the
+// part of it after the last " — ", and drops a trailing "(…)". Cut, never
+// reworded: every word printed is the brain's. Capped at 40 characters.
+function headerWords(detail: string | undefined): string {
+  const sentences = (detail ?? "").trim().split(/[.!?]\s+/);
+  let s = sentences[sentences.length - 1] ?? "";
+  const dash = s.lastIndexOf(" — ");
+  if (dash >= 0) s = s.slice(dash + 3);
+  s = s.replace(/\s*\([^()]*\)[\s.!?]*$/, "").replace(/[\s.!?]+$/, "").trim();
+  return (s.length > 40 ? `${s.slice(0, 39).trimEnd()}…` : s).toUpperCase();
+}
+
+// VOICE OUT IS DOWN — SAY WHY (round 4). With neither voice connector up the
+// label used to read "VOICE — KEY NEEDED", every time. Since the relay, her
+// voice lives on his PC in Voicebox, and she is silent because EVE desktop is
+// closed or Voicebox is not open — no key fixes either, and the label sent him
+// hunting for one. The "voice" connector already says which it is
+// (voice-relay.ts voiceConnector), so its own detail is what is printed.
+// "KEY NEEDED" is kept for the one case it is true: a brain older than the
+// relay (no "voice" row) whose ElevenLabs row says the key is not set. Only
+// ever called while neither row is connected.
+function voiceOutLabel(connectors: ConnectorStatus[] | undefined): string {
+  const voice = connectors?.find((c) => c.key === "voice");
+  if (voice) return `VOICE — ${headerWords(voice.detail) || "OFF, NO REASON GIVEN"}`;
+  const eleven = connectors?.find((c) => c.key === "elevenlabs");
+  if (eleven && /not set/i.test(eleven.detail ?? "")) return "VOICE — KEY NEEDED";
+  if (eleven) return `VOICE — ${headerWords(eleven.detail) || "OFF, NO REASON GIVEN"}`;
+  // No connector list at all: her brain did not answer /state (or has not yet).
+  // That is not a missing key either.
+  return "VOICE — HER BRAIN DIDN'T SAY";
 }
 
 /* ---- the entity: rings, core, ripples, thinking arc, speaking bars ----
@@ -365,6 +403,23 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
     }
   };
 
+  // ---- turn currency, for the speakText race ----
+  // A spoken reply can take 30-90s to render on the CPU build, long enough for
+  // him to tap the mic again before it lands. turnSeq is bumped the instant a
+  // new turn starts (typed send, transcript dispatch, OR the mic tap that
+  // starts recording — the earliest point a new turn is definitely his, before
+  // any transcript exists) so a late speakText can tell it's no longer live.
+  // speakAbortRef holds the in-flight /voice/speak fetch so that moment also
+  // aborts it — the brain sees the disconnect and drops the queued job (voice
+  // relay contract v1) instead of rendering audio nobody will hear.
+  const turnSeq = useRef(0);
+  const speakAbortRef = useRef<AbortController | null>(null);
+  const beginVoiceTurn = () => {
+    turnSeq.current++;
+    speakAbortRef.current?.abort();
+    speakAbortRef.current = null;
+  };
+
   // ---- her senses (Phase 4, 05 §7): forward texts + notifications to the
   // brain's transient buffers while the app is open. Wiring is idempotent,
   // and nothing here ever PROMPTS — the permission asks live behind the
@@ -408,7 +463,12 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
     setLive(r.state);
     setFetchedAt(r.fetchedAt);
     setLinkError(r.error);
-    ttsAvailable.current = !!r.state.connectors?.find((c) => c.key === "elevenlabs")?.connected;
+    // Voice relay contract v1: the "voice" connector is the Voicebox relay
+    // (via EVE desktop); "elevenlabs" is the fallback that predates it. Either
+    // one connected means a spoken reply will actually come back.
+    ttsAvailable.current = !!r.state.connectors?.some(
+      (c) => (c.key === "voice" || c.key === "elevenlabs") && c.connected,
+    );
   }, []);
 
   useEffect(() => {
@@ -478,26 +538,53 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
     };
   }, []);
 
-  // ---- WHICH VOICE SHE IS ACTUALLY IN (P6) ----
-  // Asked once, the first time the connector says ElevenLabs is up. The name
-  // is resolved from configuredVoiceId or not printed: voices[0] is the API's
-  // own order, not a ranking, and this screen used to print the literal
-  // "VOICE: LARA" whether or not that was true.
-  const ttsOn = !!live.connectors?.find((c) => c.key === "elevenlabs")?.connected;
+  // ---- WHICH VOICE SHE IS ACTUALLY IN (P6, extended for the relay) ----
+  // Asked the first time either voice connector is up: "voice" is the
+  // Voicebox relay (via EVE desktop), "elevenlabs" the pre-relay fallback. The
+  // name is resolved from configuredVoiceName, then configuredVoiceId, or not
+  // printed: voices[0] is the API's own order, not a ranking, and this screen
+  // used to print the literal "VOICE: LARA" whether or not that was true.
+  //
+  // ASKED AGAIN WHEN HER VOICE CHANGES (fix round 3). This used to be asked
+  // once per session, and her provider flips at runtime — Voicebox ↔
+  // ElevenLabs ↔ none — so the label kept naming the voice she USED to be in.
+  // Now any change to the "voice" connector's connected flag or detail (the
+  // shared key, desktop/src/shared/core/voice.ts — the desk's rail reads the
+  // same one) is re-asked once it has held VOICE_CONNECTOR_SETTLE_MS. The
+  // name and the id sent back to /voice/speak always come from ONE answer, so
+  // they are keyed on the provider that gave it.
+  const ttsOn = !!live.connectors?.some(
+    (c) => (c.key === "voice" || c.key === "elevenlabs") && c.connected,
+  );
+  const voiceKey = voiceConnectorKey(live.connectors);
+  const voicesKeyRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
-    if (!ttsOn || voices) return;
+    if (!ttsOn) return;
+    // Already asked under this same connector state: nothing changed.
+    if (voices && voicesKeyRef.current === voiceKey) return;
+    // Her voice changed under the answer on hand. Its id belonged to the
+    // provider that WAS speaking, so it is not sent again while the new
+    // answer is asked for (the brain then speaks its own configured voice).
+    if (voices) voiceIdRef.current = undefined;
     let cancelled = false;
-    void fetchVoices().then((v) => {
-      if (cancelled) return;
-      setVoices(v);
-      // Only ever sent back to /voice/speak when SHE named it. An older brain
-      // omits the field, ignores a voiceId, and gets none from here.
-      voiceIdRef.current = v.ok && v.configuredVoiceId ? v.configuredVoiceId : undefined;
-    });
+    const t = setTimeout(
+      () => {
+        voicesKeyRef.current = voiceKey;
+        void fetchVoices().then((v) => {
+          if (cancelled) return;
+          setVoices(v);
+          // Only ever sent back to /voice/speak when SHE named it. An older brain
+          // omits the field, ignores a voiceId, and gets none from here.
+          voiceIdRef.current = v.ok && v.configuredVoiceId ? v.configuredVoiceId : undefined;
+        });
+      },
+      voices ? VOICE_CONNECTOR_SETTLE_MS : 0,
+    );
     return () => {
       cancelled = true;
+      clearTimeout(t);
     };
-  }, [ttsOn, voices]);
+  }, [ttsOn, voices, voiceKey]);
 
   // Keep the newest line in view. Instant, never smooth: at streaming rates a
   // smooth scroll never lands before the next token restarts it, so the view
@@ -572,6 +659,8 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
   const runMessage = useCallback(async (text: string, showUser = true, viaVoice = false) => {
     if (busy.current || !text.trim()) return;
     busy.current = true;
+    beginVoiceTurn(); // this turn supersedes anything a prior turn's voice reply was doing
+    const myTurn = turnSeq.current;
     stick.current = true; // every send re-arms the pin, wherever it came from
     lastInputWasVoice.current = viaVoice;
     abortRef.current = new AbortController();
@@ -605,18 +694,36 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
         setMode("idle");
         setToolNote(null);
         busy.current = false;
-        // Voice loop (05 §3): spoken question → spoken answer. Degrades to
-        // text silently when ElevenLabs isn't wired. Audio focus was already
-        // grabbed at mic-tap (music/YouTube paused through his question); it
-        // stays held across her reply and is released the moment she finishes —
-        // or right now if there's no spoken answer to play.
+        // Voice loop (05 §3): spoken question → spoken answer. A failure (relay
+        // offline, Voicebox down, no matching profile, a bad render, a
+        // timeout, or a busy queue — voice relay contract v1) is surfaced as
+        // one short honest line, not swallowed: this used to degrade to text
+        // silently on any of those. Audio focus was already grabbed at
+        // mic-tap (music/YouTube paused through his question); it stays held
+        // across her reply and is released the moment she finishes, the
+        // moment she fails, or right now if there's no spoken answer to play.
         if (lastInputWasVoice.current && ttsAvailable.current && fullText.trim()) {
-          void speakText(fullText, voiceIdRef.current).then((url) => {
-            if (!url) {
+          const speakController = new AbortController();
+          speakAbortRef.current = speakController;
+          void speakText(fullText, voiceIdRef.current, speakController.signal).then((r: SpeakOutcome) => {
+            // He can tap the mic again long before a CPU-build render lands
+            // (30-90s). If a newer turn has started since this one fired,
+            // this reply is stale: it must never touch mode, toolNote, or
+            // audio focus — all of that belongs to the turn that's live now.
+            if (turnSeq.current !== myTurn) {
+              if (r.ok) URL.revokeObjectURL(r.url);
+              return;
+            }
+            if (speakAbortRef.current === speakController) speakAbortRef.current = null;
+            if (!r.ok) {
+              // toolNote reads as a transient status line next to her state
+              // dot, not a scary "LINK:" error — the right place for a voice
+              // failure that shouldn't read like the whole link is down.
+              setToolNote(`Voice off — ${r.error}`);
               releaseVoiceFocus(); // TTS failed — don't leave his music paused
               return;
             }
-            const audio = new Audio(url);
+            const audio = new Audio(r.url);
             let released = false;
             const finish = () => {
               if (!released) {
@@ -624,7 +731,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                 releaseVoiceFocus();
               }
               setMode("idle");
-              URL.revokeObjectURL(url);
+              URL.revokeObjectURL(r.url);
             };
             setMode("speaking");
             audio.onended = finish;
@@ -863,6 +970,11 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
         }
       };
       recorderRef.current = rec;
+      // The mic going live IS the start of a new turn, even though its
+      // transcript (and runMessage) is still seconds away — a prior turn's
+      // speakText can still be rendering on the CPU build and must not be
+      // allowed to land on top of this one (voice relay contract v1).
+      beginVoiceTurn();
       rec.start();
       setRecording(true);
       setMode("listening");
@@ -1163,17 +1275,30 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
   const sttOn = conn("deepgram");
   // P6 — THE VOICE LABEL, MEASURED. This line used to read "VOICE: LARA"
   // whenever ElevenLabs was connected: a name the phone never verified and
-  // never sent. Now it is her configured id resolved to its own name, or an
-  // honest sentence about why there is no name to print.
+  // never sent. Now it prefers configuredVoiceName — the relay already
+  // resolved it against the worker's reported profiles, so no lookup can go
+  // stale — and falls back to resolving configuredVoiceId against `voices`
+  // for a brain that only ever sends the id. Absent both: an honest sentence
+  // about why there is no name to print.
+  // A NAME IS PRINTED ONLY WHEN IT RESOLVED. With no Voicebox profile by the
+  // configured name, the relay sends configuredVoiceId:null and STILL fills
+  // configuredVoiceName with the name it looked for — so the label used to
+  // read "VOICE: LARA EVE" for a voice that does not exist. A null id now says
+  // plainly which name was not found.
+  // Neither voice row up: the brain's own reason, not "KEY NEEDED" (voiceOutLabel).
   const voiceLabel = !ttsOn
-    ? "VOICE — KEY NEEDED"
+    ? voiceOutLabel(live.connectors)
     : !voices
       ? "VOICE — ASKING"
       : !voices.ok
         ? "VOICE — SHE WOULDN'T SAY"
         : !voices.configuredVoiceId
-          ? "VOICE — BRAIN CAN'T SAY"
-          : `VOICE: ${(voices.voices?.find((v) => v.id === voices.configuredVoiceId)?.name ?? voices.configuredVoiceId).toUpperCase()}`;
+          ? voices.configuredVoiceName
+            ? `VOICE — NO PROFILE "${voices.configuredVoiceName.toUpperCase()}"`
+            : "VOICE — BRAIN CAN'T SAY"
+          : voices.configuredVoiceName
+            ? `VOICE: ${voices.configuredVoiceName.toUpperCase()}`
+            : `VOICE: ${(voices.voices?.find((v) => v.id === voices.configuredVoiceId)?.name ?? voices.configuredVoiceId).toUpperCase()}`;
 
   // Portrait vs core: his sheet toggle wins; otherwise her worn look decides.
   const showPortrait = (plateMode ?? (wearing ? "portrait" : "core")) === "portrait" && !!wearing?.img;

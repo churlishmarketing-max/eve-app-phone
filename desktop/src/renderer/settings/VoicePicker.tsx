@@ -231,7 +231,11 @@ export default function VoicePicker({ onClose }: VoicePickerProps) {
             ? `SPEAKING AS ${id.effectiveName.toUpperCase()} · ${
                 id.usingOverride ? "YOUR PICK" : "THE BRAIN'S OWN VOICE"
               }`
-            : "THIS BRAIN WILL NOT SAY WHICH VOICE IS LIVE"}
+            : id.missingProfile
+              ? // Not an old brain: a profile missing on THIS PC. Picking one of
+                // the profiles below works (the relay speaks a listed profile).
+                `VOICEBOX ON THIS PC HAS NO PROFILE NAMED "${id.missingProfile.toUpperCase()}" — PICK ONE BELOW, OR CREATE IT IN VOICEBOX`
+              : "THIS BRAIN WILL NOT SAY WHICH VOICE IS LIVE"}
         </div>
       )}
 
@@ -262,6 +266,17 @@ export default function VoicePicker({ onClose }: VoicePickerProps) {
       {id.selectedId && !overrideSupported ? (
         <div style={{ ...MONO, fontSize: 8.5, color: "var(--gold)" }}>
           A SAVED PICK IS ON FILE ({id.selectedId}) AND THIS BRAIN IS IGNORING IT.
+        </div>
+      ) : null}
+
+      {/* A pick belongs to one provider. After a flip (Voicebox <-> ElevenLabs),
+          or when the brain answered a line with X-EVE-Voice-Override: ignored,
+          the pick is on file but NOT what she speaks in — said, not hidden. */}
+      {id.selectedId && id.pickIgnored ? (
+        <div style={{ ...MONO, fontSize: 8.5, color: "var(--gold)" }}>
+          YOUR SAVED PICK ({id.selectedId}) IS NOT A VOICE{" "}
+          {id.provider === "voicebox" ? "VOICEBOX" : id.provider === "elevenlabs" ? "ELEVENLABS" : "THIS BRAIN"} CAN
+          SPEAK IN RIGHT NOW — SHE IS IN THE BRAIN&apos;S OWN VOICE.
         </div>
       ) : null}
 

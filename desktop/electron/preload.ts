@@ -89,7 +89,12 @@ const eve: EveBridge = {
     transcribe: (buf: ArrayBuffer, mime?: string) => ipcRenderer.invoke(IPC.voiceTranscribe, { buf, mime }),
     // `voiceId` is optional and per-utterance; omitted means "her configured
     // voice", which is exactly what every pre-picker caller already sends.
-    speak: (text: string, voiceId?: string) => ipcRenderer.invoke(IPC.voiceSpeak, { text, voiceId }),
+    speak: (text: string, voiceId?: string, speakId?: string) =>
+      ipcRenderer.invoke(IPC.voiceSpeak, { text, voiceId, speakId }),
+    // Barge-in reaches main: the request is aborted, not just ignored.
+    cancelSpeak: (speakId: string) => ipcRenderer.invoke(IPC.voiceSpeakCancel, speakId),
+    // ...and across windows: a turn starting anywhere abandons every pending line.
+    cancelAllSpeak: () => ipcRenderer.invoke(IPC.voiceSpeakCancelAll),
   },
   voices: () => ipcRenderer.invoke(IPC.voices),
   win: {

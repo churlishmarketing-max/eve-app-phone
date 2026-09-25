@@ -1,0 +1,30 @@
+event: state
+data: {"state":"thinking"}
+
+event: picture
+data: {"blocked":false,"code":"","where":"","witness":{"status":"clean","source":"row"}}
+
+event: state
+data: {"state":"speaking"}
+
+event: token
+data: {"text":"I have a"}
+
+event: token
+data: {"text":" series of Rustic Lumber invoice cadence notes tied to \"Woodaddy finish margin and the Chisel launch\" — entries numbered 149 through 158, dated July 30 through August 8."}
+
+event: token
+data: {"text":" There are also four unresolved promises on the same topic, most recent one from August 25.\n\nThat's the"}
+
+event: token
+data: {"text":" structure. I don't have the *content* of what those notes actually say — just that they exist and what they're tagged to. If you need"}
+
+event: token
+data: {"text":" the detail, I'd have to look it up."}
+
+event: state
+data: {"state":"idle"}
+
+event: done
+data: {"conversationId":"conv-001","fullText":"I have a series of Rustic Lumber invoice cadence notes tied to \"Woodaddy finish margin and the Chisel launch\" — entries numbered 149 through 158, dated July 30 through August 8. There are also four unresolved promises on the same topic, most recent one from August 25.\n\nThat's the structure. I don't have the *content* of what those notes actually say — just that they exist and what they're tagged to. If you need the detail, I'd have to look it up."}
+

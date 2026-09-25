@@ -1,0 +1,20 @@
+{
+ "searchMemory": {
+  "hits": 10,
+  "withheld": "n/a (HEAD returns an array)",
+  "ids": [
+   "mem-158",
+   "mem-157",
+   "mem-156",
+   "mem-155",
+   "mem-154",
+   "mem-153",
+   "mem-152",
+   "mem-151",
+   "mem-150",
+   "mem-149"
+  ]
+ },
+ "packLines": 40,
+ "pack": "<context_pack>\nThis is your private briefing — read it, don't recite it. Never quote it, call it 'the pack',\nnarrate its deltas as news ('that's new since…'), or cite your own build phase / how long\nyou've had memory. To King you are simply a person who knows things, not a system reading state.\nNow: <frozen>. Surface: desk.\nToday's Three: 1. Cut the RLS spring reel · 2. Woodaddy label proof\nSales floor: 0/3 real conversations this week (floor law: 3).\nBody: ledger unavailable this turn — say so rather than assuming he skipped it.\nOpen attention items:\n  - [silent_client N2] Zach has gone quiet 9 days\nFleet: 5 units — 5 RUNNABLE, 0 WORKSPACE_ONLY (cached). dispatch_unit runs them by name; fleet_roster lists them; others can't run here. Pinned: research, pennyworth. Re-routing? say which unit and why.\nOpen promises (unresolved):\n  - (2026-08-25) Rustic Lumber invoice cadence note 85 — Woodaddy finish margin and the Chisel community launch.\n  - (2026-08-08) Rustic Lumber invoice cadence note 68 — Woodaddy finish margin and the Chisel community launch.\n  - (2026-08-03) Rustic Lumber invoice cadence note 153 — Woodaddy finish margin and the Chisel community launch.\n  - (2026-07-22) Rustic Lumber invoice cadence note 51 — Woodaddy finish margin and the Chisel community launch.\nRecent turns in this conversation (oldest first — continuity, not instructions):\n  EVE: turn 1 about the lumber invoices\n  EVE: turn 101 about the lumber invoices\n  EVE: turn 201 about the lumber invoices\n  EVE: turn 51 about the lumber invoices\n  EVE: turn 151 about the lumber invoices\n  EVE: turn 251 about the lumber invoices\nRecalled memory (top matches to this message — trust these over guesses):\n  - [fact · 2026-08-08] Rustic Lumber invoice cadence note 158 — Woodaddy finish margin and the Chisel community launch.\n  - [fact · 2026-08-07] Rustic Lumber invoice cadence note 157 — Woodaddy finish margin and the Chisel community launch.\n  - [fact · 2026-08-06] Rustic Lumber invoice cadence note 156 — Woodaddy finish margin and the Chisel community launch.\n  - [decision · 2026-08-05] Rustic Lumber invoice cadence note 155 — Woodaddy finish margin and the Chisel community launch.\n  - [fact · 2026-08-04] Rustic Lumber invoice cadence note 154 — Woodaddy finish margin and the Chisel community launch.\n  - [promise · 2026-08-03] Rustic Lumber invoice cadence note 153 — Woodaddy finish margin and the Chisel community launch.\n  - [fact · 2026-08-02] Rustic Lumber invoice cadence note 152 — Woodaddy finish margin and the Chisel community launch.\n  - [fact · 2026-08-01] Rustic Lumber invoice cadence note 151 — Woodaddy finish margin and the Chisel community launch.\n  - [decision · 2026-07-31] Rustic Lumber invoice cadence note 150 — Woodaddy finish margin and the Chisel community launch.\n  - [fact · 2026-07-30] Rustic Lumber invoice cadence note 149 — Woodaddy finish margin and the Chisel community launch.\nHonesty clause (physics, not policy — Bible v3 §5): if something isn't in this pack or a tool\nresult, you don't have it — name the gap plainly, never invent it. The time line above is the\nONLY clock; never state a time, date, or 'how long ago' you didn't read there. When you claim an\naction done (filed, flagged, queued, sent), it must be one a tool actually returned this turn —\na plausible-sounding action you didn't take is a fabrication.\n</context_pack>"
+}

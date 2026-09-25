@@ -1,0 +1,162 @@
+event: state
+data: {"state":"thinking"}
+
+event: picture
+data: {"blocked":false,"code":"","where":"","witness":{"status":"clean","source":"row"}}
+
+event: state
+data: {"state":"speaking"}
+
+event: token
+data: {"text":"I'm"}
+
+event: token
+data: {"text":" holding"}
+
+event: token
+data: {"text":" it"}
+
+event: token
+data: {"text":" back —"}
+
+event: token
+data: {"text":" that"}
+
+event: token
+data: {"text":" landed"}
+
+event: token
+data: {"text":" in"}
+
+event: token
+data: {"text":" a"}
+
+event: token
+data: {"text":" conversation I can't"}
+
+event: token
+data: {"text":" rule a picture out"}
+
+event: token
+data: {"text":" of,"}
+
+event: token
+data: {"text":" so"}
+
+event: token
+data: {"text":" it"}
+
+event: token
+data: {"text":" didn"}
+
+event: token
+data: {"text":"'t write"}
+
+event: token
+data: {"text":" down to"}
+
+event: token
+data: {"text":" the"}
+
+event: token
+data: {"text":" store. The pack"}
+
+event: token
+data: {"text":" flag"}
+
+event: token
+data: {"text":"ged 10 "}
+
+event: token
+data: {"text":"items wit"}
+
+event: token
+data: {"text":"hheld for"}
+
+event: token
+data: {"text":" exactly"}
+
+event: token
+data: {"text":" that reason."}
+
+event: token
+data: {"text":"\n\nWhat"}
+
+event: token
+data: {"text":" I can"}
+
+event: token
+data: {"text":" do"}
+
+event: token
+data: {"text":":"}
+
+event: token
+data: {"text":" ask"}
+
+event: token
+data: {"text":" you straight"}
+
+event: token
+data: {"text":" up,"}
+
+event: token
+data: {"text":" or"}
+
+event: token
+data: {"text":" search"}
+
+event: token
+data: {"text":" if"}
+
+event: token
+data: {"text":" you point"}
+
+event: token
+data: {"text":" me at"}
+
+event: token
+data: {"text":" where"}
+
+event: token
+data: {"text":" it"}
+
+event: token
+data: {"text":" lives"}
+
+event: token
+data: {"text":" ("}
+
+event: token
+data: {"text":"email"}
+
+event: token
+data: {"text":","}
+
+event: token
+data: {"text":" the"}
+
+event: token
+data: {"text":" OS"}
+
+event: token
+data: {"text":", a"}
+
+event: token
+data: {"text":" file)."}
+
+event: token
+data: {"text":" Which"}
+
+event: token
+data: {"text":" would help"}
+
+event: token
+data: {"text":"?"}
+
+event: state
+data: {"state":"idle"}
+
+event: done
+data: {"conversationId":"conv-002","fullText":"I'm holding it back — that landed in a conversation I can't rule a picture out of, so it didn't write down to the store. The pack flagged 10 items withheld for exactly that reason.\n\nWhat I can do: ask you straight up, or search if you point me at where it lives (email, the OS, a file). Which would help?"}
+

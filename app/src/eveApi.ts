@@ -540,6 +540,15 @@ export function wardrobeImgUrl(look: WardrobeLook): string {
   return /^https?:\/\//i.test(look.url) ? look.url : `${BRAIN_URL}${look.url}`;
 }
 
+// THE VOICE RELAY OPT-IN. The brain serves her Voicebox voice (a WAV, relayed
+// from EVE desktop) on /voice/speak and /voice/voices only to a client that
+// sends this; any other client keeps ElevenLabs' mp3 while ELEVENLABS_API_KEY
+// is set on Railway (brain voice-relay.ts acceptsVoicebox/relayServes). The
+// reply reaches new Audio() as a blob URL whatever its type, so the phone opts
+// in on BOTH calls — the voice the label NAMES must be the voice she SPEAKS in. The
+// brain's CORS allow-list carries this header, or the preflight would refuse it.
+const VOICE_ACCEPT = { "X-EVE-Voice-Accept": "voicebox" } as const;
+
 // WHICH VOICE SHE IS ACTUALLY IN. The array is ElevenLabs' own order, not a
 // ranking — voices[0] is a guess — so the name is resolved from
 // `configuredVoiceId` or not printed at all. An ABSENT configuredVoiceId means
@@ -550,7 +559,7 @@ export function wardrobeImgUrl(look: WardrobeLook): string {
 export async function fetchVoices(): Promise<VoiceList> {
   try {
     const res = await fetch(`${BRAIN_URL}/voice/voices`, {
-      headers: { Authorization: `Bearer ${brainToken()}` },
+      headers: { Authorization: `Bearer ${brainToken()}`, ...VOICE_ACCEPT },
     });
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
     return (await res.json()) as VoiceList;
@@ -559,23 +568,48 @@ export async function fetchVoices(): Promise<VoiceList> {
   }
 }
 
-// Returns an object URL for the spoken reply, or null when voice-out isn't
-// wired (503) — callers degrade to text silently.
+// WHAT POST /voice/speak ACTUALLY DID (voice relay contract v1, 2026-09-24).
+// This used to return `string | null`, and the null was load-bearing in the
+// worst way: relay-offline, Voicebox-down, no-profile, a render failure, a
+// timeout and a busy queue were all the SAME value by the time they reached
+// the caller — a silent text-only fallback with no honest word said. The
+// brain's error body is {error, reason} on every non-2xx; this carries both
+// through instead of collapsing them.
+export type SpeakOutcome =
+  | { ok: true; url: string }
+  | { ok: false; error: string; reason?: string };
+
 // `voiceId` overrides the brain's configured voice for THIS utterance only;
-// the brain rejects anything that is not exactly 20 alphanumerics with a 400,
-// so it is only ever sent when the brain itself named it.
-export async function speakText(text: string, voiceId?: string): Promise<string | null> {
+// the brain accepts either a 20-alnum ElevenLabs id or a UUID and rejects
+// anything else with 400, so it is only ever sent when the brain itself named
+// one (via fetchVoices' configuredVoiceId).
+export async function speakText(
+  text: string,
+  voiceId?: string,
+  signal?: AbortSignal,
+): Promise<SpeakOutcome> {
   try {
     const res = await fetch(`${BRAIN_URL}/voice/speak`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${brainToken()}`, ...VOICE_ACCEPT },
       body: JSON.stringify(voiceId ? { text, voiceId } : { text }),
+      signal,
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string; reason?: string } | null;
+      return {
+        ok: false,
+        error: typeof body?.error === "string" ? body.error : `HTTP ${res.status}`,
+        reason: body?.reason,
+      };
+    }
     const blob = await res.blob();
-    return URL.createObjectURL(blob);
-  } catch {
-    return null;
+    return { ok: true, url: URL.createObjectURL(blob) };
+  } catch (err) {
+    return {
+      ok: false,
+      error: `no answer from her brain — ${err instanceof Error ? err.message : "network error"}`,
+    };
   }
 }
 
