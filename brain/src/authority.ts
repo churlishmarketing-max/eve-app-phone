@@ -356,7 +356,6 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.save_note": { verdict: "latched", why: "POSTS TO DISCORD and writes memory_entries in one call — R1 'send a message' AND 'write a permanent memory'. It is also the write end of context.ts's recall block, which re-injects memory under 'trust these over guesses'" },
   "eve_hands.os_command": { verdict: "latched", why: "its WRITE subcommands (add_deal, add_client, add_expense, set_sprint, add_work_item, propose_automation …) reach churlishos.app and change his business ledger. The two READ subcommands (list_proposals, list_invoices) still run and close the latch, exactly like the other readers", reader: true },
   "eve_hands.os_create_invoice": { verdict: "latched", why: "raises an invoice — a money instrument in his cockpit. R1 'spend money'" },
-  "eve_hands.os_mark_paid_offline": { verdict: "latched", why: "marks a SENT invoice paid on his word alone (check, cash, Zelle) — a money record the OS cannot verify, so nothing read out of a mailbox may flip it. R1 'spend money'" },
   "eve_hands.os_move_client_stage": { verdict: "latched", why: "moves a client in his pipeline and fires the stage-enter automations (drafts only) — the same authority as os_command's update_deal_stage. READ SIDE, NOT CLOSED: the result can name clients (an ambiguous match lists them), returned verbatim; it does not record, so his answer to 'which one?' still works in the same thread. Stated, not hidden" },
   "eve_memory.save_memory": { verdict: "latched", why: "writes memory_entries — R1 'write a permanent memory', verbatim. It hangs on the SECOND server, which is exactly why the previous sweep never saw it" },
   "eve_memory.log_touch": { verdict: "latched", why: "writes a durable client-contact row that pulse.ts turns into attention_items PROSE, which then rides the context pack — a third-party-driven write with a loop back into her own briefing" },
@@ -365,6 +364,7 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.gmail_send": { verdict: "confirm-card", why: "RED — queues the exact payload for King's approval; the handler cannot send" },
   "eve_hands.send_sms": { verdict: "confirm-card", why: "RED — queues the message for King's approval; the handler cannot send" },
   "eve_hands.os_send_pending_email": { verdict: "confirm-card", why: "RED — queues the OS send for King's approval; the handler cannot send" },
+  "eve_hands.os_mark_paid_offline": { verdict: "confirm-card", why: "RED — marks a SENT invoice paid (check, cash, Zelle), a money record the OS cannot verify. Queues ONE card (kind os_mark_paid); only his approve calls the OS with confirmed:true, and the OS refuses it without. Was latched until 4c" },
   "eve_hands.os_approve_inbox_item": { verdict: "confirm-card", why: "RED — queues ONE Inbox key for King's approval (kind os_inbox_approve); only his approve calls the OS with confirmed:true, and the OS refuses it without" },
   "eve_hands.desk_file_plan": { verdict: "confirm-card", why: "queues a filing card; the DESKTOP moves the file only after he approves it — nothing in this container touches a filesystem" },
 

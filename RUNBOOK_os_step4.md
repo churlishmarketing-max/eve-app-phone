@@ -68,11 +68,12 @@ Redeploy the OS after saving.
   read fails, nothing when the OS isn't wired.
 - `connectors.ts`, `authority.ts`: six `os_*` house tools. `os_inbox_summary`
   and `os_house_status` are GREEN reads, and `os_pause_sends` is GREEN (it can
-  pause sends, never resume them). `os_mark_paid_offline` and
-  `os_move_client_stage` are latched: a conversation that has read someone
-  else's words can't use them. `os_approve_inbox_item` is RED: one confirm card
-  per item, and the OS independently refuses an approve that didn't come
-  through your tap. No bulk approve exists on either side. (Corrected in 4c:
+  pause sends, never resume them). `os_move_client_stage` is latched: a
+  conversation that has read someone else's words can't use it.
+  `os_approve_inbox_item` and (since 4c) `os_mark_paid_offline` are RED: one
+  confirm card per item (kinds `os_inbox_approve`, `os_mark_paid`), and the OS
+  independently refuses an approve or a mark-paid that didn't come through your
+  tap (`confirmed: true`). No bulk approve exists on either side. (Corrected in 4c:
   this list used to name four tools that were never built.)
 
 ---
@@ -257,6 +258,21 @@ exposed on EVE. A draft from her never sends itself. Sending is
 **EVE has more than Rookie.** She also has the house tools (`os_inbox_summary`,
 `os_house_status`, `os_pause_sends`, `os_approve_inbox_item`,
 `os_mark_paid_offline`, `os_move_client_stage`) and now `os_events_since`.
+Their tiers, in the same shape as the table:
+
+| House tool | EVE | Tier on EVE |
+|---|---|---|
+| `inbox_approve_item` | `os_approve_inbox_item` | RED: a confirm card (`os_inbox_approve`); your tap approves |
+| `invoice_mark_paid_offline` | `os_mark_paid_offline` | RED: a confirm card (`os_mark_paid`); your tap marks it paid (was latched until 4c) |
+| `client_move_stage` | `os_move_client_stage` | latched write |
+| `house_pause_sends` | `os_pause_sends` | GREEN (pause only) |
+| `inbox_summary`, `house_status` | `os_inbox_summary`, `os_house_status` | GREEN read |
+| `events_since` (GET `/api/eve/events`) | `os_events_since` | GREEN read |
+
+The OS Inbox approves an EVE card itself only for the kinds in
+`EVE_BRAIN_EXECUTED_KINDS` (churlish-os `lib/house/inbox.ts`). Until
+`os_mark_paid` is added there, a mark-paid card shows in the Inbox as
+"approve on your phone or desk"; it still works from the phone.
 
 **The one thing she can't do from the OS chat tab** is read an attached
 receipt. The 📎 still goes to Rookie (Step 4 above).
@@ -288,8 +304,8 @@ an OS change for a later step, not this one.
 - Harnesses:
   - os-ticket 62/62 (new)
   - os-events 37/37 (new)
-  - pulse 21/21 (new)
-  - authority 119/119 (with E17, which drives `os_events_since`)
+  - pulse 24/24 (new; PL6 is the review fix: approving an OS-roster nudge creates its Today task)
+  - authority 132/132 (with E17, which drives `os_events_since`, and E18, which drives the `os_mark_paid_offline` card)
   - clock 152/152
   - brief 165/165
   - reader 63/63
