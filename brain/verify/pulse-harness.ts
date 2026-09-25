@@ -25,6 +25,7 @@ process.env.EVE_TZ = "America/Chicago";
 import { _setDbForTests } from "../src/db.js";
 import { runPulseSweep, _setPulseGeneratorForTests, parseOsQuietClients } from "../src/pulse.js";
 import { osTool, osToolData } from "../src/os.js";
+import { actOnAttention } from "../src/ops.js";
 
 const brainDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CONNECTORS_SRC = readFileSync(path.join(brainDir, "src", "connectors.ts"), "utf8");
@@ -78,6 +79,12 @@ function fake(seed: Record<string, Row[]>): Fake {
     const run = async () => {
       const rows = tables[table];
       if (st.op === "insert") {
+        // tasks.client_id REFERENCES clients(id) (sql/001) — enforced here as Postgres would.
+        const fk = (st.payload as Row).client_id;
+        if (table === "tasks" && fk != null && !(tables.clients ?? []).some((c) => c.id === fk)) {
+          writes.push(`${table}.insert-refused`);
+          return { data: null, error: { code: "23503", message: "insert or update on table \"tasks\" violates foreign key constraint" } };
+        }
         const row = { id: `row-${++n}`, created_at: new Date().toISOString(), ...(st.payload as Row) };
         rows.push(row);
         writes.push(`${table}.insert`);
@@ -196,6 +203,29 @@ async function main() {
     osAnswer = { status: 200, body: { ok: true, result: "no data here" } };
     const r2 = await runPulseSweep();
     ok("PL4.3", r2.ok === false && /no data\.clients list/.test(r2.reason ?? ""), `an answer with no data.clients FAILS too: "${r2.reason}"`);
+  }
+
+  show.push("=== PL6 — APPROVING an OS-roster nudge makes the Today task (tasks.client_id is the BRAIN's clients FK) ===");
+  {
+    const f = fake({
+      clients: BRAIN_CLIENTS,
+      attention_items: [
+        { id: "att-os", kind: "silent_client", resolved_at: null, nudge_level: 1, created_at: iso(3600_000), ref: { client_id: "os-acme", client: "Acme Roofing", days_quiet: 12, draft: "Hi Acme — update.", source: "os" } },
+        { id: "att-brain", kind: "silent_client", resolved_at: null, nudge_level: 1, created_at: iso(3600_000), ref: { client_id: "brain-1", client: "Stale Copy Co", days_quiet: 10, draft: "Hi Stale — update." } },
+      ],
+      tasks: [],
+    });
+    _setDbForTests(f.client);
+    const r = await actOnAttention("att-os", "approve");
+    const t = f.tables.tasks.find((x) => x.detail === "Hi Acme — update.");
+    ok("PL6.1", r.ok === true && r.taskCreated === true && !!t && t.client_id === null && !f.writes.includes("tasks.insert-refused"), `approve on a ref.source=os item inserts the task with client_id null (the OS uuid is not a brain client): ${JSON.stringify({ r, client_id: t?.client_id })}`);
+    const r2 = await actOnAttention("att-brain", "approve");
+    const t2 = f.tables.tasks.find((x) => x.detail === "Hi Stale — update.");
+    ok("PL6.2", r2.taskCreated === true && t2?.client_id === "brain-1", "an item from the brain's own table (no source) still links the task to its brain client");
+    f.tables.clients.length = 0;
+    f.tables.attention_items.push({ id: "att-gone", kind: "silent_client", resolved_at: null, nudge_level: 1, created_at: iso(3600_000), ref: { client_id: "brain-gone", client: "Gone Co", draft: "Hi Gone." } });
+    const r3 = await actOnAttention("att-gone", "approve");
+    ok("PL6.3", r3.taskCreated === false && typeof r3.error === "string", `a task insert that FAILS is reported, never claimed as created: ${JSON.stringify(r3)}`);
   }
 
   show.push("=== PL5 — osTool is unchanged for every existing caller ===");

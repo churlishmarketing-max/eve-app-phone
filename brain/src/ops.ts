@@ -170,11 +170,16 @@ export async function actOnAttention(id: string, action: AttentionAction): Promi
   // the send actually happens (sending stays RED — via Gmail confirm once
   // connected, or King sends it himself from the draft).
   if (item.kind === "silent_client" && typeof ref.draft === "string" && ref.draft) {
-    await c.from("tasks").insert({
+    // One House 4c: an item from the OS roster (pulse.ts, ref.source "os") is
+    // keyed on the OS's client uuid, which the brain's clients table does not
+    // hold — and tasks.client_id REFERENCES clients(id) (sql/001), so linking
+    // it would fail the insert and lose the approved draft. Unlinked instead.
+    const { error: taskErr } = await c.from("tasks").insert({
       title: `Send ${ref.client ?? "client"} the touch-base update`,
       detail: ref.draft,
-      client_id: (ref.client_id as string) ?? null,
+      client_id: ref.source === "os" ? null : ((ref.client_id as string) ?? null),
     });
+    if (taskErr) return { ok: true, outcome: "approved", taskCreated: false, error: `the Today task was not created: ${taskErr.message}` };
     return { ok: true, outcome: "approved", taskCreated: true };
   }
   // A fleet-job approval marks the job done.
