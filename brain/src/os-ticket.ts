@@ -74,7 +74,10 @@ export function verifyOsTicket(header: string | undefined, secret: string, nowSe
   return { ok: true, exp };
 }
 
-/** The two doors a ticket opens. Method + exact path; anything else (including /confirm) is bearer-only. */
+/**
+ * The two doors a ticket opens. Method + exact path; anything else (including /confirm) is bearer-only.
+ * History (GET /conversations, GET /conversations/:id/messages) is bearer-only ON PURPOSE: the OS proxies it with its server bearer.
+ */
 export function osTicketRoute(method: string, pathName: string): boolean {
   if (method === "POST" && pathName === "/chat") return true;
   if (method === "GET" && pathName === "/state") return true;

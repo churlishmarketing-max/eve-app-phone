@@ -15,6 +15,7 @@ import { runOsEventsPull } from "./os-events.js";
 import { runCapture } from "./capture.js";
 import { buildState } from "./state.js";
 import { backfillEmbeddings } from "./memory.js";
+import { conversationsRoute, conversationMessagesRoute } from "./history.js";
 import { startSchedulers, schedulersGate } from "./schedule.js";
 import { resolveConfirm, getPending } from "./confirm.js";
 import { deskFromBody, deskRefusalFromBody } from "./desk.js";
@@ -363,6 +364,21 @@ app.get("/state", async (_req, res) => {
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
+});
+
+// HISTORY — READ-ONLY (history.ts). The OS lists her past conversations and
+// opens one, so King can check what he asked her to do. BEARER-ONLY ON PURPOSE:
+// the OS proxies both with its server bearer, and os-ticket.ts does not list
+// them, so an OS ticket gets the same 401 as any wrong header. No writes, no
+// side effects, and no message content is ever logged.
+app.get("/conversations", async (req, res) => {
+  const r = await conversationsRoute(req.query.limit);
+  res.status(r.status).json(r.body);
+});
+
+app.get("/conversations/:id/messages", async (req, res) => {
+  const r = await conversationMessagesRoute(req.params.id, req.query.limit);
+  res.status(r.status).json(r.body);
 });
 
 // Any door in (01 §5): app text / voice-note transcript; email webhook in Phase 3.
