@@ -1,6 +1,6 @@
 {
   "name": "eve-app",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "description": "EVE — Executive Voice Engine app shell (React + Vite + Capacitor)",
@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "sync": "cap sync android"
+    "sync": "cap sync android",
+    "os:identity": "node scripts/install-os-identity.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
