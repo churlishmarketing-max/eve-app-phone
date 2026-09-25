@@ -94,7 +94,21 @@ type Msg = { id: string; role: "eve" | "user"; text: string };
 
 // Quick prompts seed a REAL message to the brain — never a canned reply.
 // Every one of these lands on a live capability (fleet, OS, pulse, doctrine).
-const CHIPS = ["Run my day", "What's on the board?", "Who's gone quiet?", "What's slipping?"];
+//
+// RUN THE FLEET (Step 10). The first three are how he runs the house from his
+// pocket: her chat already holds the os_* tools and unit dispatch, so these
+// are words, not new wiring. "Dispatch a unit…" does NOT send — it pre-fills
+// "Dispatch " and puts the cursor after it so he names the unit and the job
+// himself. Whatever she queues from it still lands as a confirm card.
+type Chip = { label: string; prefill?: string };
+const CHIPS: Chip[] = [
+  { label: "What's in my inbox?" },
+  { label: "Who's gone quiet?" },
+  { label: "Dispatch a unit…", prefill: "Dispatch " },
+  { label: "Run my day" },
+  { label: "What's on the board?" },
+  { label: "What's slipping?" },
+];
 
 // Entity presence meta, straight from his v6 design (dot glyph, label, colors).
 const ENT: Record<EveMode, { dot: string; label: string; col: string; aura: string }> = {
@@ -681,6 +695,19 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
     // a multi-line send — collapse it by hand.
     if (inputRef.current) inputRef.current.style.height = "auto";
     runMessage(t);
+  };
+
+  // A pre-fill chip puts words in the box and the cursor after them; it never
+  // sends. He finishes the sentence ("Dispatch Kid Flash to …").
+  const prefillDraft = (text: string) => {
+    setDraft(text);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(text.length, text.length);
+      autoGrow(el);
+    });
   };
 
   // ---- RED-tier confirm resolution ----
@@ -1547,11 +1574,17 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
               </div>
 
               <div className="chiprow">
-                {CHIPS.map((c) => (
-                  <button key={c} className="chipv6" disabled={mode !== "idle"} onClick={() => runMessage(c)}>
-                    {c}
-                  </button>
-                ))}
+                {CHIPS.map((c) =>
+                  c.prefill ? (
+                    <button key={c.label} className="chipv6 fill" onClick={() => prefillDraft(c.prefill ?? "")}>
+                      {c.label}
+                    </button>
+                  ) : (
+                    <button key={c.label} className="chipv6" disabled={mode !== "idle"} onClick={() => runMessage(c.label)}>
+                      {c.label}
+                    </button>
+                  ),
+                )}
               </div>
 
               <div className="inputrow">

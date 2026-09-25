@@ -493,6 +493,7 @@ export const CSS = `
 .osrow{ display:flex; gap:10px; align-items:baseline; padding:7px 0; border-top:1px solid var(--hair); }
 .osrow .k{ flex:none; width:56px; font-size:8.5px; letter-spacing:.16em; color:rgba(240,237,232,.45); }
 .osrow .v{ font-size:13px; line-height:1.4; color:var(--dim); }
+.chipv6.fill{ border-style:dashed; }
 
 /* ---------- boot (unchanged shell) ---------- */
 .boot{ position:absolute; inset:0; z-index:20; background:var(--bg); display:flex; flex-direction:column;
