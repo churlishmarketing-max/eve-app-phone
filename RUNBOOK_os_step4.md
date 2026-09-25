@@ -333,3 +333,85 @@ an OS change for a later step, not this one.
 - **Not exercised:** the live OS round trip (`/api/eve/events`,
   `quiet_clients` and the OS's ticket minting are being built on the OS side
   now) and a real push to the phone.
+
+# Discord — her alerts in #eve-alerts
+
+Your ask: "she can send me information and notes either via notification like
+she does currently AND OR save that information / send it via Discord."
+She now does both. Every push that reaches your phone can also land in a
+Discord channel you can scroll back through on any device. Her notes keep
+going to `#eve-notes`, exactly as before.
+
+## What you do (3 minutes)
+
+1. **Make the channel.** In the Backpack server, create a text channel
+   `#eve-alerts` next to `#eve-notes`. Keep it private to you, like the
+   notebook.
+2. **Make its webhook.** Channel settings (the gear on `#eve-alerts`) →
+   **Integrations** → **Webhooks** → **New Webhook**. Name it `EVE`, then
+   **Copy Webhook URL**.
+3. **Give it to the brain.** Railway → the brain service → **Variables** →
+   **New Variable**: `DISCORD_ALERTS_WEBHOOK_URL` = the URL you copied.
+   Railway redeploys on its own.
+   - The URL is a password for that channel. Don't paste it anywhere else. If
+     it leaks, delete the webhook in Discord and make a new one.
+4. **Check the deploy log.** One line names both channels:
+   `[discord] notes: on · alerts: on (kinds: brief,closeout,tripwire,silent_client,approval,routine_risk,os_event)`.
+   `alerts: off` means the variable isn't set.
+
+## Optional: choose which alerts mirror
+
+`DISCORD_ALERT_KINDS` is a comma-separated list of push kinds. **Normally
+leave it unset.**
+
+- **Unset:** the default seven: `brief`, `closeout`, `tripwire`,
+  `silent_client`, `approval`, `routine_risk`, `os_event`.
+- **`*`:** every push, including `floor_check` (11:45 floor nudge) and
+  `week_preview` (Sunday 19:00).
+- **A list**, e.g. `tripwire,os_event`: only those.
+- **`none`** (or the variable set but empty): nothing mirrors, and the webhook
+  stays in place for later.
+
+## What lands there, and when
+
+- **One message per push, as it's sent.** Bold title, then the body, then the
+  OS page the tap would open as the last line. The morning brief links
+  `/today`, tripwires and approvals link `/inbox`, and an OS event links its
+  own page.
+- **When:** the moment the push goes to your phone.
+  - **Quiet hours (21:30 to 06:30) follow the push.** Nothing that's held
+    overnight is posted overnight. The OS events batch goes out after 06:30,
+    and its mirror goes with it.
+- **Only real sends.** Only the hosted brain mirrors. A laptop run blocked by
+  the send wall posts nothing. If Firebase then fails to deliver a push, it's
+  still mirrored, so the channel is where you look when the phone missed one.
+- **At most one message per kind per minute.** The brief and the close-out
+  are never held back. When two pushes of one kind land inside the same 60
+  seconds, the second goes to your phone but not to Discord.
+- **Size.** A body is cut at 1,900 characters with "…". Every message stays
+  under Discord's 2,000-character cap. Mentions are switched off, so nothing
+  in a body can ping `@everyone`.
+- **It never slows a push.** The post isn't awaited and gives up after 10
+  seconds. A failure is one log line with the kind and an HTTP status, like
+  `[discord] alert not mirrored (kind=tripwire): HTTP 404`. The log never
+  holds the text or the URL.
+- **Her connectors list** now shows "Alerts (Discord)" beside "Notebook
+  (Discord)", so she can tell you whether it's wired.
+
+## Notes vs alerts
+
+- **`#eve-notes`** (`DISCORD_NOTES_WEBHOOK_URL`) is what she chooses to write
+  down: the `save_note` tool, also saved to her memory. Unchanged.
+- **`#eve-alerts`** (`DISCORD_ALERTS_WEBHOOK_URL`) is a copy of what she
+  pushed to you. She doesn't choose it; it follows the push.
+- Two webhooks, so each channel can be muted, cleared or revoked on its own.
+
+## Code and proof
+
+- `brain/src/discord.ts` (the mirror) and its one call site in
+  `brain/src/push.ts` `sendPush`, right after the send wall.
+- `brain/verify/discord-harness.ts`: 54/54.
+- Also re-run: os-events 39/39, clock 152/152, brief 165/165, pulse 24/24,
+  os-ticket 62/62, authority 132/132. `npx tsc --noEmit` is clean.
+- **Not exercised:** a real post to a Discord webhook, and a real push to the
+  phone.
