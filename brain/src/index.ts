@@ -46,6 +46,7 @@ import { corpusState } from "./corpus.js";
 import { rotateLook, initRotationConfig } from "./rotation.js";
 import { stamp, getStamp } from "./health.js";
 import { authorizeBrainRequest } from "./os-ticket.js";
+import { corsPolicy, corsAllows, corsBanner, noteRefusedOrigin } from "./cors.js";
 // R1 · the conversation key is request body — shape-checked before it becomes
 // the id every taint question is asked on (untrusted.ts).
 import { cleanConversationId } from "./untrusted.js";
@@ -104,10 +105,22 @@ app.use((err: unknown, _req: express.Request, res: express.Response, next: expre
   return next(err);
 });
 
-// CORS — the app (Vite dev :5173, or the Capacitor WebView) calls this from a
-// different origin. The bearer token is the real gate; origin is permissive.
+// CORS — the app (Vite dev :5173, or the Capacitor WebView) and now the OS's
+// browser (churlishos.app, carrying an OS ticket) call this from a different
+// origin. ONE HOUSE 4c (4.1): an ALLOW-LIST, no longer a mirror of whatever
+// Origin arrived. An origin that is not on it gets NO Access-Control-Allow-Origin
+// (never `*`) and one console.warn naming the origin, once per process. No
+// Origin header (server-to-server, curl, the Electron main process) is untouched.
+// The bearer / ticket below is still the gate; this decides which PAGES may read
+// the answer. src/cors.ts has the list and where each entry came from.
+const CORS = corsPolicy(process.env.EVE_ALLOWED_ORIGINS);
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader("Vary", "Origin");
+    if (corsAllows(origin, CORS, req.headers.host)) res.setHeader("Access-Control-Allow-Origin", origin);
+    else noteRefusedOrigin(origin);
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
   res.setHeader("Access-Control-Max-Age", "86400");
@@ -846,6 +859,9 @@ void initRotationConfig();
 // The state of the switch, in the boot log, so it is readable from a Railway
 // deploy log without opening the source or curling anything.
 console.log(intakeBanner());
+// And the CORS allow-list (4.1), for the same reason: "which pages can read her
+// answers" is answerable from the deploy log. Origins only — never a token.
+console.log(corsBanner(CORS, !!(process.env.EVE_ALLOWED_ORIGINS ?? "").trim()));
 
 app.listen(PORT, () => {
   console.log(`EVE brain listening on :${PORT}`);

@@ -2,6 +2,8 @@
 //   T. the OS TICKET (src/os-ticket.ts, used by index.ts's auth middleware):
 //      `Bearer os1.<exp>.<nonce>.<sig>`, HMAC-SHA256 keyed with EVE_BRAIN_TOKEN,
 //      alive at most 15 minutes, accepted on four routes and nowhere else.
+//   C. the CORS ALLOW-LIST (src/cors.ts, used by index.ts's CORS middleware):
+//      a listed origin is echoed, anything else gets no ACAO — never `*`.
 //
 //   cd C:\dev\eve\brain && npx tsx verify/os-ticket-harness.ts
 //
@@ -20,6 +22,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { verifyOsTicket, authorizeBrainRequest, osTicketRoute, OS_TICKET_MAX_TTL_SEC } from "../src/os-ticket.js";
+import { corsPolicy, corsAllows, corsBanner, noteRefusedOrigin, DEFAULT_ALLOWED_ORIGINS } from "../src/cors.js";
 
 const brainDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const INDEX_SRC = readFileSync(path.join(brainDir, "src", "index.ts"), "utf8");
@@ -123,6 +126,36 @@ show.push("=== T3 — THE MIDDLEWARE USES THIS, AND LOGS NOTHING ===");
   ok("T3.3", !/console\.(log|warn|error)/.test(TICKET_SRC), "SOURCE: os-ticket.ts has no console call at all — a ticket and its reason are never logged");
   const mw = INDEX_SRC.slice(INDEX_SRC.indexOf("const verdict = authorizeBrainRequest"), INDEX_SRC.indexOf("const verdict = authorizeBrainRequest") + 300);
   ok("T3.4", mw.length > 0 && !/console\./.test(mw) && /status\(401\)\.json\(\{ error: "unauthorized" \}\)/.test(mw), "SOURCE: a refusal is the same bare 401 as before, with no log line");
+}
+
+show.push("=== C — CORS: AN ALLOW-LIST, NOT A MIRROR ===");
+{
+  const def = corsPolicy(undefined);
+  ok("C1", def.open === false && corsAllows("https://churlishos.app", def) && corsAllows("https://www.churlishos.app", def), "DEFAULT: the OS origins are allowed (https://churlishos.app, https://www.churlishos.app)");
+  ok("C2", ["http://localhost", "https://localhost", "capacitor://localhost", "http://localhost:5173", "http://127.0.0.1:5173"].every((o) => corsAllows(o, def)), "DEFAULT: the repo's own clients — Capacitor WebView (http/https/capacitor://localhost) and Vite dev :5173 — are allowed");
+  ok("C3", !corsAllows("https://evil.example", def), "DEFAULT: https://evil.example is REFUSED (no ACAO)");
+  ok("C4", !corsAllows("https://churlishos.app.evil.example", def) && !corsAllows("https://evilchurlishos.app", def) && !corsAllows("http://churlishos.app", def), "look-alikes are REFUSED: suffix trick, prefix trick, and http:// for an https origin");
+  ok("C5", !corsAllows("null", def), "Origin: null (file://, sandboxed iframe) is REFUSED");
+  ok("C6", corsAllows("https://my-brain.up.railway.app", def, "my-brain.up.railway.app") && !corsAllows("https://other.up.railway.app", def, "my-brain.up.railway.app"), "SAME-ORIGIN (the brain's own /console page) is allowed by Host match; a different host is not");
+  ok("C7", corsAllows("HTTPS://ChurlishOS.app/", def), "origin compare is case- and trailing-slash-insensitive");
+  const env = corsPolicy(" https://a.example , https://b.example/ ");
+  ok("C8", env.open === false && corsAllows("https://a.example", env) && corsAllows("https://b.example", env) && !corsAllows("https://churlishos.app", env), "EVE_ALLOWED_ORIGINS REPLACES the default list (churlishos.app is not implied once it is set)");
+  const open = corsPolicy("*");
+  ok("C9", open.open === true && corsAllows("https://evil.example", open), "EVE_ALLOWED_ORIGINS=* restores reflect-any, for a laptop test");
+  ok("C10", corsBanner(open, true).startsWith("[cors] OPEN (*)") && corsBanner(def, false).startsWith("[cors] allow-list") && corsBanner(def, false).includes("https://churlishos.app"), `the boot line says which: "${corsBanner(def, false).slice(0, 60)}…"`);
+  ok("C11", corsPolicy("https://a.example,*").open === false && !corsAllows("https://evil.example", corsPolicy("https://a.example,*")), "a `*` INSIDE a list is dropped, not honoured — only the bare value opens it");
+  ok("C12", DEFAULT_ALLOWED_ORIGINS.every((o) => o !== "*"), "the default list never contains `*`");
+  const lines: string[] = [];
+  noteRefusedOrigin("https://evil.example", (l) => lines.push(l));
+  noteRefusedOrigin("https://evil.example", (l) => lines.push(l));
+  noteRefusedOrigin("https://other.example", (l) => lines.push(l));
+  ok("C13", lines.length === 2 && lines[0] === "[cors] refused origin https://evil.example", `the refusal warns ONCE per origin and names only the origin: "${lines[0]}"`);
+  for (let i = 0; i < 80; i++) noteRefusedOrigin(`https://scan${i}.example`, (l) => lines.push(l));
+  ok("C14", lines.length === 51 && /further refusals are not logged/.test(lines[50]), `bounded: a scanner cycling 80 origins produces ${lines.length} lines, the last saying the rest are not logged`);
+  const mw = INDEX_SRC.slice(INDEX_SRC.indexOf("const CORS = corsPolicy"), INDEX_SRC.indexOf("const CORS = corsPolicy") + 900);
+  ok("C15", /corsAllows\(origin, CORS, req\.headers\.host\)\) res\.setHeader\("Access-Control-Allow-Origin", origin\)/.test(mw) && !/"\*"/.test(mw), "SOURCE: the middleware echoes the origin only when corsAllows says so, and never writes `*`");
+  ok("C16", /if \(req\.method === "OPTIONS"\) return res\.sendStatus\(204\)/.test(mw) && INDEX_SRC.indexOf("const CORS = corsPolicy") < INDEX_SRC.indexOf("authorizeBrainRequest(req.method"), "SOURCE: OPTIONS preflight still answers 204, and the CORS middleware runs BEFORE auth");
+  ok("C17", /console\.log\(corsBanner\(CORS/.test(INDEX_SRC), "SOURCE: the boot log prints the CORS line");
 }
 
 console.log(show.join("\n"));
