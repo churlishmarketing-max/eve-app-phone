@@ -12,6 +12,7 @@ import { dispatchUnitDescription } from "./registry.js";
 import * as corpus from "./corpus.js";
 import { createSchedule, listSchedules, cancelSchedule, type ScheduleAuthority } from "./clock.js";
 import { postNote, notesReady, notesStatusDetail } from "./notes.js";
+import { discordAlertsReady, discordAlertsStatusDetail } from "./discord.js";
 import { saveMemory, matchClient } from "./memory.js";
 import { type DurableOrigin } from "./durable.js";
 import { logConversations } from "./floor.js";
@@ -62,6 +63,7 @@ export function getConnectorStatus(): ConnectorStatus[] {
     { key: "gcal", name: "Google Calendar", connected: google.calendarReady(), detail: google.statusDetail("gcal") },
     { key: "churlish_os", name: "Churlish OS", connected: os.ready(), detail: os.statusDetail() },
     { key: "notebook", name: "Notebook (Discord)", connected: notesReady(), detail: notesStatusDetail() },
+    { key: "alerts", name: "Alerts (Discord)", connected: discordAlertsReady(), detail: discordAlertsStatusDetail() },
     { key: "deepgram", name: "Deepgram (voice in)", connected: !!process.env.DEEPGRAM_API_KEY, detail: process.env.DEEPGRAM_API_KEY ? "key set" : "DEEPGRAM_API_KEY not set" },
     { key: "elevenlabs", name: "ElevenLabs (voice out)", connected: !!process.env.ELEVENLABS_API_KEY, detail: process.env.ELEVENLABS_API_KEY ? "key set" : "ELEVENLABS_API_KEY not set" },
   ];

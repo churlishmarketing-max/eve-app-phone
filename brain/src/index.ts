@@ -25,6 +25,8 @@ import { probePictureTaintSchema, pictureTaintReady } from "./taint.js";
 import { probeDurableOriginSchema, durableOriginReady } from "./durable.js";
 import { addText, addNotification } from "./senses.js";
 import { getConnectorStatus } from "./connectors.js";
+import { notesReady } from "./notes.js";
+import { discordBanner } from "./discord.js";
 import { runDispatch, probeDispatchSchema, dispatchReady, settleJobFromConfirm } from "./dispatch.js";
 import { runFloorCheck, runCloseout, runWeekPreview, fireTripwire, runRoutineRiskCheck } from "./proactive.js";
 import { tickRoutine, untickRoutine, createRoutine, archiveRoutine, actOnAttention, type AttentionAction } from "./ops.js";
@@ -867,6 +869,10 @@ console.log(intakeBanner());
 // And the CORS allow-list (4.1), for the same reason: "which pages can read her
 // answers" is answerable from the deploy log. Origins only — never a token.
 console.log(corsBanner(CORS, !!(process.env.EVE_ALLOWED_ORIGINS ?? "").trim()));
+// Both Discord channels in one line: the notebook (#eve-notes, her save_note)
+// and the alerts mirror (#eve-alerts, every push of an enabled kind). On/off
+// and the kind list only — a webhook URL is a credential and is never printed.
+console.log(discordBanner(notesReady()));
 
 app.listen(PORT, () => {
   console.log(`EVE brain listening on :${PORT}`);
