@@ -119,11 +119,11 @@ reason in the brain's log, and nothing is pushed.
 - **No new secret.** Both sides already hold the key.
 - **Where it works.** A ticket is valid only while `now < exp` and
   `exp − now ≤ 900` s, so it lives at most 15 minutes. It opens exactly four
-  routes: `POST /chat`, `GET /state`, `POST /confirm` and `GET /confirm/:id`.
+  routes: `POST /chat` and `GET /state` — never `/confirm`: a card resolves only through the OS's own server (the Inbox's recorded one-tap door). The ticket tolerates 30 s of clock difference between Vercel and Railway.
   Every other route stays bearer-only (the phone, the desk, `/job`,
   `/dispatch`, `/wardrobe/*` …), and a ticket there gets a 401.
 - **What it can't do.** It isn't one-time: it works for any number of calls to
-  those four routes until it expires, and 15 minutes is the whole bound on a
+  those two routes until it expires, and 15 minutes is the whole bound on a
   replay. Nothing about a ticket is logged.
 - **Code.** `brain/src/os-ticket.ts` and `brain/src/index.ts`, with
   `verify/os-ticket-harness.ts` as proof.

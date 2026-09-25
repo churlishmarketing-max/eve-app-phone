@@ -18,16 +18,24 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 // NO NEW SECRET. The key is the bearer both sides already hold; nothing new is
 // set on Railway or Vercel for this.
 //
-// WHAT A TICKET IS WORTH, and no more: index.ts accepts one on exactly four
-// routes — POST /chat, GET /state, POST /confirm, GET /confirm/:id — the four
-// the OS's EVE surface uses. Every other route stays bearer-only, so a leaked
-// ticket cannot register a push token, move her wardrobe or dispatch a unit, and
-// it dies inside fifteen minutes on its own.
+// WHAT A TICKET IS WORTH, and no more: index.ts accepts one on exactly two
+// routes — POST /chat and GET /state — the two the OS's /eve page uses. NOT
+// /confirm: a card is resolved only through the OS's own server (the Inbox's
+// one-tap door, which records it), never straight from a browser holding a
+// ticket — the judge's call, so the prime law has one door. Every other route
+// stays bearer-only, so a leaked ticket cannot register a push token, move her
+// wardrobe, dispatch a unit or approve anything, and it dies inside fifteen
+// minutes on its own.
 //
 // NOT A ONE-TIME TOKEN. The nonce is not remembered: a ticket is good for any
 // number of calls to those four routes until `exp`. That is deliberate — one
-// chat turn is a /chat plus a /state poll plus a /confirm — and the 15-minute
+// chat turn is a /chat plus a /state poll — and the 15-minute
 // ceiling is what bounds a replay. Stated here, not hidden.
+//
+// CLOCK SKEW. The OS mints exp = now + 900 on Vercel's clock; if Railway's clock
+// runs a few seconds behind, a fresh ticket would read as "too far ahead" and
+// every turn would silently fall back to the slow path. So the ceiling allows
+// OS_TICKET_SKEW_SEC on top. Expiry itself is still judged on this clock.
 //
 // PURE: no clock read, no env read, no logging. The caller passes the secret and
 // `now`, which is what lets verify/os-ticket-harness.ts drive every edge without
@@ -36,6 +44,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 /** A ticket may not live longer than this. Measured from `now`, not from minting. */
 export const OS_TICKET_MAX_TTL_SEC = 900;
+/** Seconds of clock difference between the OS and this brain that a ticket tolerates. */
+export const OS_TICKET_SKEW_SEC = 30;
 
 const TICKET_SHAPE = /^Bearer os1\.(\d{1,12})\.([0-9a-f]{16})\.([0-9a-f]{64})$/;
 
@@ -55,7 +65,7 @@ export function verifyOsTicket(header: string | undefined, secret: string, nowSe
   const exp = Number(expStr);
   if (!Number.isSafeInteger(exp)) return { ok: false, reason: "bad expiry" };
   if (!(nowSec < exp)) return { ok: false, reason: "expired" };
-  if (exp - nowSec > OS_TICKET_MAX_TTL_SEC) return { ok: false, reason: "expiry too far ahead" };
+  if (exp - nowSec > OS_TICKET_MAX_TTL_SEC + OS_TICKET_SKEW_SEC) return { ok: false, reason: "expiry too far ahead" };
   const want = createHmac("sha256", Buffer.from(secret, "utf8")).update(`os1.${expStr}.${nonce}`).digest();
   const got = Buffer.from(sig, "hex");
   // Both are 32 bytes by construction (the shape pins 64 hex chars), and the
@@ -64,12 +74,10 @@ export function verifyOsTicket(header: string | undefined, secret: string, nowSe
   return { ok: true, exp };
 }
 
-/** The four doors a ticket opens. Method + exact path; anything else is bearer-only. */
+/** The two doors a ticket opens. Method + exact path; anything else (including /confirm) is bearer-only. */
 export function osTicketRoute(method: string, pathName: string): boolean {
   if (method === "POST" && pathName === "/chat") return true;
   if (method === "GET" && pathName === "/state") return true;
-  if (method === "POST" && pathName === "/confirm") return true;
-  if (method === "GET" && /^\/confirm\/[^/]+$/.test(pathName)) return true;
   return false;
 }
 

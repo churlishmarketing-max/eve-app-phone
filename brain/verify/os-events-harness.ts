@@ -255,7 +255,12 @@ async function main() {
     } catch (e) {
       threw = e instanceof Error ? e.message : String(e);
     }
-    ok("P9.4", /no cursor/.test(threw), `an answer with no cursor THROWS ("${threw}") — the pull then moves nothing`);
+    ok("P9.4", /no cursor/.test(threw), `an answer with no cursor field THROWS ("${threw}") — the pull then moves nothing`);
+    answer = { ok: true, cursor: "", events: [] };
+    const kept = await osEventsSince("x");
+    ok("P9.4b", kept.cursor === "x" && kept.events.length === 0, "an EMPTY cursor (a quiet 24 h with no `since`, or no Ledger yet) is not an error: the caller's cursor stands");
+    const none = await osEventsSince(null);
+    ok("P9.4c", none.cursor === "" && none.events.length === 0, "…and with no cursor at all it stays empty, so the pull stays unprimed and tries again next minute");
     delete process.env.CHURLISH_OS_TOKEN;
     let nw = "";
     try {
@@ -263,7 +268,7 @@ async function main() {
     } catch (e) {
       nw = e instanceof Error ? e.message : String(e);
     }
-    ok("P9.5", /not connected/.test(nw) && urls.length === 3, "no CHURLISH_OS_TOKEN → OsNotConnectedError before any request");
+    ok("P9.5", /not connected/.test(nw) && urls.length === 5, "no CHURLISH_OS_TOKEN → OsNotConnectedError before any request");
     globalThis.fetch = realFetch;
   }
 

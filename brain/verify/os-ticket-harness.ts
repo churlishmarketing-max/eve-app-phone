@@ -21,7 +21,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { verifyOsTicket, authorizeBrainRequest, osTicketRoute, OS_TICKET_MAX_TTL_SEC } from "../src/os-ticket.js";
+import { verifyOsTicket, authorizeBrainRequest, osTicketRoute, OS_TICKET_MAX_TTL_SEC, OS_TICKET_SKEW_SEC } from "../src/os-ticket.js";
 import { corsPolicy, corsAllows, corsBanner, noteRefusedOrigin, DEFAULT_ALLOWED_ORIGINS } from "../src/cors.js";
 
 const brainDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -52,8 +52,10 @@ show.push("=== T1 — THE VERIFIER ===");
   ok("T1.1", good.ok === true && good.exp === NOW + 600, "a ticket signed with the brain token, 10 minutes out, is VALID");
   const edge = verifyOsTicket(mint(NOW + OS_TICKET_MAX_TTL_SEC), KEY, NOW);
   ok("T1.2", edge.ok === true, `exactly ${OS_TICKET_MAX_TTL_SEC}s out is still valid (exp − now ≤ 900)`);
-  const far = verifyOsTicket(mint(NOW + OS_TICKET_MAX_TTL_SEC + 1), KEY, NOW);
-  ok("T1.3", far.ok === false && far.reason === "expiry too far ahead", `901s out is REFUSED: "${far.ok ? "" : far.reason}" — no ticket outlives 15 minutes`);
+  const skewed = verifyOsTicket(mint(NOW + OS_TICKET_MAX_TTL_SEC + OS_TICKET_SKEW_SEC), KEY, NOW);
+  ok("T1.2b", skewed.ok === true, `${OS_TICKET_MAX_TTL_SEC + OS_TICKET_SKEW_SEC}s out is still valid — a brain clock ${OS_TICKET_SKEW_SEC}s behind the OS's does not refuse fresh tickets`);
+  const far = verifyOsTicket(mint(NOW + OS_TICKET_MAX_TTL_SEC + OS_TICKET_SKEW_SEC + 1), KEY, NOW);
+  ok("T1.3", far.ok === false && far.reason === "expiry too far ahead", `${OS_TICKET_MAX_TTL_SEC + OS_TICKET_SKEW_SEC + 1}s out is REFUSED: "${far.ok ? "" : far.reason}" — no ticket outlives 15 minutes plus skew`);
   const day = verifyOsTicket(mint(NOW + 86_400), KEY, NOW);
   ok("T1.4", day.ok === false, "a day out is REFUSED — a correctly signed long-lived ticket is still not a key");
   const expired = verifyOsTicket(mint(NOW - 1), KEY, NOW);
@@ -87,11 +89,11 @@ show.push("=== T1 — THE VERIFIER ===");
   ok("T1.17", !reasons.includes("0123456789abcdef") && !reasons.includes(sig), "a refusal reason never echoes the nonce or the signature back (nothing to leak into a log)");
 }
 
-show.push("=== T2 — FOUR DOORS AND NO MORE ===");
+show.push("=== T2 — TWO DOORS AND NO MORE ===");
 {
   const tk = mint(NOW + 600);
   const bearer = `Bearer ${KEY}`;
-  const doors: Array<[string, string]> = [["POST", "/chat"], ["GET", "/state"], ["POST", "/confirm"], ["GET", "/confirm/c_123"]];
+  const doors: Array<[string, string]> = [["POST", "/chat"], ["GET", "/state"]];
   for (const [m, p] of doors) {
     const r = authorizeBrainRequest(m, p, tk, KEY, NOW);
     ok(`T2.${m[0]}${p.length}`, r.ok === true && r.via === "os_ticket", `a good ticket OPENS ${m} ${p}`);
@@ -104,6 +106,7 @@ show.push("=== T2 — FOUR DOORS AND NO MORE ===");
   ok("T2.3", future.ok === false, "a ticket 16 minutes in the future on POST /chat is refused (401)");
   const badSig = authorizeBrainRequest("POST", "/chat", mint(NOW + 600, "0123456789abcdef", "wrong"), KEY, NOW);
   ok("T2.4", badSig.ok === false, "a wrong-signature ticket on POST /chat is refused (401)");
+  ok("T2.4b", authorizeBrainRequest("POST", "/confirm", tk, KEY, NOW).ok === false && authorizeBrainRequest("GET", "/confirm/c_123", tk, KEY, NOW).ok === false, "a correct ticket on POST /confirm and GET /confirm/:id is REFUSED — a card resolves only through the OS's own server, the Inbox's one-tap door");
   const wear = authorizeBrainRequest("POST", "/wardrobe/wear", tk, KEY, NOW);
   ok("T2.5", wear.ok === false, "a CORRECT ticket on POST /wardrobe/wear (bearer-only) is refused (401)");
   for (const [m, p] of [["POST", "/dispatch"], ["POST", "/register-push"], ["POST", "/job"], ["POST", "/capture"], ["POST", "/senses/sms"], ["POST", "/attention/x/action"], ["POST", "/wardrobe/sync/manifest"], ["GET", "/vitals"]] as const) {

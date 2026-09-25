@@ -162,10 +162,13 @@ export async function osEventsSince(cursor: string | null, limit = 50): Promise<
   });
   const j = (await r.json().catch(() => ({}))) as { ok?: boolean; cursor?: unknown; events?: unknown; error?: string };
   if (!r.ok || !j.ok) throw new Error(j.error || `OS answered ${r.status}`);
-  if (typeof j.cursor !== "string" || !j.cursor) throw new Error("OS events answer carried no cursor");
+  if (typeof j.cursor !== "string") throw new Error("OS events answer carried no cursor");
   const raw = Array.isArray(j.events) ? j.events : [];
   const events = raw.map(asOsEvent).filter((e): e is OsEvent => e !== null);
-  return { cursor: j.cursor, events, dropped: raw.length - events.length };
+  // An EMPTY cursor is the OS saying "nothing to point at yet" (no `since` and
+  // a quiet 24 h, or the Ledger not applied) — not an error. The caller's own
+  // cursor stands, so the pull neither moves nor primes on it.
+  return { cursor: j.cursor || cursor || "", events, dropped: raw.length - events.length };
 }
 
 // ---- ambient board snapshot (the "seamless OS" path) ----

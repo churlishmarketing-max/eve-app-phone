@@ -144,8 +144,9 @@ if (!TOKEN) {
 // low-sensitivity on a single-user LAN) — 02_ARCHITECTURE §3, §7.
 // timing-safe comparison per review C32.
 //
-// ONE HOUSE 4c (4.1) — AND BESIDE IT, THE OS TICKET. On exactly four routes —
-// POST /chat, GET /state, POST /confirm, GET /confirm/:id — a short-lived
+// ONE HOUSE 4c (4.1) — AND BESIDE IT, THE OS TICKET. On exactly two routes —
+// POST /chat and GET /state (never /confirm: cards resolve only through the
+// OS's own server, the Inbox's recorded one-tap door) — a short-lived
 // `Bearer os1.<exp>.<nonce>.<sig>` signed with this same token is accepted too,
 // so the OS's browser can talk to her without ever holding the key
 // (src/os-ticket.ts has the format and the reasons). Everywhere else a ticket is

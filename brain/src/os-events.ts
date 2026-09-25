@@ -207,8 +207,10 @@ export async function runOsEventsPull(opts: { force?: boolean } = {}, deps: Pull
 
     if (start === null) {
       // FIRST RUN (or an unreadable store): prime, never push the last 24 h.
-      if (cursor !== null) await remember(deps, cursor);
-      return { ok: true, outcome: "primed", ...base, events: seen.length, dropped };
+      // An empty cursor means the OS had nothing to point at yet: stay unprimed
+      // and try again next minute, quietly.
+      if (cursor) await remember(deps, cursor);
+      return { ok: true, outcome: cursor ? "primed" : "nothing-yet", ...base, events: seen.length, dropped };
     }
 
     const worthy = seen.filter(pushWorthy);
@@ -237,7 +239,7 @@ export async function runOsEventsPull(opts: { force?: boolean } = {}, deps: Pull
         }
       }
     }
-    if (cursor !== null && cursor !== start) await remember(deps, cursor);
+    if (cursor && cursor !== start) await remember(deps, cursor);
     return { ok: true, outcome: "pulled", events: seen.length, worthy: worthy.length, pushed, dropped };
   } catch (e) {
     // An unreachable OS moves nothing; the next minute tries again from the same cursor.
