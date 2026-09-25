@@ -869,6 +869,8 @@ async function main() {
       "eve_hands.save_note": { args: { note: HOSTILE, title: "From the mail" }, table: "memory_entries" },
       "eve_hands.os_command": { args: { tool: "add_deal", input: { client_name: "Vendor Corp", amount: 5000 } } },
       "eve_hands.os_create_invoice": { args: { client_name: "Vendor Corp", items: [{ desc: "Retainer", unit: 4000 }] } },
+      "eve_hands.os_mark_paid_offline": { args: { invoice_number: "INV-0012", method: "check", note: HOSTILE } },
+      "eve_hands.os_move_client_stage": { args: { client_name: "Vendor Corp", stage: "Signed" } },
       "eve_memory.save_memory": { args: { kind: "decision", content: HOSTILE }, table: "memory_entries" },
       "eve_memory.log_touch": { args: { client: "Vendor Corp", channel: "email", summary: "replied" }, table: "touches" },
     };

@@ -325,6 +325,7 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.os_board": { verdict: "exempt", why: "read-only — OS rows carry client-authored names and notes; closes the latch", reader: true },
   "eve_hands.os_clients": { verdict: "exempt", why: "read-only — client names, emails and notes are third-party text; closes the latch", reader: true },
   "eve_hands.desk_scan": { verdict: "exempt", why: "read-only — filenames are chosen by whoever made the file; closes the latch", reader: true },
+  "eve_hands.os_inbox_summary": { verdict: "exempt", why: "read-only — Inbox titles carry client names, email subjects and Cowork titles (third-party text); closes the latch", reader: true },
 
   // ---- THE TWO THE MERGE CAUGHT --------------------------------------------
   // desk_where and desk_handoff arrived on the picture branch (3377a1a); this
@@ -342,6 +343,7 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.corpus_read": { verdict: "exempt", why: "reads a section of ONE OF HIS OWN DOCUMENTS off our disk (corpus/, built by scripts/sync-corpus.mjs from the PDFs he handed over). Takes none of R1's four: reads nothing, writes nothing, sends nothing, spends nothing. AND IT DELIBERATELY DOES NOT LATCH, which is the argued half: nobody but Brandon can write into this shelf and it does not change between builds, so latching it would disarm authority on any turn she consulted his own plan while protecting against no writer. The imperative problem — these pages are full of \"send the first 20\", \"approve this\" — is answered by PROVENANCE, not by a content check: every passage leaves corpus.ts inside a constant frame naming it a quotation from a document, never an instruction to her", reader: false },
   "eve_hands.corpus_search": { verdict: "exempt", why: "the same shelf, the same disk, the same frame — word-overlap search over his own documents returning at most 8 short passages with their citations. Same verdict and same reason as corpus_read; if that one is ever re-verdicted this one moves with it", reader: false },
   "eve_hands.list_schedules": { verdict: "exempt", why: "reads the clock back; grants nothing and changes nothing", reader: false },
+  "eve_hands.os_house_status": { verdict: "exempt", why: "reads the OS rails back as flags, counts and one timestamp (sends paused, daily cap, test mode, last sweep, failed jobs) — no third-party prose, no authority", reader: false },
   "eve_memory.search_memory": { verdict: "exempt", why: "read-only over HER OWN distillations, not live third-party text; latching it would disarm nearly every turn she recalls anything, which is the 'refuses everything' failure the calendar fix exists to avoid. Its injection path is closed at the WRITE end instead — save_memory and save_note are latched", reader: false },
 
   // ---- eve_hands · LATCHED (real authority, refused in a tainted turn) -----
@@ -353,6 +355,8 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.save_note": { verdict: "latched", why: "POSTS TO DISCORD and writes memory_entries in one call — R1 'send a message' AND 'write a permanent memory'. It is also the write end of context.ts's recall block, which re-injects memory under 'trust these over guesses'" },
   "eve_hands.os_command": { verdict: "latched", why: "its WRITE subcommands (add_deal, add_client, add_expense, set_sprint, add_work_item, propose_automation …) reach churlishos.app and change his business ledger. The two READ subcommands (list_proposals, list_invoices) still run and close the latch, exactly like the other readers", reader: true },
   "eve_hands.os_create_invoice": { verdict: "latched", why: "raises an invoice — a money instrument in his cockpit. R1 'spend money'" },
+  "eve_hands.os_mark_paid_offline": { verdict: "latched", why: "marks a SENT invoice paid on his word alone (check, cash, Zelle) — a money record the OS cannot verify, so nothing read out of a mailbox may flip it. R1 'spend money'" },
+  "eve_hands.os_move_client_stage": { verdict: "latched", why: "moves a client in his pipeline and fires the stage-enter automations (drafts only) — the same authority as os_command's update_deal_stage. READ SIDE, NOT CLOSED: the result can name clients (an ambiguous match lists them), returned verbatim; it does not record, so his answer to 'which one?' still works in the same thread. Stated, not hidden" },
   "eve_memory.save_memory": { verdict: "latched", why: "writes memory_entries — R1 'write a permanent memory', verbatim. It hangs on the SECOND server, which is exactly why the previous sweep never saw it" },
   "eve_memory.log_touch": { verdict: "latched", why: "writes a durable client-contact row that pulse.ts turns into attention_items PROSE, which then rides the context pack — a third-party-driven write with a loop back into her own briefing" },
 
@@ -360,6 +364,7 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.gmail_send": { verdict: "confirm-card", why: "RED — queues the exact payload for King's approval; the handler cannot send" },
   "eve_hands.send_sms": { verdict: "confirm-card", why: "RED — queues the message for King's approval; the handler cannot send" },
   "eve_hands.os_send_pending_email": { verdict: "confirm-card", why: "RED — queues the OS send for King's approval; the handler cannot send" },
+  "eve_hands.os_approve_inbox_item": { verdict: "confirm-card", why: "RED — queues ONE Inbox key for King's approval (kind os_inbox_approve); only his approve calls the OS with confirmed:true, and the OS refuses it without" },
   "eve_hands.desk_file_plan": { verdict: "confirm-card", why: "queues a filing card; the DESKTOP moves the file only after he approves it — nothing in this container touches a filesystem" },
 
   // ---- eve_hands · EXEMPT, deliberately, each measured against R1's list ---
@@ -378,6 +383,7 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.log_conversation": { verdict: "exempt", why: "moves the sales-floor COUNTER. It re-enters her pack as a number, and a number cannot carry an instruction. Outside R1's list" },
   "eve_hands.log_checkin": { verdict: "exempt", why: "logs his energy/sleep/one line for the day — a row about HIM that he overwrites by checking in again. Outside R1's list. RESIDUAL, stated: the free-text `note` re-enters the pack as prose ('He wrote today: …'), so this is the thinnest exemption in the table" },
   "eve_hands.tick_habit": { verdict: "exempt", why: "ticks or unticks one habit for one day — idempotent, reversible in the same tool. Outside R1's list" },
+  "eve_hands.os_pause_sends": { verdict: "exempt", why: "the brake: pauses the OS's outgoing email and cannot resume it (the OS refuses paused:false; only King resumes, in /automations). It sends nothing, schedules nothing, spends nothing and writes no memory — the worst a stranger's sentence can do with it is hold mail until he un-pauses. Outside R1's list" },
 };
 
 /**

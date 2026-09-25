@@ -318,7 +318,9 @@ console.log("\n=== B5 — R2: no send fires without an approval ===");
     "mcp__eve_hands__gmail_unread",
     // Pre-date this stream. Listed so the assertion covers the WHOLE mail-facing
     // surface rather than the subset that flatters it.
+    "mcp__eve_hands__os_approve_inbox_item", // One House 4b: the OS Inbox, not mail — matches /inbox/
     "mcp__eve_hands__os_draft_email",
+    "mcp__eve_hands__os_inbox_summary", // One House 4b: the OS Inbox, not mail — matches /inbox/
     "mcp__eve_hands__os_send_pending_email",
   ];
   ok("B5-7", JSON.stringify(mailFacing) === JSON.stringify(EXPECTED), `the mail-facing tool surface is the SAME ${EXPECTED.length} it was before this stream — the reader added no callable surface (allowlist total is now ${connectorToolNames.length}, grown by other streams, not this one)`);
