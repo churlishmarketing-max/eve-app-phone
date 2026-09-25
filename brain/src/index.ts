@@ -164,7 +164,7 @@ app.use((req, res, next) => {
 // Throwaway dev console for testing her voice in a browser. Not the app —
 // the real shell is the eve-app-demo.jsx port. The token is NEVER embedded
 // (review C29: any website could fetch this page cross-origin via the
-// permissive CORS and read the token out of it) — paste it once; the page
+// CORS allow-list — same-origin is on it — and read the token out of it) — paste it once; the page
 // keeps it in localStorage.
 app.get("/console", (_req, res) => {
   const html = readFileSync(path.join(here, "..", "public", "console.html"), "utf8");

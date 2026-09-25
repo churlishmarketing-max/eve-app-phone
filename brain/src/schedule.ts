@@ -42,8 +42,12 @@ export function isQuietHours(d: Date): boolean {
 // wall uses. Returned with its reason so the boot log can say which.
 export function schedulersGate(env: NodeJS.ProcessEnv = process.env): { on: boolean; why: string } {
   if (env.EVE_SCHEDULERS === "on") return { on: true, why: "EVE_SCHEDULERS=on" };
-  if (env.RAILWAY_ENVIRONMENT) return { on: true, why: "hosted (RAILWAY_ENVIRONMENT set)" };
-  return { on: false, why: "no RAILWAY_ENVIRONMENT, EVE_SCHEDULERS is not on" };
+  // Any Railway-injected RAILWAY_* variable marks the hosted brain — the same
+  // prefix scan push.ts uses, so a Railway rename can never silently stop the
+  // 07:00 brief, the pulse, the unit clock and the OS pull (review M1).
+  const marker = Object.keys(env).find((k) => k.startsWith("RAILWAY_") && env[k]);
+  if (marker) return { on: true, why: `hosted (${marker} set)` };
+  return { on: false, why: "no RAILWAY_* marker, EVE_SCHEDULERS is not on" };
 }
 
 export function startSchedulers(): void {

@@ -28,7 +28,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 // minutes on its own.
 //
 // NOT A ONE-TIME TOKEN. The nonce is not remembered: a ticket is good for any
-// number of calls to those four routes until `exp`. That is deliberate — one
+// number of calls to those two routes until `exp`. That is deliberate — one
 // chat turn is a /chat plus a /state poll — and the 15-minute
 // ceiling is what bounds a replay. Stated here, not hidden.
 //

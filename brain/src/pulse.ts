@@ -227,7 +227,7 @@ export async function runPulseSweep(force = false): Promise<PulseResult> {
     if (!draft) {
       // LLM hiccup: do NOT insert an empty item — the dedupe rule would
       // suppress this client forever (review C15). Next sweep retries.
-      console.warn(`[pulse] draft generation failed for ${cl.name}; will retry next sweep`);
+      console.warn("[pulse] draft generation failed for one client; will retry next sweep");
       continue;
     }
 

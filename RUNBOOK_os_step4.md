@@ -44,7 +44,7 @@ Redeploy the OS after saving.
 ## Step 4 — prove it (2 minutes)
 
 1. Railway → the brain service → the latest deploy log: it says
-   `[schedulers] ON — hosted (RAILWAY_ENVIRONMENT set)`.
+   `[schedulers] ON — hosted (RAILWAY_… set)`.
 2. Open the OS cockpit → the chat tab. The header reads **EVE**, not Rookie.
    Ask her "what's on the board?" Attach a receipt with 📎: that still goes to
    Rookie.
@@ -303,7 +303,7 @@ an OS change for a later step, not this one.
 - `npx tsc --noEmit` is clean.
 - Harnesses:
   - os-ticket 62/62 (new)
-  - os-events 37/37 (new)
+  - os-events 39/39 (new)
   - pulse 24/24 (new; PL6 is the review fix: approving an OS-roster nudge creates its Today task)
   - authority 132/132 (with E17, which drives `os_events_since`, and E18, which drives the `os_mark_paid_offline` card)
   - clock 152/152

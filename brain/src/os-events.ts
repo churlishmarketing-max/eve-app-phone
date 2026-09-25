@@ -47,6 +47,8 @@ export const OS_EVENTS_CURSOR_KEY = "os.events_cursor";
 export const PULL_LIMIT = 50;
 export const MAX_PAGES = 10;
 export const MAX_PUSH_WORDS = 25;
+/** …and never more than this many characters: FCM rejects an oversized body and push.ts then drops the phone's token (review L1). */
+export const MAX_PUSH_CHARS = 240;
 /** After this many consecutive failed sends the batch is let go, so one bad token can't hold the feed forever. */
 export const MAX_SEND_FAILURES = 3;
 
@@ -88,7 +90,8 @@ export function batchPushBody(events: OsEvent[]): string {
   }
   const body = `${head} ${titles.join("; ")}`;
   const all = body.split(/\s+/);
-  return all.length <= MAX_PUSH_WORDS ? body : all.slice(0, MAX_PUSH_WORDS).join(" ");
+  const capped = all.length <= MAX_PUSH_WORDS ? body : all.slice(0, MAX_PUSH_WORDS).join(" ");
+  return capped.length <= MAX_PUSH_CHARS ? capped : `${capped.slice(0, MAX_PUSH_CHARS - 1)}…`;
 }
 
 /** The OS page a tap opens. Only a same-site PATH is honoured; anything else falls back to the Ledger. */
