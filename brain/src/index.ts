@@ -1,6 +1,6 @@
 import "./env.js";
 import express from "express";
-import { randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
@@ -45,6 +45,7 @@ import { registryCounts } from "./registry.js";
 import { corpusState } from "./corpus.js";
 import { rotateLook, initRotationConfig } from "./rotation.js";
 import { stamp, getStamp } from "./health.js";
+import { authorizeBrainRequest } from "./os-ticket.js";
 // R1 · the conversation key is request body — shape-checked before it becomes
 // the id every taint question is asked on (untrusted.ts).
 import { cleanConversationId } from "./untrusted.js";
@@ -128,14 +129,20 @@ if (!TOKEN) {
 // and wardrobe images (<img> tags can't send Authorization; portraits are
 // low-sensitivity on a single-user LAN) — 02_ARCHITECTURE §3, §7.
 // timing-safe comparison per review C32.
-const TOKEN_BUF = Buffer.from(`Bearer ${TOKEN}`);
+//
+// ONE HOUSE 4c (4.1) — AND BESIDE IT, THE OS TICKET. On exactly four routes —
+// POST /chat, GET /state, POST /confirm, GET /confirm/:id — a short-lived
+// `Bearer os1.<exp>.<nonce>.<sig>` signed with this same token is accepted too,
+// so the OS's browser can talk to her without ever holding the key
+// (src/os-ticket.ts has the format and the reasons). Everywhere else a ticket is
+// just a wrong header: the phone and desktop routes stay bearer-only. A refused
+// ticket is the same bare 401 as a wrong bearer, and NOTHING about either is
+// logged — not the header, not the reason.
 app.use((req, res, next) => {
   const openWardrobe = req.method === "GET" && req.path.startsWith("/wardrobe");
   if (req.path === "/health" || req.path === "/console" || openWardrobe) return next();
-  const auth = Buffer.from(req.headers.authorization || "");
-  if (auth.length !== TOKEN_BUF.length || !timingSafeEqual(auth, TOKEN_BUF)) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  const verdict = authorizeBrainRequest(req.method, req.path, req.headers.authorization, TOKEN, Math.floor(Date.now() / 1000));
+  if (!verdict.ok) return res.status(401).json({ error: "unauthorized" });
   next();
 });
 
