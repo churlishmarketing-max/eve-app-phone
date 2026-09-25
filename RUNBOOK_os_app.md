@@ -172,8 +172,12 @@ Electron. The phone itself still has to prove:
   (`/today`), so it opens the **OS Today page**. If you'd rather the Body nudge
   win, the fix is in the brain: don't set `link` when the deeplink is
   `eve://body`.
-- **Silent-client, approval and tripwire** pushes now open the OS **Inbox**,
-  not EVE's Ops tab.
+- **Silent-client, approval, routine-risk and tripwire** pushes now open the
+  OS **Inbox**, not EVE's Ops/Body tab (the brain's Step 4 table,
+  `brain/src/push.ts` `OS_PAGE_BY_KIND`). ⚑ A unit-dispatch **approval**
+  (`kind: approval`) is a confirm card in EVE's Ops tab, and it may not appear
+  in the OS Inbox at all. If it doesn't, take `approval` out of that table so
+  those pushes open Ops again.
 - On the desktop, toasts (RED confirms and tripwires) still open the deck. A
   toast only opens the OS window when the item carries an OS link, and none do
   today.
