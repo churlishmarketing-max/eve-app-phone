@@ -17,6 +17,7 @@ import * as api from "./api.js";
 import { BUILD_STAMP, IS_UNSTAMPED, stampLabel } from "../src/shared/build-stamp.js";
 import * as desk from "./desk/index.js";
 import { runE2E } from "./e2e.js";
+import { isOsPage, openOsWindow } from "./os-window.js";
 import { brainUrl, isHarness, isMock, isSmoke, readConfig, windowsHidden, writeConfig } from "./config.js";
 import { isQuietHours } from "./quiet.js";
 import { lastState, pollOnce, startPoll, stopPoll } from "./poll.js";
@@ -548,6 +549,10 @@ function registerIpc(): void {
     await shell.openExternal(url);
     return { ok: true };
   });
+
+  // ONE ICON (Step 10): the dedicated OS window. A page key or nothing; any
+  // other value lands on the Inbox. Never a URL from the renderer.
+  ipcMain.handle(IPC.osOpen, (_e, page: unknown) => ({ ok: openOsWindow(isOsPage(page) ? page : "inbox").ok }));
 
   // The flyout window is S4's (electron/windows.js's registerWindow("flyout",
   // win) is how it gets found here) — until then this is a safe no-op.

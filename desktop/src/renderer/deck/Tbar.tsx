@@ -44,6 +44,20 @@ export default function Tbar({ now, online, sessionNo, view, closetOpen, onGo }:
       <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <span className="sesch">SES {pad3(sessionNo)} — WAKE THE ENGINE</span>
         <b>EVE//OS {APP_VERSION}-DESKTOP</b>
+        {/* ONE ICON (Step 10): the Churlish OS in its own window, beside
+            her deck. A page key crosses the bridge, never a URL. It only
+            shows where the strip has room (app.css .osbtn, 1440px and up —
+            the deck's default size); narrower, the bar is already full and
+            the tray's "Churlish OS" item is the way in. */}
+        <button
+          type="button"
+          className="tbtn osbtn"
+          onClick={() => void window.eve.openOs("inbox")}
+          title="Open the Churlish OS"
+          aria-label="Open the Churlish OS"
+        >
+          CHURLISH OS
+        </button>
         <span style={{ display: "inline-flex", alignItems: "center" }}>
           <span className={online ? "dot" : "dot down"} />
           {online ? "LINK" : "DOWN"}

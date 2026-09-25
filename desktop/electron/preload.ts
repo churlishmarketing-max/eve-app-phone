@@ -21,6 +21,7 @@ import {
   type ConfigPatch,
   type DeskProgress,
   type EveBridge,
+  type OsPage,
   type PttEvent,
   type StateUpdate,
   type SummonShownEvent,
@@ -102,6 +103,7 @@ const eve: EveBridge = {
   },
   deckFocus: () => ipcRenderer.invoke(IPC.deckFocus),
   openExternal: (target: "os" | "gmail") => ipcRenderer.invoke(IPC.openExternal, target),
+  openOs: (page?: OsPage) => ipcRenderer.invoke(IPC.osOpen, page),
   flyoutHide: () => ipcRenderer.invoke(IPC.flyoutHide),
   ping: () => ipcRenderer.invoke(IPC.ping),
   // FILING HANDS — added LAST, per the documented order.

@@ -21,6 +21,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { focusDeck } from "./windows.js";
 import { hideFlyout, toggleFlyout } from "./flyout-window.js";
+import { openOsWindow } from "./os-window.js";
 
 export type TrayState = "idle" | "thinking" | "alert" | "quiet";
 
@@ -366,6 +367,7 @@ function buildMenu(): Menu {
     },
     { type: "separator" },
     { label: "Open the deck", click: () => { hideFlyout(); focusDeck(); } },
+    { label: "Churlish OS", click: () => { hideFlyout(); openOsWindow("inbox"); } },
     { type: "separator" },
     { label: "Quit EVE", role: "quit" },
   ]);

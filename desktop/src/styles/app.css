@@ -163,6 +163,19 @@ body {
   border-color: rgba(var(--rgbAccent), 0.45);
   color: var(--ice);
 }
+/* ONE ICON (Step 10): the title bar's CHURLISH OS button. The strip is already
+   full below the deck's 1440px default (measured at 1120 and 1280: the nav
+   widens with the window), so under 1440px the button steps aside rather than
+   wrapping the clock and the session badge. The tray menu's "Churlish OS"
+   item opens the same window at any width. */
+.tbtn.osbtn {
+  white-space: nowrap;
+}
+@media (max-width: 1439px) {
+  .tbtn.osbtn {
+    display: none;
+  }
+}
 
 /* ---- buttons that wear the design system's chip/button classes ---------- */
 button.chipv6,
