@@ -39,6 +39,19 @@ export async function osTool(
   input: Record<string, unknown> = {},
   confirmed = false,
 ): Promise<string> {
+  return (await osToolData(tool, input, confirmed)).result;
+}
+
+// One House 4c (4.6): the same call, with the OS's `data` beside the prose.
+// The house tools answer `{ ok, result, data }` — `result` is the sentence she
+// relays, `data` is the numbers a job computes on (quiet_clients' roster). osTool
+// above is this minus `data`, so every existing caller is byte-identical. `data`
+// is whatever object the OS sent, or null — the CALLER shape-checks it.
+export async function osToolData(
+  tool: string,
+  input: Record<string, unknown> = {},
+  confirmed = false,
+): Promise<{ result: string; data: Record<string, unknown> | null }> {
   const token = process.env.CHURLISH_OS_TOKEN;
   if (!token) throw new OsNotConnectedError();
   const ac = new AbortController();
@@ -50,9 +63,10 @@ export async function osTool(
       body: JSON.stringify({ tool, input, ...(confirmed ? { confirmed: true } : {}) }),
       signal: ac.signal,
     });
-    const j = (await r.json().catch(() => ({}))) as { ok?: boolean; result?: string; error?: string };
+    const j = (await r.json().catch(() => ({}))) as { ok?: boolean; result?: string; data?: unknown; error?: string };
     if (!r.ok || !j.ok) throw new Error(j.error || `OS answered ${r.status}`);
-    return j.result ?? "";
+    const data = j.data && typeof j.data === "object" && !Array.isArray(j.data) ? (j.data as Record<string, unknown>) : null;
+    return { result: j.result ?? "", data };
   } finally {
     clearTimeout(deadline);
   }
