@@ -5,6 +5,7 @@ import { runPulseSweep } from "./pulse.js";
 import { runFloorCheck, runCloseout, runWeekPreview, runRoutineRiskCheck } from "./proactive.js";
 import { rotateLook } from "./rotation.js";
 import { startClock } from "./clock.js";
+import { startOsEventsPull } from "./os-events.js";
 import { stamp } from "./health.js";
 
 // Brandon is Central time. Same fallback as context.ts — a missing EVE_TZ
@@ -31,6 +32,22 @@ export function isQuietHours(d: Date): boolean {
   const afterStart = h > 21 || (h === 21 && m >= 30);
   const beforeEnd = h < 6 || (h === 6 && m < 30);
   return afterStart || beforeEnd;
+}
+
+// ONE HOUSE B2.4 — "never drive the live brain". The crons (07:00 brief,
+// 17:30 close-out, pulse, the unit clock …) run only on the hosted brain, or
+// where someone deliberately sets EVE_SCHEDULERS=on. A laptop boot of this
+// repo serves /chat and /state but never fires a job on its own. The
+// Railway marker is the same kind of free-in-the-cloud signal push.ts's send
+// wall uses. Returned with its reason so the boot log can say which.
+export function schedulersGate(env: NodeJS.ProcessEnv = process.env): { on: boolean; why: string } {
+  if (env.EVE_SCHEDULERS === "on") return { on: true, why: "EVE_SCHEDULERS=on" };
+  // Any Railway-injected RAILWAY_* variable marks the hosted brain — the same
+  // prefix scan push.ts uses, so a Railway rename can never silently stop the
+  // 07:00 brief, the pulse, the unit clock and the OS pull (review M1).
+  const marker = Object.keys(env).find((k) => k.startsWith("RAILWAY_") && env[k]);
+  if (marker) return { on: true, why: `hosted (${marker} set)` };
+  return { on: false, why: "no RAILWAY_* marker, EVE_SCHEDULERS is not on" };
 }
 
 export function startSchedulers(): void {
@@ -129,6 +146,10 @@ export function startSchedulers(): void {
   // each due row to dispatchUnit (clock.ts). The ten above are unchanged: this
   // adds a drain beside them, it does not reschedule any of them.
   startClock();
+  // ONE HOUSE 4c (4.3/4.4) — the minute OS pull. Armed here so it lives behind
+  // the same gate as every cron above: a laptop boot never pulls or pushes.
+  // Without CHURLISH_OS_TOKEN it arms nothing and logs that once (os-events.ts).
+  startOsEventsPull();
   console.log(
     `[schedule] armed (${TZ}): 07:00 brief · 07:14/18:22/22:43 wardrobe · 11:45 floor (wk) · 12:30 pulse · 17:30 closeout · 20:00 routines · Sun 19:00 preview · 02:00 distill; quiet 21:30–06:30`,
   );

@@ -3,6 +3,7 @@ import { staticSystemPrompt } from "./persona.js";
 import { db } from "./db.js";
 import { isQuietHours } from "./schedule.js";
 import { sendPush, getLatestToken, isPushReady } from "./push.js";
+import * as os from "./os.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
@@ -12,7 +13,7 @@ const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 // Nudge escalation law (04 §4): N1 inform → N2 shrink the task → N3
 // thumb-only. No N4 — after 48h at N3 the item is marked slipped, once.
 
-async function generate(prompt: string): Promise<string> {
+async function generateWithModel(prompt: string): Promise<string> {
   let out = "";
   const q = query({
     prompt,
@@ -30,12 +31,70 @@ async function generate(prompt: string): Promise<string> {
   return out.trim();
 }
 
+// Test seam (verify/pulse-harness.ts): swap the model call for a canned line so
+// both roster branches can be driven offline. Never called by the server.
+let generate: (prompt: string) => Promise<string> = generateWithModel;
+export function _setPulseGeneratorForTests(fn: ((prompt: string) => Promise<string>) | null): void {
+  generate = fn ?? generateWithModel;
+}
+
 export interface PulseResult {
   ok: boolean;
   reason?: string;
   quiet: { client: string; daysQuiet: number }[];
   escalated: number;
   pushed: boolean;
+  /** One House 4c: whose roster this sweep read — the OS's quiet_clients, or the brain's own clients table. */
+  source?: "os" | "brain";
+}
+
+// ---- ONE HOUSE 4c (4.6) · WHO IS QUIET IS THE OS'S CALL NOW ----------------
+//
+// The OS is the client spine (connectors.ts: "the OS is the single spine now"),
+// and the brain's own `clients` table is a copy nobody keeps current. So when
+// the OS line is wired (CHURLISH_OS_TOKEN set) the sweep asks the OS who has
+// gone quiet — the house tool `quiet_clients`, answering
+//   { ok, result, data: { clients: [{ id, name, cadence_days, days_quiet,
+//                                     last_touch_at: string | null }] } }
+// — and runs EXACTLY the per-client flow below on that list (draft, attention
+// item, escalation, one push): cadence_days → cadence_days, days_quiet →
+// daysQuiet. The OS has already decided each of them is past cadence; the brain
+// does not second-guess it with its own arithmetic.
+//
+// NOT WIRED → the brain's own table, exactly as before. WIRED BUT FAILING → the
+// sweep FAILS and says why; it does not fall back to the stale table, because a
+// nudge drafted off a copy the OS has moved past is a wrong nudge sent with
+// confidence. A client row that does not match the shape is dropped, never
+// repaired.
+export interface PulseClient {
+  id: string;
+  name: string;
+  cadence_days: number;
+  last_touch_at: string | null;
+  /** Present only on the OS roster — the OS's own count. */
+  days_quiet?: number;
+}
+
+export function parseOsQuietClients(data: Record<string, unknown> | null): PulseClient[] | null {
+  const list = data?.clients;
+  if (!Array.isArray(list)) return null;
+  const out: PulseClient[] = [];
+  for (const v of list) {
+    if (!v || typeof v !== "object") continue;
+    const r = v as Record<string, unknown>;
+    if (typeof r.id !== "string" || !r.id || typeof r.name !== "string" || !r.name) continue;
+    if (typeof r.cadence_days !== "number" || !Number.isFinite(r.cadence_days)) continue;
+    if (typeof r.days_quiet !== "number" || !Number.isFinite(r.days_quiet)) continue;
+    if (r.last_touch_at !== null && r.last_touch_at !== undefined && typeof r.last_touch_at !== "string") continue;
+    out.push({
+      id: r.id,
+      name: r.name,
+      cadence_days: r.cadence_days,
+      days_quiet: Math.floor(r.days_quiet),
+      last_touch_at: typeof r.last_touch_at === "string" ? r.last_touch_at : null,
+    });
+  }
+  return out;
 }
 
 const HOUR = 3600_000;
@@ -44,31 +103,66 @@ export async function runPulseSweep(force = false): Promise<PulseResult> {
   const c = db();
   if (!c) return { ok: false, reason: "memory spine offline", quiet: [], escalated: 0, pushed: false };
 
-  const { data: clients, error } = await c
-    .from("clients")
-    .select("id, name, cadence_days, last_touch_at")
-    .eq("status", "active");
-  if (error) return { ok: false, reason: error.message, quiet: [], escalated: 0, pushed: false };
+  // Whose roster: the OS's when wired (4.6), the brain's own table otherwise.
+  const source: "os" | "brain" = os.ready() ? "os" : "brain";
+  let clients: PulseClient[];
+  if (source === "os") {
+    try {
+      const r = await os.osToolData("quiet_clients");
+      const parsed = parseOsQuietClients(r.data);
+      if (!parsed) return { ok: false, reason: "OS quiet_clients answered with no data.clients list", quiet: [], escalated: 0, pushed: false, source };
+      clients = parsed;
+    } catch (e) {
+      return { ok: false, reason: `OS quiet_clients failed: ${e instanceof Error ? e.message : String(e)}`, quiet: [], escalated: 0, pushed: false, source };
+    }
+  } else {
+    const { data, error } = await c
+      .from("clients")
+      .select("id, name, cadence_days, last_touch_at")
+      .eq("status", "active");
+    if (error) return { ok: false, reason: error.message, quiet: [], escalated: 0, pushed: false, source };
+    clients = (data ?? []) as PulseClient[];
+  }
 
   const quiet: { client: string; daysQuiet: number; attentionId?: string }[] = [];
   let escalated = 0;
 
-  for (const cl of clients ?? []) {
-    // Exact-time comparison per spec: now - last_touch_at > cadence_days
-    // (review C10 — floor() made clients trigger a day late). Never-touched
-    // clients count as quiet from day one.
+  for (const cl of clients) {
     const lastTouch = cl.last_touch_at ? new Date(cl.last_touch_at).getTime() : null;
-    const daysQuietExact = lastTouch === null ? Infinity : (Date.now() - lastTouch) / 86400_000;
-    if (daysQuietExact <= cl.cadence_days) continue;
-    const daysQuiet = lastTouch === null ? cl.cadence_days + 1 : Math.floor(daysQuietExact);
+    let daysQuiet: number;
+    if (source === "os") {
+      // The OS already decided this client is quiet; its count is the count.
+      daysQuiet = cl.days_quiet ?? cl.cadence_days + 1;
+    } else {
+      // Exact-time comparison per spec: now - last_touch_at > cadence_days
+      // (review C10 — floor() made clients trigger a day late). Never-touched
+      // clients count as quiet from day one.
+      const daysQuietExact = lastTouch === null ? Infinity : (Date.now() - lastTouch) / 86400_000;
+      if (daysQuietExact <= cl.cadence_days) continue;
+      daysQuiet = lastTouch === null ? cl.cadence_days + 1 : Math.floor(daysQuietExact);
+    }
 
-    const { data: existing } = await c
+    let { data: existing } = await c
       .from("attention_items")
       .select("id, nudge_level, created_at, ref")
       .eq("kind", "silent_client")
       .is("resolved_at", null)
       .contains("ref", { client_id: cl.id })
       .limit(1);
+    // THE CUTOVER. An item opened while the sweep read the brain's table is
+    // keyed on the BRAIN's client id; the OS's id for the same client is a
+    // different uuid. Without this second look the first OS sweep would open a
+    // duplicate item for every client already being nudged. Matched on the
+    // name the item was opened under, OS branch only.
+    if (!existing?.length && source === "os") {
+      ({ data: existing } = await c
+        .from("attention_items")
+        .select("id, nudge_level, created_at, ref")
+        .eq("kind", "silent_client")
+        .is("resolved_at", null)
+        .contains("ref", { client: cl.name })
+        .limit(1));
+    }
 
     if (existing?.length) {
       // Escalation, not duplication (04 §4). One level per 24h since the
@@ -105,6 +199,10 @@ export async function runPulseSweep(force = false): Promise<PulseResult> {
 
     // Context: recent touches + open work, so the item carries WHAT to touch
     // base about (04 §3). Client data is wrapped as untrusted content.
+    // ON THE OS BRANCH these reads are keyed on the OS's client id, which the
+    // brain's touches/tasks tables do not carry — so the draft is written from
+    // "(no logged touches)" until the OS contract carries touch history. Stated,
+    // not hidden: the nudge is right about WHO, thinner about WHAT.
     const [{ data: touches }, { data: openTasks }, { data: openJobs }] = await Promise.all([
       c.from("touches").select("channel, summary, at").eq("client_id", cl.id).order("at", { ascending: false }).limit(3),
       c.from("tasks").select("title, due_at").eq("client_id", cl.id).is("done_at", null).limit(5),
@@ -129,7 +227,7 @@ export async function runPulseSweep(force = false): Promise<PulseResult> {
     if (!draft) {
       // LLM hiccup: do NOT insert an empty item — the dedupe rule would
       // suppress this client forever (review C15). Next sweep retries.
-      console.warn(`[pulse] draft generation failed for ${cl.name}; will retry next sweep`);
+      console.warn("[pulse] draft generation failed for one client; will retry next sweep");
       continue;
     }
 
@@ -142,7 +240,7 @@ export async function runPulseSweep(force = false): Promise<PulseResult> {
       .from("attention_items")
       .insert({
         kind: "silent_client",
-        ref: { client_id: cl.id, client: cl.name, days_quiet: daysQuiet, draft },
+        ref: { client_id: cl.id, client: cl.name, days_quiet: daysQuiet, draft, source },
         message: message || `${cl.name}: ${daysQuiet} days quiet — update drafted.`,
         nudge_level: 1,
       })
@@ -176,6 +274,6 @@ export async function runPulseSweep(force = false): Promise<PulseResult> {
     }
   }
 
-  await c.from("runs").insert({ job: "pulse_sweep", ok: true, detail: { quiet, escalated, pushed } });
-  return { ok: true, quiet: quiet.map(({ client, daysQuiet }) => ({ client, daysQuiet })), escalated, pushed };
+  await c.from("runs").insert({ job: "pulse_sweep", ok: true, detail: { quiet, escalated, pushed, source } });
+  return { ok: true, quiet: quiet.map(({ client, daysQuiet }) => ({ client, daysQuiet })), escalated, pushed, source };
 }

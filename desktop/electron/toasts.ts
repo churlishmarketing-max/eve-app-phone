@@ -19,6 +19,7 @@ import { Notification } from "electron";
 import { windowsHidden } from "./config.js";
 import { isQuietHours } from "./quiet.js";
 import { deckFocused, focusDeck } from "./windows.js";
+import { isOsUrl, openOsWindow } from "./os-window.js";
 
 /** Decisions are logged, never the payload body — a toast can carry client copy. */
 function log(kind: ToastKind, item: ToastItem, outcome: string): void {
@@ -31,6 +32,12 @@ export interface ToastItem {
   id: string;
   title?: string;
   body?: string;
+  /**
+   * ONE ICON (Step 10): an absolute Churlish OS URL this item points at. A
+   * click opens the OS window there instead of the deck — the phone's push
+   * rule, on the desk. Absent (today's confirms and tripwires) = the deck.
+   */
+  link?: string;
 }
 
 const TOASTABLE = new Set<ToastKind>(["red_confirm", "tripwire"]);
@@ -72,7 +79,9 @@ export function notify(kind: ToastKind, item: ToastItem, at: Date = new Date()):
   });
   // Click focuses the deck on the item (handoff §7.3: "toast clicks focus the
   // deck on the item"). Pane-focus routing is S2/S3's; the focus is ours.
-  n.on("click", () => focusDeck());
+  // ONE ICON: an item that names an OS page opens the OS window on it.
+  const link = item.link;
+  n.on("click", () => (isOsUrl(link) ? openOsWindow(link) : focusDeck()));
   n.show();
   log(kind, item, "fired");
   return { fired: true };

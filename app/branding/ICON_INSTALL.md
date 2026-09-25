@@ -46,3 +46,19 @@ not the launcher icon or the notification's large icon.
 
 Android launchers cache icons hard. The versionCode bump (→10) usually forces a
 refresh on reinstall; if the old icon lingers, restart the launcher (or reboot).
+
+## 2026-09-25 — the launcher icon is the OS's now (One House Step 10, "One icon")
+
+The app is "Churlish OS" on the home screen; EVE is the assistant inside it. The
+launcher art is the OS's own C/OS mark, taken from the OS repo's
+`public/icons/` (copied into `os-icon/source/`) and pre-sized into
+`os-icon/res/mipmap-{mdpi..xxxhdpi}/` under the SAME four file names as above
+(`ic_launcher`, `ic_launcher_round`, `ic_launcher_foreground`,
+`ic_launcher_background`), so no XML changes. The adaptive foreground is the
+maskable art at 88% on its own #080809 ground, so the square clears a circle
+mask (`os-icon/adaptive/preview_*.png`).
+
+Install it with `npm run os:identity` from `app/` — it copies those PNGs over
+`android/app/src/main/res/`, renames the app in `strings.xml`, and backs up
+every file it replaces to `android/.os-identity-backup/<stamp>/`. The EVE art
+in `eve-icon/` stays here; copying that backup folder back restores her icon.

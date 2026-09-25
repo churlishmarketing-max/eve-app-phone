@@ -896,6 +896,8 @@ export const IPC = {
   summonHide: "eve:summon:hide",
   deckFocus: "eve:deck:focus",
   openExternal: "eve:open:external",
+  // ONE ICON (Step 10): the Churlish OS in its own window. Takes a page KEY.
+  osOpen: "eve:os:open",
   flyoutHide: "eve:flyout:hide",
   // FILING HANDS — invoke. There is deliberately no eve:desk:move.
   deskRoots: "eve:desk:roots",
@@ -933,6 +935,9 @@ export type IpcChannel = (typeof IPC)[keyof typeof IPC];
 // ---------------------------------------------------------------------------
 
 export type Unsub = () => void;
+
+/** The OS pages the desk can open by name (One House Step 10). */
+export type OsPage = "inbox" | "today" | "ledger" | "team" | "eve";
 
 export interface EveBridge {
   config: {
@@ -1041,6 +1046,11 @@ export interface EveBridge {
   deckFocus(): Promise<void>;
   /** Main-side allowlist ONLY — the renderer sends a key, never a URL. */
   openExternal(target: "os" | "gmail"): Promise<{ ok: boolean }>;
+  /**
+   * ONE ICON (Step 10): open or focus the dedicated Churlish OS window on a
+   * page. A key, never a URL — main builds the address (electron/os-window.ts).
+   */
+  openOs(page?: OsPage): Promise<{ ok: boolean }>;
   /** Hides the flyout window if one exists; no-ops safely before S4 creates it. */
   flyoutHide(): Promise<void>;
   ping(): Promise<PingResult>;

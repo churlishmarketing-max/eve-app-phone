@@ -39,6 +39,19 @@ export async function osTool(
   input: Record<string, unknown> = {},
   confirmed = false,
 ): Promise<string> {
+  return (await osToolData(tool, input, confirmed)).result;
+}
+
+// One House 4c (4.6): the same call, with the OS's `data` beside the prose.
+// The house tools answer `{ ok, result, data }` — `result` is the sentence she
+// relays, `data` is the numbers a job computes on (quiet_clients' roster). osTool
+// above is this minus `data`, so every existing caller is byte-identical. `data`
+// is whatever object the OS sent, or null — the CALLER shape-checks it.
+export async function osToolData(
+  tool: string,
+  input: Record<string, unknown> = {},
+  confirmed = false,
+): Promise<{ result: string; data: Record<string, unknown> | null }> {
   const token = process.env.CHURLISH_OS_TOKEN;
   if (!token) throw new OsNotConnectedError();
   const ac = new AbortController();
@@ -50,12 +63,112 @@ export async function osTool(
       body: JSON.stringify({ tool, input, ...(confirmed ? { confirmed: true } : {}) }),
       signal: ac.signal,
     });
-    const j = (await r.json().catch(() => ({}))) as { ok?: boolean; result?: string; error?: string };
+    const j = (await r.json().catch(() => ({}))) as { ok?: boolean; result?: string; data?: unknown; error?: string };
     if (!r.ok || !j.ok) throw new Error(j.error || `OS answered ${r.status}`);
-    return j.result ?? "";
+    const data = j.data && typeof j.data === "object" && !Array.isArray(j.data) ? (j.data as Record<string, unknown>) : null;
+    return { result: j.result ?? "", data };
   } finally {
     clearTimeout(deadline);
   }
+}
+
+// ---- the OS sweep, for the 07:00 brief (One House Step 4) ----
+// GET /api/eve/sweep on the OS (bearer = this same token) answers
+// { ok, ran_at: ISO | null, needs_you: number | null }: when the newest
+// house.sweep / house.sweep_ran Ledger line was written, and how many open
+// needs-you Ledger lines the OS holds. No token throws OsNotConnectedError
+// like osTool; an unreachable OS throws its reason.
+export interface OsSweep {
+  ran_at: string | null;
+  needs_you: number | null;
+}
+
+export async function osSweep(): Promise<OsSweep> {
+  const token = process.env.CHURLISH_OS_TOKEN;
+  if (!token) throw new OsNotConnectedError();
+  const r = await fetch(`${OS_URL}/api/eve/sweep`, {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const j = (await r.json().catch(() => ({}))) as { ok?: boolean; ran_at?: unknown; needs_you?: unknown; error?: string };
+  if (!r.ok || !j.ok) throw new Error(j.error || `OS answered ${r.status}`);
+  return {
+    ran_at: typeof j.ran_at === "string" ? j.ran_at : null,
+    needs_you: typeof j.needs_you === "number" && Number.isFinite(j.needs_you) ? j.needs_you : null,
+  };
+}
+
+// ---- the OS event feed (One House Step 4c · 4.3 / 4.4) ----
+// GET /api/eve/events?since=<cursor>&limit=<n> on the OS (bearer = this same
+// token) answers
+//   { ok: true, cursor: string, events: [{ id, at (ISO), kind, title,
+//     detail: string | null, link: "/inbox" | "/ledger" | …, needs_you: boolean,
+//     client_id: string | null }] }
+// `since` omitted or empty → the OS answers the last 24 h. The cursor is OPAQUE:
+// it is passed back verbatim and never parsed here. An event that does not match
+// the shape is DROPPED (counted in `dropped`), never repaired — the cursor still
+// moves past it, because the OS already has. Titles and details are third-party
+// text (client names, email subjects) and are never logged by this module.
+export interface OsEvent {
+  id: string;
+  at: string;
+  kind: string;
+  title: string;
+  detail: string | null;
+  link: string;
+  needs_you: boolean;
+  client_id: string | null;
+}
+
+export interface OsEventsPage {
+  cursor: string;
+  events: OsEvent[];
+  dropped: number;
+}
+
+export const OS_EVENTS_MAX_LIMIT = 200;
+
+function asOsEvent(v: unknown): OsEvent | null {
+  if (!v || typeof v !== "object") return null;
+  const e = v as Record<string, unknown>;
+  const str = (k: string) => typeof e[k] === "string" && (e[k] as string).length > 0;
+  if (!str("id") || !str("at") || !str("kind") || typeof e.title !== "string" || !str("link")) return null;
+  if (typeof e.needs_you !== "boolean") return null;
+  if (e.detail !== null && e.detail !== undefined && typeof e.detail !== "string") return null;
+  if (e.client_id !== null && e.client_id !== undefined && typeof e.client_id !== "string") return null;
+  if (Number.isNaN(new Date(e.at as string).getTime())) return null;
+  return {
+    id: e.id as string,
+    at: e.at as string,
+    kind: e.kind as string,
+    title: e.title as string,
+    detail: typeof e.detail === "string" ? e.detail : null,
+    link: e.link as string,
+    needs_you: e.needs_you as boolean,
+    client_id: typeof e.client_id === "string" ? e.client_id : null,
+  };
+}
+
+export async function osEventsSince(cursor: string | null, limit = 50): Promise<OsEventsPage> {
+  const token = process.env.CHURLISH_OS_TOKEN;
+  if (!token) throw new OsNotConnectedError();
+  const n = Math.min(OS_EVENTS_MAX_LIMIT, Math.max(1, Math.floor(Number.isFinite(limit) ? limit : 50)));
+  const qs = new URLSearchParams();
+  if (cursor) qs.set("since", cursor);
+  qs.set("limit", String(n));
+  const r = await fetch(`${OS_URL}/api/eve/events?${qs.toString()}`, {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const j = (await r.json().catch(() => ({}))) as { ok?: boolean; cursor?: unknown; events?: unknown; error?: string };
+  if (!r.ok || !j.ok) throw new Error(j.error || `OS answered ${r.status}`);
+  if (typeof j.cursor !== "string") throw new Error("OS events answer carried no cursor");
+  const raw = Array.isArray(j.events) ? j.events : [];
+  const events = raw.map(asOsEvent).filter((e): e is OsEvent => e !== null);
+  // An EMPTY cursor is the OS saying "nothing to point at yet" (no `since` and
+  // a quiet 24 h, or the Ledger not applied) — not an error. The caller's own
+  // cursor stands, so the pull neither moves nor primes on it.
+  return { cursor: j.cursor || cursor || "", events, dropped: raw.length - events.length };
 }
 
 // ---- ambient board snapshot (the "seamless OS" path) ----

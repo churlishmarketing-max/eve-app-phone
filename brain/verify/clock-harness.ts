@@ -682,7 +682,7 @@ async function main() {
     // SOURCE: every reader that pulls third-party text closes the latch. The
     // three above are proven behaviourally; the mail and OS readers are proven
     // here by inspection because exercising them would touch his real mailbox.
-    const readers = ["gmail_unread", "gmail_search", "calendar_view", "read_texts", "read_notifications", "os_board", "os_clients", "os_command", "desk_scan"];
+    const readers = ["gmail_unread", "gmail_search", "calendar_view", "read_texts", "read_notifications", "os_board", "os_clients", "os_command", "os_inbox_summary", "os_events_since", "desk_scan"];
     const chunks = CONNECTORS_SRC.split(/\n      tool\(\n/);
     for (const name of readers) {
       const chunk = chunks.find((c) => c.startsWith(`        "${name}",`));

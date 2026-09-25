@@ -323,7 +323,7 @@ async function main() {
     const noAuthSpeak = await speak({ text: "hi" }, undefined, false);
     ok("V1.1", noAuthPoll.status === 401 && relayState().worker === null, `poll without the bearer → ${noAuthPoll.status}, and no status was recorded`);
     ok("V1.2", noAuthSpeak.status === 401, `speak without the bearer → ${noAuthSpeak.status}`);
-    const bearerAt = INDEX_SRC.indexOf("timingSafeEqual(auth, TOKEN_BUF)");
+    const bearerAt = INDEX_SRC.indexOf("authorizeBrainRequest(req.method, req.path");
     const mountAt = INDEX_SRC.indexOf("mountVoiceRoutes(app)");
     ok("V1.3", bearerAt > 0 && mountAt > bearerAt, `SOURCE: index.ts mounts the voice routes AFTER the global bearer middleware (bearer @${bearerAt}, mount @${mountAt})`);
     ok(

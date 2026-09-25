@@ -1,6 +1,6 @@
 import "./env.js";
 import express from "express";
-import { randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
@@ -11,10 +11,11 @@ import { saveToken, isPushAllowed } from "./push.js";
 import { runMorningBrief } from "./brief.js";
 import { runDistill } from "./distill.js";
 import { runPulseSweep } from "./pulse.js";
+import { runOsEventsPull } from "./os-events.js";
 import { runCapture } from "./capture.js";
 import { buildState } from "./state.js";
 import { backfillEmbeddings } from "./memory.js";
-import { startSchedulers } from "./schedule.js";
+import { startSchedulers, schedulersGate } from "./schedule.js";
 import { resolveConfirm, getPending } from "./confirm.js";
 import { deskFromBody, deskRefusalFromBody } from "./desk.js";
 import { imageFromBody } from "./image.js";
@@ -24,6 +25,8 @@ import { probePictureTaintSchema, pictureTaintReady } from "./taint.js";
 import { probeDurableOriginSchema, durableOriginReady } from "./durable.js";
 import { addText, addNotification } from "./senses.js";
 import { getHealthConnectorStatus } from "./connectors.js";
+import { notesReady } from "./notes.js";
+import { discordBanner } from "./discord.js";
 import { runDispatch, probeDispatchSchema, dispatchReady, settleJobFromConfirm } from "./dispatch.js";
 import { runFloorCheck, runCloseout, runWeekPreview, fireTripwire, runRoutineRiskCheck } from "./proactive.js";
 import { tickRoutine, untickRoutine, createRoutine, archiveRoutine, actOnAttention, type AttentionAction } from "./ops.js";
@@ -41,6 +44,8 @@ import { registryCounts } from "./registry.js";
 import { corpusState } from "./corpus.js";
 import { rotateLook, initRotationConfig } from "./rotation.js";
 import { stamp, getStamp } from "./health.js";
+import { authorizeBrainRequest } from "./os-ticket.js";
+import { corsPolicy, corsAllows, corsBanner, noteRefusedOrigin } from "./cors.js";
 // R1 · the conversation key is request body — shape-checked before it becomes
 // the id every taint question is asked on (untrusted.ts).
 import { cleanConversationId } from "./untrusted.js";
@@ -99,10 +104,22 @@ app.use((err: unknown, _req: express.Request, res: express.Response, next: expre
   return next(err);
 });
 
-// CORS — the app (Vite dev :5173, or the Capacitor WebView) calls this from a
-// different origin. The bearer token is the real gate; origin is permissive.
+// CORS — the app (Vite dev :5173, or the Capacitor WebView) and now the OS's
+// browser (churlishos.app, carrying an OS ticket) call this from a different
+// origin. ONE HOUSE 4c (4.1): an ALLOW-LIST, no longer a mirror of whatever
+// Origin arrived. An origin that is not on it gets NO Access-Control-Allow-Origin
+// (never `*`) and one console.warn naming the origin, once per process. No
+// Origin header (server-to-server, curl, the Electron main process) is untouched.
+// The bearer / ticket below is still the gate; this decides which PAGES may read
+// the answer. src/cors.ts has the list and where each entry came from.
+const CORS = corsPolicy(process.env.EVE_ALLOWED_ORIGINS);
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader("Vary", "Origin");
+    if (corsAllows(origin, CORS, req.headers.host)) res.setHeader("Access-Control-Allow-Origin", origin);
+    else noteRefusedOrigin(origin);
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   // X-EVE-Voice-Accept: the voice relay's opt-in (voice-relay.ts) — without it
   // here the WebView's preflight would refuse the phone's /voice/speak outright.
@@ -126,21 +143,28 @@ if (!TOKEN) {
 // and wardrobe images (<img> tags can't send Authorization; portraits are
 // low-sensitivity on a single-user LAN) — 02_ARCHITECTURE §3, §7.
 // timing-safe comparison per review C32.
-const TOKEN_BUF = Buffer.from(`Bearer ${TOKEN}`);
+//
+// ONE HOUSE 4c (4.1) — AND BESIDE IT, THE OS TICKET. On exactly two routes —
+// POST /chat and GET /state (never /confirm: cards resolve only through the
+// OS's own server, the Inbox's recorded one-tap door) — a short-lived
+// `Bearer os1.<exp>.<nonce>.<sig>` signed with this same token is accepted too,
+// so the OS's browser can talk to her without ever holding the key
+// (src/os-ticket.ts has the format and the reasons). Everywhere else a ticket is
+// just a wrong header: the phone and desktop routes stay bearer-only. A refused
+// ticket is the same bare 401 as a wrong bearer, and NOTHING about either is
+// logged — not the header, not the reason.
 app.use((req, res, next) => {
   const openWardrobe = req.method === "GET" && req.path.startsWith("/wardrobe");
   if (req.path === "/health" || req.path === "/console" || openWardrobe) return next();
-  const auth = Buffer.from(req.headers.authorization || "");
-  if (auth.length !== TOKEN_BUF.length || !timingSafeEqual(auth, TOKEN_BUF)) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  const verdict = authorizeBrainRequest(req.method, req.path, req.headers.authorization, TOKEN, Math.floor(Date.now() / 1000));
+  if (!verdict.ok) return res.status(401).json({ error: "unauthorized" });
   next();
 });
 
 // Throwaway dev console for testing her voice in a browser. Not the app —
 // the real shell is the eve-app-demo.jsx port. The token is NEVER embedded
 // (review C29: any website could fetch this page cross-origin via the
-// permissive CORS and read the token out of it) — paste it once; the page
+// CORS allow-list — same-origin is on it — and read the token out of it) — paste it once; the page
 // keeps it in localStorage.
 app.get("/console", (_req, res) => {
   const html = readFileSync(path.join(here, "..", "public", "console.html"), "utf8");
@@ -629,6 +653,9 @@ app.post("/job", async (req, res) => {
       return res.json(await fireTripwire(message, data, f));
     }
     if (job === "embed_backfill") return res.json(await backfillEmbeddings());
+    // One House 4c — the minute OS pull, by hand. force skips the quiet-hours hold.
+    // The answer is counts and an outcome only; no title ever rides it.
+    if (job === "os_events") return res.json(await runOsEventsPull({ force: f }));
     if (job === "wardrobe_rotate") {
       const slot = ["morning", "evening", "night"].includes(data?.slot) ? data.slot : "morning";
       return res.json(await rotateLook(slot as "morning" | "evening" | "night"));
@@ -829,8 +856,22 @@ void initRotationConfig();
 // The state of the switch, in the boot log, so it is readable from a Railway
 // deploy log without opening the source or curling anything.
 console.log(intakeBanner());
+// And the CORS allow-list (4.1), for the same reason: "which pages can read her
+// answers" is answerable from the deploy log. Origins only — never a token.
+console.log(corsBanner(CORS, !!(process.env.EVE_ALLOWED_ORIGINS ?? "").trim()));
+// Both Discord channels in one line: the notebook (#eve-notes, her save_note)
+// and the alerts mirror (#eve-alerts, every push of an enabled kind). On/off
+// and the kind list only — a webhook URL is a credential and is never printed.
+console.log(discordBanner(notesReady()));
 
 app.listen(PORT, () => {
   console.log(`EVE brain listening on :${PORT}`);
-  startSchedulers();
+  // startClock() is armed inside startSchedulers(), so one gate holds both.
+  const gate = schedulersGate();
+  if (gate.on) {
+    console.log(`[schedulers] ON — ${gate.why}`);
+    startSchedulers();
+  } else {
+    console.log(`[schedulers] OFF — ${gate.why}. No crons, no unit clock on this brain.`);
+  }
 });

@@ -7,6 +7,10 @@
 // lives on the device now (src/tokenStore.ts).
 interface ImportMetaEnv {
   readonly VITE_BRAIN_URL?: string;
+  // The Churlish OS base URL for the OS tab and OS push links (One House
+  // Step 10). Not a secret — the OS is behind its own login. Defaults to
+  // https://churlishos.app when unset (src/os.ts).
+  readonly VITE_CHURLISH_OS_URL?: string;
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;
