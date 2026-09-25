@@ -47,7 +47,9 @@ export const DEFAULT_ALERT_KINDS: readonly string[] = [
   "os_event",
 ];
 /** Kinds the per-kind rate guard never holds back. */
-const UNLIMITED: ReadonlySet<string> = new Set(["brief", "closeout"]);
+// os_event is already batched by the minute pull (one push per pull, held
+// through quiet hours), so the guard would only ever drop a real batch.
+const UNLIMITED: ReadonlySet<string> = new Set(["brief", "closeout", "os_event"]);
 
 function webhook(): string | undefined {
   return process.env.DISCORD_ALERTS_WEBHOOK_URL || undefined;

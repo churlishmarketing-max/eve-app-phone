@@ -242,20 +242,23 @@ async function main() {
     let fake = 1_800_000_000_000;
     Date.now = () => fake;
     try {
-      const a = await d.mirrorToDiscord("os_event", "EVE · THE OS", "one", null);
+      const a = await d.mirrorToDiscord("silent_client", "EVE · PULSE", "one", null);
       fake += 30_000;
-      const b = await d.mirrorToDiscord("os_event", "EVE · THE OS", "two", null);
-      ok("D5.1", a.outcome === "sent" && b.outcome === "rate-limited" && calls.length === 1, `os_event twice in 30 s → ${a.outcome}, ${b.outcome} (${calls.length} post)`);
+      const b = await d.mirrorToDiscord("silent_client", "EVE · PULSE", "two", null);
+      ok("D5.1", a.outcome === "sent" && b.outcome === "rate-limited" && calls.length === 1, `silent_client twice in 30 s → ${a.outcome}, ${b.outcome} (${calls.length} post)`);
       const c = await d.mirrorToDiscord("tripwire", "EVE · TRIPWIRE", "three", null);
       ok("D5.2", c.outcome === "sent" && calls.length === 2, "another kind in the same window still posts — the guard is per kind");
       fake += 30_000;
-      const e = await d.mirrorToDiscord("os_event", "EVE · THE OS", "four", null);
-      ok("D5.3", e.outcome === "sent" && calls.length === 3, `60 s after the first, os_event posts again (${e.outcome})`);
+      const e = await d.mirrorToDiscord("silent_client", "EVE · PULSE", "four", null);
+      ok("D5.3", e.outcome === "sent" && calls.length === 3, `60 s after the first, silent_client posts again (${e.outcome})`);
       const f1 = await d.mirrorToDiscord("brief", "EVE", "b1", null);
       const f2 = await d.mirrorToDiscord("brief", "EVE", "b2", null);
       const g1 = await d.mirrorToDiscord("closeout", "EVE · CLOSE-OUT", "c1", null);
       const g2 = await d.mirrorToDiscord("closeout", "EVE · CLOSE-OUT", "c2", null);
       ok("D5.4", [f1, f2, g1, g2].every((r) => r.outcome === "sent") && calls.length === 7, "brief and closeout are never held by the guard");
+      const o1 = await d.mirrorToDiscord("os_event", "EVE · THE OS", "o1", null);
+      const o2 = await d.mirrorToDiscord("os_event", "EVE · THE OS", "o2", null);
+      ok("D5.4b", o1.outcome === "sent" && o2.outcome === "sent" && calls.length === 9, "os_event is never held either — the minute pull already batches it, so every OS batch reaches Discord");
       // Two in the same tick: the stamp is taken before any await.
       fake += 120_000;
       const [h1, h2] = await Promise.all([d.mirrorToDiscord("approval", "EVE", "x", null), d.mirrorToDiscord("approval", "EVE", "y", null)]);
