@@ -5,6 +5,7 @@ import { runPulseSweep } from "./pulse.js";
 import { runFloorCheck, runCloseout, runWeekPreview, runRoutineRiskCheck } from "./proactive.js";
 import { rotateLook } from "./rotation.js";
 import { startClock } from "./clock.js";
+import { startOsEventsPull } from "./os-events.js";
 import { stamp } from "./health.js";
 
 // Brandon is Central time. Same fallback as context.ts — a missing EVE_TZ
@@ -141,6 +142,10 @@ export function startSchedulers(): void {
   // each due row to dispatchUnit (clock.ts). The ten above are unchanged: this
   // adds a drain beside them, it does not reschedule any of them.
   startClock();
+  // ONE HOUSE 4c (4.3/4.4) — the minute OS pull. Armed here so it lives behind
+  // the same gate as every cron above: a laptop boot never pulls or pushes.
+  // Without CHURLISH_OS_TOKEN it arms nothing and logs that once (os-events.ts).
+  startOsEventsPull();
   console.log(
     `[schedule] armed (${TZ}): 07:00 brief · 07:14/18:22/22:43 wardrobe · 11:45 floor (wk) · 12:30 pulse · 17:30 closeout · 20:00 routines · Sun 19:00 preview · 02:00 distill; quiet 21:30–06:30`,
   );

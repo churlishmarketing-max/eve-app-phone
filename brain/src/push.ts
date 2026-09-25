@@ -83,6 +83,12 @@ export interface PushData {
   kind: string;
   attention_id: string;
   deeplink: string;
+  /**
+   * One House 4c: an explicit OS page for this push, absolute. Beats the
+   * OS_PAGE_BY_KIND table — the OS event pull (os-events.ts) opens the page the
+   * event itself names (/inbox, /ledger, …), which no per-kind table can know.
+   */
+  link?: string;
 }
 export interface SendPushArgs {
   title: string;
@@ -131,14 +137,18 @@ export function isPushAllowed(): { allowed: boolean; why: string } {
 // Current API is FCM HTTP v1 via the Admin SDK (legacy HTTP API shut down 2024).
 export async function sendPush(token: string, opts: SendPushArgs): Promise<string> {
   const { title, body, channelId, data } = opts;
-  const link = osLinkFor(data.kind);
+  const link = data.link ?? osLinkFor(data.kind);
   const gate = isPushAllowed();
   if (!gate.allowed) {
     // Dev runs stay fully observable: the exact notification is printed instead
     // of delivered. The return is the same shape a real send gives (the message
     // id) but EMPTY, so `!!id` stays false and no caller can read a blocked
     // push as a sent one.
-    console.log(`[push] BLOCKED (dev) would have sent: ${title} | ${body} | ${data.deeplink}${link ? ` | ${link}` : ""}`);
+    //
+    // EXCEPT an os_event body (One House 4c): it is built from OS event TITLES —
+    // client names, email subjects — and those are never logged. Its length is.
+    const shown = data.kind === "os_event" ? `(${body.length} chars, titles not logged)` : body;
+    console.log(`[push] BLOCKED (dev) would have sent: ${title} | ${shown} | ${data.deeplink}${link ? ` | ${link}` : ""}`);
     return "";
   }
   const message: Message = {

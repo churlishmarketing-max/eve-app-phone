@@ -325,6 +325,7 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.os_board": { verdict: "exempt", why: "read-only — OS rows carry client-authored names and notes; closes the latch", reader: true },
   "eve_hands.os_clients": { verdict: "exempt", why: "read-only — client names, emails and notes are third-party text; closes the latch", reader: true },
   "eve_hands.desk_scan": { verdict: "exempt", why: "read-only — filenames are chosen by whoever made the file; closes the latch", reader: true },
+  "eve_hands.os_events_since": { verdict: "exempt", why: "read-only — the OS event feed (GET /api/eve/events): event titles carry client names and email subjects (third-party text), so it closes the latch and records the conversation taint before the text comes back. It writes nothing on either shore; the cursor is echoed, not stored", reader: true },
   "eve_hands.os_inbox_summary": { verdict: "exempt", why: "read-only — Inbox titles carry client names, email subjects and Cowork titles (third-party text); closes the latch", reader: true },
 
   // ---- THE TWO THE MERGE CAUGHT --------------------------------------------

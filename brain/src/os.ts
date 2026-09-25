@@ -84,6 +84,76 @@ export async function osSweep(): Promise<OsSweep> {
   };
 }
 
+// ---- the OS event feed (One House Step 4c · 4.3 / 4.4) ----
+// GET /api/eve/events?since=<cursor>&limit=<n> on the OS (bearer = this same
+// token) answers
+//   { ok: true, cursor: string, events: [{ id, at (ISO), kind, title,
+//     detail: string | null, link: "/inbox" | "/ledger" | …, needs_you: boolean,
+//     client_id: string | null }] }
+// `since` omitted or empty → the OS answers the last 24 h. The cursor is OPAQUE:
+// it is passed back verbatim and never parsed here. An event that does not match
+// the shape is DROPPED (counted in `dropped`), never repaired — the cursor still
+// moves past it, because the OS already has. Titles and details are third-party
+// text (client names, email subjects) and are never logged by this module.
+export interface OsEvent {
+  id: string;
+  at: string;
+  kind: string;
+  title: string;
+  detail: string | null;
+  link: string;
+  needs_you: boolean;
+  client_id: string | null;
+}
+
+export interface OsEventsPage {
+  cursor: string;
+  events: OsEvent[];
+  dropped: number;
+}
+
+export const OS_EVENTS_MAX_LIMIT = 200;
+
+function asOsEvent(v: unknown): OsEvent | null {
+  if (!v || typeof v !== "object") return null;
+  const e = v as Record<string, unknown>;
+  const str = (k: string) => typeof e[k] === "string" && (e[k] as string).length > 0;
+  if (!str("id") || !str("at") || !str("kind") || typeof e.title !== "string" || !str("link")) return null;
+  if (typeof e.needs_you !== "boolean") return null;
+  if (e.detail !== null && e.detail !== undefined && typeof e.detail !== "string") return null;
+  if (e.client_id !== null && e.client_id !== undefined && typeof e.client_id !== "string") return null;
+  if (Number.isNaN(new Date(e.at as string).getTime())) return null;
+  return {
+    id: e.id as string,
+    at: e.at as string,
+    kind: e.kind as string,
+    title: e.title as string,
+    detail: typeof e.detail === "string" ? e.detail : null,
+    link: e.link as string,
+    needs_you: e.needs_you as boolean,
+    client_id: typeof e.client_id === "string" ? e.client_id : null,
+  };
+}
+
+export async function osEventsSince(cursor: string | null, limit = 50): Promise<OsEventsPage> {
+  const token = process.env.CHURLISH_OS_TOKEN;
+  if (!token) throw new OsNotConnectedError();
+  const n = Math.min(OS_EVENTS_MAX_LIMIT, Math.max(1, Math.floor(Number.isFinite(limit) ? limit : 50)));
+  const qs = new URLSearchParams();
+  if (cursor) qs.set("since", cursor);
+  qs.set("limit", String(n));
+  const r = await fetch(`${OS_URL}/api/eve/events?${qs.toString()}`, {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const j = (await r.json().catch(() => ({}))) as { ok?: boolean; cursor?: unknown; events?: unknown; error?: string };
+  if (!r.ok || !j.ok) throw new Error(j.error || `OS answered ${r.status}`);
+  if (typeof j.cursor !== "string" || !j.cursor) throw new Error("OS events answer carried no cursor");
+  const raw = Array.isArray(j.events) ? j.events : [];
+  const events = raw.map(asOsEvent).filter((e): e is OsEvent => e !== null);
+  return { cursor: j.cursor, events, dropped: raw.length - events.length };
+}
+
 // ---- ambient board snapshot (the "seamless OS" path) ----
 // The board question was her slowest turn: she had to emit an os_board tool
 // call, wait for the Railway→Vercel→Supabase round-trip, THEN answer — two LLM

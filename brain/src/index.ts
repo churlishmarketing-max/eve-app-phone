@@ -11,6 +11,7 @@ import { saveToken, isPushAllowed } from "./push.js";
 import { runMorningBrief } from "./brief.js";
 import { runDistill } from "./distill.js";
 import { runPulseSweep } from "./pulse.js";
+import { runOsEventsPull } from "./os-events.js";
 import { runCapture } from "./capture.js";
 import { buildState } from "./state.js";
 import { backfillEmbeddings } from "./memory.js";
@@ -659,6 +660,9 @@ app.post("/job", async (req, res) => {
       return res.json(await fireTripwire(message, data, f));
     }
     if (job === "embed_backfill") return res.json(await backfillEmbeddings());
+    // One House 4c — the minute OS pull, by hand. force skips the quiet-hours hold.
+    // The answer is counts and an outcome only; no title ever rides it.
+    if (job === "os_events") return res.json(await runOsEventsPull({ force: f }));
     if (job === "wardrobe_rotate") {
       const slot = ["morning", "evening", "night"].includes(data?.slot) ? data.slot : "morning";
       return res.json(await rotateLook(slot as "morning" | "evening" | "night"));
