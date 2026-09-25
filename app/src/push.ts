@@ -3,6 +3,7 @@ import { PushNotifications } from "@capacitor/push-notifications";
 import type { Channel } from "@capacitor/push-notifications";
 import { BRAIN_URL } from "./config";
 import { brainToken } from "./tokenStore";
+import { pushTarget } from "./os";
 
 // EVE's three independently-tunable Android channels (04_PROACTIVE_ENGINE §5).
 // importance: 5=MAX/heads-up, 3=DEFAULT(sound), 2=LOW(silent). visibility: 1=PUBLIC, 0=PRIVATE.
@@ -15,8 +16,15 @@ const EVE_CHANNELS: Channel[] = [
     importance: 5, visibility: 1, sound: "default", lights: true, lightColor: "#C41E3A", vibration: true },
 ];
 
+export interface PushRoutes {
+  /** An in-app route: eve://today, eve://ops, eve://body. */
+  onDeeplink: (link: string) => void;
+  /** An absolute Churlish OS URL (data.link on the OS host). */
+  onOsLink: (url: string) => void;
+}
+
 // Native-only. On web/dev this is a no-op so the browser build keeps working.
-export async function initPush(onDeeplink: (link: string) => void): Promise<void> {
+export async function initPush(routes: PushRoutes): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
 
   for (const channel of EVE_CHANNELS) {
@@ -39,9 +47,12 @@ export async function initPush(onDeeplink: (link: string) => void): Promise<void
     console.error("push registration error", e.error),
   );
   await PushNotifications.addListener("pushNotificationActionPerformed", (a) => {
-    const n = a.notification;
-    const deeplink = n.link ?? (n.data && n.data.deeplink);
-    if (deeplink) onDeeplink(deeplink);
+    // ONE ICON (Step 10): an OS link in data.link opens the OS inside the
+    // app; everything else routes on `n.link ?? n.data.deeplink` exactly as
+    // it always has. The rule lives in os.ts's pushTarget, in one place.
+    const t = pushTarget(a.notification);
+    if (t?.to === "os") routes.onOsLink(t.url);
+    else if (t?.to === "app") routes.onDeeplink(t.deeplink);
   });
 
   // Android 13+ runtime permission.

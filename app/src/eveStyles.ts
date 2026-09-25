@@ -457,10 +457,11 @@ export const CSS = `
 .acclock .s{ margin-left:auto; font-size:8.5px; letter-spacing:.06em; color:rgba(240,237,232,.35); }
 
 /* ---------- nav ---------- */
-/* SIX tabs now — FLEET joined. At his 420px viewport that is 70px a column;
-   the label drops to 7.5px and loses a little tracking so TODAY and FLEET
-   still fit on one line inside their cell. */
-.nav6{ position:relative; z-index:2; flex:none; display:grid; grid-template-columns:repeat(6,1fr);
+/* SEVEN tabs now — FLEET joined, then OS (Step 10). At a 390px viewport that
+   is ~54px a column; the label is 7.5px mono and the longest word (TODAY,
+   FLEET) is five letters, so every label still fits on one line. The class
+   keeps its old name — renaming it buys nothing and touches every screen. */
+.nav6{ position:relative; z-index:2; flex:none; display:grid; grid-template-columns:repeat(7,1fr);
   background:rgba(7,11,12,.94); border-top:1px solid var(--hair);
   padding:8px 6px calc(14px + env(safe-area-inset-bottom)); }
 .navi{ cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; padding-top:8px;
@@ -470,6 +471,28 @@ export const CSS = `
 .navi.on .tick{ opacity:1; }
 .navi .lb{ font-family:'IBM Plex Mono',monospace; font-size:7.5px; letter-spacing:.1em; color:rgba(240,237,232,.42); }
 .navi.on .lb{ color:var(--tealHi); }
+
+/* ---------- OS (Step 10) — the Churlish OS launcher chrome ---------- */
+.oshero{ margin-top:18px; width:100%; cursor:pointer; text-align:left; display:grid;
+  grid-template-columns:1fr auto; gap:4px 12px; padding:16px; border-radius:12px;
+  background:linear-gradient(180deg, rgba(28,185,200,.10), rgba(12,20,23,.9));
+  border:1px solid rgba(28,185,200,.35); color:var(--cream); font-family:inherit; }
+.oshero .k{ font-size:11px; letter-spacing:.24em; color:var(--ice); }
+.oshero .l{ grid-column:1; font-size:14px; line-height:1.4; color:var(--dim); }
+.oshero .u{ grid-column:1; font-size:8.5px; letter-spacing:.1em; color:rgba(240,237,232,.3); overflow-wrap:anywhere; }
+.oshero .go{ grid-column:2; grid-row:1 / span 3; align-self:center; font-size:10px; letter-spacing:.2em;
+  color:var(--tealHi); padding:8px 10px; border:1px solid rgba(28,185,200,.35); border-radius:6px; }
+.osgrid{ margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.oslink{ cursor:pointer; text-align:left; display:flex; flex-direction:column; gap:5px; padding:12px;
+  border-radius:10px; background:var(--panel); border:1px solid var(--hair2); color:var(--cream); min-width:0; font-family:inherit; }
+.oslink .k{ font-size:9.5px; letter-spacing:.18em; color:rgba(240,237,232,.85); }
+.oslink .l{ font-size:12.5px; line-height:1.35; color:var(--dim); }
+.oslink .u{ font-size:8.5px; letter-spacing:.08em; color:rgba(28,185,200,.6); }
+.oshero:active, .oslink:active{ border-color:var(--tealHi); }
+.osnote .hd{ font-size:9px; letter-spacing:.22em; color:rgba(28,185,200,.85); margin-bottom:6px; }
+.osrow{ display:flex; gap:10px; align-items:baseline; padding:7px 0; border-top:1px solid var(--hair); }
+.osrow .k{ flex:none; width:56px; font-size:8.5px; letter-spacing:.16em; color:rgba(240,237,232,.45); }
+.osrow .v{ font-size:13px; line-height:1.4; color:var(--dim); }
 
 /* ---------- boot (unchanged shell) ---------- */
 .boot{ position:absolute; inset:0; z-index:20; background:var(--bg); display:flex; flex-direction:column;

@@ -61,6 +61,9 @@ import { BRAIN_URL } from "./config";
 // gets — "present, N chars" and never the value itself.
 import { clearToken, tokenFingerprint } from "./tokenStore";
 import { initPush } from "./push";
+// ONE ICON (Step 10): the Churlish OS, opened inside the app. Why a Custom
+// Tab and not an iframe is argued at the top of os.ts.
+import { OS_HOME, OS_HOST, OS_PAGES, openOs, osIsNative, osPageUrl, osPathOf } from "./os";
 import {
   smsSupported,
   checkReadSmsPermissions,
@@ -85,7 +88,7 @@ import { requestAudioFocus, abandonAudioFocus } from "./native/audioFocus";
    ============================================================ */
 
 type EveMode = "idle" | "listening" | "thinking" | "speaking" | "alert";
-type Tab = "today" | "eve" | "fleet" | "ops" | "wire" | "body";
+type Tab = "today" | "eve" | "os" | "fleet" | "ops" | "wire" | "body";
 type Look = { id: string; name: string; img?: string; status: string };
 type Msg = { id: string; role: "eve" | "user"; text: string };
 
@@ -234,6 +237,11 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
   const [booted, setBooted] = useState(false);
   const [bootLeaving, setBootLeaving] = useState(false);
   const [tab, setTab] = useState<Tab>("today");
+  // THE OS TAB. What the app last opened (the Custom Tab does not report where
+  // he navigates inside it, so this is only ever "what WE opened"), and a
+  // line for when the open itself failed.
+  const [osOpened, setOsOpened] = useState<{ path: string; at: Date } | null>(null);
+  const [osNote, setOsNote] = useState<string | null>(null);
   const [mode, setMode] = useState<EveMode>("idle");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [errNote, setErrNote] = useState<string | null>(null);
@@ -399,6 +407,17 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
     else setNotifSense(false); // revoked in settings — show it honestly
   }, [wireSmsListener, wireNotificationListener]);
 
+  // ---- the OS, inside the app (Step 10) ----
+  // Lands on the OS tab and opens the page over it. Back (or the tab's ✕)
+  // comes home to the OS screen, not to wherever he was before.
+  const goOs = useCallback(async (url: string) => {
+    setTab("os");
+    setOsNote(null);
+    const ok = await openOs(url);
+    if (ok) setOsOpened({ path: osPathOf(url), at: new Date() });
+    else setOsNote("COULD NOT OPEN THE OS — TAP A LINK TO TRY AGAIN");
+  }, []);
+
   // ---- the one ambient channel ----
   // /state is a poll and it is the ONLY thing that moves when no chat turn is
   // open. Hoisted out of the boot effect because three other places need to
@@ -415,10 +434,16 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
     const clock = setInterval(() => setNow(new Date()), 30_000);
     const t = timers.current;
     // FCM registration + deeplink routing (native only; no-op in the browser).
-    initPush((deeplink) => {
-      if (deeplink === "eve://today") setTab("today");
-      else if (deeplink === "eve://ops") setTab("ops");
-      else if (deeplink === "eve://body") setTab("body");
+    // A push whose data.link is an OS URL opens the OS tab AT that URL (the
+    // brief -> /today, attention -> /inbox, an os_event -> its own page);
+    // eve:// deeplinks route exactly as before.
+    initPush({
+      onDeeplink: (deeplink) => {
+        if (deeplink === "eve://today") setTab("today");
+        else if (deeplink === "eve://ops") setTab("ops");
+        else if (deeplink === "eve://body") setTab("body");
+      },
+      onOsLink: (url) => void goOs(url),
     });
     // Senses: wire whatever's already granted; re-check with the state poll
     // so flipping notification access in settings lands within a minute.
@@ -1580,6 +1605,59 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
             </div>
           )}
 
+          {/* ---------- OS (One House Step 10 — "One icon") ----------
+              The Churlish OS inside the app. This screen is the chrome; the
+              OS itself opens over it in an in-app browser tab that keeps its
+              own login (see os.ts for why not an iframe). Every link here is
+              built from OS_URL — the screen can only open OS pages. */}
+          {tab === "os" && (
+            <div className="scr" data-screen="os">
+              <div className="eyeb mono">
+                <span>▸ CHURLISH OS</span>
+                <span className="r">{OS_HOST.toUpperCase()}</span>
+              </div>
+              <h1 className="h1v6 disp">OS</h1>
+              <p className="ledev6">The whole house, one tap away. It opens inside the app — sign in once and it stays signed in.</p>
+
+              <button className="oshero hit44" data-os-link="inbox" onClick={() => void goOs(osPageUrl("inbox"))}>
+                <span className="k mono">INBOX</span>
+                <span className="l">{OS_PAGES[0].line}</span>
+                <span className="u mono">{OS_HOST}/inbox</span>
+                <span className="go mono">OPEN ▸</span>
+              </button>
+
+              <div className="osgrid">
+                {OS_PAGES.filter((p) => p.key !== "inbox").map((p) => (
+                  <button key={p.key} className="oslink hit44" data-os-link={p.key} onClick={() => void goOs(osPageUrl(p.key))}>
+                    <span className="k mono">{p.label}</span>
+                    <span className="l">{p.line}</span>
+                    <span className="u mono">{p.path}</span>
+                  </button>
+                ))}
+              </div>
+
+              {osNote && <div className="errline mono" style={{ marginTop: 12 }}>{osNote}</div>}
+              {osOpened && (
+                <div className="caphint mono">
+                  LAST OPENED · {osOpened.path} · {osOpened.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </div>
+              )}
+
+              <div className="card osnote" style={{ marginTop: 14 }}>
+                <div className="hd mono">HOW IT WORKS</div>
+                <div className="osrow"><span className="k mono">LOGIN</span><span className="v">Once, inside the OS. It stays signed in between opens.</span></div>
+                <div className="osrow"><span className="k mono">PUSHES</span><span className="v">A push about the OS opens that OS page here.</span></div>
+                <div className="osrow"><span className="k mono">BACK</span><span className="v">Back or ✕ closes the OS and returns to this screen.</span></div>
+                <div className="osrow"><span className="k mono">EVE</span><span className="v">Tell her what to do on the EVE tab — she runs the fleet from there.</span></div>
+                {!osIsNative() && (
+                  <div className="caphint mono">IN A DESKTOP BROWSER THE OS OPENS IN A NEW TAB. ON THE PHONE IT OPENS IN THE APP.</div>
+                )}
+              </div>
+
+              <div className="footnote mono">one login. one inbox. one tap, one item.</div>
+            </div>
+          )}
+
           {/* ---------- FLEET (P1 · P3) ----------
               The thing this phone knew literally nothing about. There is no
               local list of names here and there never will be: the roster, the
@@ -2394,6 +2472,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
           {([
             ["today", "TODAY"],
             ["eve", "EVE"],
+            ["os", "OS"],
             ["fleet", "FLEET"],
             ["ops", "OPS"],
             ["wire", "WIRE"],
@@ -2402,7 +2481,10 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
             <button
               key={id}
               className={`navi${tab === id ? " on" : ""}`}
-              onClick={() => setTab(id)}
+              // OS on the phone opens the Inbox straight away — that IS the tab.
+              // In a desktop browser (dev, preview) it only shows the screen:
+              // a new browser tab on every nav tap would be noise.
+              onClick={() => (id === "os" && osIsNative() ? void goOs(OS_HOME) : setTab(id))}
               aria-label={lab}
               aria-current={tab === id ? "page" : undefined}
             >
@@ -2415,6 +2497,11 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
               {id === "eve" && (
                 <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5 }}>
                   <circle cx="10" cy="10" r="4.2" /><ellipse cx="10" cy="10" rx="8.5" ry="3.2" transform="rotate(-16 10 10)" />
+                </svg>
+              )}
+              {id === "os" && (
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinejoin: "round" }}>
+                  <rect x="3" y="3" width="14" height="14" rx="1.2" /><path d="M3 6.2h14" strokeWidth={2.2} />
                 </svg>
               )}
               {id === "fleet" && (
