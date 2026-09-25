@@ -14,7 +14,8 @@ const config: CapacitorConfig = {
   appName: "Churlish OS",
   webDir: "dist",
   // WebView background — kills the white flash/frame before CSS paints.
-  backgroundColor: "#070B0C",
+  // Matches the OS reskin's --bg (src/eveStyles.ts OS.bg).
+  backgroundColor: "#080809",
   server: {
     // Serve the app over http:// so calling the http:// brain isn't mixed content.
     androidScheme: "http",

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { PluginListenerHandle } from "@capacitor/core";
-import { CSS } from "./eveStyles";
+import { CSS, OS } from "./eveStyles";
 import {
   streamChat,
   fetchState,
@@ -114,26 +114,29 @@ const CHIPS: Chip[] = [
 ];
 
 // Entity presence meta, straight from his v6 design (dot glyph, label, colors).
+// Palette reskinned onto the OS's terminal red/black system (eveStyles.ts OS) —
+// her old teal identity is retired; --thinking-- alone keeps a non-red (cream)
+// glow so processing still reads differently from listening/speaking/alert.
 const ENT: Record<EveMode, { dot: string; label: string; col: string; aura: string }> = {
-  idle: { dot: "○", label: "IDLE — HOLDING THE ROOM", col: "rgba(28,185,200,.8)", aura: "rgba(0,122,135,.3)" },
-  listening: { dot: "●", label: "LISTENING — GO AHEAD", col: "#1CB9C8", aura: "rgba(28,185,200,.34)" },
-  thinking: { dot: "◐", label: "WORKING THE PROBLEM", col: "#9BEFF7", aura: "rgba(0,122,135,.32)" },
-  speaking: { dot: "●", label: "SPEAKING", col: "#1CB9C8", aura: "rgba(28,185,200,.36)" },
-  alert: { dot: "▲", label: "ALERT — NEEDS YOUR EYES", col: "#C41E3A", aura: "rgba(196,30,58,.32)" },
+  idle: { dot: "○", label: "IDLE — HOLDING THE ROOM", col: `${OS.red}cc`, aura: `${OS.reddim}4d` },
+  listening: { dot: "●", label: "LISTENING — GO AHEAD", col: OS.red, aura: `${OS.red}57` },
+  thinking: { dot: "◐", label: "WORKING THE PROBLEM", col: OS.cream, aura: `${OS.reddim}52` },
+  speaking: { dot: "●", label: "SPEAKING", col: OS.red, aura: `${OS.red}5c` },
+  alert: { dot: "▲", label: "ALERT — NEEDS YOUR EYES", col: OS.red, aura: `${OS.red}52` },
 };
-const ORB_BG = "radial-gradient(circle at 34% 30%, #C9F7FB 0%, #1CB9C8 30%, #007A87 58%, #06272C 100%)";
-const ORB_BG_RED = "radial-gradient(circle at 34% 30%, #F7C9D2 0%, #E0526E 30%, #C41E3A 58%, #2C060D 100%)";
-const ORB_GLOW = "0 0 36px rgba(28,185,200,.5), 0 0 90px rgba(0,122,135,.35), inset 0 0 20px rgba(201,247,251,.35)";
-const ORB_GLOW_RED = "0 0 36px rgba(196,30,58,.5), 0 0 90px rgba(196,30,58,.3), inset 0 0 20px rgba(247,201,210,.35)";
+const ORB_BG = `radial-gradient(circle at 34% 30%, ${OS.cream} 0%, ${OS.red} 30%, ${OS.reddim} 58%, #1a0605 100%)`;
+const ORB_BG_RED = `radial-gradient(circle at 34% 30%, ${OS.redInk} 0%, ${OS.red} 30%, ${OS.red} 58%, #1a0605 100%)`;
+const ORB_GLOW = `0 0 36px ${OS.red}80, 0 0 90px ${OS.reddim}59, inset 0 0 20px ${OS.cream}59`;
+const ORB_GLOW_RED = `0 0 36px ${OS.red}80, 0 0 90px ${OS.red}4d, inset 0 0 20px ${OS.redInk}59`;
 // Version is NOT declared here any more — see src/version.ts. It comes from
 // package.json through a build-time define, which is the same field the
 // Android versionName is to read, so the screen and the package cannot
 // disagree about which build he is holding.
 
-const CORE_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.85), #1CB9C8 40%, #063A42 80%)";
-const ALERT_BG = "radial-gradient(circle at 50% 38%, rgba(240,237,232,.9), #C41E3A 42%, #4A0E1A 78%)";
-const CORE_SHADOW = "0 0 46px rgba(28,185,200,.5), 0 0 110px rgba(0,122,135,.3), inset 0 -8px 22px rgba(0,0,0,.4)";
-const ALERT_SHADOW = "0 0 46px rgba(196,30,58,.55), 0 0 110px rgba(196,30,58,.28), inset 0 -8px 22px rgba(0,0,0,.4)";
+const CORE_BG = `radial-gradient(circle at 50% 38%, ${OS.cream}d9, ${OS.red} 40%, #1a0605 80%)`;
+const ALERT_BG = `radial-gradient(circle at 50% 38%, ${OS.cream}e6, ${OS.red} 42%, #1a0605 78%)`;
+const CORE_SHADOW = `0 0 46px ${OS.red}80, 0 0 110px ${OS.reddim}4d, inset 0 -8px 22px rgba(0,0,0,.4)`;
+const ALERT_SHADOW = `0 0 46px ${OS.red}8c, 0 0 110px ${OS.red}47, inset 0 -8px 22px rgba(0,0,0,.4)`;
 
 const CONV_KEY = "eve.conversationId";
 const WEAR_KEY = "eve.wearing";
@@ -1298,8 +1301,8 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
   // Teal for done, never --green: green is the GREEN autonomy tier on Wire.
   const boxStyle = (on: boolean) =>
     on
-      ? { color: "var(--ice)", borderColor: "rgba(28,185,200,.6)", background: "rgba(28,185,200,.16)" }
-      : { color: "rgba(240,237,232,.28)", borderColor: "rgba(240,237,232,.14)", background: "transparent" };
+      ? { color: "var(--ice)", borderColor: "rgba(230,50,43,.6)", background: "rgba(230,50,43,.16)" }
+      : { color: "rgba(236,232,225,.28)", borderColor: "rgba(236,232,225,.14)", background: "transparent" };
   const checkRowStyle = {
     width: "100%",
     cursor: "pointer",
@@ -1376,8 +1379,8 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
           <span className="erip r3" />
         </>
       )}
-      <div className="ering"><div style={red ? { borderColor: "rgba(196,30,58,.55)", borderBottomColor: "transparent" } : undefined} /></div>
-      <div className="ering2"><div style={red ? { borderColor: "rgba(196,30,58,.4)", borderTopColor: "transparent" } : undefined} /></div>
+      <div className="ering"><div style={red ? { borderColor: "rgba(230,50,43,.55)", borderBottomColor: "transparent" } : undefined} /></div>
+      <div className="ering2"><div style={red ? { borderColor: "rgba(230,50,43,.4)", borderTopColor: "transparent" } : undefined} /></div>
       <div className={`efast${mode === "thinking" ? " on" : ""}`}><div /></div>
       <button
         className="orb"
@@ -1407,7 +1410,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
         <span className="sb">{wearing.name.toUpperCase()}</span>
         <span
           className="morb"
-          style={{ background: red ? ORB_BG_RED : ORB_BG, boxShadow: red ? "0 0 12px rgba(196,30,58,.6)" : "0 0 12px rgba(28,185,200,.6)" }}
+          style={{ background: red ? ORB_BG_RED : ORB_BG, boxShadow: red ? "0 0 12px rgba(230,50,43,.6)" : "0 0 12px rgba(230,50,43,.6)" }}
         />
       </div>
     </div>
@@ -1421,10 +1424,10 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
         <div className="motes" aria-hidden>
           <span style={{ left: "14%", top: "78%", width: 2, height: 2, animation: "floatup 13s linear 0s infinite" }} />
           <span style={{ left: "30%", top: "88%", width: 3, height: 3, opacity: .6, animation: "floatup 17s linear 3s infinite" }} />
-          <span style={{ left: "48%", top: "82%", width: 2, height: 2, background: "rgba(155,239,247,.45)", animation: "floatup 11s linear 6s infinite" }} />
+          <span style={{ left: "48%", top: "82%", width: 2, height: 2, background: "rgba(236,232,225,.45)", animation: "floatup 11s linear 6s infinite" }} />
           <span style={{ left: "63%", top: "90%", width: 2, height: 2, animation: "floatup 15s linear 1.5s infinite" }} />
           <span style={{ left: "78%", top: "80%", width: 3, height: 3, opacity: .5, animation: "floatup 19s linear 8s infinite" }} />
-          <span style={{ left: "88%", top: "86%", width: 2, height: 2, background: "rgba(155,239,247,.35)", animation: "floatup 14s linear 4.5s infinite" }} />
+          <span style={{ left: "88%", top: "86%", width: 2, height: 2, background: "rgba(236,232,225,.35)", animation: "floatup 14s linear 4.5s infinite" }} />
         </div>
 
         {/* ---------- status bar ---------- */}
@@ -1493,7 +1496,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                     {floor ? floor.count : DASH}
                     <em>/{floor ? floor.goal : DASH}</em>
                   </span>
-                  <span style={{ fontSize: 13, color: "rgba(240,237,232,.55)" }}>conversations on the floor</span>
+                  <span style={{ fontSize: 13, color: "rgba(236,232,225,.55)" }}>conversations on the floor</span>
                 </div>
                 {!!floor && (
                   <div className="fbars">
@@ -1545,10 +1548,10 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
               </div>
 
               {/* run her day — the REAL morning brief, not a scripted preview */}
-              <div className="card" style={{ marginTop: 22, borderColor: "rgba(28,185,200,.14)" }}>
+              <div className="card" style={{ marginTop: 22, borderColor: "rgba(230,50,43,.14)" }}>
                 <div className="simhead">
                   <button className="simplay" onClick={runHerDay} disabled={jobBusy || !live.online} aria-label="Run her morning brief now">
-                    <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: "#9BEFF7" }}><path d="M8 5.5l11 6.5-11 6.5z" /></svg>
+                    <svg viewBox="0 0 24 24" style={{ width: 18, height: 18, fill: "#ece8e1" }}><path d="M8 5.5l11 6.5-11 6.5z" /></svg>
                   </button>
                   <div style={{ flex: 1 }}>
                     <div className="simtt disp">Run EVE's day</div>
@@ -1577,7 +1580,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
 
               {/* capture */}
               <div className="card" style={{ marginTop: 22 }}>
-                <div className="mono" style={{ fontSize: 9, letterSpacing: ".22em", color: "rgba(28,185,200,.85)" }}>
+                <div className="mono" style={{ fontSize: 9, letterSpacing: ".22em", color: "rgba(230,50,43,.85)" }}>
                   CAPTURE — ANY DOOR IN
                 </div>
                 <div
@@ -1588,7 +1591,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                   onKeyDown={(e) => { if (e.key === "Enter") setTab("eve"); }}
                 >
                   <span className="ph mono">&gt; brief me — say it, type it, forward it.</span>
-                  <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: "none", stroke: "rgba(28,185,200,.8)", strokeWidth: 1.6, strokeLinecap: "round" }}>
+                  <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: "none", stroke: "rgba(230,50,43,.8)", strokeWidth: 1.6, strokeLinecap: "round" }}>
                     <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" /><path d="M12 18v3" />
                   </svg>
                 </div>
@@ -1654,7 +1657,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                   <div className="brow eve">
                     <div className="bub eve">
                       <div className="bname mono">EVE</div>
-                      <div className="btext" style={{ color: "rgba(240,237,232,.5)" }}>
+                      <div className="btext" style={{ color: "rgba(236,232,225,.5)" }}>
                         Type below, talk, or pick a prompt. Every line is written live — real replies, real memory.
                       </div>
                     </div>
@@ -1669,9 +1672,9 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                           <div className="btext" dangerouslySetInnerHTML={{ __html: mdLite(m.text) }} />
                         ) : mode === "thinking" ? (
                           <div style={{ display: "flex", gap: 5, padding: "3px 0" }}>
-                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1CB9C8", animation: "typedot 1.1s ease-in-out 0s infinite" }} />
-                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1CB9C8", animation: "typedot 1.1s ease-in-out .18s infinite" }} />
-                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#1CB9C8", animation: "typedot 1.1s ease-in-out .36s infinite" }} />
+                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#e6322b", animation: "typedot 1.1s ease-in-out 0s infinite" }} />
+                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#e6322b", animation: "typedot 1.1s ease-in-out .18s infinite" }} />
+                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#e6322b", animation: "typedot 1.1s ease-in-out .36s infinite" }} />
                           </div>
                         ) : (
                           <div className="btext" />
@@ -1740,7 +1743,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                   aria-label="Message EVE"
                 />
                 <button className="sendv6 hit44" onClick={sendText} aria-label="Send">
-                  <svg viewBox="0 0 20 20" style={{ width: 17, height: 17, fill: "none", stroke: "#9BEFF7", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" }}>
+                  <svg viewBox="0 0 20 20" style={{ width: 17, height: 17, fill: "none", stroke: "#ece8e1", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" }}>
                     <path d="M3 10h13" /><path d="M11.5 4.5L17 10l-5.5 5.5" />
                   </svg>
                 </button>
@@ -1753,7 +1756,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                   onClick={micTap}
                   aria-label={recording ? "Stop and send" : "Talk to EVE"}
                 >
-                  <svg viewBox="0 0 24 24" style={{ width: 22, height: 22, fill: "none", stroke: recording ? "#F7C9D2" : "#1CB9C8", strokeWidth: 1.6, strokeLinecap: "round" }}>
+                  <svg viewBox="0 0 24 24" style={{ width: 22, height: 22, fill: "none", stroke: recording ? OS.redInk : OS.red, strokeWidth: 1.6, strokeLinecap: "round" }}>
                     <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" /><path d="M12 18v3" />
                   </svg>
                 </button>
@@ -1972,7 +1975,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                   <div className="divrow">
                     {/* The section header for the RED tier, and 9.5px type —
                         --redInk, not the law hex, same rule as the card below
-                        it. #C41E3A on --bg measured 3.38:1 here. */}
+                        it. #e6322b on --bg measured 3.38:1 here. */}
                     <span className="l" style={{ color: "var(--redInk)" }}>WAITING ON YOUR THUMB — RED</span>
                     <span className="rule" />
                     <span className="r">{cards.length}</span>
@@ -2248,25 +2251,25 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
               </div>
 
               <div className="card rules" style={{ marginTop: 14 }}>
-                <div className="mono" style={{ fontSize: 9, letterSpacing: ".22em", color: "rgba(28,185,200,.85)" }}>
+                <div className="mono" style={{ fontSize: 9, letterSpacing: ".22em", color: "rgba(230,50,43,.85)" }}>
                   AUTONOMY — HOUSE RULES
                 </div>
                 <div className="rulerow">
-                  <span className="dot" style={{ background: "#3EA26E", boxShadow: "0 0 8px rgba(62,162,110,.5)" }} />
-                  <span className="k mono" style={{ color: "#3EA26E" }}>GREEN</span>
+                  <span className="dot" style={{ background: "#3fb97a", boxShadow: "0 0 8px rgba(63,185,122,.5)" }} />
+                  <span className="k mono" style={{ color: "#3fb97a" }}>GREEN</span>
                   <span className="v">Acts, then tells you. Filing, drafts, research, the OS board.</span>
                 </div>
                 <div className="rulerow">
-                  <span className="dot" style={{ background: "#C9A54A", boxShadow: "0 0 8px rgba(201,165,74,.5)" }} />
-                  <span className="k mono" style={{ color: "#C9A54A" }}>YELLOW</span>
+                  <span className="dot" style={{ background: "#c8960a", boxShadow: "0 0 8px rgba(200,150,10,.5)" }} />
+                  <span className="k mono" style={{ color: "#c8960a" }}>YELLOW</span>
                   <span className="v">Drafts, then waits. Anything a client will read.</span>
                 </div>
                 <div className="rulerow">
                   {/* The DOT is the indicator and keeps the law hex; the WORD
-                      beside it is 9px type, so it takes --redInk. #C41E3A on
+                      beside it is 9px type, so it takes --redInk. #e6322b on
                       --panel measured 3.19:1 here — the tier header of the one
                       tier that never moves without him. 3.19 -> 6.82. */}
-                  <span className="dot" style={{ background: "#C41E3A", boxShadow: "0 0 8px rgba(196,30,58,.5)" }} />
+                  <span className="dot" style={{ background: "#e6322b", boxShadow: "0 0 8px rgba(230,50,43,.5)" }} />
                   <span className="k mono" style={{ color: "var(--redInk)" }}>RED</span>
                   <span className="v">Never without you. Money out, sends, anything public.</span>
                 </div>
@@ -2558,7 +2561,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                 onClick={() => pickPlateMode("portrait")}
                 disabled={!wearing?.img}
               >
-                <span className="sw" style={{ borderRadius: 8, background: wearing?.img ? `url(${wearing.img}) center 12%/cover` : "rgba(28,185,200,.2)" }} />
+                <span className="sw" style={{ borderRadius: 0, background: wearing?.img ? `url(${wearing.img}) center 12%/cover` : `${OS.red}33` }} />
                 <span className="k mono">PORTRAIT</span>
                 <span className="s mono">{wearing?.img ? "her face, her look" : "closet loading…"}</span>
               </button>
@@ -2648,39 +2651,39 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
             >
               <span className="tick" />
               {id === "today" && (
-                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinecap: "round" }}>
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#e6322b" : "rgba(236,232,225,.42)", strokeWidth: 1.5, strokeLinecap: "round" }}>
                   <circle cx="10" cy="8.5" r="4" /><path d="M2.5 16.5h15" />
                 </svg>
               )}
               {id === "eve" && (
-                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5 }}>
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#e6322b" : "rgba(236,232,225,.42)", strokeWidth: 1.5 }}>
                   <circle cx="10" cy="10" r="4.2" /><ellipse cx="10" cy="10" rx="8.5" ry="3.2" transform="rotate(-16 10 10)" />
                 </svg>
               )}
               {id === "os" && (
-                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinejoin: "round" }}>
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#e6322b" : "rgba(236,232,225,.42)", strokeWidth: 1.5, strokeLinejoin: "round" }}>
                   <rect x="3" y="3" width="14" height="14" rx="1.2" /><path d="M3 6.2h14" strokeWidth={2.2} />
                 </svg>
               )}
               {id === "fleet" && (
-                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#e6322b" : "rgba(236,232,225,.42)", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
                   <rect x="2.5" y="2.5" width="6" height="6" rx="1.4" /><rect x="11.5" y="2.5" width="6" height="6" rx="1.4" />
                   <rect x="2.5" y="11.5" width="6" height="6" rx="1.4" /><rect x="11.5" y="11.5" width="6" height="6" rx="1.4" />
                 </svg>
               )}
               {id === "ops" && (
-                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinecap: "round" }}>
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#e6322b" : "rgba(236,232,225,.42)", strokeWidth: 1.5, strokeLinecap: "round" }}>
                   <path d="M3 5.5h14" /><path d="M3 10h9" /><circle cx="16" cy="10" r="1.6" /><path d="M3 14.5h12" />
                 </svg>
               )}
               {id === "wire" && (
-                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.4, strokeLinecap: "round" }}>
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#e6322b" : "rgba(236,232,225,.42)", strokeWidth: 1.4, strokeLinecap: "round" }}>
                   <circle cx="4.5" cy="5" r="1.7" /><circle cx="15.5" cy="6.5" r="1.7" /><circle cx="6.5" cy="15" r="1.7" /><circle cx="14.5" cy="14" r="1.7" />
                   <path d="M6 5.7l7.8 0.6" /><path d="M5.2 6.6l1 6.7" /><path d="M8.2 14.6l4.6-0.4" /><path d="M15 8.2l-0.3 4.1" />
                 </svg>
               )}
               {id === "body" && (
-                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#1CB9C8" : "rgba(240,237,232,.42)", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
+                <svg viewBox="0 0 20 20" style={{ width: 19, height: 19, fill: "none", stroke: tab === id ? "#e6322b" : "rgba(236,232,225,.42)", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
                   <path d="M2.5 10h3.4l1.7-4.2 2.5 8.4 1.9-4.2h5.5" />
                 </svg>
               )}

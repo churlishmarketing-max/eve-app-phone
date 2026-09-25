@@ -119,7 +119,7 @@ export async function openOs(url: string = OS_HOME): Promise<boolean> {
     await Browser.open({
       url,
       // Her near-black, so the tab's toolbar reads as part of the app.
-      toolbarColor: "#070B0C",
+      toolbarColor: "#080809",
       presentationStyle: "fullscreen",
     });
     return true;
