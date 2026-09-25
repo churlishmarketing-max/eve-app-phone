@@ -50,7 +50,10 @@ function diff(state: EveState): void {
     if (a.kind !== "tripwire") continue;
     if (!a.id || seenTripwires.has(a.id)) continue;
     seenTripwires.add(a.id);
-    notify("tripwire", { id: a.id, title: "EVE — tripwire", body: a.message });
+    // An item whose ref names an OS page (ref.link) opens it on click; the
+    // toast engine ignores anything that is not an OS URL.
+    const link = typeof a.ref?.link === "string" ? a.ref.link : undefined;
+    notify("tripwire", { id: a.id, title: "EVE — tripwire", body: a.message, ...(link ? { link } : {}) });
   }
 }
 
