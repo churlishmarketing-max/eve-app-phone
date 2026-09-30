@@ -35,6 +35,20 @@ import { db } from "./db.js";
 //      can be thousands of rows, and a count or "first message" read off a
 //      bounded window would be wrong for exactly the thread he uses most.
 //   3. The conversation rows (surface, started_at) in one `in` select.
+//   4. TOP-UP. When the scan stops at SCAN_MAX with fewer than `limit`
+//      conversations (the phone's one thread can fill all 5,000 rows on its
+//      own), the rest come from the conversations table, newest started_at
+//      first, skipping ids the scan found: TOPUP_PAGE rows a page, at most
+//      TOPUP_PAGES pages. Each gets the same stats read (zero messages → left
+//      out) and one more read for its own last message's time. Stats are read
+//      in chunks no bigger than what is still missing, so filling 2 slots
+//      never costs 50 reads. An EXHAUSTED scan (an empty page before SCAN_MAX)
+//      skips the top-up: it has seen every message row, so every conversation
+//      the table could add has zero messages. Every scan-found conversation's
+//      last message is newer than every top-up one's (that is what "not in
+//      the newest 5,000 rows" means), so the two never interleave; among the
+//      top-up ones started_at stands in for recency when choosing which to
+//      read, and the final sort is still by last message.
 
 export const LIST_DEFAULT = 30;
 export const LIST_MAX = 100;
@@ -47,6 +61,10 @@ export const SCAN_PAGE = 1000;
 export const SCAN_MAX = 5000;
 /** How many conversations' counts/previews are read at once. */
 export const STATS_CONCURRENCY = 8;
+/** One top-up page: conversation rows, newest started_at first. */
+export const TOPUP_PAGE = 50;
+/** The most top-up pages one list call will read (≤ TOPUP_PAGE × TOPUP_PAGES rows). */
+export const TOPUP_PAGES = 5;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -90,16 +108,20 @@ export interface ConversationStats {
 }
 
 /**
- * The five reads history needs, and nothing else. The live one is
+ * The seven reads history needs, and nothing else. The live one is
  * supabaseHistoryStore; the harness passes an in-memory one. Every method
  * THROWS on a store error — the route turns that into a 500.
  */
 export interface HistoryStore {
   /** Message rows newest-first (created_at desc, id desc), rows offset..offset+n-1. */
   activityPage(offset: number, n: number): Promise<ActivityRow[]>;
+  /** Conversation rows newest-started first (started_at desc nulls last, id desc), rows offset..offset+n-1. The top-up's source. */
+  recentConversations(offset: number, n: number): Promise<ConversationRow[]>;
   conversations(ids: string[]): Promise<ConversationRow[]>;
   conversation(id: string): Promise<ConversationRow | null>;
   stats(id: string): Promise<ConversationStats>;
+  /** The time of one conversation's newest message (no content), or null when it has none. */
+  lastMessageAt(id: string): Promise<string | null>;
   /** The newest `n` messages of one conversation, newest-first. */
   lastMessages(id: string, n: number): Promise<HistoryMessage[]>;
 }
@@ -217,22 +239,8 @@ async function mapPool<T, R>(items: readonly T[], n: number, fn: (t: T) => Promi
 
 // ---- the two reads ---------------------------------------------------------
 
-/** The newest conversations, newest first. [] when the memory spine is offline. */
-export async function listConversations(
-  limit: number,
-  store: HistoryStore | null = defaultHistoryStore(),
-): Promise<ConversationSummary[]> {
-  if (!store) return [];
-  const want = clampLimit(limit, LIST_DEFAULT, LIST_MAX);
-  const newest = new Map<string, string | null>();
-  for (let offset = 0; offset < SCAN_MAX && newest.size < want; ) {
-    const page = await store.activityPage(offset, Math.min(SCAN_PAGE, SCAN_MAX - offset));
-    if (page.length === 0) break;
-    takeNewest(page, want, newest);
-    // Advance by what came back, not by what was asked for: a store capped
-    // below SCAN_PAGE must not be mistaken for the end of the table.
-    offset += page.length;
-  }
+/** The scan's conversations → candidates: one `in` select for the rows, one stats read each. */
+async function scanCandidates(store: HistoryStore, newest: ReadonlyMap<string, string | null>): Promise<ListCandidate[]> {
   if (newest.size === 0) return [];
   const ids = [...newest.keys()];
   const [rows, stats] = await Promise.all([
@@ -245,6 +253,69 @@ export async function listConversations(
     const s = statsById.get(row.id);
     if (!s) continue;
     candidates.push({ row, lastMessageAt: newest.get(row.id) ?? null, stats: s });
+  }
+  return candidates;
+}
+
+/**
+ * Up to `need` conversations with messages that the scan did not reach, from
+ * the conversations table newest-started first (see step 4 above). Bounded:
+ * at most TOPUP_PAGES pages of TOPUP_PAGE rows, however the store behaves —
+ * a store that ignores the offset is cut off by the page bound, and an id seen
+ * twice is read once.
+ */
+async function topUpCandidates(store: HistoryStore, found: ReadonlySet<string>, need: number): Promise<ListCandidate[]> {
+  const out: ListCandidate[] = [];
+  const seen = new Set(found);
+  for (let page = 0, offset = 0; page < TOPUP_PAGES && out.length < need; page++) {
+    const rows = await store.recentConversations(offset, TOPUP_PAGE);
+    if (rows.length === 0) break;
+    // Advance by what came back, as the scan does.
+    offset += rows.length;
+    const fresh: ConversationRow[] = [];
+    for (const row of rows) {
+      if (typeof row.id !== "string" || !row.id || seen.has(row.id)) continue;
+      seen.add(row.id);
+      fresh.push(row);
+    }
+    for (let i = 0; i < fresh.length && out.length < need; ) {
+      const chunk = fresh.slice(i, i + (need - out.length));
+      i += chunk.length;
+      const got = await mapPool(chunk, STATS_CONCURRENCY, async (row): Promise<ListCandidate | null> => {
+        const stats = await store.stats(row.id);
+        if (!(stats.count > 0)) return null;
+        return { row, lastMessageAt: await store.lastMessageAt(row.id), stats };
+      });
+      for (const c of got) if (c) out.push(c);
+    }
+  }
+  return out;
+}
+
+/** The newest conversations, newest first. [] when the memory spine is offline. */
+export async function listConversations(
+  limit: number,
+  store: HistoryStore | null = defaultHistoryStore(),
+): Promise<ConversationSummary[]> {
+  if (!store) return [];
+  const want = clampLimit(limit, LIST_DEFAULT, LIST_MAX);
+  const newest = new Map<string, string | null>();
+  let exhausted = false;
+  for (let offset = 0; offset < SCAN_MAX && newest.size < want; ) {
+    const page = await store.activityPage(offset, Math.min(SCAN_PAGE, SCAN_MAX - offset));
+    if (page.length === 0) {
+      exhausted = true;
+      break;
+    }
+    takeNewest(page, want, newest);
+    // Advance by what came back, not by what was asked for: a store capped
+    // below SCAN_PAGE must not be mistaken for the end of the table.
+    offset += page.length;
+  }
+  const candidates = await scanCandidates(store, newest);
+  const listed = candidates.filter((c) => c.stats.count > 0).length;
+  if (!exhausted && listed < want) {
+    candidates.push(...(await topUpCandidates(store, new Set(newest.keys()), want - listed)));
   }
   return shapeConversationList(candidates, want);
 }
@@ -332,6 +403,17 @@ export function supabaseHistoryStore(c: SupabaseClient): HistoryStore {
       return (data ?? []) as ActivityRow[];
     },
 
+    async recentConversations(offset, n) {
+      const { data, error } = await c
+        .from("conversations")
+        .select("id, surface, started_at")
+        .order("started_at", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: false })
+        .range(offset, offset + n - 1);
+      check(error);
+      return (data ?? []) as ConversationRow[];
+    },
+
     async conversations(ids) {
       if (ids.length === 0) return [];
       const { data, error } = await c.from("conversations").select("id, surface, started_at").in("id", ids);
@@ -377,6 +459,19 @@ export function supabaseHistoryStore(c: SupabaseClient): HistoryStore {
       check(user.error);
       const u = (user.data?.[0] ?? null) as { content?: unknown } | null;
       return { count, firstUser: u && typeof u.content === "string" ? u.content : null };
+    },
+
+    async lastMessageAt(id) {
+      const { data, error } = await c
+        .from("messages")
+        .select("created_at")
+        .eq("conversation_id", id)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(1);
+      check(error);
+      const row = (data?.[0] ?? null) as { created_at?: unknown } | null;
+      return row && typeof row.created_at === "string" ? row.created_at : null;
     },
 
     async lastMessages(id, n) {

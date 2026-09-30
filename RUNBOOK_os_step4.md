@@ -339,8 +339,8 @@ an OS change for a later step, not this one.
 - **`GET /conversations?limit=30`** (limit 1–100) → `{ conversations: [{ id, surface, started_at, last_at, preview, count }] }`, newest `last_at` (last message) first. Conversations with no messages are left out; `preview` is your first line, whitespace collapsed and cut to 100 characters with "…"; `count` is exact.
 - **`GET /conversations/:id/messages?limit=200`** (limit 1–500) → `{ id, surface, started_at, messages: [{ role, content, created_at }] }`: the newest `limit` messages, oldest first, content exactly as stored. A non-uuid id gets a 400 and an unknown one gets a 404 `{ error: "not found" }`. With Supabase offline both routes return 503.
 - **Auth.** Bearer only: the OS proxies both from its server with `EVE_BRAIN_TOKEN`. An OS ticket gets a 401 here, because `os-ticket.ts` doesn't list these routes.
-- **Read-only.** No writes, no distilling, and nothing about a message is logged. No migration: the list scans at most the newest 5,000 message rows, so a conversation whose last message is older than that isn't listed.
-- **Code.** `brain/src/history.ts` and two routes in `brain/src/index.ts`. `brain/verify/history-harness.ts` is the proof: 80/80, and os-ticket is still 62/62.
+- **Read-only.** No writes, no distilling, and nothing about a message is logged. No migration: the list scans at most the newest 5,000 message rows, and when those hold fewer than `limit` conversations (the phone's one long thread can fill them alone) it tops up from `conversations`, newest `started_at` first, 50 at a time and at most 250, each with its own count, first line and last-message time, still skipping empty ones.
+- **Code.** `brain/src/history.ts` and two routes in `brain/src/index.ts`. `brain/verify/history-harness.ts` is the proof: 97/97, and os-ticket is still 62/62.
 - **Checked locally** with no Supabase: the bearer got 503 on both routes, a ticket got 401, a bad id got 400. **Not exercised:** a read against the live Supabase.
 
 # Discord — her alerts in #eve-alerts

@@ -9,6 +9,8 @@
 // (supabaseHistoryStore — the exact query chains the server runs) against a fake
 // Supabase client that enforces PostgREST's 1000-row cap and records every
 // operation, so "read-only" is checked against what was actually called.
+// H10 drives the TOP-UP (the phone's one thread filling all SCAN_MAX rows)
+// through both stores, and runs before H9 so H9's silence check covers it.
 //
 // Where a check reads SOURCE TEXT rather than driving behaviour it says SOURCE.
 
@@ -37,6 +39,8 @@ import {
   PREVIEW_MAX,
   SCAN_PAGE,
   SCAN_MAX,
+  TOPUP_PAGE,
+  TOPUP_PAGES,
   type HistoryStore,
   type ConversationSummary,
   type ConversationMessages,
@@ -116,15 +120,24 @@ const byTimeThenId = (a: Msg, b: Msg) => (a.created_at < b.created_at ? -1 : a.c
 
 interface MemCalls {
   activity: Array<{ offset: number; n: number; got: number }>;
+  recent: Array<{ offset: number; n: number; got: number }>;
   stats: number;
   conversations: number;
   conversation: number;
+  lastMessageAt: number;
   lastMessages: number;
 }
 
-/** An in-memory HistoryStore over a World. pageCap imitates a store's max-rows. */
-function memStore(w: World, opts: { pageCap?: number; throwOn?: keyof HistoryStore } = {}): { store: HistoryStore; calls: MemCalls } {
-  const calls: MemCalls = { activity: [], stats: 0, conversations: 0, conversation: 0, lastMessages: 0 };
+/**
+ * An in-memory HistoryStore over a World. pageCap imitates a store's max-rows;
+ * stuckRecent makes recentConversations ignore its offset (a broken store that
+ * never reaches the end), to prove the top-up is bounded anyway.
+ */
+function memStore(
+  w: World,
+  opts: { pageCap?: number; throwOn?: keyof HistoryStore; stuckRecent?: boolean } = {},
+): { store: HistoryStore; calls: MemCalls } {
+  const calls: MemCalls = { activity: [], recent: [], stats: 0, conversations: 0, conversation: 0, lastMessageAt: 0, lastMessages: 0 };
   const boom = (k: keyof HistoryStore) => {
     if (opts.throwOn === k) throw new Error("relation \"messages\" is unreachable");
   };
@@ -137,6 +150,21 @@ function memStore(w: World, opts: { pageCap?: number; throwOn?: keyof HistorySto
         .slice(offset, offset + take)
         .map((m) => ({ conversation_id: m.conversation_id, created_at: m.created_at }));
       calls.activity.push({ offset, n, got: rows.length });
+      return rows;
+    },
+    async recentConversations(offset, n) {
+      boom("recentConversations");
+      const from = opts.stuckRecent ? 0 : offset;
+      // started_at desc, nulls last, id desc — the live store's order.
+      const rows = [...w.conversations]
+        .sort((a, b) =>
+          a.started_at === b.started_at
+            ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0)
+            : a.started_at === null ? 1 : b.started_at === null ? -1 : a.started_at < b.started_at ? 1 : -1,
+        )
+        .slice(from, from + n)
+        .map((c) => ({ id: c.id, surface: c.surface, started_at: c.started_at }));
+      calls.recent.push({ offset, n, got: rows.length });
       return rows;
     },
     async conversations(ids) {
@@ -155,6 +183,11 @@ function memStore(w: World, opts: { pageCap?: number; throwOn?: keyof HistorySto
       calls.stats++;
       const mine = w.messages.filter((m) => m.conversation_id === id).sort(byTimeThenId);
       return { count: mine.length, firstUser: mine.find((m) => m.role === "user")?.content ?? null };
+    },
+    async lastMessageAt(id) {
+      boom("lastMessageAt");
+      calls.lastMessageAt++;
+      return newestFirst().find((m) => m.conversation_id === id)?.created_at ?? null;
     },
     async lastMessages(id, n) {
       boom("lastMessages");
@@ -201,6 +234,28 @@ function worldC(pThreadRows = 2500): { w: World; p: string; olds: string[] } {
   say(w, p, "user", "the very first thing I asked on the phone", 1000);
   for (let i = 1; i < pThreadRows; i++) say(w, p, i % 2 ? "eve" : "user", `turn ${i}`, 1000 + i);
   return { w, p, olds };
+}
+
+// Scenario D — the top-up: the phone's thread is 6000 rows, more than the whole
+// scan, and five older threads (plus empty conversations among them) sit
+// behind it. Each older thread's last message is its own, later than its start
+// and its first line, so last_at can only come from its own messages.
+function worldD(pThreadRows = 6000): { w: World; p: string; olds: string[]; empties: string[] } {
+  const w = newWorld();
+  const olds: string[] = [];
+  for (let k = 0; k < 5; k++) {
+    const id = conv(w, 200 + k, k % 2 ? "desk" : "voice", 100 * k);
+    say(w, id, "user", `older thread ${k + 1}`, 100 * k + 5);
+    say(w, id, "eve", `reply ${k + 1}`, 100 * k + 7 + k);
+    olds.push(id);
+  }
+  // Zero messages: one started between the old threads, one after them, and
+  // one after EVERYTHING (the first row the top-up reads).
+  const empties = [conv(w, 300, "desk", 150), conv(w, 301, "app", 450), conv(w, 302, "voice", 99_999)];
+  const p = conv(w, 100, "app", 999);
+  say(w, p, "user", "the very first thing I asked on the phone", 1000);
+  for (let i = 1; i < pThreadRows; i++) say(w, p, i % 2 ? "eve" : "user", `turn ${i}`, 1000 + i);
+  return { w, p, olds, empties };
 }
 
 // ---------------------------------------------------------------------------
@@ -420,7 +475,8 @@ async function main() {
     const hm = memStore(huge.w, { pageCap: SCAN_PAGE });
     const hl = listOf(await conversationsRoute("30", hm.store));
     const scanned = hm.calls.activity.reduce((s, c) => s + c.got, 0);
-    ok("H4.8", scanned === SCAN_MAX && hl.length === 1 && hl[0].count === SCAN_MAX + 1000, `the scan is BOUNDED: ${scanned} rows at most (SCAN_MAX); a thread older than the newest ${SCAN_MAX} rows is not listed — the stated cost of the bound`);
+    ok("H4.8", scanned === SCAN_MAX && hl[0]?.count === SCAN_MAX + 1000 && hl.length === 4 && hm.calls.recent.length > 0, `the scan is BOUNDED: ${scanned} rows at most (SCAN_MAX); the threads behind it come from the TOP-UP, not a longer scan (H10)`);
+    ok("H4.10", m.calls.recent.length === 0 && capped.calls.recent.length === 0 && early.calls.recent.length === 0, "a scan that reached the end of the messages table (or filled the limit) reads NO top-up page");
 
     const empty = memStore(newWorld());
     const er = await conversationsRoute(undefined, empty.store);
@@ -559,11 +615,72 @@ async function main() {
     ok("H8.6", !/conversations/.test(allow.slice(allow.indexOf("{"))) && /History \(GET \/conversations.*bearer-only ON PURPOSE/.test(TICKET_SRC), "SOURCE: osTicketRoute's body names no history path, and its comment says history is bearer-only on purpose");
   }
 
+  show.push("=== H10 — THE TOP-UP (one thread fills the whole scan) ===");
+  {
+    const { w, p, olds, empties } = worldD(6000);
+    const m = memStore(w, { pageCap: SCAN_PAGE });
+    const r = await conversationsRoute("30", m.store);
+    const list = listOf(r);
+    const want = [p, ...[...olds].reverse()];
+    ok("H10.1", r.status === 200 && list.map((c) => c.id).join() === want.join(), `a 6000-row thread plus 5 older threads → all 6 listed, newest last message first (${list.length})`);
+    const scanned = m.calls.activity.reduce((s, c) => s + c.got, 0);
+    ok("H10.2", scanned === SCAN_MAX && list[0]?.count === 6000 && list[0].preview === "the very first thing I asked on the phone", `the scan is still bounded (${scanned} rows) and the long thread still has its exact count and first line`);
+    const lastOk = olds.every((id, k) => {
+      const c = list.find((x) => x.id === id);
+      return !!c && c.last_at === at(100 * k + 7 + k) && c.last_at !== c.started_at && c.count === 2 && c.preview === `older thread ${k + 1}`;
+    });
+    ok("H10.3", lastOk, "each older thread's last_at is ITS OWN last message (not its start, not its first line); count and preview as for any thread");
+    ok("H10.4", !list.some((c) => empties.includes(c.id)), "the three zero-message conversations the top-up reads (one started after everything) are still left out");
+    ok("H10.5", m.calls.recent.map((c) => c.offset).join() === "0,9" && m.calls.recent.every((c) => c.n === TOPUP_PAGE), `top-up pages of ${TOPUP_PAGE}, newest started first, until an empty page (offsets ${m.calls.recent.map((c) => c.offset).join(", ")})`);
+    ok("H10.6", m.calls.stats === 1 + 8 && m.calls.lastMessageAt === 5 && m.calls.conversations === 1, `stats once per conversation (1 scanned + 8 topped up), last-message time only for the 5 with messages (${m.calls.stats}, ${m.calls.lastMessageAt})`);
+
+    const three = memStore(w, { pageCap: SCAN_PAGE });
+    const tl = listOf(await conversationsRoute("3", three.store));
+    ok("H10.7", tl.map((c) => c.id).join() === [p, olds[4], olds[3]].join() && three.calls.stats === 1 + 4 && three.calls.recent.length === 1, `limit=3: stats are read in chunks of what is missing (2 at a time: 2 empties, then 2 threads) — ${three.calls.stats - 1} top-up stats reads, not ${TOPUP_PAGE}`);
+
+    // Exhausted conversations table: two older threads only.
+    const small = worldD(6000);
+    small.w.conversations = small.w.conversations.filter((c) => c.id === small.p || c.id === small.olds[0] || c.id === small.olds[1]);
+    small.w.messages = small.w.messages.filter((x) => small.w.conversations.some((c) => c.id === x.conversation_id));
+    const ex = memStore(small.w, { pageCap: SCAN_PAGE });
+    const el = listOf(await conversationsRoute("30", ex.store));
+    ok("H10.8", el.map((c) => c.id).join() === [small.p, small.olds[1], small.olds[0]].join() && ex.calls.recent.length === 2 && ex.calls.recent[1].got === 0, `the conversations table runs out before the limit → it stops at the first empty page (${ex.calls.recent.length} top-up reads) with the 3 it has`);
+
+    // A broken store whose top-up page never ends (it ignores the offset).
+    const stuck = memStore(w, { pageCap: SCAN_PAGE, stuckRecent: true });
+    const sl = listOf(await conversationsRoute("30", stuck.store));
+    ok("H10.9", stuck.calls.recent.length === TOPUP_PAGES && sl.map((c) => c.id).join() === want.join() && stuck.calls.stats === 1 + 8, `a store that never runs out is cut off at ${TOPUP_PAGES} pages, and an id it repeats is read once (${stuck.calls.recent.length} pages, ${stuck.calls.stats} stats reads)`);
+
+    // The bound: more empty conversations than the top-up reads, all newer than the old threads.
+    const crowd = worldD(6000);
+    for (let i = 0; i < 300; i++) conv(crowd.w, 5000 + i, "app", 500 + i);
+    const cm = memStore(crowd.w, { pageCap: SCAN_PAGE });
+    const cl = listOf(await conversationsRoute("30", cm.store));
+    const read = cm.calls.recent.reduce((s, c) => s + c.got, 0);
+    ok("H10.10", cl.length === 1 && cm.calls.recent.length === TOPUP_PAGES && read === TOPUP_PAGE * TOPUP_PAGES && cm.calls.stats === 1 + read - 1, `BOUNDED: 300 empty conversations ahead of the old threads → the top-up gives up after ${read} rows (${TOPUP_PAGES} × ${TOPUP_PAGE}); the old threads behind them are the stated cost`);
+
+    for (const k of ["recentConversations", "lastMessageAt"] as const) {
+      const e = await conversationsRoute("30", memStore(w, { pageCap: SCAN_PAGE, throwOn: k }).store);
+      ok(`H10.11${k[0]}`, e.status === 500 && /^history read failed: /.test((e.body as { error: string }).error) && !JSON.stringify(e.body).includes("older thread"), `a store error in ${k} → 500, never a partial list, never content`);
+    }
+
+    // The live store: the exact query chains, through the 1000-row cap.
+    const fk = fakeDb(w);
+    _setDbForTests(fk.client);
+    const live = await conversationsRoute("30");
+    ok("H10.12", live.status === 200 && JSON.stringify(live.body) === JSON.stringify(r.body), `the live store's top-up answer equals the in-memory one, item for item (${listOf(live).length})`);
+    ok("H10.13", fk.ops.some((o) => o === `conversations.select(id, surface, started_at).order(started_at desc).order(id desc).range(0,${TOPUP_PAGE - 1})`), "live top-up page: conversations, started_at desc, id as the tie-break, a bounded range");
+    const lastReads = fk.ops.filter((o) => o === "messages.select(created_at).eq(conversation_id).order(created_at desc).order(id desc).limit(1)").length;
+    ok("H10.14", lastReads === 5 && !fk.ops.some((o) => /^messages\.select\((role, )?content.*order\(created_at desc\)/.test(o)), `live last-message time: ${lastReads} one-row selects of created_at only — no content`);
+    ok("H10.15", fk.writes.length === 0, `READ-ONLY, measured: the top-up made ${fk.writes.length} insert/update/upsert/delete/rpc`);
+    _setDbForTests(null);
+  }
+
   show.push("=== H9 — READ-ONLY AND SILENT, IN SOURCE ===");
   {
     ok("H9.1", !/\.(insert|update|upsert|delete|rpc)\(/.test(HISTORY_SRC), "SOURCE: history.ts calls no insert / update / upsert / delete / rpc");
     ok("H9.2", !/console\./.test(HISTORY_SRC), "SOURCE: history.ts has no console call at all");
-    ok("H9.3", !logged.some((l) => l.includes(SECRET) || l.includes("first thing I asked")), `nothing any scenario ran logged a word of content (${logged.length} console lines in all)`);
+    ok("H9.3", !logged.some((l) => l.includes(SECRET) || l.includes("first thing I asked") || l.includes("older thread")), `nothing any scenario ran logged a word of content (${logged.length} console lines in all)`);
   }
 
   console.log = realLog;
