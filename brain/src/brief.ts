@@ -29,6 +29,7 @@ import { recentJobsQuery, shapeJob } from "./dispatch.js";
 import { triageMail, readTodayShape } from "./mail.js";
 import * as google from "./google.js";
 import { osSweep, ready as osReady } from "./os.js";
+import { readClientRoster } from "./roster.js";
 import type { MailSource } from "./google.js";
 
 const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
@@ -122,7 +123,9 @@ export async function collectBriefInput(now = new Date(), source: MailSource | n
       c.from("tasks").select("id, title, detail, priority, due_at").not("priority", "is", null).is("done_at", null).order("priority"),
       recentJobsQuery(c, now.getTime()),
       c.from("runs").select("id, job, ok, at").gte("at", from).order("at", { ascending: false }).limit(50),
-      c.from("clients").select("id, name, cadence_days, last_touch_at, status").eq("status", "active"),
+      // The OS's roster when the OS line is wired, the local table only when
+      // that read fails — the same reader /state uses (roster.ts).
+      readClientRoster(now),
       c.from("memory_entries").select("content, created_at").eq("kind", "promise").eq("status", "active").order("created_at", { ascending: false }).limit(8),
     ]);
 
@@ -138,16 +141,18 @@ export async function collectBriefInput(now = new Date(), source: MailSource | n
     if (runs.error) note("overnight", `The runs log would not read: ${runs.error.message}. Nothing below claims a scheduled job fired.`);
     else input.runs = (runs.data ?? []) as unknown as BriefInput["runs"];
 
-    if (clients.error) note("slipping", `The client list would not read: ${clients.error.message}`);
-    else
-      input.clients = (clients.data ?? []).map((cl) => ({
-        id: String(cl.id),
-        name: String(cl.name),
-        cadence_days: Number(cl.cadence_days),
-        // Same arithmetic state.ts runs, so the pane and the brief can never
-        // disagree about how quiet a client is.
-        days_quiet: cl.last_touch_at ? Math.floor((now.getTime() - new Date(cl.last_touch_at as string).getTime()) / 86_400_000) : null,
+    if (clients.clients === null) note("slipping", `The client list would not read: ${clients.error ?? "unknown error"}`);
+    else {
+      if (clients.osError) note("slipping", `The OS client roster would not read (${clients.osError}), so this used her own older copy.`);
+      input.clients = clients.clients.map((cl) => ({
+        id: cl.id,
+        name: cl.name,
+        cadence_days: cl.cadence_days,
+        // roster.ts runs the same arithmetic for /state, so the pane and the
+        // brief can never disagree about how quiet a client is.
+        days_quiet: cl.days_quiet,
       }));
+    }
 
     if (promises.error) note("slipping", `Her promise ledger would not read: ${promises.error.message}`);
     else input.promises = (promises.data ?? []) as unknown as BriefInput["promises"];

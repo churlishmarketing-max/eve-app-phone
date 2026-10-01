@@ -107,6 +107,7 @@ export const PACK_SOURCES = [
   { id: "recall", handling: "carried-ungated", why: "memory_entries, injected under 'trust these over guesses' — the highest-trust region she has. Same three writers as promises, same corrected verdict: the in-turn writers are latched and locked, distill.ts is quarantined (W3), and the residual that keeps the word off `write-gated` is the same one — pre-007 rows carry no source-conversation taint and are recalled unfiltered. Closing that is a READ-side filter over memory_entries.source_conversation and it is NOT in this pass" },
   { id: "attention", handling: "omit-or-taint", why: "V1/JE — attention_items.message is written from third-party sources by capture.ts:89, pulse.ts:146, proactive.ts:156 and dispatch.ts. NOTHING in that column is King's typed words, so it is treated as untrusted whole" },
   { id: "honesty", handling: "clean", why: "our own honesty clause" },
+  { id: "opener", handling: "clean", why: "opener.ts, first `os` turn only: the SHAPE of her own brief deck (section, position, a kind phrase from opener.ts's frozen table keyed by briefing.ts's constant RECOMMEND, and a record pointer that must match a strict id pattern) or the kinds and nudge levels of her open attention items. No item WORDS ride it except the three kinds briefing.ts composes from numbers alone (floor, free block, OS sweep), each re-sanitised and pattern-checked. No text from the OS page is taken" },
 ] as const;
 
 export type PackSourceId = (typeof PACK_SOURCES)[number]["id"];
@@ -577,8 +578,12 @@ export async function buildContextPack(
   // conversations.read_untrusted (somebody else's words arrived, sql/007). A
   // thread can be either, both or neither, and each shuts its own doors.
   historySuppressed: string | null = null,
+  // WHAT HE SAW BEFORE HIS FIRST LINE ON THE OS (opener.ts). Built by chat.ts
+  // on the first turn of an `os` conversation and null on every other turn, so
+  // every other pack is byte-identical. Never persisted, never logged.
+  opener: string | null = null,
 ): Promise<string> {
-  return (await buildPackLines(surface, incomingMessage, conversationId, includeHistory, desk, deskRefusal, untrusted, historySuppressed))
+  return (await buildPackLines(surface, incomingMessage, conversationId, includeHistory, desk, deskRefusal, untrusted, historySuppressed, opener))
     .map((l) => l.text)
     .join("\n");
 }
@@ -599,6 +604,7 @@ export async function buildPackLines(
   deskRefusal: DeskRefusal | null = null,
   untrusted: PackUntrusted = {},
   historySuppressed: string | null = null,
+  opener: string | null = null,
 ): Promise<PackLine[]> {
   const [snapshot, loops, recalled, turns, fleet] = await Promise.all([
     todaySnapshot(untrusted),
@@ -634,6 +640,7 @@ export async function buildPackLines(
       "you've had memory. To King you are simply a person who knows things, not a system reading state.",
     ),
     ...L("now", nowLine(surface)),
+    ...(opener ? L("opener", opener) : []),
     ...L("worn", ...wornLine()),
     ...L("desk_census", ...renderDeskCensus(desk)),
     ...L("desk_absence", ...renderDeskAbsence(desk ? null : deskRefusal, surface)),

@@ -14,6 +14,7 @@ import { pictureFrame, pictureVerdict, type PictureFrame } from "./picture.js";
 import { renderCarriedNames, type CarriedNames } from "./carried.js";
 import type { HandoffFrame } from "./handoff.js";
 import { turnLedgerLine } from "./honesty.js";
+import { readOpenerNote, wantsOpener } from "./opener.js";
 import type { JobFrame } from "./dispatch.js";
 import { newTurnLatch, type DurableTaint, type LockNotice } from "./authority.js";
 import {
@@ -233,6 +234,11 @@ export async function runChat(
     //    fresh thread still files, which matters because a fresh thread is this
     //    whole design's only exit.
     taint = await readPictureTaintBeforeMint(conversationId, stamp.seen);
+    // THE OS OPENER (opener.ts). "New" is the store's checked answer — no row
+    // and no transcript — taken here, before step 3 mints the row and before a
+    // picture write can overwrite `taint`. It is the one honest "no prior
+    // messages" this file has.
+    const newThread = taint.source === "new";
 
     // 3. NOW THE ROW EXISTS. Awaited rather than raced with the context pack,
     //    because the message append below has a foreign key into it.
@@ -307,6 +313,11 @@ export async function runChat(
     //    are not replayed — because the thing being replayed is the transcript
     //    the picture is described in.
     const cleanConversation = verdict.blocked === false;
+    // WHAT HE SAW BEFORE HIS FIRST LINE, on the first turn of an `os` thread
+    // only. Her own deck / attention shape, never the OS page's text; it rides
+    // the pack (source `opener`), is never appended as a message and is never
+    // logged. Null on every other turn and every other surface.
+    const opener = wantsOpener(surface, !!resumeSession, newThread) ? await readOpenerNote() : null;
     const replayHistory = !resumeSession && cleanConversation;
     // Persist the user turn + assemble context (parallel; both tolerate an
     // offline spine). History rehydrates from the durable store only when
@@ -381,6 +392,7 @@ export async function runChat(
       // Why the continuity is missing, when it is. A thread that silently
       // forgets itself is a thread he will think is broken.
       !resumeSession && !cleanConversation ? verdict.where : null,
+      opener,
     );
     // HIS WORDS plus a marker if a picture came with them — never the pixels.
     // The durable store rides back into later context packs as text, and a
