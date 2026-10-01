@@ -846,7 +846,15 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
         note = `FAILED — ${err instanceof Error ? err.message : "send error"}`;
       }
     } else {
-      note = r.ok ? (r.executed ? `SENT — ${r.detail ?? ""}` : "CANCELLED") : `FAILED — ${r.error ?? "unknown"}`;
+      // Approved but not executed (e.g. the OS's Pause all held it): show the
+      // brain's sentence. CANCELLED is only ever his own deny.
+      note = r.ok
+        ? r.executed
+          ? `SENT — ${r.detail ?? ""}`
+          : approve
+            ? r.detail || "NOT SENT"
+            : "CANCELLED"
+        : `FAILED — ${r.error ?? "unknown"}`;
     }
     setConfirmNote((n) => ({ ...n, [c.id]: note }));
     later(() => {
