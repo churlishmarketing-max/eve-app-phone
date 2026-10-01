@@ -1,8 +1,8 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { db } from "./db.js";
 import { matchClient } from "./memory.js";
+import { everydayModel } from "./models.js";
 
-const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
 // POST /capture — any door in (01 §5). Phase 2: app text / voice-note
 // transcript. Email webhook joins in Phase 3 via the same endpoint.
@@ -41,7 +41,7 @@ export async function runCapture(
       `Return STRICT JSON only: {"title": "imperative task title", "detail": "context worth keeping or null", ` +
       `"client": "client name if one is clearly referenced else null", "due": "ISO date (resolve relative dates like 'Friday' using today) if a deadline is stated else null"}`,
     options: {
-      model: MODEL,
+      model: everydayModel(),
       systemPrompt: "You turn raw captured notes into one clean task. JSON only, no commentary.",
       allowedTools: [],
       maxTurns: 1,

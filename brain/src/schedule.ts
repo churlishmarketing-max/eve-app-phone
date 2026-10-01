@@ -7,6 +7,7 @@ import { rotateLook } from "./rotation.js";
 import { startClock } from "./clock.js";
 import { startOsEventsPull } from "./os-events.js";
 import { stamp } from "./health.js";
+import { startModelWatch } from "./models.js";
 
 // Brandon is Central time. Same fallback as context.ts — a missing EVE_TZ
 // must not put the scheduler and the context pack in different timezones
@@ -150,7 +151,10 @@ export function startSchedulers(): void {
   // the same gate as every cron above: a laptop boot never pulls or pushes.
   // Without CHURLISH_OS_TOKEN it arms nothing and logs that once (os-events.ts).
   startOsEventsPull();
+  // THE SONNET WATCH (models.ts) — a boot check now, then 09:47 daily: list
+  // models, smoke-test a newer claude-sonnet-*, adopt on a pass, tell King.
+  startModelWatch({ quiet: isQuietHours, tz: TZ });
   console.log(
-    `[schedule] armed (${TZ}): 07:00 brief · 07:14/18:22/22:43 wardrobe · 11:45 floor (wk) · 12:30 pulse · 17:30 closeout · 20:00 routines · Sun 19:00 preview · 02:00 distill; quiet 21:30–06:30`,
+    `[schedule] armed (${TZ}): 07:00 brief · 07:14/18:22/22:43 wardrobe · 11:45 floor (wk) · 12:30 pulse · 17:30 closeout · 20:00 routines · Sun 19:00 preview · 02:00 distill · 09:47 model watch; quiet 21:30–06:30`,
   );
 }

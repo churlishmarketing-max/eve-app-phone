@@ -64,7 +64,24 @@ export interface Capability {
   triggers?: string; // short trigger phrases (≤ ~80 chars)
   division?: string; // roster division where known
   origin: "code" | "manifest";
+  /** Runs on heavyModel() (Opus) instead of fleetModel(). Set from HEAVY_UNITS only. */
+  heavy?: boolean;
 }
+
+// THE HEAVY UNITS — the fleet's Opus seats (models.ts heavyModel()). Only units
+// whose job is strategy, proposals, pricing or diagnosis. CODE, not manifest
+// data, for the same reason capability is code: a regenerated MANIFEST.json or
+// an OS row cannot move a unit onto the expensive seat. The reason rides along
+// so the list is auditable where it is declared.
+export const HEAVY_UNITS: Readonly<Record<string, string>> = {
+  "justice-league": "strategy: portfolio and sequencing verdicts, prices every new idea",
+  jsa: "strategy: one decidable call, steelmanned both ways, ruled with tripwires",
+  "master-plan-formula": "strategy + pricing: whole-business master plans and pricing architecture",
+  "strategy-doc-builder": "strategy: client gameplans, playbooks and KPI infrastructure",
+  "proposal-generator": "proposals + pricing: tiered client proposals",
+  "ad-diagnostic-engine": "diagnosis: why an ad is failing, scale or kill",
+  "doctor-mid-nite": "diagnosis: funnel page surgery when the page is the patient",
+};
 
 const BASE_LAW =
   "Law for every deliverable: numbers beat adjectives — a finding without a number, dollar figure, or " +
@@ -319,7 +336,9 @@ function loadManifest(codeKeys: Set<string>): Capability[] {
 }
 
 const codeKeys = new Set(CODE_ROWS.map((c) => c.key));
-export const REGISTRY: readonly Capability[] = [...CODE_ROWS, ...loadManifest(codeKeys)];
+export const REGISTRY: readonly Capability[] = [...CODE_ROWS, ...loadManifest(codeKeys)].map((c) =>
+  HEAVY_UNITS[c.key] ? { ...c, heavy: true } : c,
+);
 
 const byKey = new Map(REGISTRY.map((c) => [c.key, c]));
 

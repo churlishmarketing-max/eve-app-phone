@@ -4,8 +4,8 @@ import { matchClient, saveMemory, type MemoryKind } from "./memory.js";
 import { readPictureTaintMany } from "./taint.js";
 import { pictureIntakeOn } from "./intake.js";
 import { readUntrustedTaintMany } from "./untrusted.js";
+import { everydayModel } from "./models.js";
 
-const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
 // Nightly distillation (03 §5): she remembers the SUBSTANCE of the day, the
 // way a person does — not a transcript dump. Runs at 02:00 via cron, or
@@ -45,7 +45,7 @@ async function runDistiller(prompt: string): Promise<string> {
   const q = query({
     prompt,
     options: {
-      model: MODEL,
+      model: everydayModel(),
       systemPrompt:
         "You are EVE's nightly memory distiller. You read a day of conversation and extract only what is " +
         "durable. Output STRICT JSON, nothing else. Never invent content that is not in the transcript.",

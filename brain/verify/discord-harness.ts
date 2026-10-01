@@ -124,7 +124,7 @@ async function main() {
   show.push("=== D2 — DISCORD_ALERT_KINDS ===");
   {
     const def = d.parseAlertKinds(undefined);
-    ok("D2.1", !def.all && [...def.kinds].join(",") === "brief,closeout,tripwire,silent_client,approval,routine_risk,os_event", `unset → the default seven: ${[...def.kinds].join(",")}`);
+    ok("D2.1", !def.all && [...def.kinds].join(",") === "brief,closeout,tripwire,silent_client,approval,routine_risk,os_event,model", `unset → the default eight (model added with models.ts): ${[...def.kinds].join(",")}`);
     const star = d.parseAlertKinds("*");
     ok("D2.2", star.all, `"*" → every kind`);
     ok("D2.3", d.parseAlertKinds("none").kinds.size === 0 && !d.parseAlertKinds("none").all, `"none" → nothing`);
@@ -371,7 +371,7 @@ async function main() {
     ok("D8.1", off === "[discord] notes: off · alerts: off", `both unset: "${off}"`);
     process.env.DISCORD_ALERTS_WEBHOOK_URL = HOOK;
     const on = d.discordBanner(true);
-    ok("D8.2", on === "[discord] notes: on · alerts: on (kinds: brief,closeout,tripwire,silent_client,approval,routine_risk,os_event)", `both set: "${on}"`);
+    ok("D8.2", on === "[discord] notes: on · alerts: on (kinds: brief,closeout,tripwire,silent_client,approval,routine_risk,os_event,model)", `both set: "${on}"`);
     process.env.DISCORD_ALERT_KINDS = "*";
     const star = d.discordBanner(true);
     process.env.DISCORD_ALERT_KINDS = "none";

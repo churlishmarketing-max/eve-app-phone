@@ -6,8 +6,8 @@ import { sendPush, getLatestToken, isPushReady, type SendPushArgs } from "./push
 import { floorView } from "./floor.js";
 import { localDay, addLocalDays } from "./day.js";
 import { buildVitals } from "./vitals.js";
+import { everydayModel } from "./models.js";
 
-const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 const TZ = process.env.EVE_TZ || "America/Chicago";
 
 // The rest of the daily cadence (04 §1): floor_check 11:45 weekdays,
@@ -32,7 +32,7 @@ async function generateLine(task: string): Promise<string> {
   const q = query({
     prompt: `[System task: ${task} HARD LIMIT 25 words. Substance first, exactly one clause of flavour. No markdown, no quotes — output only the notification text.]`,
     options: {
-      model: MODEL,
+      model: everydayModel(),
       systemPrompt: staticSystemPrompt,
       allowedTools: [],
       disallowedTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch"],

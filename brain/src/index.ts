@@ -41,6 +41,7 @@ import { getWearing, setWearing, listLooksAsync, lookUrl, initWardrobe } from ".
 import { MAX_LOOK_BYTES, addLook, bucketManifest } from "./wardrobe-add.js";
 import { warmBoard, boardSnapshotReady } from "./os.js";
 import { warmFleet, fleetViewStatus } from "./fleet.js";
+import { initModels } from "./models.js";
 import { registryCounts } from "./registry.js";
 import { corpusState } from "./corpus.js";
 import { rotateLook, initRotationConfig } from "./rotation.js";
@@ -860,6 +861,9 @@ void probePictureTaintSchema();
 void probeDurableOriginSchema();
 // Warm the closet cache + her worn look before the first request.
 void initWardrobe();
+// The adopted Sonnet from app_state (models.ts), so a restart keeps it. A read
+// only — the smoke-tested Sonnet watch runs behind the scheduler gate.
+void initModels().catch(() => {});
 // Warm the ambient OS board snapshot so the very first board question is fast
 // (also gives the Vercel /api/eve function an early hit toward staying warm).
 void warmBoard();

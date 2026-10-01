@@ -8,6 +8,7 @@ import { localDay, addLocalDays } from "./day.js";
 import { recentJobsQuery, shapeJob, JOBS_WINDOW_MS, JOBS_LIMIT } from "./dispatch.js";
 import { buildFleetBlock } from "./registry.js";
 import { readClientRoster } from "./roster.js";
+import { modelsBlock } from "./models.js";
 
 // GET /state — the Today/Ops screens read live data THROUGH the brain
 // (05 §4: the app never holds a Supabase key).
@@ -21,7 +22,7 @@ export async function buildState(): Promise<Record<string, unknown>> {
   // which is the one thing an outage does not mean.
   const brief = await getLatestBriefDeck();
   // Pending RED confirms + connector tiles work even with the spine offline.
-  if (!c) return { online: false, brief, pendingConfirms: listPending(), connectors: getConnectorStatus() };
+  if (!c) return { online: false, brief, pendingConfirms: listPending(), connectors: getConnectorStatus(), models: modelsBlock() };
 
   const [three, floor, attention, clients, jobs, routines, routineDays] = await Promise.all([
     c.from("tasks").select("id, title, detail, priority, due_at").not("priority", "is", null).is("done_at", null).order("priority"),
@@ -46,7 +47,7 @@ export async function buildState(): Promise<Record<string, unknown>> {
 
   // A Supabase outage must not render as a confident all-clear (review C19).
   if (three.error || attention.error || clients.clients === null) {
-    return { online: false, brief, pendingConfirms: listPending(), connectors: getConnectorStatus() };
+    return { online: false, brief, pendingConfirms: listPending(), connectors: getConnectorStatus(), models: modelsBlock() };
   }
 
   // The routines the app renders carry the COMPUTED streak, not the stored int.
@@ -93,6 +94,8 @@ export async function buildState(): Promise<Record<string, unknown>> {
     routines: routineList,
     pendingConfirms: listPending(),
     connectors: getConnectorStatus(),
+    // Which model each seat runs right now, and when the Sonnet was last adopted (models.ts).
+    models: modelsBlock(),
   };
 }
 
