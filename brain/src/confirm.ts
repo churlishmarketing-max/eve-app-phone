@@ -30,8 +30,18 @@ export interface ClientAction {
   payload: Record<string, unknown>;
 }
 
+// An executor that checked a gate first and stood down (Pause all in the OS,
+// or the OS unreachable for that check) answers this instead of a string: the
+// card resolves approved but NOT executed, with the sentence that says why.
+export interface NotExecuted {
+  executed: false;
+  detail: string;
+}
+
+export type Executor = () => Promise<string | NotExecuted>;
+
 interface StoredConfirm extends PendingConfirm {
-  execute: (() => Promise<string>) | null; // runs the real send on approval; null → the app executes
+  execute: Executor | null; // runs the real send on approval; null → the app executes
   clientAction?: ClientAction;
 }
 
@@ -87,7 +97,7 @@ export function requestConfirm(
   kind: string,
   summary: string,
   payload: Record<string, unknown>,
-  execute: (() => Promise<string>) | null,
+  execute: Executor | null,
   clientAction?: ClientAction,
   // CARD-4: a filing plan rots faster than a text. Per-kind TTL, defaulted so
   // every existing caller keeps its 30 minutes exactly.
@@ -155,8 +165,9 @@ export async function resolveConfirm(
     };
   }
   try {
-    const detail = await entry.execute();
-    return { ok: true, executed: true, detail, ...link };
+    const out = await entry.execute();
+    if (typeof out !== "string") return { ok: true, executed: false, detail: out.detail, ...link };
+    return { ok: true, executed: true, detail: out, ...link };
   } catch (err) {
     return { ok: false, error: `send failed: ${err instanceof Error ? err.message : String(err)}`, ...link };
   }

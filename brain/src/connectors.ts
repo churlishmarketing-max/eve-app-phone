@@ -469,7 +469,15 @@ export function buildConnectorServer(
             "send_email",
             `Email to ${to}: "${subject}"`,
             payload,
-            () => google.sendMail(to, subject, body),
+            // Pause all / test mode / the Ledger, read from the OS at approve time (os.ts houseGatedSend).
+            () =>
+              os.houseGatedSend({
+                kind: "gmail",
+                recipients: os.splitRecipients(to),
+                subject,
+                ref: pending.id,
+                send: (rcpt, subj) => google.sendMail(rcpt.join(", "), subj, body),
+              }),
           );
           emitConfirm(pending);
           return text(
@@ -532,7 +540,15 @@ export function buildConnectorServer(
               "calendar_invite",
               `Event "${title}" inviting ${attendees.join(", ")}`,
               payload,
-              () => google.createEvent(title, startIso, endIso, description, attendees),
+              // Invites email out from his Calendar: the same OS gate as gmail_send.
+              () =>
+                os.houseGatedSend({
+                  kind: "calendar",
+                  recipients: attendees,
+                  subject: title,
+                  ref: pending.id,
+                  send: (rcpt, subj) => google.createEvent(subj, startIso, endIso, description, rcpt),
+                }),
             );
             emitConfirm(pending);
             return text(`Invites email out, so it's queued for King's confirmation (id ${pending.id}). NOT created yet.`);

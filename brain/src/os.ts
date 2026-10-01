@@ -255,3 +255,146 @@ export async function refreshBoardNow(): Promise<void> {
   boardCache = boardCache ? { ...boardCache, at: 0 } : null; // invalidate, then re-read
   await refreshBoard();
 }
+
+// ---- the house gate on HIS-mailbox sends (gmail_send, calendar_invite) ----
+// Her gmail_send and calendar_invite leave from Brandon's own Gmail / Calendar —
+// the sender must stay his mailbox, so they cannot ride the OS's send gate. They
+// still answer to it: after his approve on the RED card, the executor (built
+// here, wired in connectors.ts) reads house_status FIRST and
+//   · sends paused        → nothing sent; the card resolves not executed
+//   · OS unreachable /
+//     no token / garbled  → nothing sent (fail closed)
+//   · test mode on        → every recipient / attendee becomes TEST_INBOX and
+//                           the subject / title reads "[TEST → orig, …] …" —
+//                           the same marking as the OS's applyTestGuard
+//                           (churlish-os lib/house/send-gate.ts)
+// and, after a real send, writes ONE Ledger line through the OS's ledger_note
+// (confirmed:true; title = recipient domain + subject, never the body). A Ledger
+// failure does not undo the send: one log line, no content.
+
+export const TEST_INBOX = "hello@churlishmedia.com";
+export const PAUSED_DETAIL = "Paused in the OS — nothing sent.";
+export const UNREACHABLE_DETAIL = "Couldn't reach the OS to check Pause all — nothing sent.";
+
+export type HouseGate = { ok: true; testMode: boolean } | { ok: false; detail: string };
+
+export async function houseGate(): Promise<HouseGate> {
+  let data: Record<string, unknown> | null;
+  try {
+    data = (await osToolData("house_status")).data;
+  } catch {
+    return { ok: false, detail: UNREACHABLE_DETAIL };
+  }
+  // No numbers, no answer: a reply that cannot say whether sends are paused is
+  // treated exactly like no reply.
+  if (!data || typeof data.sends_paused !== "boolean" || typeof data.test_mode !== "boolean") {
+    return { ok: false, detail: UNREACHABLE_DETAIL };
+  }
+  if (data.sends_paused) return { ok: false, detail: PAUSED_DETAIL };
+  return { ok: true, testMode: data.test_mode };
+}
+
+/** Every recipient goes to TEST_INBOX; the subject names who it was for, as the OS does. */
+export function applyTestGuard(recipients: string[], subject: string): { to: string[]; subject: string } {
+  return { to: [TEST_INBOX], subject: `[TEST → ${recipients.join(", ")}] ${subject}` };
+}
+
+export function splitRecipients(to: string): string[] {
+  return to.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+}
+
+/** The domains only — the Ledger names who it went to by domain, never an address. */
+export function recipientDomains(recipients: string[]): string {
+  const d = [...new Set(recipients.map((r) => {
+    const at = r.lastIndexOf("@");
+    return at >= 0 ? r.slice(at + 1).replace(/[>\s]+$/, "").toLowerCase() : "";
+  }).filter(Boolean))];
+  return d.length ? d.join(", ") : "unknown domain";
+}
+
+export type GatedKind = "gmail" | "calendar";
+
+export interface GatedSend {
+  kind: GatedKind;
+  recipients: string[];
+  subject: string; // the email subject, or the event title
+  ref: string; // the confirm card's id — one Ledger line per card
+  send: (to: string[], subject: string) => Promise<string>;
+}
+
+export async function houseGatedSend(g: GatedSend): Promise<string | { executed: false; detail: string }> {
+  const gate = await houseGate();
+  if (!gate.ok) return { executed: false, detail: gate.detail };
+  const out = gate.testMode ? applyTestGuard(g.recipients, g.subject) : { to: g.recipients, subject: g.subject };
+  const detail = await g.send(out.to, out.subject); // a throw here is a failed send — the card says so
+  const gmail = g.kind === "gmail";
+  const title = `${gmail ? "EVE emailed" : "EVE invited"} ${recipientDomains(g.recipients)} — ${g.subject}`.slice(0, 160);
+  const note = gate.testMode
+    ? `Test mode on: went to the test inbox, not the ${gmail ? "recipient" : "attendees"}.`
+    : `${gmail ? "Sent from Brandon's Gmail" : "Invite sent from Brandon's Calendar"} after he approved her card.`;
+  try {
+    await osTool("ledger_note", { kind: gmail ? "eve.gmail_sent" : "eve.calendar_invite", title, detail: note, ref: g.ref }, true);
+  } catch {
+    console.warn(`[os] ledger_note failed after a ${g.kind} send — the send stands`);
+  }
+  return gate.testMode ? `${detail} (Test mode: went to ${TEST_INBOX}, not the ${gmail ? "recipient" : "attendees"}.)` : detail;
+}
+
+// ---- the OS client roster (/state's client tile and the brief) ----
+// GET /api/eve/clients on the OS (bearer = this same token) answers
+//   { ok: true, clients: [{ id, name, status, segment, cadence_days,
+//     days_quiet: number | null, last_touch_at: string | null }], blind: [] }
+// — every real, non-test client of the OS owner (churlish-os
+// lib/eve/clients.ts). A row that does not match the shape is DROPPED, never
+// repaired. No token throws OsNotConnectedError like osTool; an unreachable OS,
+// a non-ok answer or a missing `clients` list throws its reason, so the caller
+// can fall back to the brain's own table AND say it did. Names are third-party
+// text and are never logged by this module.
+export interface OsRosterClient {
+  id: string;
+  name: string;
+  status: string;
+  segment: string | null;
+  cadence_days: number;
+  days_quiet: number | null;
+  last_touch_at: string | null;
+}
+
+export function parseOsRoster(v: unknown): OsRosterClient[] | null {
+  if (!v || typeof v !== "object") return null;
+  const list = (v as Record<string, unknown>).clients;
+  if (!Array.isArray(list)) return null;
+  const out: OsRosterClient[] = [];
+  for (const x of list) {
+    if (!x || typeof x !== "object") continue;
+    const r = x as Record<string, unknown>;
+    if (typeof r.id !== "string" || !r.id || typeof r.name !== "string" || !r.name) continue;
+    if (typeof r.cadence_days !== "number" || !Number.isFinite(r.cadence_days)) continue;
+    if (r.days_quiet !== null && (typeof r.days_quiet !== "number" || !Number.isFinite(r.days_quiet))) continue;
+    if (r.last_touch_at !== null && r.last_touch_at !== undefined && typeof r.last_touch_at !== "string") continue;
+    out.push({
+      id: r.id,
+      name: r.name,
+      status: typeof r.status === "string" ? r.status : "",
+      segment: typeof r.segment === "string" && r.segment ? r.segment : null,
+      cadence_days: r.cadence_days,
+      days_quiet: typeof r.days_quiet === "number" ? Math.floor(r.days_quiet) : null,
+      last_touch_at: typeof r.last_touch_at === "string" ? r.last_touch_at : null,
+    });
+  }
+  return out;
+}
+
+export async function osClients(): Promise<OsRosterClient[]> {
+  const token = process.env.CHURLISH_OS_TOKEN;
+  if (!token) throw new OsNotConnectedError();
+  const r = await fetch(`${OS_URL}/api/eve/clients`, {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const j = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+  if (!r.ok || !j.ok) throw new Error(j.error || `OS answered ${r.status}`);
+  const list = parseOsRoster(j);
+  if (!list) throw new Error("OS clients answer carried no clients list");
+  return list;
+}
