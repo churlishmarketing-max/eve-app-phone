@@ -7,6 +7,7 @@ import { db } from "./db.js";
 import { searchMemory } from "./memory.js";
 import { withheldRecallLine } from "./durable.js";
 import { isQuietHours } from "./schedule.js";
+import { fleetModel, heavyModel } from "./models.js";
 import { sendPush, getLatestToken, isPushReady } from "./push.js";
 import { requestConfirm, type PendingConfirm } from "./confirm.js";
 import { fleetRoster } from "./fleet.js";
@@ -52,9 +53,13 @@ export const WORKER_PERMISSION_MODE =
 // a `job` SSE frame on the dispatching turn, and `failed` always lands an
 // attention item so it reaches his inbox instead of a server log.
 //
-// Fleet workers run their OWN model — kept on Sonnet 5 even when the chat loop
-// (EVE_MODEL) drops to Haiku for cost. Split set by King 2026-07-17.
-const MODEL = process.env.EVE_FLEET_MODEL || "claude-sonnet-5";
+// Fleet workers run their OWN model (EVE_FLEET_MODEL, else the adopted Sonnet —
+// models.ts), split from the chat loop by King 2026-07-17. A unit marked
+// `heavy` in the registry (strategy, proposals, pricing, diagnosis) runs on
+// heavyModel() instead. Read per job, never at module load.
+export function workerModel(unit: string): string {
+  return capability(unit)?.heavy ? heavyModel() : fleetModel();
+}
 const here = path.dirname(fileURLToPath(import.meta.url));
 const deliverablesDir = path.join(here, "..", "data", "deliverables");
 
@@ -665,7 +670,7 @@ const runWorker: WorkerFn = async (c, jobId, unit, name, title, task, runner, cl
         "its evidence or assumption; end with 'The One Thing to Do First' — one sentence, one action, " +
         "one deadline. Output ONLY the deliverable document.",
       options: {
-        model: MODEL,
+        model: workerModel(unit),
         systemPrompt: runner.doctrine,
         tools: [...WORKER_TOOLS],
         allowedTools: [...WORKER_TOOLS],

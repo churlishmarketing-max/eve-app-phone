@@ -14,6 +14,7 @@ import { pictureFrame, pictureVerdict, type PictureFrame } from "./picture.js";
 import { renderCarriedNames, type CarriedNames } from "./carried.js";
 import type { HandoffFrame } from "./handoff.js";
 import { turnLedgerLine } from "./honesty.js";
+import { pickChatModel } from "./models.js";
 import { readOpenerNote, wantsOpener } from "./opener.js";
 import type { JobFrame } from "./dispatch.js";
 import { newTurnLatch, type DurableTaint, type LockNotice } from "./authority.js";
@@ -32,7 +33,6 @@ import {
   type TaintRead as UntrustedRead,
 } from "./untrusted.js";
 
-const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
 // THERE IS NO `sessions` MAP HERE ANY MORE (audit 4, D2).
 //
@@ -174,11 +174,18 @@ export async function runChat(
   // The SDK retries a 5xx up to CLAUDE_CODE_MAX_RETRIES times with backoff —
   // during an Anthropic outage that reads as a silent hang for minutes. Fail
   // honestly instead: abort and say what happened.
+  // WHICH MODEL RUNS THIS TURN (models.ts). Sonnet unless he asked for Opus
+  // in plain words, the message is long, it is a strategy / pricing /
+  // proposal / contract / negotiation / master-plan request, or the previous
+  // turn ran on Opus. Decided once, here, and written to the turn ledger.
+  const pick = pickChatModel(userMessage, { conversationId });
+
   const ac = abort ?? new AbortController();
+  // Opus is slower, and an escalated turn is the deep one: 180s, not 100s.
   const deadline = setTimeout(() => {
     timedOut = true;
     ac.abort();
-  }, 100_000);
+  }, pick.tier === "opus" ? 180_000 : 100_000);
 
   events.onState("thinking");
 
@@ -596,7 +603,7 @@ export async function runChat(
           ? blocks[0].text
           : "",
       options: {
-        model: MODEL,
+        model: pick.model,
         systemPrompt: staticSystemPrompt,
         // Re-passed on every call including resumes — in-process MCP servers
         // don't persist with the session transcript.
@@ -710,7 +717,7 @@ export async function runChat(
     // The counts this process kept are still worth having, so they are LOGGED.
     // A log line cannot promise more than it counted, and it never reaches his
     // answer, which is the whole difference.
-    console.info(turnLedgerLine(conversationId, { cardsRaised, deskRefusals }));
+    console.info(turnLedgerLine(conversationId, { cardsRaised, deskRefusals, model: { tier: pick.tier, id: pick.model, reason: pick.reason } }));
 
     // HER REPLY. THIS LINE WAS STEP 3 OF THE D6-10 CHAIN: unconditional, on
     // picture turns, on the exact turn picture.ts had instructed her to say what

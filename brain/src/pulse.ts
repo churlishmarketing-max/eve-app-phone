@@ -4,8 +4,8 @@ import { db } from "./db.js";
 import { isQuietHours } from "./schedule.js";
 import { sendPush, getLatestToken, isPushReady } from "./push.js";
 import * as os from "./os.js";
+import { everydayModel } from "./models.js";
 
-const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
 // Client pulse — the touch-base radar (04 §3). Never let a client sit in
 // silence: past cadence → drafted update + attention item + one push.
@@ -18,7 +18,7 @@ async function generateWithModel(prompt: string): Promise<string> {
   const q = query({
     prompt,
     options: {
-      model: MODEL,
+      model: everydayModel(),
       systemPrompt: staticSystemPrompt,
       allowedTools: [],
       disallowedTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch"],

@@ -45,11 +45,13 @@ export const DEFAULT_ALERT_KINDS: readonly string[] = [
   "approval",
   "routine_risk",
   "os_event",
+  "model",
 ];
 /** Kinds the per-kind rate guard never holds back. */
 // os_event is already batched by the minute pull (one push per pull, held
 // through quiet hours), so the guard would only ever drop a real batch.
-const UNLIMITED: ReadonlySet<string> = new Set(["brief", "closeout", "os_event"]);
+// model is once per model id by construction (models.ts), so it is never dropped either.
+const UNLIMITED: ReadonlySet<string> = new Set(["brief", "closeout", "os_event", "model"]);
 
 function webhook(): string | undefined {
   return process.env.DISCORD_ALERTS_WEBHOOK_URL || undefined;

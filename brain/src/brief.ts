@@ -28,11 +28,11 @@ import { floorView } from "./floor.js";
 import { recentJobsQuery, shapeJob } from "./dispatch.js";
 import { triageMail, readTodayShape } from "./mail.js";
 import * as google from "./google.js";
+import { everydayModel } from "./models.js";
 import { osSweep, ready as osReady } from "./os.js";
 import { readClientRoster } from "./roster.js";
 import type { MailSource } from "./google.js";
 
-const MODEL = process.env.EVE_MODEL || "claude-sonnet-5";
 
 // The body's ONE clause inside the existing 07:00 push — never a second
 // notification, and never a checklist read back at him. It names what the DAY
@@ -229,7 +229,7 @@ export async function generateBrief(bodyClause = "", briefBlock = ""): Promise<s
   const q = query({
     prompt: directive,
     options: {
-      model: MODEL,
+      model: everydayModel(),
       systemPrompt: staticSystemPrompt,
       allowedTools: [],
       disallowedTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch"],

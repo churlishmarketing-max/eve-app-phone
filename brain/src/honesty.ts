@@ -144,6 +144,8 @@ export interface TurnFacts {
   cardsRaised: number;
   /** desk tool refusals this turn. Counted by connectors.ts. */
   deskRefusals: number;
+  /** Which model ran this turn and why (models.ts pickChatModel). Never content. */
+  model?: { tier: string; id: string; reason: string };
 }
 
 /**
@@ -156,5 +158,6 @@ export interface TurnFacts {
  * and all this code can prove is a count.
  */
 export function turnLedgerLine(conversationId: string, facts: TurnFacts): string {
-  return `[turn] ${conversationId} cardsRaised=${facts.cardsRaised} deskRefusals=${facts.deskRefusals}`;
+  const model = facts.model ? ` model=${facts.model.tier} reason=${facts.model.reason} id=${facts.model.id}` : "";
+  return `[turn] ${conversationId} cardsRaised=${facts.cardsRaised} deskRefusals=${facts.deskRefusals}${model}`;
 }
