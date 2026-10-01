@@ -14,7 +14,7 @@ import { pictureFrame, pictureVerdict, type PictureFrame } from "./picture.js";
 import { renderCarriedNames, type CarriedNames } from "./carried.js";
 import type { HandoffFrame } from "./handoff.js";
 import { turnLedgerLine } from "./honesty.js";
-import { pickChatModel } from "./models.js";
+import { noteChatExchange, routeTurn } from "./models.js";
 import { readOpenerNote, wantsOpener } from "./opener.js";
 import type { JobFrame } from "./dispatch.js";
 import { newTurnLatch, type DurableTaint, type LockNotice } from "./authority.js";
@@ -174,18 +174,23 @@ export async function runChat(
   // The SDK retries a 5xx up to CLAUDE_CODE_MAX_RETRIES times with backoff —
   // during an Anthropic outage that reads as a silent hang for minutes. Fail
   // honestly instead: abort and say what happened.
-  // WHICH MODEL RUNS THIS TURN (models.ts). Sonnet unless he asked for Opus
-  // in plain words, the message is long, it is a strategy / pricing /
-  // proposal / contract / negotiation / master-plan request, or the previous
-  // turn ran on Opus. Decided once, here, and written to the turn ledger.
-  const pick = pickChatModel(userMessage, { conversationId });
+  // WHICH MODEL RUNS THIS TURN (models.ts routeTurn). An explicit ask wins;
+  // else a small Haiku call judges light or heavy; if it fails, the fixed
+  // rules decide. STARTED here and awaited just before the model is built, so
+  // the router's round trip overlaps the store reads below instead of adding
+  // to them. It never rejects. Decided once and written to the turn ledger.
+  const pickP = routeTurn(userMessage, { conversationId });
 
   const ac = abort ?? new AbortController();
   // Opus is slower, and an escalated turn is the deep one: 180s, not 100s.
-  const deadline = setTimeout(() => {
+  // The clock starts now at 100s and is stretched to 180s from this same
+  // start once the pick says Opus.
+  const turnStart = Date.now();
+  const onDeadline = () => {
     timedOut = true;
     ac.abort();
-  }, pick.tier === "opus" ? 180_000 : 100_000);
+  };
+  let deadline = setTimeout(onDeadline, 100_000);
 
   events.onState("thinking");
 
@@ -577,6 +582,12 @@ export async function runChat(
       carriedNames ? renderCarriedNames(carriedNames) : "",
     );
 
+    const pick = await pickP;
+    if (pick.tier === "opus") {
+      clearTimeout(deadline);
+      deadline = setTimeout(onDeadline, Math.max(0, 180_000 - (Date.now() - turnStart)));
+    }
+
     const q = query({
       // Volatile context rides in the user turn; system prompt stays static
       // (prompt-cache friendly).
@@ -726,6 +737,11 @@ export async function runChat(
     // under "trust these over guesses". The gate is inside appendMessage now, so
     // it cannot be forgotten by the next caller of it.
     if (fullText.trim()) void appendMessage(conversationId, "eve", fullText);
+    // What the router sees as "the exchange before" on his next turn — in
+    // memory, clipped, never logged. Not on a picture turn: her reply there
+    // describes his screen, and a screenshot never shapes a turn he did not
+    // just send.
+    if (!image) noteChatExchange(conversationId, userMessage, fullText);
     events.onState("idle");
     events.onDone({ conversationId, fullText });
   } catch (err) {

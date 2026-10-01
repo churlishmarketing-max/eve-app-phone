@@ -2640,9 +2640,9 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
         <nav className="nav6">
           {([
             ["today", "TODAY"],
-            ["eve", "EVE"],
-            ["os", "OS"],
             ["fleet", "FLEET"],
+            ["os", "OS"],
+            ["eve", "EVE"],
             ["ops", "OPS"],
             ["wire", "WIRE"],
             ["body", "BODY"],
