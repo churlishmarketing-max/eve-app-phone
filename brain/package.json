@@ -2,7 +2,7 @@
   "name": "eve-brain",
   "version": "0.1.0",
   "private": true,
-  "description": "EVE \u2014 Executive Voice Engine brain service (Churlish Media)",
+  "description": "EVE — Executive Voice Engine brain service (Churlish Media)",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -13,8 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "0.3.211",
-    "tsx": "^4.19.0",
+    "@anthropic-ai/claude-agent-sdk": "0.3.289",
     "@deepgram/sdk": "^5.6.0",
     "@elevenlabs/elevenlabs-js": "^2.58.0",
     "@supabase/supabase-js": "^2.110.6",
@@ -23,6 +22,7 @@
     "firebase-admin": "^14.1.0",
     "googleapis": "^173.0.0",
     "node-cron": "^4.6.0",
+    "tsx": "^4.19.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
