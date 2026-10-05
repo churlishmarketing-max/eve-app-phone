@@ -1,0 +1,22 @@
+# Weekly library updates for her brain as pull requests Brandon merges.
+# This is what keeps @anthropic-ai/claude-agent-sdk new enough for the newest
+# models (an old SDK is refused for them — see RUNBOOK_models.md). Minor and
+# patch bumps arrive together; a major version comes alone.
+# .github/workflows/check.yml typechecks the brain and runs its authority and
+# models harnesses on each PR. The phone app and desktop aren't watched: they
+# only change when an APK or installer is rebuilt by hand.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /brain
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: deps

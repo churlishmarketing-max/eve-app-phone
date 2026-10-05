@@ -1,0 +1,25 @@
+# The brain's fast checks on every pull request: a red X means don't merge yet.
+name: check
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  brain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: brain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: brain/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx tsx verify/authority-harness.ts
+      - run: npx tsx verify/models-harness.ts
