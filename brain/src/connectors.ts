@@ -135,6 +135,10 @@ export const connectorToolNames = [
   "mcp__eve_hands__os_move_client_stage",
   "mcp__eve_hands__os_inbox_summary",
   "mcp__eve_hands__os_house_status",
+  // HLP invitations (OS migration 48) — a guest list in, the drafting job queued.
+  // Neither sends: every invitation waits in his OS Inbox for one tap.
+  "mcp__eve_hands__os_hlp_import_guests",
+  "mcp__eve_hands__os_hlp_queue_invitations",
   // One House Step 4c — what happened in the house since a cursor (os-events.ts).
   "mcp__eve_hands__os_events_since",
   "mcp__eve_hands__dispatch_fleet",
@@ -1424,6 +1428,91 @@ export function buildConnectorServer(
           }
         },
         { annotations: { readOnlyHint: true } },
+      ),
+      // ---- HLP invitations (OS migration 48) · Blue Beetle's Lane 1 now runs here ----
+      //
+      // Two OS writes that send nothing. There is NO invitation send tool on
+      // either shore: each invitation is one card in his OS Inbox and leaves on
+      // his own tap (the OS refuses hlp_invite keys on inbox_approve_item).
+      // LATCHED, like os_move_client_stage: a pasted CSV is the obvious road
+      // for a stranger's list, so a turn or conversation that has read
+      // third-party text imports nothing and queues nothing.
+      tool(
+        "os_hlp_import_guests",
+        "Import a High Level Pros podcast-guest list into the OS. Pass Brandon's list AS HE GAVE IT: `csv` for pasted " +
+          "CSV text (first line = header naming name, email, business, linkedin, line_one, source, trade, number), `rows` " +
+          "for structured data — one or the other, at most 500 rows per call (split longer lists). NEVER invent, guess or " +
+          "\"fix\" an email, and NEVER write a line_one: line_one is the verified specific thing about that person that " +
+          "opens the invitation, and only Brandon supplies it. A row without line_one still imports but gets NO draft — " +
+          "say how many need one (needs_line_one) and ask him for them. Duplicates, do-not-email addresses and existing " +
+          "clients are skipped by the OS. Returns counts only. It sends nothing — drafting is queued, and every " +
+          "invitation waits in Brandon's OS Inbox for his tap.",
+        {
+          csv: z.string().min(1).max(500_000).optional().describe("Brandon's pasted CSV, verbatim, header line first"),
+          rows: z
+            .array(
+              z
+                .object({
+                  name: z.string().max(2000).optional(),
+                  email: z.string().max(2000).optional(),
+                  business: z.string().max(2000).optional(),
+                  linkedin: z.string().max(2000).optional(),
+                  line_one: z.string().max(2000).optional().describe("Only what Brandon gave — never written by EVE"),
+                  source: z.string().max(2000).optional(),
+                  trade: z.string().max(2000).optional(),
+                  number: z.string().max(2000).optional(),
+                })
+                .strict(),
+            )
+            .min(1)
+            .max(500)
+            .optional()
+            .describe("Structured rows, exactly as Brandon gave them — instead of csv"),
+        },
+        async ({ csv, rows }) => {
+          const locked = conversationLock(turn, "os_hlp_import_guests", "import a guest list into your OS", "No guests were imported.");
+          if (locked) return text(locked, true);
+          if (turn.tainted()) {
+            return text(untrustedRefusal("import a guest list into your OS", "No guests were imported."), true);
+          }
+          if ((csv ? 1 : 0) + (rows ? 1 : 0) !== 1) {
+            return text("Give the list as csv OR rows — exactly one. Nothing was imported.", true);
+          }
+          try {
+            const { result, data } = await os.osToolData("hlp_import_guests", csv ? { csv } : { rows });
+            const need = typeof data?.needs_line_one === "number" ? data.needs_line_one : 0;
+            return text(
+              result +
+                (need > 0
+                  ? ` ${need} imported without a line one and get no draft until Brandon gives each one — ask him; don't write them.`
+                  : "") +
+                " Nothing was sent.",
+            );
+          } catch (e) {
+            return text(os.explainError(e), true);
+          }
+        },
+      ),
+      tool(
+        "os_hlp_queue_invitations",
+        "Queue the OS's High Level Pros invitation drafting job now (T1 first invitations, T3 close-outs). The drafts go " +
+          "to Brandon's OS Inbox, one card each, and each one goes only on his own tap; the OS caps NEW invitations at 20 " +
+          "a day. Returns how many drafts wait and how many of today's 20 slots are left. It sends nothing — never say an " +
+          "invitation was sent, only that drafts are queued or waiting for his tap.",
+        {},
+        async () => {
+          const locked = conversationLock(turn, "os_hlp_queue_invitations", "queue the invitation drafts", "Nothing was queued.");
+          if (locked) return text(locked, true);
+          if (turn.tainted()) {
+            return text(untrustedRefusal("queue the invitation drafts", "Nothing was queued."), true);
+          }
+          try {
+            const { result } = await os.osToolData("hlp_queue_invitations", {});
+            return text(`${result} Nothing was sent by this call.`);
+          } catch (e) {
+            return text(os.explainError(e), true);
+          }
+        },
       ),
       // ---- One House Step 4c · the OS event feed (GET /api/eve/events) ----
       tool(

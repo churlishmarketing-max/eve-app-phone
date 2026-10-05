@@ -70,7 +70,7 @@ const RUNNABLE = {
   "alfred-editor": { as: "alfred", reason: "Phase 2 (analyze → plan → brand → mockup) is text from a pasted transcript; Remotion build + Premiere placement stay workspace", note: "planning phases only" },
   "aqualad": { reason: "fiction/RP/worldbuilding writer; text references only" },
   "avatar-bible-loader": { reason: "serves avatar profiles from its text references; builds new ones from pasted material" },
-  "blue-beetle": { reason: "drafts outreach sequences and reply routing; the worker holds no send tools so nothing goes out", note: "drafts only — Smartlead/LinkedIn/Calendar stay workspace" },
+  "blue-beetle": { reason: "drafts outreach sequences and reply routing; the worker holds no send tools so nothing goes out", note: "drafts only — Smartlead/LinkedIn/Calendar stay workspace. Lane 1 invitations now run through EVE's OS tools (os_hlp_import_guests, os_hlp_queue_invitations) and Brandon's OS Inbox, one tap per invitation — say so rather than drafting a send" },
   "brainiac": { reason: "rewrites a request into a model-tuned prompt; text only" },
   "brother-eye": { reason: "AEO query battery + visibility report; needs web search, which workers have" },
   "cassandra-cain": { reason: "scores a draft against pasted performance data; text in, score out", note: "pattern files cannot be saved from the brain — the score is the deliverable" },

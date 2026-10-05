@@ -871,6 +871,8 @@ async function main() {
       "eve_hands.os_command": { args: { tool: "add_deal", input: { client_name: "Vendor Corp", amount: 5000 } } },
       "eve_hands.os_create_invoice": { args: { client_name: "Vendor Corp", items: [{ desc: "Retainer", unit: 4000 }] } },
       "eve_hands.os_move_client_stage": { args: { client_name: "Vendor Corp", stage: "Signed" } },
+      "eve_hands.os_hlp_import_guests": { args: { csv: "name,email,business,line_one\nVendor Corp,ceo@vendor.example,Vendor Corp,the mail said so" } },
+      "eve_hands.os_hlp_queue_invitations": { args: {} },
       "eve_memory.save_memory": { args: { kind: "decision", content: HOSTILE }, table: "memory_entries" },
       "eve_memory.log_touch": { args: { client: "Vendor Corp", channel: "email", summary: "replied" }, table: "touches" },
     };
@@ -1666,6 +1668,113 @@ async function main() {
     const markSites = [...CONNECTORS_SRC.matchAll(/"invoice_mark_paid_offline"/g)].length;
     ok("E18.7", markSites === 1 && /requestConfirm\(\s*"os_mark_paid"[\s\S]{0,300}?\(\) => os\.osTool\("invoice_mark_paid_offline", payload, true\)/.test(CONNECTORS_SRC), `SOURCE: exactly ONE invoice_mark_paid_offline call site in connectors.ts (${markSites}), and it is the execute callback INSIDE requestConfirm("os_mark_paid") — the card is the only road`);
     ok("E18.6", rNo.isError === true && /No card was raised/.test(rNo.content[0].text) && net.length === 0, "no invoice number and no id → refused before any card is drawn, and nothing reaches the OS");
+    delete process.env.CHURLISH_OS_TOKEN;
+  }
+
+  // =========================================================================
+  console.log("\n=== E19 — HLP invitations: os_hlp_import_guests + os_hlp_queue_invitations, driven ===");
+  {
+    // Two OS writes that send nothing (churlish-os lib/eve/tools.ts, migration
+    // 48). Driven against a local fake of POST /api/eve that answers the OS's
+    // fixed { ok, result, data } shapes, so the request bodies, the relayed
+    // answers and the OS's own errors are all observed, not asserted from source.
+    const IMPORT = "mcp__eve_hands__os_hlp_import_guests";
+    const QUEUE = "mcp__eve_hands__os_hlp_queue_invitations";
+    const live19 = turn();
+    const registered19 = Object.keys((live19.servers[0] as Server).instance._registeredTools);
+    ok("E19.1", connectorToolNames.includes(IMPORT) && connectorToolNames.includes(QUEUE) && registered19.includes("os_hlp_import_guests") && registered19.includes("os_hlp_queue_invitations"), "both tools are in connectorToolNames AND registered on eve_hands (a tool missing from the list is invisible to her)");
+    ok("E19.2", TOOL_VERDICTS["eve_hands.os_hlp_import_guests"]?.verdict === "latched" && TOOL_VERDICTS["eve_hands.os_hlp_queue_invitations"]?.verdict === "latched" && TOOL_VERDICTS["eve_hands.os_move_client_stage"]?.verdict === "latched" && !TOOL_VERDICTS["eve_hands.os_hlp_import_guests"].reader && !TOOL_VERDICTS["eve_hands.os_hlp_queue_invitations"].reader, "both carry verdict 'latched' — the same as os_move_client_stage, the OS write that sends nothing — and neither is a reader (the OS answers counts only)");
+
+    type Os19 = { tool: string; input: Record<string, unknown>; confirmed: boolean };
+    let calls19: Os19[] = [];
+    let answer19: { code: number; body: unknown } = { code: 200, body: {} };
+    const sentinel19 = globalThis.fetch;
+    globalThis.fetch = (async (input: unknown, init?: { body?: unknown }) => {
+      const b = JSON.parse(String(init?.body ?? "{}")) as { tool: string; input: Record<string, unknown>; confirmed?: boolean };
+      calls19.push({ tool: b.tool, input: b.input, confirmed: b.confirmed === true });
+      net.push({ url: String(input), body: String(init?.body ?? "") });
+      return new Response(JSON.stringify(answer19.body), { status: answer19.code, headers: { "content-type": "application/json" } });
+    }) as typeof globalThis.fetch;
+    process.env.CHURLISH_OS_TOKEN = "harness-token";
+    const fresh = () => {
+      useDb({ conversations: [{ id: CLEAN_CONV, surface: "app", read_untrusted: false }], messages: [], unit_schedules: [] });
+      calls19 = [];
+      return turn(false, durableFor());
+    };
+    const IMPORT_OK = {
+      ok: true,
+      result: "3 imported (1 need line one) · 2 skipped: 1 already a guest, 1 a client — guests and sales never mix. Drafting is queued; each invitation will wait in the Inbox for Brandon's tap.",
+      data: { total: 5, imported: 3, needs_line_one: 1, skipped: { already_a_guest: 1, client: 1 }, skipped_total: 2, dry_run: false, queued: true },
+    };
+    const CSV = "name,email,business,line_one\nDana Ruiz,dana@ruizroofing.example,Ruiz Roofing,Rebuilt the crew after the 2024 hail season";
+
+    // ---- csv → { tool: "hlp_import_guests", input: { csv } }, nothing else
+    answer19 = { code: 200, body: IMPORT_OK };
+    let t19 = fresh();
+    const rc = await t19.h.os_hlp_import_guests({ csv: CSV }, {});
+    const c0 = calls19[0];
+    ok("E19.3", calls19.length === 1 && c0.tool === "hlp_import_guests" && JSON.stringify(c0.input) === JSON.stringify({ csv: CSV }) && c0.confirmed === false, `csv goes as {tool:"hlp_import_guests", input:{csv}} verbatim, no rows key, no confirmed (got ${JSON.stringify(c0 ?? null).slice(0, 120)})`);
+    const rcTxt = rc.content[0].text;
+    ok("E19.4", rc.isError !== true && rcTxt.startsWith(IMPORT_OK.result) && /1 imported without a line one and get no draft/.test(rcTxt) && /Nothing was sent\.$/.test(rcTxt), `the OS's sentence is relayed, the needs-line-one count is spelled out, and it ends "Nothing was sent.": "${rcTxt.slice(-150)}"`);
+    ok("E19.5", t19.latch.tainted() === false, "counts only → it does not close the latch (not a reader)");
+
+    // ---- rows → { input: { rows } }, exactly as given
+    t19 = fresh();
+    const ROWS = [
+      { name: "Dana Ruiz", email: "dana@ruizroofing.example", business: "Ruiz Roofing", line_one: "Rebuilt the crew after the 2024 hail season", trade: "roofing" },
+      { name: "Sam Ode", email: "sam@odeplumbing.example", business: "Ode Plumbing" },
+    ];
+    await t19.h.os_hlp_import_guests({ rows: ROWS }, {});
+    ok("E19.6", calls19.length === 1 && calls19[0].tool === "hlp_import_guests" && JSON.stringify(calls19[0].input) === JSON.stringify({ rows: ROWS }) && calls19[0].confirmed === false, "rows go as {tool:\"hlp_import_guests\", input:{rows}} untouched — no line_one added to the row that had none");
+
+    // ---- neither, or both → refused before the OS
+    t19 = fresh();
+    const rNone = await t19.h.os_hlp_import_guests({}, {});
+    const rBoth = await t19.h.os_hlp_import_guests({ csv: CSV, rows: ROWS }, {});
+    ok("E19.7", rNone.isError === true && rBoth.isError === true && /exactly one/.test(rBoth.content[0].text) && calls19.length === 0, "no list, or csv AND rows → refused before any call to the OS (outbound 0)");
+
+    // ---- queue → { tool: "hlp_queue_invitations", input: {} }
+    answer19 = {
+      code: 200,
+      body: {
+        ok: true,
+        result: "Drafting queued for the next drain (within 5 minutes). Waiting in the Inbox now: 4 invitation(s), 1 close-out(s), 0 reply(ies). 6 of 20 new invitations went today; 14 slot(s) left. Each one waits for Brandon's tap — nothing is sent from here.",
+        data: { queued: true, job_key: "hlp_invites_draft:eve:2026-10-05T14:05", drafts_waiting: { T1: 4, T3: 1, R1: 0, total: 5 }, held: 0, t1_sent_today: 6, t1_slots_left: 14, auto_send: false },
+      },
+    };
+    t19 = fresh();
+    const rq = await t19.h.os_hlp_queue_invitations({}, {});
+    const rqTxt = rq.content[0].text;
+    ok("E19.8", calls19.length === 1 && calls19[0].tool === "hlp_queue_invitations" && JSON.stringify(calls19[0].input) === "{}" && calls19[0].confirmed === false, `the queue call is {tool:"hlp_queue_invitations", input:{}} with no confirmed (got ${JSON.stringify(calls19[0] ?? null)})`);
+    ok("E19.9", rq.isError !== true && /14 slot\(s\) left/.test(rqTxt) && /Nothing was sent by this call\.$/.test(rqTxt), `the OS's counts are relayed and it ends "Nothing was sent by this call.": "${rqTxt.slice(-120)}"`);
+
+    // ---- the OS's own error is relayed, as an error
+    answer19 = { code: 400, body: { ok: false, error: "hlp_import_guests: 612 rows — at most 500 per call. Split the list." } };
+    t19 = fresh();
+    const rErr = await t19.h.os_hlp_import_guests({ csv: CSV }, {});
+    ok("E19.10", rErr.isError === true && /OS call failed: hlp_import_guests: 612 rows — at most 500 per call\. Split the list\./.test(rErr.content[0].text), `an OS refusal comes back verbatim as an error: "${rErr.content[0].text}"`);
+    answer19 = { code: 502, body: { ok: false, error: "Couldn't queue the drafting job: insert failed." } };
+    t19 = fresh();
+    const rErrQ = await t19.h.os_hlp_queue_invitations({}, {});
+    ok("E19.11", rErrQ.isError === true && /Couldn't queue the drafting job: insert failed\./.test(rErrQ.content[0].text) && !/Nothing was sent by this call/.test(rErrQ.content[0].text), `…and so does a failed queue, with no success line glued on: "${rErrQ.content[0].text}"`);
+
+    // ---- TAINT: a turn that read third-party text imports nothing, queues nothing
+    answer19 = { code: 200, body: IMPORT_OK };
+    t19 = fresh();
+    await t19.h.read_texts({ max: 5 }, {});
+    calls19 = [];
+    const tImp = await t19.h.os_hlp_import_guests({ csv: CSV }, {});
+    const tQ = await t19.h.os_hlp_queue_invitations({}, {});
+    ok("E19.12", t19.latch.tainted() === true && tImp.isError === true && REFUSED.test(tImp.content[0].text) && tQ.isError === true && REFUSED.test(tQ.content[0].text) && calls19.length === 0, `after a reader in the same turn both REFUSE with zero OS calls (outbound=${calls19.length}) — a stranger's pasted list never lands`);
+
+    // ---- NO SEND PATH
+    const start19 = CONNECTORS_SRC.indexOf('        "os_hlp_import_guests",\n');
+    const src19 = CONNECTORS_SRC.slice(start19, CONNECTORS_SRC.indexOf("// ---- One House Step 4c · the OS event feed", start19));
+    ok("E19.13", start19 > 0 && src19.length > 500 && !/requestConfirm|confirmed|google\.|sendMail|hlp_invite\b|inbox_approve|approve_item/.test(src19) && (src19.match(/os\.osToolData\("hlp_(import_guests|queue_invitations)"/g) ?? []).length === 2 && !/os\.osTool\(/.test(src19), "SOURCE: the two handlers make exactly two OS calls (hlp_import_guests, hlp_queue_invitations), never pass confirmed, raise no card and touch no mail or Inbox-approve path");
+    const hlpNames = connectorToolNames.filter((n) => /hlp|invit/i.test(n));
+    ok("E19.14", hlpNames.length === 2 && hlpNames.every((n) => n === IMPORT || n === QUEUE) && !connectorToolNames.some((n) => /send_invit|invite_send|hlp_send/i.test(n)), `the only HLP tools she can see are these two — there is no invitation send tool (${hlpNames.join(", ")})`);
+
+    globalThis.fetch = sentinel19;
     delete process.env.CHURLISH_OS_TOKEN;
   }
 

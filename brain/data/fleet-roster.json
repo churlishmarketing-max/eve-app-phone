@@ -114,7 +114,7 @@
     "key": "blue-beetle",
     "name": "Blue Beetle",
     "alias": "Outreach · V5",
-    "job": "Lane 1 (first): HLP guest invitations, 3 touches then stop, books the pre-interview, zero pitches in the thread. Lane 2: sales outreach at rule volume. Lane 3: sponsors from Dec 1.",
+    "job": "Lane 1 (first): HLP guest invitations, 3 touches then stop, books the pre-interview, zero pitches in the thread. Lane 1 now runs through the OS: EVE imports the list (os_hlp_import_guests) and queues the drafts (os_hlp_queue_invitations); each invitation waits in Brandon's OS Inbox for one tap, 20 new a day. Lane 2: sales outreach at rule volume. Lane 3: sponsors from Dec 1.",
     "triggers": "\"run Blue Beetle\" · \"send the invitations\" · outreach",
     "schedule": "Daily",
     "loc": "WS"
