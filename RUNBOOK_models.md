@@ -58,3 +58,14 @@ proposal-generator, ad-diagnostic-engine, doctor-mid-nite.
   where reason is `router:"<why>"`, `asked`, `short` / `short:kept-heavy`, `rules:<rule>`,
   `off`, or `router-failed cause=<timeout|http-NNN|invalid-json|error|no-key> fallback=rules:<rule>`.
 - Moves: logs lines starting `[models]`.
+
+## The Agent SDK version gates new models
+
+The API refuses a model newer than the Claude Code build bundled in
+`@anthropic-ai/claude-agent-sdk` ("Claude Code 2.1.211 does not support this
+model; version 2.1.280 or newer is required"). 0.3.211 ran Sonnet 5.5 but not
+Opus 5.5, so heavy turns quietly fell back to Sonnet. Pinned at 0.3.289
+(Claude Code 2.1.289) on 2026-10-05. When the boot log says a model "failed
+its test" with that message, bump the SDK: `npm install
+@anthropic-ai/claude-agent-sdk@latest --save-exact` in `brain/`, then
+`npx tsc --noEmit` and `npx tsx verify/models-harness.ts`.
