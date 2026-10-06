@@ -442,6 +442,114 @@ export async function runDispatch(
 }
 
 // ---------------------------------------------------------------------------
+// THE DISPATCH CARD — a tainted turn's dispatch, drawn instead of refused.
+//
+// R1 said, and still says, that nothing read out of a mailbox may start a job:
+// dispatchUnit refuses "untrusted_content" on its first line and that line is
+// untouched. What changed (2026-10-06) is what the TOOL does instead of
+// reaching that line from a tainted turn. On the phone, "start a fresh thread"
+// had no button behind it, so he asked for Kid Flash and could not have him.
+//
+// So the tool draws THIS card (authority.ts `card-when-tainted`, W4): the
+// resolved unit, its name, the exact task text, the client and her routing
+// line, as the payload his screen prints field by field and the hash covers.
+// Drawing it opens NO job row and spends nothing. His approve runs
+// dispatchUnit with those SAME fields — read back out of the hashed payload,
+// never out of the turn that drew it — and authority "king", because by then
+// it is: the only thing that reaches the executor is his tap, on a separate
+// request. confirm.ts deletes the card on its first resolve, so a second
+// approve finds nothing and starts nothing.
+//
+// THE CHECKS THAT CAN FAIL WITHOUT HIM RUN FIRST, so he is never handed a card
+// whose approve would only refuse: the unit must resolve to a runnable registry
+// row, the task must be non-empty, and a tool-runner's declared inputs (the
+// client, for Pennyworth) must be present. Those are the same refusals
+// dispatchUnit speaks, for the same reasons, before any card exists.
+// ---------------------------------------------------------------------------
+
+export interface DispatchCardInput {
+  unit: string;
+  task: string;
+  why: string;
+  client?: string;
+  conversationId?: string;
+}
+
+export interface DispatchCardDrawn {
+  ok: true;
+  pending: PendingConfirm;
+  unit: string;
+  name: string;
+}
+
+/** The sentence his card prints after an approve, built from the outcome — never her `say`. */
+function dispatchCardDetail(r: DispatchAccepted): string {
+  const id8 = r.jobId.slice(0, 8);
+  if (r.status === "in_approvals" && r.confirmId) {
+    return `${r.name} drafted it (job ${id8}) — its send card is waiting for you separately. Nothing has been sent.`;
+  }
+  return `${r.name} has it — job ${id8}, running now. The deliverable lands in your inbox${discordAlertsReady() ? " and in Discord" : ""} when it's done.`;
+}
+
+export async function requestDispatchCard(input: DispatchCardInput): Promise<DispatchCardDrawn | DispatchRefusal> {
+  const task = input.task?.trim() ?? "";
+  const resolved = await resolveDispatch(input.unit ?? "");
+  if ("ok" in resolved) return resolved; // the spoken refusal — no card for a unit that cannot run
+  const { key, cap } = resolved;
+  if (!task) {
+    return { ok: false, code: "missing_input", unit: key, name: cap.name, say: `Nothing to hand ${cap.name} — the task was empty. No card was drawn and nothing was started.`, runnable: [] };
+  }
+  const client = input.client?.trim() || undefined;
+  if (cap.runner.kind === "tool") {
+    const have: Record<string, string | undefined> = { client };
+    const missing = cap.runner.inputs.filter((i) => i.required && !have[i.name]?.trim());
+    if (missing.length) {
+      return {
+        ok: false,
+        code: "missing_input",
+        unit: key,
+        name: cap.name,
+        say: `${cap.name} needs ${missing.map((m) => m.name).join(", ")} to run this — which ${missing[0].name}? No card was drawn and nothing was started.`,
+        runnable: [],
+      };
+    }
+  }
+  const why = input.why?.trim() || "dispatched from a confirm card";
+  // THE PAYLOAD IS THE WHOLE INSTRUCTION. Every field the executor uses is in
+  // here, so the hash his approve echoes covers all of it, and the executor
+  // reads ONLY from this object.
+  const payload: Record<string, unknown> = {
+    unit: key,
+    name: cap.name,
+    task,
+    ...(client ? { client } : {}),
+    why,
+  };
+  const oneLine = task.replace(/\s+/g, " ");
+  const pending = requestConfirm(
+    "dispatch_unit",
+    `Dispatch ${cap.name} — "${oneLine.length > 120 ? `${oneLine.slice(0, 119)}…` : oneLine}"${client ? ` (client: ${client})` : ""}`,
+    payload,
+    async () => {
+      const r = await dispatchUnit({
+        unit: payload.unit as string,
+        task: payload.task as string,
+        why: payload.why as string,
+        ...(typeof payload.client === "string" ? { client: payload.client } : {}),
+        conversationId: input.conversationId,
+        // HIS. The executor is reachable only through POST /confirm with the
+        // hash of exactly this payload, so the authority that arrives here is
+        // his tap and nothing else.
+        authority: "king",
+      });
+      if (!r.ok) return { executed: false, detail: r.say };
+      return dispatchCardDetail(r);
+    },
+  );
+  return { ok: true, pending, unit: key, name: cap.name };
+}
+
+// ---------------------------------------------------------------------------
 // Tool adapters — CODE. A registry row can only pick one of these by name.
 // ---------------------------------------------------------------------------
 

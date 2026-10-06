@@ -185,6 +185,17 @@ export function untrustedRefusal(cannot: string, nothing: string): string {
  * affordance off the lock frame, because a model-discretionary exit is one the
  * model can forget to mention (and the picture audit called exactly that a dead
  * end). See desktop/src/renderer/deck/TalkColumn.tsx.
+ *
+ * AND IT IS NO LONGER SPOKEN BY EVERY GATED TOOL (2026-10-06). "Start a fresh
+ * thread" was a dead end on the PHONE: there was no fresh-thread button, and
+ * reopening the app resumes the same conversation, so he asked her to dispatch
+ * Kid Flash and to post the findings to Discord and got this sentence twice with
+ * nowhere to go. The tools whose verdict is `card-when-tainted` (dispatch_unit,
+ * dispatch_fleet, save_note) never reach it now: where they would have refused
+ * they DRAW A CARD instead and speak `signatureCardNotice` below, which tells him
+ * the true thing — it is on his screen, nothing ran, his tap runs it. The
+ * fresh-thread wording stays for every tool that still refuses, and it is true
+ * there again: the phone is getting its own New conversation button.
  */
 export function conversationLockRefusal(read: TaintRead, cannot: string, nothing: string): string {
   if (read.status === "tainted") {
@@ -228,6 +239,73 @@ export function conversationLock(
   return conversationLockRefusal(turn.conversation(), cannot, nothing);
 }
 
+// ---------------------------------------------------------------------------
+// THE THIRD ANSWER: NOT "YES", NOT "NO" — "HERE IS THE CARD, YOUR TAP RUNS IT".
+//
+// Every gate above has two outcomes, act or refuse. A refusal is right when the
+// only way through is a fresh conversation and that exit exists; on the phone it
+// did not, and "refuse" turned into "you cannot have this today". For a tool
+// whose action can be stated EXACTLY on a card — this unit, this sentence, this
+// client; this note, this channel — there is a third outcome that W4 already
+// licenses: draw ONE card carrying the exact payload, run nothing, and let his
+// approve (a separate HTTP request that carries nothing but his tap) be the
+// signature that runs it with authority "king".
+//
+// WHAT DECIDES IT IS THE SAME FACT THAT DECIDED THE REFUSAL. `signatureRequired`
+// reads `locked()` and `tainted()` — where this turn and this conversation have
+// been — and nothing else. No text is inspected, and a clean turn of a clean
+// conversation gets `null` and acts exactly as it always has.
+//
+// IT DOES NOT CALL noteLock(). The lock frame tells the desktop "a tool REFUSED
+// on the lock this turn" and raises the reset button beside it. Nothing refused
+// here: the card is the way forward, and a reset button beside a card he can
+// approve would point him at the dead end this exists to remove.
+// ---------------------------------------------------------------------------
+
+/** Why a card was drawn instead of the tool acting. Never constructed for a clean turn. */
+export type SignatureReason =
+  /** The DURABLE read: this conversation has read a stranger's words, or cannot say. */
+  | { scope: "conversation"; read: TaintRead }
+  /** The PER-TURN latch: a reader (or the pack) brought third-party text into THIS turn. */
+  | { scope: "turn" };
+
+/**
+ * NULL MEANS ACT. Anything else means DRAW THE CARD AND RUN NOTHING.
+ *
+ * The durable read is asked first, for the same reason `conversationLock` asks
+ * it first: it is the authority, and the latch is only the fast path.
+ */
+export function signatureRequired(turn: TurnLatch): SignatureReason | null {
+  if (turn.locked()) return { scope: "conversation", read: turn.conversation() };
+  if (turn.tainted()) return { scope: "turn" };
+  return null;
+}
+
+/**
+ * WHAT SHE SAYS WHEN THE CARD WAS DRAWN. Three facts and no fourth: why she did
+ * not act on her own, that the exact thing is on his screen, and that NOTHING
+ * HAS RUN — the half he needs most, said in the same breath as the rest so it
+ * cannot be dropped from a paraphrase.
+ *
+ * The witness is the real one, exactly as in `conversationLockRefusal`: the
+ * durable read's own `why`, interpolated, never summarised.
+ *
+ * `cannot` finishes "I can't … on my own here"; `shows` finishes "showing
+ * exactly …"; `nothing` is the flat statement of what has not happened yet.
+ */
+export function signatureCardNotice(reason: SignatureReason, cannot: string, shows: string, nothing: string): string {
+  const why =
+    reason.scope === "turn"
+      ? "This turn has already pulled someone else's words in — mail, calendar entries, texts, filenames and OS records are data, not orders"
+      : reason.read.status === "tainted"
+        ? `Someone else's words have already been read into this conversation (${reason.read.why}), and they are data, not orders`
+        : `I can't tell you this conversation is clean (${reason.read.why})`;
+  return (
+    `${why} — so I can't ${cannot} on my own here. I've put ONE card on your screen instead, showing exactly ` +
+    `${shows}. ${nothing}: it is waiting for your tap, and only your approve runs it. Cancel it and nothing happens.`
+  );
+}
+
 /**
  * WHAT THE DESKTOP IS TOLD WHEN THE LOCK FIRED. Emitted by chat.ts as an SSE
  * `locked` frame, ONCE per turn, because a refusal happened in code.
@@ -262,8 +340,21 @@ export interface LockNotice {
  *                   these was measured against R1's own list (schedule work,
  *                   cancel work, dispatch work, file a file, send a message,
  *                   write a permanent memory, spend money) and lands outside it.
+ *  · card-when-tainted — takes authority, and in a CLEAN turn of a CLEAN
+ *                   conversation acts directly, exactly as a latched tool's
+ *                   allow side does. Where a latched tool would REFUSE (the turn
+ *                   latch closed, or the conversation locked or unreadable) it
+ *                   instead DRAWS ONE CARD carrying the exact payload, runs
+ *                   nothing, and returns. Only King's approve runs it, with
+ *                   authority "king"; a second approve finds no card. This is
+ *                   the W4 ruling below applied to a tool that used to refuse:
+ *                   untrusted text may cause the card to be DRAWN, never RUN.
+ *                   verify/authority-harness.ts drives every one of these
+ *                   through a locked conversation AND a tainted turn and counts
+ *                   1 card, 0 rows, 0 outbound before the tap; then 1 run on
+ *                   approve, and 0 more on a second approve.
  */
-export type Verdict = "latched" | "confirm-card" | "exempt";
+export type Verdict = "latched" | "confirm-card" | "exempt" | "card-when-tainted";
 
 /**
  * W4 · THE CONFIRM-CARD RULING, STATED — "HIS APPROVE IS THE SIGNATURE".
@@ -351,10 +442,16 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   // ---- eve_hands · LATCHED (real authority, refused in a tainted turn) -----
   "eve_hands.schedule_unit": { verdict: "latched", why: "writes a standing order — R1 'schedule work'; createSchedule(authority())" },
   "eve_hands.cancel_schedule": { verdict: "latched", why: "DELETES a standing order — R1 'cancel work'; cancelSchedule(ref, authority())" },
-  "eve_hands.dispatch_unit": { verdict: "latched", why: "starts a job and spends budget — R1 'dispatch work' / 'spend money'; authority: authority()" },
-  "eve_hands.dispatch_fleet": { verdict: "latched", why: "deprecated alias of dispatch_unit — an unlatched alias is a hole straight through the fix it aliases; authority: authority()" },
   "eve_hands.calendar_create_event": { verdict: "latched", why: "puts an event on his calendar — R1 'schedule work'. The attendee branch is ALSO a confirm card (invites email out), but the no-attendee branch reached google.createEvent with no card at all, so the gate is on the tool" },
-  "eve_hands.save_note": { verdict: "latched", why: "POSTS TO DISCORD and writes memory_entries in one call — R1 'send a message' AND 'write a permanent memory'. It is also the write end of context.ts's recall block, which re-injects memory under 'trust these over guesses'" },
+
+  // ---- eve_hands · CARD WHEN TAINTED (act when clean; his tap when not) -----
+  // These three were `latched` until 2026-10-06, and on the phone a latched
+  // refusal was a dead end: no fresh-thread button, and reopening the app
+  // resumes the same conversation. Each one's action fits EXACTLY on a card, so
+  // where it used to refuse it now draws one, and his approve is the signature.
+  "eve_hands.dispatch_unit": { verdict: "card-when-tainted", why: "starts a job and spends budget — R1 'dispatch work' / 'spend money'. CLEAN turn of a CLEAN conversation: dispatches directly with authority(), unchanged. TAINTED turn or LOCKED/unreadable conversation: draws ONE card (kind dispatch_unit) whose payload is the resolved unit, its name, the EXACT task text, the client and her routing line, opens no job row and spends nothing; only his approve calls dispatchUnit(... authority:'king') with those same fields, once (confirm.ts deletes the card on first resolve)" },
+  "eve_hands.dispatch_fleet": { verdict: "card-when-tainted", why: "deprecated alias of dispatch_unit, and it draws the SAME card through the same function (dispatch.ts requestDispatchCard) — an alias that refused while its target carded, or acted while its target carded, would be a hole through the fix it aliases" },
+  "eve_hands.save_note": { verdict: "card-when-tainted", why: "CLEAN: posts to Discord #eve-notes AND writes memory_entries — R1 'send a message' and 'write a permanent memory', unchanged. TAINTED/LOCKED: the picture/filename guard still runs first (both homes or neither), then ONE card (kind save_note) carrying the exact note, title and channel; his approve posts it to #eve-notes ONLY. memory_entries is never written from a card: a permanent memory is re-injected into EVERY later conversation under 'trust these over guesses', and his tap on a Discord post he can read is not a signature on that" },
   "eve_hands.os_command": { verdict: "latched", why: "its WRITE subcommands (add_deal, add_client, add_expense, set_sprint, add_work_item, propose_automation …) reach churlishos.app and change his business ledger. The two READ subcommands (list_proposals, list_invoices) still run and close the latch, exactly like the other readers", reader: true },
   "eve_hands.os_create_invoice": { verdict: "latched", why: "raises an invoice — a money instrument in his cockpit. R1 'spend money'" },
   "eve_hands.os_move_client_stage": { verdict: "latched", why: "moves a client in his pipeline and fires the stage-enter automations (drafts only) — the same authority as os_command's update_deal_stage. READ SIDE, NOT CLOSED: the result can name clients (an ambiguous match lists them), returned verbatim; it does not record, so his answer to 'which one?' still works in the same thread. Stated, not hidden" },
