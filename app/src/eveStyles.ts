@@ -263,7 +263,7 @@ export const CSS = `
    is to be read before something irreversible happens. */
 .confirmv6 .hd{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:9px; letter-spacing:.18em; color:var(--redInk); }
 .confirmv6 .sum{ margin-top:7px; font-weight:600; font-size:13.5px; color:var(--cream); }
-.confirmv6 .field{ margin-top:6px; font-size:12px; line-height:1.45; color:rgba(236,232,225,.6); word-break:break-word; }
+.confirmv6 .field{ margin-top:6px; font-size:12px; line-height:1.45; color:rgba(236,232,225,.6); word-break:break-word; overflow-wrap:anywhere; white-space:pre-wrap; }
 /* The key label was rgba(236,232,225,.4) — MEASURED 3.44:1 against this plate
    at 8.5px. It names the field he is being asked to approve, so it goes to .55
    (5.48:1). The payload text above it measures 6.31:1 and is left alone. The

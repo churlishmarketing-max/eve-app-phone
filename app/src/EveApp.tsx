@@ -214,6 +214,14 @@ function stampOf(iso: string | null | undefined): string {
 // A payload value, printed so a human can judge it. String(v) turned every
 // nested object on a confirm card into the literal "[object Object]" — the
 // exact opposite of "a card he cannot read is a card he cannot judge".
+// The approve button names what his tap does: a dispatch runs a unit, a note
+// posts to Discord, everything else sends.
+function approveLabel(kind: string): string {
+  if (kind === "dispatch_unit") return "APPROVE — RUN IT";
+  if (kind === "save_note") return "APPROVE — POST IT";
+  return "APPROVE — SEND IT";
+}
+
 function payloadText(v: unknown): string {
   if (v === null) return "null";
   if (typeof v === "string") return v;
@@ -1217,7 +1225,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
         {entries.map(([k, v]) => (
           <div className="field" key={k}>
             <b>{k.toUpperCase()}</b>
-            {payloadText(v).slice(0, 600)}
+            {payloadText(v)}
           </div>
         ))}
         <div className="cmeta mono">
@@ -1245,7 +1253,7 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
             {isDeskOnly(c) ? (
               <p className="clocked">{DESK_ONLY_LINE}</p>
             ) : (
-              <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>APPROVE — SEND IT</button>
+              <button className="cbtn ok hit44" onClick={() => decideConfirm(c, true)}>{approveLabel(c.kind)}</button>
             )}
             <button className="cbtn gh hit44" onClick={() => decideConfirm(c, false)}>CANCEL</button>
           </div>
