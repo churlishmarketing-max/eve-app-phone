@@ -327,6 +327,7 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.desk_scan": { verdict: "exempt", why: "read-only — filenames are chosen by whoever made the file; closes the latch", reader: true },
   "eve_hands.os_events_since": { verdict: "exempt", why: "read-only — the OS event feed (GET /api/eve/events): event titles carry client names and email subjects (third-party text), so it closes the latch and records the conversation taint before the text comes back. It writes nothing on either shore; the cursor is echoed, not stored", reader: true },
   "eve_hands.os_inbox_summary": { verdict: "exempt", why: "read-only — Inbox titles carry client names, email subjects and Cowork titles (third-party text); closes the latch", reader: true },
+  "eve_hands.fleet_job_result": { verdict: "exempt", why: "read-only — one jobs row and its deliverable (attention_items ref.content, the local file, or a tool unit's draft). It writes nothing, starts nothing and sends nothing. But the deliverable was written by an unattended worker that READ THE WEB, so it is someone else's prose: it records the conversation taint BEFORE the text comes back and returns it inside <untrusted_deliverable> with a constant note", reader: true },
 
   // ---- THE TWO THE MERGE CAUGHT --------------------------------------------
   // desk_where and desk_handoff arrived on the picture branch (3377a1a); this
