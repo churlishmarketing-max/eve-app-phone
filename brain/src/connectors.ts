@@ -642,8 +642,8 @@ export function buildConnectorServer(
           "isn't a clean fact/decision for the spine (a list, a draft, a snippet, a thought to revisit). " +
           "Markdown renders. Long notes split across messages automatically — nothing gets truncated. " +
           "ONE EXCEPTION: in a conversation that has read someone else's words (mail, texts, a fleet deliverable…) " +
-          "it does not post on your word — it puts the exact note on a confirm card and his tap posts it, to " +
-          "#eve-notes only and not into your memory. Tell him it is waiting for his tap; never say it is noted.\n" +
+          "it still posts to #eve-notes on your word, but it does NOT keep the note in your memory. The tool says so; " +
+          "tell him it is in #eve-notes and never say it is remembered.\n" +
           // S3 — DROPPED WHILE INTAKE IS OFF. There is no conversation a
           // picture has been in, so a paragraph teaching her what happens on
           // one teaches a workflow that cannot occur. The withhold machinery
@@ -660,65 +660,63 @@ export function buildConnectorServer(
           title: z.string().optional().describe("Short headline, rendered bold at the top of the note"),
         },
         async ({ note, title }) => {
-          // V2 · LATCHED. This one call does TWO of the things R1 names in the
-          // same breath: it POSTS A MESSAGE to Discord and it WRITES A PERMANENT
-          // MEMORY. The judge drove the first (save_note reached Discord in a
-          // tainted turn); the second is the write end of context.ts's recall
-          // block, which reads memory_entries back into her pack under "trust
-          // these over guesses" — so an unlatched save_note is a laundry for
-          // third-party prose into the highest-trust region she has.
-          // W1 → W4 (2026-10-06) — THE CONVERSATION LOCK, AND NOW A CARD. The
-          // durable read is still asked first (signatureRequired), and a
-          // tainted turn or a locked thread still writes NOTHING on her word.
-          // What changed is the answer: he asked her to post Kid Flash's
-          // findings to Discord and was told to start a fresh thread his phone
-          // had no button for. So the note goes on ONE card — the exact text,
-          // the title, the channel — and his approve posts it.
+          // V2 · LATCHED, NOW HALF-LATCHED (authority.ts). This one call does
+          // TWO of the things R1 names in the same breath: it POSTS A MESSAGE
+          // to Discord and it WRITES A PERMANENT MEMORY. The judge drove the
+          // first (save_note reached Discord in a tainted turn) — and Brandon
+          // has since ruled that half is hers. The second is the write end of
+          // context.ts's recall block, which reads memory_entries back into her
+          // pack under "trust these over guesses" — so an unlatched memory half
+          // is a laundry for third-party prose into the highest-trust region
+          // she has, and it stays latched.
+          // W1 → W4 → W5 (2026-10-06) — THE CONVERSATION LOCK, SPLIT IN TWO.
+          // The durable read is still asked first (signatureRequired), and a
+          // tainted turn or a locked thread still writes NO MEMORY on her word.
+          // The Discord half no longer waits for anyone: Brandon's ruling, the
+          // same day the card went in, was "let her post to discord without
+          // asking". #eve-notes is HIS private channel and only he reads it, so
+          // a stranger's sentence that rides a note there lands in front of the
+          // one reader who knows it came out of a thread that read mail. The
+          // memory half is different in kind — memory_entries is re-injected
+          // into EVERY later conversation under "trust these over guesses" —
+          // so it stays shut here, card or no card.
           const sig = signatureRequired(turn);
           if (sig) {
             if (!notesReady()) {
-              return text(`There's no notebook to post to — ${notesStatusDetail()}. No card was drawn and nothing was posted.`, true);
+              return text(`There's no notebook to post to — ${notesStatusDetail()}. Nothing was posted and nothing was kept in your memory.`, true);
             }
             // BOTH HOMES OR NEITHER STILL HOLDS. The picture taint and the
             // filename-echo barrier (durable.ts) refuse a note before it reaches
-            // EITHER home, and a card is a road to one of them — so the same
-            // guard runs before a card is drawn, and says the same words.
+            // EITHER home, and the post below is a road to one of them — so the
+            // same guard runs before anything is posted, and says the same words.
             const origin: DurableOrigin = { kind: "conversation", conversationId: dispatch.conversationId ?? "", desk };
             const g = await guardDurableWrite(origin, { content: note, permanent: true });
             if (!g.ok) {
               return text(
-                `${g.say} It is not in #eve-notes either and no card was drawn — a note in his notebook is a ` +
+                `${g.say} It is not in #eve-notes either — nothing was posted, because a note in his notebook is a ` +
                   `permanent record he will read back as yours. Give him the text here in this answer instead.`,
                 true,
               );
             }
-            // DISCORD ONLY, NEVER MEMORY. His tap signs a Discord post he can
-            // read on the card. It does not sign a memory_entries row, which is
-            // re-injected into every later conversation under "trust these over
-            // guesses" — so the card cannot write one, and she is told so.
-            const payload: Record<string, unknown> = { channel: "#eve-notes", ...(title?.trim() ? { title: title.trim() } : {}), note };
-            const head = (title?.trim() || note.trim().split("\n")[0] || "note").replace(/\s+/g, " ");
-            const pending = requestConfirm(
-              "save_note",
-              `Post a note to #eve-notes — "${head.length > 90 ? `${head.slice(0, 89)}…` : head}" (${note.length} characters)`,
-              payload,
-              async () => {
-                const d = await postNote(payload.note as string, typeof payload.title === "string" ? payload.title : undefined);
-                if (!d.ok) return { executed: false, detail: `NOT posted — the notebook rejected it: ${d.error}` };
-                const spread = d.parts && d.parts > 1 ? ` (${d.parts} messages)` : "";
-                return `Posted to #eve-notes${spread}. Not kept in EVE's memory — it came out of a thread that had read someone else's words.`;
-              },
-            );
-            emitConfirm(pending);
+            // DISCORD ONLY, NEVER MEMORY. No saveMemory call exists on this
+            // branch, so no memory_entries row can come out of it — and she is
+            // told so in the same sentence that tells her it posted.
+            const d = await postNote(note, title);
+            if (!d.ok) {
+              const partial = d.parts && d.parts > 0 ? ` The first ${d.parts} part${d.parts > 1 ? "s" : ""} did reach #eve-notes, so tell him the note there is incomplete.` : "";
+              return text(
+                `NOT posted to #eve-notes — the notebook rejected it: ${d.error}.${partial} It is not in your memory either ` +
+                  `(this thread has read someone else's words, so a note here never goes to memory). Say plainly it was not ` +
+                  `saved, and give him the text in this answer so it is not lost.`,
+                true,
+              );
+            }
+            const spread = d.parts && d.parts > 1 ? ` (${d.parts} messages)` : "";
             return text(
-              signatureCardNotice(
-                sig,
-                "write a note into your notebook",
-                "the note word for word and the channel it goes to (#eve-notes)",
-                "Nothing has been posted yet",
-              ) +
-                ` If he approves it goes to #eve-notes only — it will NOT be kept in your memory, so do not say it is ` +
-                `remembered.\n\n${cardLicence(pending.id)} Card ${pending.id.slice(0, 8)}, expires ${pending.expiresAt}.`,
+              `Posted to #eve-notes${spread}${title?.trim() ? ` — "${title.trim()}"` : ""}. It is NOT kept in your memory: this ` +
+                `thread has read someone else's words, and a note from a thread like that goes to his notebook only, never ` +
+                `into the memory you recall from. So tell him it is in #eve-notes, and do not say it is remembered or that ` +
+                `you will recall it later.`,
             );
           }
           // ---- THE HEAD OF THE D6-10 CHAIN (audit 6, X1) ------------------

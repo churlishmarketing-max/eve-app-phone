@@ -319,7 +319,7 @@ async function main() {
             problems.push(`UNCLASSIFIED: ${key} is mounted on the query and carries no verdict`);
             continue;
           }
-          if (!["latched", "confirm-card", "exempt", "card-when-tainted"].includes(v.verdict)) {
+          if (!["latched", "confirm-card", "exempt", "card-when-tainted", "half-latched"].includes(v.verdict)) {
             problems.push(`BAD VERDICT: ${key} has verdict "${v.verdict}"`);
           }
           if (!v.why || v.why.trim().length < 20) {
@@ -387,9 +387,9 @@ async function main() {
     // Defensive on purpose: when E1.1 is RED (a tool with no verdict) this
     // census must still print instead of throwing, or the red test is illegible
     // at exactly the moment somebody needs to read it.
-    const counts = { latched: 0, "confirm-card": 0, exempt: 0, "card-when-tainted": 0, unclassified: 0 } as Record<string, number>;
+    const counts = { latched: 0, "confirm-card": 0, exempt: 0, "card-when-tainted": 0, "half-latched": 0, unclassified: 0 } as Record<string, number>;
     for (const k of mountedNames) counts[TOOL_VERDICTS[k]?.verdict ?? "unclassified"] += 1;
-    loud("E1.7", `verdict census: ${counts.latched} latched · ${counts["card-when-tainted"]} card-when-tainted · ${counts["confirm-card"]} confirm-carded · ${counts.exempt} exempt · ${counts.unclassified} UNCLASSIFIED (each reason in src/authority.ts)`);
+    loud("E1.7", `verdict census: ${counts.latched} latched · ${counts["card-when-tainted"]} card-when-tainted · ${counts["half-latched"]} half-latched · ${counts["confirm-card"]} confirm-carded · ${counts.exempt} exempt · ${counts.unclassified} UNCLASSIFIED (each reason in src/authority.ts)`);
     for (const k of mountedNames.filter((k) => TOOL_VERDICTS[k]?.verdict === "latched")) loud("E1.7x", `   latched: ${k}`);
 
     // The one door still open is kept LOUD rather than quietly dropped.
@@ -480,8 +480,10 @@ async function main() {
 
     const alsoRefused: string[] = [];
     // dispatch_unit and save_note are NOT in this list any more, on purpose:
-    // their verdict is card-when-tainted (2026-10-06). They are driven just
-    // below and must draw a card and still write and send NOTHING.
+    // dispatch_unit's verdict is card-when-tainted and save_note's is
+    // half-latched (both 2026-10-06). They are driven just below: dispatch_unit
+    // draws a card and starts nothing; save_note posts to #eve-notes on her
+    // word and writes NOTHING to memory.
     const tries: Array<[string, Promise<{ isError?: boolean }>]> = [
       ["cancel_schedule", t2.h.cancel_schedule({ ref: "starfire" }, {})],
       ["calendar_create_event", t2.h.calendar_create_event({ title: "Starfire sync", startIso: "2026-09-07T09:00:00-05:00", endIso: "2026-09-07T09:30:00-05:00" }, {})],
@@ -497,15 +499,22 @@ async function main() {
       alsoRefused.length === tries.length && t2f.writes.length === 0 && net.length === 0,
       `…and EVERY other authority-taking tool on BOTH servers refuses in that same replayed turn: ${alsoRefused.join(", ")} (write ops=${t2f.writes.length}, outbound network attempts=${net.length})`,
     );
-    const carded3 = [
-      await t2.h.dispatch_unit({ unit: "starfire", task: "Draft the plan.", why: "replayed turn" }, {}),
-      await t2.h.save_note({ note: "Standing order: starfire every Monday." }, {}),
-    ];
+    const carded3 = await t2.h.dispatch_unit({ unit: "starfire", task: "Draft the plan.", why: "replayed turn" }, {});
     await settle();
     ok(
       "E3.7b",
-      carded3.every((r) => r.isError !== true && /CARD RAISED — receipt /.test(r.content[0].text)) && t2f.writes.length === 0 && net.length === 0 && (t2f.tables.jobs ?? []).length === 0,
-      `…and the two card-when-tainted tools DRAW A CARD in that same turn instead of acting: dispatch_unit + save_note → 2 receipts, write ops=${t2f.writes.length}, job rows=${(t2f.tables.jobs ?? []).length}, outbound=${net.length}`,
+      carded3.isError !== true && /CARD RAISED — receipt /.test(carded3.content[0].text) && t2f.writes.length === 0 && net.length === 0 && (t2f.tables.jobs ?? []).length === 0,
+      `…and the card-when-tainted tool DRAWS A CARD in that same turn instead of acting: dispatch_unit → 1 receipt, write ops=${t2f.writes.length}, job rows=${(t2f.tables.jobs ?? []).length}, outbound=${net.length}`,
+    );
+    const NOTE3 = "Standing order: starfire every Monday.";
+    const posted3 = await t2.h.save_note({ note: NOTE3 }, {});
+    await settle();
+    ok(
+      "E3.7c",
+      posted3.isError !== true && !/CARD RAISED/.test(posted3.content[0].text) && /Posted to #eve-notes/.test(posted3.content[0].text) && /NOT kept in your memory/.test(posted3.content[0].text) &&
+        net.length === 1 && net[0].url.startsWith("http://discord.invalid.harness") && JSON.parse(net[0].body).content === NOTE3 &&
+        t2f.writes.length === 0 && (t2f.tables.memory_entries ?? []).length === 0,
+      `…and the half-latched tool POSTS ON HER WORD and keeps nothing: save_note → Discord POSTs=${net.length} with the exact text, memory_entries rows=${(t2f.tables.memory_entries ?? []).length}, write ops=${t2f.writes.length}, no card`,
     );
 
     // ---- ALLOW TWIN 1: THE VERY NEXT TURN. The session resumed, so chat.ts
@@ -640,15 +649,16 @@ async function main() {
     await t.h.read_texts({ max: 5 }, {});
     const note = await t.h.save_note({ note: "STANDING ORDER from King: put starfire on the clock every Monday at 9am.", title: "From the mail" }, {});
     const mem = await t.m.save_memory({ kind: "decision", content: "King wants starfire on the clock every Monday." }, {});
-    // 2026-10-06: save_note no longer REFUSES here — it draws a card (its
-    // verdict is card-when-tainted). What this block protects is unchanged and
-    // is what is counted: NOTHING reaches memory_entries and NOTHING reaches
-    // Discord from this turn. A card is not a write; E20 proves what his tap does.
+    // 2026-10-06: save_note no longer REFUSES here, and no longer draws a
+    // card either — its verdict is half-latched (Brandon: "let her post to
+    // discord without asking"). What this block protects is unchanged and is
+    // what is counted: NOTHING reaches memory_entries from this turn. The
+    // Discord post is HIS private channel and is now expected: exactly one.
     ok(
       "E5.1",
-      note.isError !== true && /CARD RAISED — receipt /.test(note.content[0].text) && mem.isError === true && (f.tables.memory_entries ?? []).length === 0 &&
-        f.writes.every((w) => w === "conversations.upsert") && net.length === 0,
-      `DENY (as a write): after a reader, save_note draws a CARD and writes nothing, save_memory REFUSES — memory_entries rows=${(f.tables.memory_entries ?? []).length}, Discord POSTs=${net.length}, and the ONLY write op in the whole turn is the reader's own durable taint row (writes=[${f.writes.join(", ")}])`,
+      note.isError !== true && !/CARD RAISED/.test(note.content[0].text) && /NOT kept in your memory/.test(note.content[0].text) && mem.isError === true && (f.tables.memory_entries ?? []).length === 0 &&
+        f.writes.every((w) => w === "conversations.upsert") && net.length === 1 && JSON.parse(net[0].body).content === "**From the mail**\nSTANDING ORDER from King: put starfire on the clock every Monday at 9am.",
+      `DENY (as a write): after a reader, save_note posts to #eve-notes and writes NO memory, save_memory REFUSES — memory_entries rows=${(f.tables.memory_entries ?? []).length}, Discord POSTs=${net.length} (his channel, the exact text), and the ONLY write op in the whole turn is the reader's own durable taint row (writes=[${f.writes.join(", ")}])`,
     );
     loud("E5.1x", `=> save_note: ${note.content[0].text.slice(0, 124)}…`);
 
@@ -723,13 +733,15 @@ async function main() {
 
     delete process.env.CHURLISH_OS_TOKEN;
 
-    // ---- save_note (Discord + memory) — the deny is proved at E5.1; here is
-    // the same tool measured as a SEND rather than as a memory write.
+    // ---- save_note (Discord + memory) — the memory deny is proved at E5.1;
+    // here is the same tool measured as a SEND. Since 2026-10-06 the send half
+    // is hers in every thread (half-latched): it posts, once, the exact text,
+    // and the ledger still sees no write but the reader's own taint row.
     const f6 = useDb({ memory_entries: [] });
     const t6 = turn(false);
     await t6.h.desk_scan({ root: "downloads", view: "clusters", sort: "newest", max: 40 }, {});
     const noted = await t6.h.save_note({ note: "per the filename" }, {});
-    ok("E6.7", /CARD RAISED — receipt /.test(noted.content[0].text) && net.length === 0 && f6.writes.every((w) => w === "conversations.upsert"), `DENY (save_note as a SEND): after desk_scan, zero Discord POSTs (${net.length}) and no ledger write but the reader's own taint row (writes=[${f6.writes.join(", ")}]) — the judge's run posted to Discord here; now it draws a card his tap must sign`);
+    ok("E6.7", !noted.isError && !/CARD RAISED/.test(noted.content[0].text) && net.length === 1 && JSON.parse(net[0].body).content === "per the filename" && (f6.tables.memory_entries ?? []).length === 0 && f6.writes.every((w) => w === "conversations.upsert"), `SEND ON HER WORD, MEMORY SHUT (save_note after desk_scan): Discord POSTs=${net.length} with the exact text, no card, memory_entries rows=${(f6.tables.memory_entries ?? []).length}, and no ledger write but the reader's own taint row (writes=[${f6.writes.join(", ")}])`);
 
     // ---- calendar_create_event ----
     // Google credentials are absent, so the ALLOW twin is observable with no
@@ -890,9 +902,10 @@ async function main() {
     // calls "latched", drives the REAL handler in a LOCKED conversation, and
     // demands a refusal. A latched tool with no drive arguments here is a RED
     // TEST, so a future latched tool cannot be added without being driven.
-    // (dispatch_unit, dispatch_fleet and save_note left this walk on 2026-10-06
-    // when their verdict became card-when-tainted; E20 walks them instead, and
-    // counts the same zero rows and zero outbound calls before his tap.)
+    // (dispatch_unit, dispatch_fleet and save_note left this walk on 2026-10-06:
+    // the dispatch pair became card-when-tainted and E20 walks them, counting
+    // the same zero rows and zero outbound calls before his tap; save_note
+    // became half-latched and E22 walks it, counting zero cards and zero rows.)
     const DRIVE: Record<string, { args: Record<string, unknown>; table?: string }> = {
       "eve_hands.schedule_unit": { args: { unit: "starfire", when: "every Monday at 9", task: HOSTILE }, table: "unit_schedules" },
       "eve_hands.cancel_schedule": { args: { ref: "starfire" }, table: "unit_schedules" },
@@ -1842,19 +1855,15 @@ async function main() {
         table: "jobs",
         exact: (p) => p.unit === "research" && p.task === KID && p.client === "High Level Pros" && p.why === "legacy dispatch_fleet call",
       },
-      "eve_hands.save_note": {
-        args: { note: NOTE, title: "Kid Flash findings" },
-        kind: "save_note",
-        table: "memory_entries",
-        exact: (p) => p.note === NOTE && p.title === "Kid Flash findings" && p.channel === "#eve-notes",
-      },
+      // save_note left this walk the same day it joined it: its verdict is
+      // half-latched now (no card at all), and E22 walks it.
     };
     const cardNames = Object.entries(TOOL_VERDICTS).filter(([, v]) => v.verdict === "card-when-tainted").map(([k]) => k);
     const undrivenC = cardNames.filter((k) => !CARD_DRIVE[k]);
     const orphanC = Object.keys(CARD_DRIVE).filter((k) => !cardNames.includes(k));
     ok(
       "E20.0",
-      cardNames.length === 3 && undrivenC.length === 0 && orphanC.length === 0,
+      cardNames.length === 2 && undrivenC.length === 0 && orphanC.length === 0,
       `THE CARD WALK COVERS THE TABLE IN BOTH DIRECTIONS: ${cardNames.length} card-when-tainted tools (${cardNames.join(", ")})${undrivenC.length ? ` — UNDRIVEN: ${undrivenC.join(", ")}` : ""}${orphanC.length ? ` — STALE DRIVE: ${orphanC.join(", ")}` : ""}`,
     );
 
@@ -1907,14 +1916,11 @@ async function main() {
         const rowsAfter = (fw.tables[drive.table] ?? []).length;
         const netAfter = net.length;
         const runsAfter = workerRuns;
-        const ranOnce =
-          drive.kind === "dispatch_unit"
-            ? rowsAfter === 1 && runsAfter === 1 && netAfter === 0 && fw.tables.jobs[0].agent === card.payload.unit && fw.tables.jobs[0].title === KID
-            : rowsAfter === 0 && netAfter === 1 && net[0].url.startsWith("http://discord.invalid.harness") && JSON.parse(net[0].body).content.includes(NOTE);
+        const ranOnce = rowsAfter === 1 && runsAfter === 1 && netAfter === 0 && fw.tables.jobs[0].agent === card.payload.unit && fw.tables.jobs[0].title === KID;
         ok(
           `E20.4-${tag}`,
           first.ok === true && first.executed === true && ranOnce,
-          `${tag}: HIS APPROVE RUNS IT, ONCE — ${drive.kind === "dispatch_unit" ? `job rows=${rowsAfter} (agent=${String(fw.tables.jobs?.[0]?.agent)}), worker runs=${runsAfter}` : `Discord POSTs=${netAfter} to #eve-notes, memory_entries rows=${rowsAfter} (a card never writes memory)`} — "${first.ok ? first.detail.slice(0, 90) : first.error}"`,
+          `${tag}: HIS APPROVE RUNS IT, ONCE — job rows=${rowsAfter} (agent=${String(fw.tables.jobs?.[0]?.agent)}), worker runs=${runsAfter} — "${first.ok ? first.detail.slice(0, 90) : first.error}"`,
         );
         const second = await resolveConfirm(card.id, card.hash, true);
         await settle();
@@ -2062,6 +2068,111 @@ async function main() {
     // landDeliverable keeps a local copy on disk, exactly as in production; a
     // harness leaves nothing of its own behind.
     rmSync(path.join(dispatchTest.deliverablesDir, `${ra.jobId}.md`), { force: true });
+  }
+
+  // =========================================================================
+  console.log("\n=== E22 — HALF-LATCHED: save_note posts to #eve-notes on her word in a locked thread, and keeps NOTHING in memory ===");
+  {
+    // Brandon's ruling, 2026-10-06: "let her post to discord without asking".
+    // Every tool whose verdict is half-latched is driven here in BOTH shapes a
+    // card used to fire on — the durable lock and the per-turn latch — and we
+    // count: 0 cards, exactly 1 Discord post carrying the exact text, 0
+    // memory_entries rows, no lock notice. Then a note the picture guard
+    // refuses: 0 posts, 0 rows, 0 cards. The clean twin is E20.8 / E5.2.
+    const CONV22 = "conv-half-latched";
+    const NOTE22 = "Kid Flash found five candidates. Top pick: the roofing owner who posts weekly job-site videos.";
+    const TITLE22 = "Kid Flash findings";
+    const HALF_DRIVE: Record<string, { args: Record<string, unknown>; table: string; body: string }> = {
+      "eve_hands.save_note": { args: { note: NOTE22, title: TITLE22 }, table: "memory_entries", body: `**${TITLE22}**\n${NOTE22}` },
+    };
+    const halfNames = Object.entries(TOOL_VERDICTS).filter(([, v]) => v.verdict === "half-latched").map(([k]) => k);
+    const undrivenH = halfNames.filter((k) => !HALF_DRIVE[k]);
+    const orphanH = Object.keys(HALF_DRIVE).filter((k) => !halfNames.includes(k));
+    ok(
+      "E22.0",
+      halfNames.length === 1 && undrivenH.length === 0 && orphanH.length === 0,
+      `THE HALF-LATCHED WALK COVERS THE TABLE IN BOTH DIRECTIONS: ${halfNames.length} half-latched tool(s) (${halfNames.join(", ")})${undrivenH.length ? ` — UNDRIVEN: ${undrivenH.join(", ")}` : ""}${orphanH.length ? ` — STALE DRIVE: ${orphanH.join(", ")}` : ""}`,
+    );
+
+    function halfTurn(conv: string, durable: DurableTaint) {
+      const cards: PendingConfirm[] = [];
+      const latch = newTurnLatch(false, durable);
+      const hands = buildConnectorServer((c) => cards.push(c), null, null, "app", { conversationId: conv }, {}, {}, false, latch);
+      return { h: handlersOf(hands), cards, latch };
+    }
+
+    for (const name of halfNames) {
+      const drive = HALF_DRIVE[name];
+      if (!drive) continue;
+      const toolName = name.split(".")[1];
+      for (const scope of ["locked", "turn"] as const) {
+        const tag = `${toolName}/${scope}`;
+        const fh = useDb({ conversations: [{ id: CONV22, surface: "app", read_untrusted: scope === "locked" }], messages: [], memory_entries: [] });
+        const durable: DurableTaint =
+          scope === "locked"
+            ? { read: await readUntrustedTaintBeforeMint(CONV22), record: async () => markUntrustedRead(CONV22, "app") }
+            : durableFor(CONV22);
+        const t = halfTurn(CONV22, durable);
+        if (scope === "turn") await t.h.read_texts({ max: 5 }, {}); // the reader closes THIS turn's latch
+        const res = await t.h[toolName](drive.args, {});
+        await settle();
+        const rows = (fh.tables[drive.table] ?? []).length;
+        const said = res.content[0].text;
+        ok(
+          `E22.1-${tag}`,
+          res.isError !== true && t.cards.length === 0 && net.length === 1 && net[0].url.startsWith("http://discord.invalid.harness") &&
+            JSON.parse(net[0].body).content === drive.body && rows === 0 && fh.writes.every((w) => w === "conversations.upsert"),
+          `${tag}: ON HER WORD — cards=${t.cards.length}, Discord POSTs=${net.length} to #eve-notes with the EXACT text, ${drive.table} rows=${rows}, writes=[${fh.writes.join(", ")}]`,
+        );
+        ok(
+          `E22.2-${tag}`,
+          /Posted to #eve-notes/.test(said) && /NOT kept in your memory/.test(said) && /do not say it is remembered/.test(said) &&
+            !/CARD RAISED/.test(said) && !/fresh thread/i.test(said) && !t.latch.lockNotices().includes(toolName),
+          `${tag}: she is told both halves in one sentence — posted, and NOT in her memory, so never "remembered" — with no card, no "fresh thread" and no lock notice: "${said.slice(0, 110)}…"`,
+        );
+      }
+    }
+
+    // GUARD-REFUSED: a picture has been in this (locked) conversation, so the
+    // durable guard refuses the note before EITHER home — no post, no row, no card.
+    {
+      const fg = useDb({ conversations: [{ id: CONV22, surface: "app", read_untrusted: true, saw_image: true }], messages: [], memory_entries: [] });
+      const t = halfTurn(CONV22, { read: await readUntrustedTaintBeforeMint(CONV22), record: async () => markUntrustedRead(CONV22, "app") });
+      const res = await t.h.save_note({ note: NOTE22, title: TITLE22 }, {});
+      await settle();
+      ok(
+        "E22.3",
+        res.isError === true && net.length === 0 && (fg.tables.memory_entries ?? []).length === 0 && t.cards.length === 0 &&
+          /not in #eve-notes either/.test(res.content[0].text) && /nothing was posted/.test(res.content[0].text),
+        `GUARD FIRST: a picture-tainted locked thread posts NOTHING — Discord POSTs=${net.length}, memory_entries rows=${(fg.tables.memory_entries ?? []).length}, cards=${t.cards.length} — "${res.content[0].text.slice(0, 90)}…"`,
+      );
+    }
+
+    // A NOTEBOOK THAT REJECTS THE POST IS REPORTED AS NOT POSTED.
+    {
+      const fx = useDb({ conversations: [{ id: CONV22, surface: "app", read_untrusted: true }], messages: [], memory_entries: [] });
+      const prevFetch = globalThis.fetch;
+      globalThis.fetch = (async (input: unknown, init?: { body?: unknown }) => {
+        net.push({ url: String(input), body: String(init?.body ?? "") });
+        return new Response("webhook gone", { status: 404 });
+      }) as typeof globalThis.fetch;
+      const t = halfTurn(CONV22, { read: await readUntrustedTaintBeforeMint(CONV22), record: async () => markUntrustedRead(CONV22, "app") });
+      const res = await t.h.save_note({ note: NOTE22 }, {});
+      await settle();
+      globalThis.fetch = prevFetch;
+      ok(
+        "E22.4",
+        res.isError === true && /NOT posted to #eve-notes/.test(res.content[0].text) && /webhook gone/.test(res.content[0].text) && !/Posted to #eve-notes/.test(res.content[0].text) &&
+          (fx.tables.memory_entries ?? []).length === 0 && t.cards.length === 0,
+        `A FAILED POST IS SAID AS ONE — "${res.content[0].text.slice(0, 100)}…" (memory rows=${(fx.tables.memory_entries ?? []).length}, cards=${t.cards.length})`,
+      );
+    }
+
+    ok(
+      "E22.5",
+      !/requestConfirm\(\s*"save_note"/.test(CONNECTORS_SRC) && TOOL_VERDICTS["eve_hands.save_note"]?.verdict === "half-latched" && /let her post to discord without asking/.test(TOOL_VERDICTS["eve_hands.save_note"]?.why ?? ""),
+      "SOURCE: no save_note card exists in connectors.ts any more, and authority.ts carries the verdict half-latched with Brandon's ruling quoted in its reason",
+    );
   }
 
   // =========================================================================

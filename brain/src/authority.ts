@@ -191,11 +191,13 @@ export function untrustedRefusal(cannot: string, nothing: string): string {
  * reopening the app resumes the same conversation, so he asked her to dispatch
  * Kid Flash and to post the findings to Discord and got this sentence twice with
  * nowhere to go. The tools whose verdict is `card-when-tainted` (dispatch_unit,
- * dispatch_fleet, save_note) never reach it now: where they would have refused
- * they DRAW A CARD instead and speak `signatureCardNotice` below, which tells him
- * the true thing — it is on his screen, nothing ran, his tap runs it. The
- * fresh-thread wording stays for every tool that still refuses, and it is true
- * there again: the phone is getting its own New conversation button.
+ * dispatch_fleet) never reach it now: where they would have refused they DRAW A
+ * CARD instead and speak `signatureCardNotice` below, which tells him the true
+ * thing — it is on his screen, nothing ran, his tap runs it. save_note never
+ * reaches it either, and draws no card: its verdict is `half-latched` (same day,
+ * his second ruling) — it posts to #eve-notes on her word and keeps nothing in
+ * memory. The fresh-thread wording stays for every tool that still refuses, and
+ * it is true there again: the phone is getting its own New conversation button.
  */
 export function conversationLockRefusal(read: TaintRead, cannot: string, nothing: string): string {
   if (read.status === "tainted") {
@@ -353,8 +355,30 @@ export interface LockNotice {
  *                   through a locked conversation AND a tainted turn and counts
  *                   1 card, 0 rows, 0 outbound before the tap; then 1 run on
  *                   approve, and 0 more on a second approve.
+ *  · half-latched — ONE call that takes TWO of R1's authorities, split at the
+ *                   latch rather than carded or refused whole. The half whose
+ *                   only reader is King himself (a post to his private Discord
+ *                   #eve-notes) runs on her word in EVERY conversation. The half
+ *                   that re-enters HER OWN context (a memory_entries row,
+ *                   recalled into every later conversation under "trust these
+ *                   over guesses") is latched exactly as a latched tool is:
+ *                   written in a clean turn of a clean conversation, never
+ *                   otherwise, and no card can sign it. The tool returns what
+ *                   it did AND what it did not, in one sentence, so she cannot
+ *                   report the post as a memory. Content guards that refuse
+ *                   BOTH homes (the picture taint, the filename echo) still run
+ *                   before either half. Not `exempt` (half of it is gated), not
+ *                   `latched` (it does not refuse), not `card-when-tainted` (it
+ *                   draws nothing — the card was the step he ruled out). Why a
+ *                   post to Discord may skip the signature that an email may
+ *                   not: the only person a stranger's sentence reaches through
+ *                   #eve-notes is the one person who knows the thread read mail.
+ *                   verify/authority-harness.ts drives every one of these
+ *                   through a locked conversation AND a tainted turn and counts
+ *                   0 cards, exactly 1 post carrying the exact text, 0 rows;
+ *                   and a guard-refused note at 0 posts, 0 rows, 0 cards.
  */
-export type Verdict = "latched" | "confirm-card" | "exempt" | "card-when-tainted";
+export type Verdict = "latched" | "confirm-card" | "exempt" | "card-when-tainted" | "half-latched";
 
 /**
  * W4 · THE CONFIRM-CARD RULING, STATED — "HIS APPROVE IS THE SIGNATURE".
@@ -437,7 +461,7 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.corpus_search": { verdict: "exempt", why: "the same shelf, the same disk, the same frame — word-overlap search over his own documents returning at most 8 short passages with their citations. Same verdict and same reason as corpus_read; if that one is ever re-verdicted this one moves with it", reader: false },
   "eve_hands.list_schedules": { verdict: "exempt", why: "reads the clock back; grants nothing and changes nothing", reader: false },
   "eve_hands.os_house_status": { verdict: "exempt", why: "reads the OS rails back as flags, counts and one timestamp (sends paused, daily cap, test mode, last sweep, failed jobs) — no third-party prose, no authority", reader: false },
-  "eve_memory.search_memory": { verdict: "exempt", why: "read-only over HER OWN distillations, not live third-party text; latching it would disarm nearly every turn she recalls anything, which is the 'refuses everything' failure the calendar fix exists to avoid. Its injection path is closed at the WRITE end instead — save_memory and save_note are latched", reader: false },
+  "eve_memory.search_memory": { verdict: "exempt", why: "read-only over HER OWN distillations, not live third-party text; latching it would disarm nearly every turn she recalls anything, which is the 'refuses everything' failure the calendar fix exists to avoid. Its injection path is closed at the WRITE end instead — save_memory is latched, and so is save_note's memory half (its Discord half is not: half-latched)", reader: false },
 
   // ---- eve_hands · LATCHED (real authority, refused in a tainted turn) -----
   "eve_hands.schedule_unit": { verdict: "latched", why: "writes a standing order — R1 'schedule work'; createSchedule(authority())" },
@@ -445,13 +469,15 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   "eve_hands.calendar_create_event": { verdict: "latched", why: "puts an event on his calendar — R1 'schedule work'. The attendee branch is ALSO a confirm card (invites email out), but the no-attendee branch reached google.createEvent with no card at all, so the gate is on the tool" },
 
   // ---- eve_hands · CARD WHEN TAINTED (act when clean; his tap when not) -----
-  // These three were `latched` until 2026-10-06, and on the phone a latched
-  // refusal was a dead end: no fresh-thread button, and reopening the app
-  // resumes the same conversation. Each one's action fits EXACTLY on a card, so
-  // where it used to refuse it now draws one, and his approve is the signature.
+  // These were `latched` until 2026-10-06, and on the phone a latched refusal
+  // was a dead end: no fresh-thread button, and reopening the app resumes the
+  // same conversation. Each one's action fits EXACTLY on a card, so where it
+  // used to refuse it now draws one, and his approve is the signature.
+  // (save_note was the third, for one day; it is `half-latched` below.)
   "eve_hands.dispatch_unit": { verdict: "card-when-tainted", why: "starts a job and spends budget — R1 'dispatch work' / 'spend money'. CLEAN turn of a CLEAN conversation: dispatches directly with authority(), unchanged. TAINTED turn or LOCKED/unreadable conversation: draws ONE card (kind dispatch_unit) whose payload is the resolved unit, its name, the EXACT task text, the client and her routing line, opens no job row and spends nothing; only his approve calls dispatchUnit(... authority:'king') with those same fields, once (confirm.ts deletes the card on first resolve)" },
   "eve_hands.dispatch_fleet": { verdict: "card-when-tainted", why: "deprecated alias of dispatch_unit, and it draws the SAME card through the same function (dispatch.ts requestDispatchCard) — an alias that refused while its target carded, or acted while its target carded, would be a hole through the fix it aliases" },
-  "eve_hands.save_note": { verdict: "card-when-tainted", why: "CLEAN: posts to Discord #eve-notes AND writes memory_entries — R1 'send a message' and 'write a permanent memory', unchanged. TAINTED/LOCKED: the picture/filename guard still runs first (both homes or neither), then ONE card (kind save_note) carrying the exact note, title and channel; his approve posts it to #eve-notes ONLY. memory_entries is never written from a card: a permanent memory is re-injected into EVERY later conversation under 'trust these over guesses', and his tap on a Discord post he can read is not a signature on that" },
+  // ---- eve_hands · HALF-LATCHED (one half on her word; the other gated) ----
+  "eve_hands.save_note": { verdict: "half-latched", why: "ONE call, two of R1's authorities — 'send a message' (Discord #eve-notes) and 'write a permanent memory' (memory_entries) — split at the latch. THE POST runs on her word in EVERY conversation, by Brandon's ruling of 2026-10-06 (\"let her post to discord without asking\"): #eve-notes is his private channel and he is its only reader, so a stranger's sentence carried there reaches exactly the one person who knows the thread read mail. THE MEMORY HALF STAYS GATED: written only in a clean turn of a clean conversation, NEVER in a tainted turn or a locked/unreadable thread, and no card or tap can sign it — a permanent memory is re-injected into every later conversation under 'trust these over guesses', which is the injection path. The picture/filename guard (durable.ts) still runs FIRST in every branch, so a note it refuses reaches neither home. In a tainted/locked thread she is told in the same sentence that it posted and that it is NOT in her memory, so she cannot call it remembered. No card is ever drawn (it was card-when-tainted for one day)" },
   "eve_hands.os_command": { verdict: "latched", why: "its WRITE subcommands (add_deal, add_client, add_expense, set_sprint, add_work_item, propose_automation …) reach churlishos.app and change his business ledger. The two READ subcommands (list_proposals, list_invoices) still run and close the latch, exactly like the other readers", reader: true },
   "eve_hands.os_create_invoice": { verdict: "latched", why: "raises an invoice — a money instrument in his cockpit. R1 'spend money'" },
   "eve_hands.os_move_client_stage": { verdict: "latched", why: "moves a client in his pipeline and fires the stage-enter automations (drafts only) — the same authority as os_command's update_deal_stage. READ SIDE, NOT CLOSED: the result can name clients (an ambiguous match lists them), returned verbatim; it does not record, so his answer to 'which one?' still works in the same thread. Stated, not hidden" },
