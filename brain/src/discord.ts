@@ -227,10 +227,13 @@ export function mirrorToDiscord(kind: string, title: string, body: string, link?
 // deliverable lands — not by a model deciding to send something, so no tool,
 // no latch and no card is involved, and none can be.
 //
-// WHY THIS CHANNEL AND NOT #eve-notes. A note in #eve-notes is read back as
-// HERS (notes.ts); a worker's web research filed there under her name is the
-// laundering the save_note gate exists to stop. #eve-alerts is the record of
-// things that HAPPENED, and every message here is headed with the unit that
+// WHY THIS CHANNEL AND NOT #eve-notes. A note in #eve-notes is read as HERS
+// (notes.ts): what lands there is what she CHOSE to write down. A worker's web
+// research filed there automatically, under her name, would blur whose words
+// they are. (She may still post a summary there herself with save_note, in any
+// thread — Brandon's ruling 2026-10-06 — and from a thread that read someone
+// else's words that note never reaches her memory.) #eve-alerts is the record
+// of things that HAPPENED, and every message here is headed with the unit that
 // wrote it.
 //
 // WHY IT IS NOT mirrorToDiscord. That function mirrors PUSHES and has exactly
