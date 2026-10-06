@@ -323,6 +323,11 @@ export const CSS = `
 .micv6.rec{ border-color:var(--red); box-shadow:0 0 30px rgba(230,50,43,.5); }
 .wbtn{ cursor:pointer; justify-self:end; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:9px; letter-spacing:.16em;
   color:rgba(230,50,43,.75); padding:7px 9px; border:1px solid rgba(230,50,43,.25); border-radius:0; background:none; }
+.rcol{ justify-self:end; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.wbtn:disabled{ opacity:.4; cursor:default; }
+.locknote{ margin-top:10px; padding:9px 10px; border:1px solid rgba(230,50,43,.4); background:rgba(161,50,40,.12); }
+.locklab{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:9px; letter-spacing:.16em; color:var(--red); margin-bottom:4px; }
+.locktxt{ font-size:12.5px; line-height:1.45; color:rgba(236,232,225,.8); margin-bottom:8px; }
 .footline{ flex:none; padding-bottom:8px; text-align:center; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:8.5px;
   letter-spacing:.1em; color:rgba(236,232,225,.26); }
 

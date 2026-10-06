@@ -250,7 +250,20 @@ export interface StreamHandlers {
   // envelope is its own IPC shape and is not what comes off this socket.
   onJob?: (job: JobFrame) => void;
   onDone?: (info: { conversationId: string; fullText: string }) => void;
+  // `event: locked` (W1/W2) — the brain refused something in code because this
+  // conversation has read someone else's words. It carries NO text to seed a
+  // composer with, by design (authority.ts LockNotice): the phone seeds the
+  // reset from its own record of what HE typed, never from the frame.
+  onLock?: (lock: LockFrame) => void;
   onError?: (message: string) => void;
+}
+
+export interface LockFrame {
+  conversationId: string;
+  status: "tainted" | "unknown";
+  source: string;
+  why: string;
+  tools: string[];
 }
 
 // ---- RED-tier confirm resolution (02 §6): echo id + payload hash ----
@@ -694,6 +707,9 @@ function dispatchFrame(frame: string, h: StreamHandlers): void {
       break;
     case "job":
       if (payload && typeof payload.id === "string") h.onJob?.(payload as JobFrame);
+      break;
+    case "locked":
+      h.onLock?.(payload as LockFrame);
       break;
     case "done":
       h.onDone?.(payload);

@@ -141,6 +141,23 @@ const ALERT_SHADOW = `0 0 46px ${OS.red}8c, 0 0 110px ${OS.red}47, inset 0 -8px 
 const CONV_KEY = "eve.conversationId";
 const WEAR_KEY = "eve.wearing";
 
+// A conversation read third-party text (mail, a calendar entry, a text) and her
+// brain now refuses some actions in it. The brain has no reset call and nothing
+// is deleted: "fresh" is simply a conversation id it has never seen. This is
+// the only place the phone ever forgets CONV_KEY.
+function forgetConversationId(): void {
+  try {
+    localStorage.removeItem(CONV_KEY);
+  } catch {
+    /* storage unavailable — the in-memory id is already cleared */
+  }
+}
+
+// The brain's `locked` frame, remembered against the reply it landed under.
+// `seed` is what HE typed in the refused turn, taken from runMessage's own
+// argument — never from the frame, never from anything she said (W2).
+type LockNote = { eveId: string; seed: string };
+
 // DESK-ONLY CONFIRMS — the send_sms law, in reverse.
 //
 // A file_batch confirm carries a clientAction only a DESKTOP can run: the
@@ -381,6 +398,10 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
   };
 
   const convId = useRef<string | null>(localStorage.getItem(CONV_KEY));
+  // Bumped by every reset. A turn already in flight when he resets must not
+  // write its (old) conversation id back into storage when it finishes.
+  const convEpoch = useRef(0);
+  const [lockNote, setLockNote] = useState<LockNote | null>(null);
   const busy = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -708,6 +729,8 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
     abortRef.current = new AbortController();
     setErrNote(null);
     setToolNote(null);
+    setLockNote(null);
+    const myEpoch = convEpoch.current;
     const eveId = newId();
     // Optimistic user line, then an empty EVE line that fills token by token.
     setMessages((ms) => [
@@ -730,9 +753,14 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
       // jobsView() decide whether it may move a row: the poll is the truth.
       onJob: (j) =>
         setJobFrames((fs) => [...fs, { frame: j, at: new Date().toISOString(), seq: ++frameSeq.current }]),
+      // Only a message HE typed (or spoke, or tapped as a chip) can be put back
+      // in the box. The app-open greeting is showUser=false and seeds nothing.
+      onLock: () => setLockNote({ eveId, seed: showUser ? text : "" }),
       onDone: ({ conversationId, fullText }) => {
-        convId.current = conversationId;
-        localStorage.setItem(CONV_KEY, conversationId);
+        if (convEpoch.current === myEpoch) {
+          convId.current = conversationId;
+          localStorage.setItem(CONV_KEY, conversationId);
+        }
         setMode("idle");
         setToolNote(null);
         busy.current = false;
@@ -796,6 +824,34 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
       },
     }, abortRef.current.signal);
   }, []);
+
+  // NEW CONVERSATION. Forget the id (memory + storage) so the next send goes
+  // out with conversationId:null and the brain mints a fresh one, which onDone
+  // then stores — so a restart reopens the NEW conversation. Clears the
+  // on-screen thread. Deletes nothing on the brain: the old conversation is
+  // still there, just no longer the one this phone resumes. Confirm cards are
+  // single-use signature requests and are left alone.
+  const resetConversation = () => {
+    convEpoch.current++;
+    convId.current = null;
+    forgetConversationId();
+    beginVoiceTurn();
+    setMessages([]);
+    setLockNote(null);
+    setErrNote(null);
+    setToolNote(null);
+  };
+
+  // START FRESH THREAD (the locked notice). Same reset, then HIS refused
+  // message back in the composer, unsent. If he has already typed something
+  // new, it stays below the restored text rather than being overwritten.
+  const startFreshThread = () => {
+    const seed = lockNote?.seed ?? "";
+    resetConversation();
+    if (!seed) return;
+    const next = draft.trim() ? `${seed}\n\n${draft}` : seed;
+    prefillDraft(next);
+  };
 
   const sendText = () => {
     const t = draft.trim();
@@ -1687,6 +1743,18 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                         ) : (
                           <div className="btext" />
                         )}
+                        {lockNote?.eveId === m.id && (
+                          <div className="locknote" role="status">
+                            <div className="mono locklab">THREAD LOCKED</div>
+                            <div className="locktxt">
+                              This conversation has read someone else's words, so I won't act on some things in it.
+                              A fresh thread is the way out. Your message comes back in the box, unsent.
+                            </div>
+                            <button className="cbtn ok hit44" disabled={mode === "thinking"} onClick={startFreshThread}>
+                              Start fresh thread
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -1768,7 +1836,12 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
                     <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" /><path d="M12 18v3" />
                   </svg>
                 </button>
-                <button className="wbtn" onClick={() => setWardrobe(true)}>[ WARDROBE ]</button>
+                <div className="rcol">
+                  <button className="wbtn hit44" disabled={mode === "thinking"} onClick={resetConversation} aria-label="New conversation">
+                    [ NEW CONVERSATION ]
+                  </button>
+                  <button className="wbtn" onClick={() => setWardrobe(true)}>[ WARDROBE ]</button>
+                </div>
               </div>
               <div className="footline mono">push-to-talk only. she never listens uninvited.</div>
             </div>
