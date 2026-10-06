@@ -10,6 +10,7 @@ import { isQuietHours } from "./schedule.js";
 import { fleetModel, heavyModel } from "./models.js";
 import { sendPush, getLatestToken, isPushReady } from "./push.js";
 import { requestConfirm, type PendingConfirm } from "./confirm.js";
+import { postDeliverable } from "./discord.js";
 import { fleetRoster } from "./fleet.js";
 import * as os from "./os.js";
 import {
@@ -700,7 +701,28 @@ const runWorker: WorkerFn = async (c, jobId, unit, name, title, task, runner, cl
     await failJob(jobId, unit, title, "worker returned an empty deliverable", emit, c);
     return;
   }
+  await landDeliverable(c, { jobId, unit, name, title, task, client, out, costUsd, emit });
+};
 
+interface Landing {
+  jobId: string;
+  unit: string;
+  name: string;
+  title: string;
+  task: string;
+  client: string | undefined;
+  out: string;
+  costUsd: number | undefined;
+  emit?: JobEmit;
+}
+
+/**
+ * WHERE A FINISHED DELIVERABLE GOES: the disk, the job row, his inbox, his
+ * Discord, his phone — in that order, each one unable to undo the one before.
+ * Split out of runWorker so a harness can land one without an SDK call.
+ */
+async function landDeliverable(c: SupabaseClient, l: Landing): Promise<void> {
+  const { jobId, unit, name, title, task, client, out, costUsd, emit } = l;
   // Local copy for convenience; the DB (attention item) carries the CONTENT —
   // hosted filesystems are ephemeral.
   let filePath: string | null = null;
@@ -723,12 +745,40 @@ const runWorker: WorkerFn = async (c, jobId, unit, name, title, task, runner, cl
   emit?.(frameFor(jobId, "in_approvals", title, overlay.get(jobId)));
 
   // Approval inbox item carrying the deliverable itself (ops.ts approve → done).
-  await c.from("attention_items").insert({
+  const { error: inboxError } = await c.from("attention_items").insert({
     kind: "approval",
     message: `Deliverable ready: ${task.slice(0, 100)}`,
     nudge_level: 1,
     ref: { job_id: jobId, jobId, agent: unit, unit, client: client ?? null, path: filePath, content: out },
   });
+  if (inboxError) console.error(`[dispatch] deliverable attention item for ${jobId} not written:`, inboxError.message);
+
+  // ---- AND TO HIS DISCORD (2026-10-06) ------------------------------------
+  // "I want her to put it in Discord or in my inbox to check." The inbox half is
+  // the row above; this is the other half, ONE message to #eve-alerts
+  // (discord.ts postDeliverable). It is CODE posting a worker's finished output
+  // to his own channel, not a model choosing to send: no tool, so no latch and
+  // no card applies, and nothing in the deliverable can change where it goes.
+  //
+  // It cannot fail the job. postDeliverable never rejects and the try is the
+  // belt; a failure is one log line and the job stays exactly where the patch
+  // above put it. No webhook configured → it does nothing at all.
+  //
+  // The "where's the rest" line tells the truth about the inbox row: if that
+  // insert failed, the full text is still on this brain, and fleet_job_result
+  // reads it back by job id.
+  try {
+    await postDeliverable({
+      name,
+      jobId,
+      task,
+      deliverable: out,
+      fullTextAt: inboxError ? `full text: ask EVE for job ${jobId.slice(0, 8)}` : "full text in your OS Inbox",
+      silent: isQuietHours(new Date()),
+    });
+  } catch (err) {
+    console.warn(`[dispatch] deliverable Discord post for ${jobId} skipped:`, err instanceof Error ? err.name : "error");
+  }
 
   // Done-ping — quiet hours hold it; the approval item still lands above.
   if (!isQuietHours(new Date()) && isPushReady()) {
@@ -746,7 +796,7 @@ const runWorker: WorkerFn = async (c, jobId, unit, name, title, task, runner, cl
       }
     }
   }
-};
+}
 
 // Swappable so the harness can prove the worker path without an SDK call.
 let workerRunner: WorkerFn = runWorker;
@@ -760,4 +810,6 @@ export const _test = {
     workerRunner = fn ?? runWorker;
   },
   overlay,
+  landDeliverable,
+  deliverablesDir,
 };

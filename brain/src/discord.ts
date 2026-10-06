@@ -216,3 +216,122 @@ export function mirrorToDiscord(kind: string, title: string, body: string, link?
     return Promise.resolve({ outcome: "failed" });
   }
 }
+
+// ---------------------------------------------------------------------------
+// FINISHED FLEET WORK — ONE MESSAGE PER DELIVERABLE (2026-10-06).
+//
+// Brandon, after a locked thread could neither post Kid Flash's findings nor
+// read them back: "I want her to put it in Discord or in my inbox to check."
+// The inbox half already happened (dispatch.ts writes an attention item the OS
+// Inbox shows); this is the Discord half, posted by CODE the moment the
+// deliverable lands — not by a model deciding to send something, so no tool,
+// no latch and no card is involved, and none can be.
+//
+// WHY THIS CHANNEL AND NOT #eve-notes. A note in #eve-notes is read back as
+// HERS (notes.ts); a worker's web research filed there under her name is the
+// laundering the save_note gate exists to stop. #eve-alerts is the record of
+// things that HAPPENED, and every message here is headed with the unit that
+// wrote it.
+//
+// WHY IT IS NOT mirrorToDiscord. That function mirrors PUSHES and has exactly
+// one call site, inside sendPush (verify/discord-harness.ts D6.11). This is a
+// different message with a different shape, so it is a different function.
+// DISCORD_ALERT_KINDS picks which push kinds mirror; a deliverable is not a
+// push, so a kind list does not hold it back — but switching the channel OFF
+// ("none", or set and empty) does, because that is him saying "nothing here".
+// No per-kind rate guard: it is one message per finished job by construction,
+// and dropping one would be dropping the thing he asked for.
+//
+// NEVER THROWS, NEVER FAILS THE JOB. Same 10-second deadline as the mirror, and
+// any failure is ONE log line naming the kind and an HTTP status or
+// "timeout"/"network error" — never the deliverable, the task or the URL.
+// ---------------------------------------------------------------------------
+
+/** Discord's SUPPRESS_NOTIFICATIONS message flag: posts as @silent (no ping). */
+export const SILENT_FLAG = 4096;
+const TASK_MAX = 200;
+
+export interface DeliverablePost {
+  /** The unit's display name — "Kid Flash". Our registry's words. */
+  name: string;
+  jobId: string;
+  /** The task as dispatched. One line, capped. */
+  task: string;
+  /** The worker's markdown, whole. Cut here, never upstream. */
+  deliverable: string;
+  /** Where the whole text lives when this message had to cut it. */
+  fullTextAt: string;
+  /** Quiet hours: post it, but as @silent, so a 2 a.m. finish does not ping him. */
+  silent?: boolean;
+}
+
+/**
+ * ONE message ≤ 2000: a bold head naming the unit and job, the task, then the
+ * deliverable. When the deliverable does not fit it is cut at the last line or
+ * paragraph break that keeps most of it, and the last line says where the rest
+ * is. When it fits, nothing is appended.
+ */
+export function formatDeliverable(p: DeliverablePost): string {
+  const head = `**${cap(oneLine(p.name) || "Fleet", TITLE_MAX)} — finished** · job ${oneLine(p.jobId).slice(0, 8)}`;
+  const taskLine = `Task: ${cap(oneLine(p.task), TASK_MAX)}`;
+  const body = p.deliverable.trim();
+  const prefix = `${head}\n${taskLine}\n\n`;
+  if (prefix.length + body.length <= LIMIT) return `${prefix}${body}`;
+  const footer = `\n\n… cut at this point (${body.length} characters in all) — ${oneLine(p.fullTextAt)}.`;
+  const room = Math.max(0, LIMIT - prefix.length - footer.length);
+  const window = body.slice(0, room);
+  let at = window.lastIndexOf("\n\n");
+  if (at < room * 0.6) at = window.lastIndexOf("\n");
+  if (at < room * 0.6) at = room;
+  const msg = `${prefix}${body.slice(0, at).trimEnd()}${footer}`;
+  return msg.length <= LIMIT ? msg : cap(msg, LIMIT);
+}
+
+/** True when he has switched the alerts channel off outright ("none" / ""). */
+function channelOff(): boolean {
+  const k = alertKinds();
+  return !k.all && k.kinds.size === 0;
+}
+
+/**
+ * Post one finished deliverable to #eve-alerts. Awaitable, NEVER rejects.
+ * "off" (no webhook) and "kind-off" (channel switched off) fetch nothing.
+ */
+export async function postDeliverable(p: DeliverablePost): Promise<MirrorResult> {
+  try {
+    const url = webhook();
+    if (!url) return { outcome: "off" };
+    if (channelOff()) return { outcome: "kind-off" };
+    const content = formatDeliverable(p);
+    const ac = new AbortController();
+    const deadline = setTimeout(() => ac.abort(), TIMEOUT_MS);
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        // allowed_mentions: none — a worker that read the web can have copied an
+        // "@everyone" out of a page, and it must not ping his server.
+        body: JSON.stringify({
+          content,
+          allowed_mentions: { parse: [] },
+          ...(p.silent ? { flags: SILENT_FLAG } : {}),
+        }),
+        signal: ac.signal,
+      });
+      if (!r.ok) {
+        console.warn(`[discord] deliverable not posted (kind=deliverable): HTTP ${r.status}`);
+        return { outcome: "failed", status: r.status };
+      }
+      return { outcome: "sent", status: r.status };
+    } catch (e) {
+      const why = ac.signal.aborted || (e as { name?: string })?.name === "AbortError" ? "timeout" : "network error";
+      console.warn(`[discord] deliverable not posted (kind=deliverable): ${why}`);
+      return { outcome: "failed", status: 0 };
+    } finally {
+      clearTimeout(deadline);
+    }
+  } catch {
+    console.warn("[discord] deliverable not posted (kind=deliverable): internal error");
+    return { outcome: "failed" };
+  }
+}
