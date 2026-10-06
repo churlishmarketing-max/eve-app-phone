@@ -191,9 +191,11 @@ export function untrustedRefusal(cannot: string, nothing: string): string {
  * reopening the app resumes the same conversation, so he asked her to dispatch
  * Kid Flash and to post the findings to Discord and got this sentence twice with
  * nowhere to go. The tools whose verdict is `card-when-tainted` (dispatch_unit,
- * dispatch_fleet) never reach it now: where they would have refused they DRAW A
- * CARD instead and speak `signatureCardNotice` below, which tells him the true
- * thing — it is on his screen, nothing ran, his tap runs it. save_note never
+ * dispatch_fleet, and — the same day, after "set the sell-by date to Dec 1" got
+ * this sentence in the OS web chat — os_command's writes, os_create_invoice and
+ * os_move_client_stage) never reach it now: where they would have refused they
+ * DRAW A CARD instead and speak `signatureCardNotice` below, which tells him the
+ * true thing — it is on his screen, nothing ran, his tap runs it. save_note never
  * reaches it either, and draws no card: its verdict is `half-latched` (same day,
  * his second ruling) — it posts to #eve-notes on her word and keeps nothing in
  * memory. The fresh-thread wording stays for every tool that still refuses, and
@@ -351,10 +353,20 @@ export interface LockNotice {
  *                   authority "king"; a second approve finds no card. This is
  *                   the W4 ruling below applied to a tool that used to refuse:
  *                   untrusted text may cause the card to be DRAWN, never RUN.
+ *                   The checks that can fail without him (an unknown unit, a
+ *                   date the OS would ignore, a field it would drop) run BEFORE
+ *                   the card, so he is never handed one his approve could only
+ *                   fail on. Members: dispatch_unit, dispatch_fleet
+ *                   (dispatch.ts requestDispatchCard) and, since the same day,
+ *                   os_command's WRITE subcommands, os_create_invoice and
+ *                   os_move_client_stage (os-card.ts requestOsCard — the card
+ *                   carries the exact os_tool + os_input, and his approve makes
+ *                   the same os.osTool call the clean path makes).
  *                   verify/authority-harness.ts drives every one of these
  *                   through a locked conversation AND a tainted turn and counts
  *                   1 card, 0 rows, 0 outbound before the tap; then 1 run on
- *                   approve, and 0 more on a second approve.
+ *                   approve, and 0 more on a second approve (E20 the dispatch
+ *                   pair, E23 the OS writes).
  *  · half-latched — ONE call that takes TWO of R1's authorities, split at the
  *                   latch rather than carded or refused whole. The half whose
  *                   only reader is King himself (a post to his private Discord
@@ -473,16 +485,21 @@ export const TOOL_VERDICTS: Record<string, ToolVerdict> = {
   // was a dead end: no fresh-thread button, and reopening the app resumes the
   // same conversation. Each one's action fits EXACTLY on a card, so where it
   // used to refuse it now draws one, and his approve is the signature.
-  // (save_note was the third, for one day; it is `half-latched` below.)
+  // (save_note was in it for one day; it is `half-latched` below.)
   "eve_hands.dispatch_unit": { verdict: "card-when-tainted", why: "starts a job and spends budget — R1 'dispatch work' / 'spend money'. CLEAN turn of a CLEAN conversation: dispatches directly with authority(), unchanged. TAINTED turn or LOCKED/unreadable conversation: draws ONE card (kind dispatch_unit) whose payload is the resolved unit, its name, the EXACT task text, the client and her routing line, opens no job row and spends nothing; only his approve calls dispatchUnit(... authority:'king') with those same fields, once (confirm.ts deletes the card on first resolve)" },
   "eve_hands.dispatch_fleet": { verdict: "card-when-tainted", why: "deprecated alias of dispatch_unit, and it draws the SAME card through the same function (dispatch.ts requestDispatchCard) — an alias that refused while its target carded, or acted while its target carded, would be a hole through the fix it aliases" },
+  // The OS writes joined this block the same day, from the other surface: in
+  // the OS web chat "set the sell-by date to Dec 1" got "open a fresh thread".
+  // Each one's change fits EXACTLY on a card (os-card.ts: the subcommand, every
+  // field, the exact OS call), so where it refused it now draws one.
+  "eve_hands.os_command": { verdict: "card-when-tainted", why: "its WRITE subcommands (add_deal, add_client, add_expense, set_sprint, add_work_item, propose_automation …) reach churlishos.app and change his business ledger. CLEAN turn of a CLEAN conversation: calls the OS directly, unchanged. TAINTED turn or LOCKED/unreadable conversation: a write draws ONE card (kind os_command) whose payload is the subcommand, every argument as a labelled human-readable field (set_sprint: collected target, sell-by date, deadline, the one thing) and the exact os_tool + os_input; it calls nothing, and only his approve makes the SAME os.osTool(subcommand, input) call, once (confirm.ts deletes the card on first resolve). os-card.ts checks the arguments first (a field the OS would drop, a missing required one, a date that is not a real YYYY-MM-DD, an unknown stage) so no card is drawn that his approve could only fail on. The two READ subcommands (list_proposals, list_invoices) keep their reader behaviour: they run in any turn and record the taint, as do the writes whose answers quote OS rows; the echo-only writes (connectors.ts OS_COMMAND_ECHO_ONLY) do not record", reader: true },
+  "eve_hands.os_create_invoice": { verdict: "card-when-tainted", why: "raises an invoice — a money instrument in his cockpit, R1 'spend money'. CLEAN: drafts it directly, unchanged. TAINTED/LOCKED: draws ONE card (kind os_create_invoice) showing the client, every line (desc, qty × unit = line total), the total, due date and notes, with the exact create_invoice input; only his approve sends that input to the OS, once. A due date that is not a real YYYY-MM-DD, an empty description or a qty of 0 is refused before any card, because the OS would silently drop or rewrite it" },
+  "eve_hands.os_move_client_stage": { verdict: "card-when-tainted", why: "moves a client in his pipeline and fires the stage-enter automations (drafts only) — the same authority as os_command's update_deal_stage. CLEAN: moves directly, unchanged. TAINTED/LOCKED: draws ONE card (kind os_move_client_stage) with the client, the new stage and the exact client_move_stage input; only his approve calls the OS, once. READ SIDE, NOT CLOSED: the result can name clients (an ambiguous match lists them), returned verbatim; it does not record, so his answer to 'which one?' still works in the same thread. Stated, not hidden" },
   // ---- eve_hands · HALF-LATCHED (one half on her word; the other gated) ----
   "eve_hands.save_note": { verdict: "half-latched", why: "ONE call, two of R1's authorities — 'send a message' (Discord #eve-notes) and 'write a permanent memory' (memory_entries) — split at the latch. THE POST runs on her word in EVERY conversation, by Brandon's ruling of 2026-10-06 (\"let her post to discord without asking\"): #eve-notes is his private channel and he is its only reader, so a stranger's sentence carried there reaches exactly the one person who knows the thread read mail. THE MEMORY HALF STAYS GATED: written only in a clean turn of a clean conversation, NEVER in a tainted turn or a locked/unreadable thread, and no card or tap can sign it — a permanent memory is re-injected into every later conversation under 'trust these over guesses', which is the injection path. The picture/filename guard (durable.ts) still runs FIRST in every branch, so a note it refuses reaches neither home. In a tainted/locked thread she is told in the same sentence that it posted and that it is NOT in her memory, so she cannot call it remembered. No card is ever drawn (it was card-when-tainted for one day)" },
-  "eve_hands.os_command": { verdict: "latched", why: "its WRITE subcommands (add_deal, add_client, add_expense, set_sprint, add_work_item, propose_automation …) reach churlishos.app and change his business ledger. The two READ subcommands (list_proposals, list_invoices) still run and close the latch, exactly like the other readers", reader: true },
-  "eve_hands.os_create_invoice": { verdict: "latched", why: "raises an invoice — a money instrument in his cockpit. R1 'spend money'" },
-  "eve_hands.os_move_client_stage": { verdict: "latched", why: "moves a client in his pipeline and fires the stage-enter automations (drafts only) — the same authority as os_command's update_deal_stage. READ SIDE, NOT CLOSED: the result can name clients (an ambiguous match lists them), returned verbatim; it does not record, so his answer to 'which one?' still works in the same thread. Stated, not hidden" },
-  "eve_hands.os_hlp_import_guests": { verdict: "latched", why: "writes HLP guest rows into his OS and queues their drafting job — an OS write that sends nothing, given the same verdict as os_move_client_stage and os_command's add_client. Latched for the input as much as the write: a pasted CSV is exactly where a stranger's list (and a stranger's invented 'line one') would arrive, so a turn or conversation that has read third-party text imports nothing. No send path: the invitations it leads to wait in his OS Inbox, one tap each. READ SIDE: the OS answers counts only (imported, needs line one, skipped by reason), never names or addresses, so it does not record" },
-  "eve_hands.os_hlp_queue_invitations": { verdict: "latched", why: "enqueues the OS's invitation drafting job (house_jobs) — R1 'dispatch work', an OS write that sends nothing, so the same verdict as os_move_client_stage. The drafts land in his OS Inbox one card each and leave only on his tap (20 new a day, OS-capped); there is no invitation send tool on either shore. READ SIDE: the OS answers counts, a job key and flags — no third-party prose, so it does not record" },
+  // ---- LATCHED, continued — these still refuse with the fresh-thread wording --
+  "eve_hands.os_hlp_import_guests": { verdict: "latched", why: "writes HLP guest rows into his OS and queues their drafting job — an OS write that sends nothing. It shared its verdict with os_move_client_stage and os_command's add_client until 2026-10-06, when those became card-when-tainted; this one STAYS latched — out of that day's scope, and a whole guest list is not something one card can show him line by line. Latched for the input as much as the write: a pasted CSV is exactly where a stranger's list (and a stranger's invented 'line one') would arrive, so a turn or conversation that has read third-party text imports nothing. No send path: the invitations it leads to wait in his OS Inbox, one tap each. READ SIDE: the OS answers counts only (imported, needs line one, skipped by reason), never names or addresses, so it does not record" },
+  "eve_hands.os_hlp_queue_invitations": { verdict: "latched", why: "enqueues the OS's invitation drafting job (house_jobs) — R1 'dispatch work', an OS write that sends nothing; latched, as os_move_client_stage was until it became card-when-tainted on 2026-10-06 (this one stays latched — out of that day's scope). The drafts land in his OS Inbox one card each and leave only on his tap (20 new a day, OS-capped); there is no invitation send tool on either shore. READ SIDE: the OS answers counts, a job key and flags — no third-party prose, so it does not record" },
   "eve_memory.save_memory": { verdict: "latched", why: "writes memory_entries — R1 'write a permanent memory', verbatim. It hangs on the SECOND server, which is exactly why the previous sweep never saw it" },
   "eve_memory.log_touch": { verdict: "latched", why: "writes a durable client-contact row that pulse.ts turns into attention_items PROSE, which then rides the context pack — a third-party-driven write with a loop back into her own briefing" },
 
