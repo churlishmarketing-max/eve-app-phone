@@ -1095,10 +1095,14 @@ export function buildConnectorServer(
         async ({ filter }) => {
           const { units, live, osCount, why } = await fleetRoster();
           if (!units.length) return text("Fleet roster not loaded.", true);
-          const q = (filter ?? "").trim().toLowerCase();
+          // "kid-flash", "kid_flash" and "Kid Flash" are one unit: hyphens and
+          // underscores read as spaces on both sides, and the registry key is
+          // searched too — she names units by key, the roster shows them by name.
+          const norm = (s: string | null | undefined) => (s ?? "").toLowerCase().replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+          const q = norm(filter);
           const rows = q
             ? units.filter((u) =>
-                [u.name, u.alias, u.job, u.triggers, u.division].some((f) => (f ?? "").toLowerCase().includes(q)),
+                [u.key, u.name, u.alias, u.job, u.triggers, u.division].some((f) => norm(f).includes(q)),
               )
             : units;
           if (!rows.length) return text(`No fleet unit matches "${filter}". ${units.length} units on the roster.`);
