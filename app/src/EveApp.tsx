@@ -1439,7 +1439,11 @@ export default function EveApp({ onSignedOut }: { onSignedOut: (reason: "signedo
         ? "PARSING…"
         : mode === "speaking"
           ? "SYNTHESISING"
-          : `${sttOn ? "DEEPGRAM ● LIVE" : "EARS — KEY NEEDED"}\n${voiceLabel}`;
+          : // Offline, the connector list is empty, so "KEY NEEDED" would blame a
+            // key the brain may well hold. Say what is actually true.
+            !live.online
+            ? "EARS — BRAIN OFFLINE\nVOICE — BRAIN OFFLINE"
+            : `${sttOn ? "DEEPGRAM ● LIVE" : "EARS — KEY NEEDED"}\n${voiceLabel}`;
 
   const orbEl = (
     <div className="ezone">
