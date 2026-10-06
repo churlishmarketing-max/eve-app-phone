@@ -807,10 +807,13 @@ async function main() {
     const j12c = await j11.h.cancel_schedule({ ref: "starfire" }, {});
     const j12d = await j11.h.dispatch_unit({ unit: "starfire", task: "Draft the plan.", why: "pack-tainted turn" }, {});
     await settle();
+    // 2026-10-06: dispatch_unit's verdict is card-when-tainted — in this turn
+    // it draws ONE card for his tap instead of refusing. What A6.4 protects is
+    // unchanged and still counted: no job row, no write, nothing started.
     ok(
       "A6.4",
-      j12c.isError === true && j12d.isError === true && j11.f.writes.length === 0 && j11.f.tables.jobs.length === 0,
-      `…and in that SAME pack-tainted turn cancel_schedule and dispatch_unit refuse too (write ops=${j11.f.writes.length}, job rows=${j11.f.tables.jobs.length})`,
+      j12c.isError === true && j12d.isError !== true && /CARD RAISED — receipt /.test(j12d.content[0].text) && j11.f.writes.length === 0 && j11.f.tables.jobs.length === 0,
+      `…and in that SAME pack-tainted turn cancel_schedule refuses and dispatch_unit only DRAWS A CARD — nothing starts (write ops=${j11.f.writes.length}, job rows=${j11.f.tables.jobs.length})`,
     );
 
     // The latch is on the DOOR, not the words: a wholly innocent event taints
@@ -883,8 +886,8 @@ async function main() {
       await settle();
       ok(
         `A6.12-${reader.slice(0, 8)}`,
-        r.isError === true && t.f.writes.length === 0 && t.f.tables.jobs.length === 0,
-        `H3: after ${reader}, dispatch_unit REFUSES and no job row is opened (job rows=${t.f.tables.jobs.length}, write ops=${t.f.writes.length})`,
+        r.isError !== true && /CARD RAISED — receipt /.test(r.content[0].text) && t.f.writes.length === 0 && t.f.tables.jobs.length === 0,
+        `H3: after ${reader}, dispatch_unit draws a CARD for his tap and no job row is opened (job rows=${t.f.tables.jobs.length}, write ops=${t.f.writes.length})`,
       );
       if (reader === "read_texts") loud("A6.12x", `=> ${r.content[0].text.slice(0, 118)}…`);
     }
@@ -894,7 +897,7 @@ async function main() {
     await aliasT.h.read_texts({ max: 5 }, {});
     const aliasR = await aliasT.h.dispatch_fleet({ agent: "research", task: "Sweep the Omaha lumber market" }, {});
     await settle();
-    ok("A6.13", aliasR.isError === true && aliasT.f.writes.length === 0 && aliasT.f.tables.jobs.length === 0, `H3: dispatch_fleet (the deprecated alias) is latched too (job rows=${aliasT.f.tables.jobs.length}, write ops=${aliasT.f.writes.length})`);
+    ok("A6.13", aliasR.isError !== true && /CARD RAISED — receipt /.test(aliasR.content[0].text) && aliasT.f.writes.length === 0 && aliasT.f.tables.jobs.length === 0, `H3: dispatch_fleet (the deprecated alias) draws the same card and starts nothing (job rows=${aliasT.f.tables.jobs.length}, write ops=${aliasT.f.writes.length})`);
 
     // ALLOW TWIN: a clean turn dispatches and the job row lands. Without this,
     // the refusals above prove only that dispatch is broken.

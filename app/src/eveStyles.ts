@@ -263,7 +263,7 @@ export const CSS = `
    is to be read before something irreversible happens. */
 .confirmv6 .hd{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:9px; letter-spacing:.18em; color:var(--redInk); }
 .confirmv6 .sum{ margin-top:7px; font-weight:600; font-size:13.5px; color:var(--cream); }
-.confirmv6 .field{ margin-top:6px; font-size:12px; line-height:1.45; color:rgba(236,232,225,.6); word-break:break-word; }
+.confirmv6 .field{ margin-top:6px; font-size:12px; line-height:1.45; color:rgba(236,232,225,.6); word-break:break-word; overflow-wrap:anywhere; white-space:pre-wrap; }
 /* The key label was rgba(236,232,225,.4) — MEASURED 3.44:1 against this plate
    at 8.5px. It names the field he is being asked to approve, so it goes to .55
    (5.48:1). The payload text above it measures 6.31:1 and is left alone. The
@@ -323,6 +323,11 @@ export const CSS = `
 .micv6.rec{ border-color:var(--red); box-shadow:0 0 30px rgba(230,50,43,.5); }
 .wbtn{ cursor:pointer; justify-self:end; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:9px; letter-spacing:.16em;
   color:rgba(230,50,43,.75); padding:7px 9px; border:1px solid rgba(230,50,43,.25); border-radius:0; background:none; }
+.rcol{ justify-self:end; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.wbtn:disabled{ opacity:.4; cursor:default; }
+.locknote{ margin-top:10px; padding:9px 10px; border:1px solid rgba(230,50,43,.4); background:rgba(161,50,40,.12); }
+.locklab{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:9px; letter-spacing:.16em; color:var(--red); margin-bottom:4px; }
+.locktxt{ font-size:12.5px; line-height:1.45; color:rgba(236,232,225,.8); margin-bottom:8px; }
 .footline{ flex:none; padding-bottom:8px; text-align:center; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:8.5px;
   letter-spacing:.1em; color:rgba(236,232,225,.26); }
 
